@@ -1,0 +1,1 @@
+function println (str1 as string) as int end

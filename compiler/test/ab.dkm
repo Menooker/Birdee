@@ -1,0 +1,4 @@
+require ab
+function println (str1 as string) as int
+	print(str1+"\n")
+end

@@ -1,0 +1,65 @@
+//require ab
+/*
+class clsa
+	public ata as int=2
+	public function p(pa as string) as int
+		println("CLSA"+this.ata+1)
+		println("CLSA" + pa)
+	end
+end
+
+class clsb
+	public ata as int=2
+	public function p(obja as clsa) as int
+		println("CLSB"+this.ata+1)
+		obja.p("PPPPP")
+
+	end
+
+	constructor  initialize()
+
+	end
+end
+
+
+function aa(a1 as string,a2 as string) as string throws  clsa 
+	print(a1+"\n")
+
+	dim err as clsa=new clsa()
+	err.ata=123
+	throw err
+	return a1+ a2
+	//return 1
+end
+
+*/
+dim v as var
+v="1"
+/*
+println(v+1)
+dim obj as clsa=new clsa()
+dim obj2 as clsb=new clsb()
+
+dim a as int=1
+a=v
+select a
+case 0
+println("0")
+case 1
+println("1")
+end
+*/
+/*
+try
+
+	obj.ata=22
+	obj2.p(obj)
+		//throw obj
+catch clsb ex
+	println("EX clsb"+ex.ata)
+catch clsa ex2
+	println("EX clsa"+ex2.ata)	
+finally
+	println("f")
+end*/
+

@@ -1,0 +1,14 @@
+#t=GetClock()
+
+dim i as int
+dim j as int
+dim a as int[]=new int[1000]
+for i=0;i<10000;i=i+1
+	for j=0;j<1000;j=j+1
+		a[j]=j
+		if( a[j]!=j) then
+			println("EEEEE")
+		end
+	end
+end
+println(GetClock()-#t)

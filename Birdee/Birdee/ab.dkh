@@ -1,0 +1,3 @@
+require req2
+declare sub println2 (str1 as string)
+

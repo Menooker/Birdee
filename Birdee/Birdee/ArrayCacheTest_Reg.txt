@@ -1,0 +1,40 @@
+dim N as int =10000
+dim a as int[]=new int[N]
+sub init()
+	dim i as int
+	for i=0;i<N;i++
+		a[i]=i
+	end
+end
+
+sub chk(ch as boolean)
+	if ch then
+		println("OK")
+	else
+		BreakPoint()
+	end
+end
+
+sub main()
+	init()
+	dim k as int[]
+	dim p as int[]
+	k=new int[100]
+	p=k
+	k[10]=2
+	chk(k[10]==2)
+	k=a
+	chk(k[10]==10)
+	k[10]=23
+	chk(k[10]==23)
+	a[11]=33
+	chk(a[11]==33)
+	a=p
+	chk(a[10]==2)
+
+
+end
+
+main()
+//init()
+

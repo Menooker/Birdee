@@ -1,0 +1,72 @@
+sub PIT(pa as boolean)
+	if pa then
+		println("ok")
+	else
+		println("not ok")
+	end
+end
+
+class clsa
+	dim a as int
+	dim b as var
+end
+
+#b=2
+dim a as int
+dim b as int=10
+#a=1
+//////////
+//comparation test
+//////////
+PIT( (#a==#b) == false)
+PIT( (#a<=#b) == true)
+#a=2
+PIT( (#a==#b) == true)
+PIT( (#a>#b) == false)
+#a=2.1
+PIT( (#a==#b) == false)
+PIT( (#a>#b) == true)
+/////////
+
+/////////
+//array test
+/////////
+#b=2
+dim arr as int[]=new int[10]
+arr[0]=#b
+arr[1]=123
+PIT(arr[0]==2)
+arr[#b]=1024
+PIT(arr[2]==1024)
+#b=arr[1]
+PIT(#b==123)
+/////////
+
+
+/////////
+//member test
+/////////
+#b=12
+dim ca as clsa=new clsa()
+ca.a=#b
+PIT(ca.a==12)
+ca.a=14
+#b=ca.a
+PIT(#b==14)
+
+/////////
+//var array test
+////////
+dim arr2 as var[]=new var[10]
+arr2[1]=1
+arr2[0]="1.2"
+PIT(arr2[1]==1 )
+PIT(arr2[0]==1.2)
+////////
+
+/////////
+//var member test
+/////////
+ca.b=0.123
+PIT(ca.b==0.123)
+////////

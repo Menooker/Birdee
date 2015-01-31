@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="..\..\compiler\diksam.y">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\compiler\diksam.l">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\compiler\test\test.dkm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\compiler\builder.bat">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="ab.dkh">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="ab.dkm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="backup.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="vartest.dkm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="test_delegate.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="8Queens.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="ArrayCacheTest.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="Bubbles.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="ArrayCacheTest_Reg.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="req2.dkh">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\DBG.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\debug\debug.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\compiler\diksam.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\compiler\diksamc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\DKC.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\DVM.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\DVM_code.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\DVM_dev.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\dvm\dvm_pri.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\memory\memory.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\share.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\compiler\y.tab.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BirdeeDef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdCompile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdExec.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UnportableAPI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Conf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdException.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdVarients.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdArrayCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\MEM.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdHashMap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdDynLdr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Birdee.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\error_dvm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\error_message_dvm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\execute.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\heap.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\load.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\native.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\nativeif.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\util_dvm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\dvm\wchar_dvm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\main.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\main\test\mathtest.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\memory\memory.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\memory\storage.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\disassemble.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\dispose.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\opcode.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\util.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\wchar_share.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\builtin\builtin.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\builtin\builtin_conv.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\create.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\error_compiler.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\error_message_compiler.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\fix_tree.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\interface.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\lex.yy.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\string.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\util_compiler.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\wchar_compiler.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\y.tab.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\debug\debug.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\generate.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdCompile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdExec.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UnportableAPI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdException.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdVarients.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdArrayCache.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\libLLVMlite\llvm-3.4.2.src\lib\Transforms\Instrumentation\BoundsChecking.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdHashMap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdLoader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdDumper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdDynLdr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

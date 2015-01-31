@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{19D3B749-0692-4E37-BFBD-EB53D0BE8DB1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Birdee</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Menooker\libLLVMlite\llvm-3.4.2.src\include;D:\Menooker\libLLVMlite\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\Menooker\libLLVMlite\llvm-3.4.2.src\include;D:\Menooker\libLLVMlite\include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\..\compiler\builder.bat" />
+    <None Include="..\..\compiler\diksam.l" />
+    <None Include="..\..\compiler\diksam.y" />
+    <None Include="..\..\compiler\test\test.dkm" />
+    <None Include="8Queens.txt" />
+    <None Include="ab.dkh" />
+    <None Include="ab.dkm" />
+    <None Include="ArrayCacheTest.txt" />
+    <None Include="ArrayCacheTest_Reg.txt" />
+    <None Include="backup.txt" />
+    <None Include="Bubbles.txt" />
+    <None Include="ReadMe.txt" />
+    <None Include="req2.dkh" />
+    <None Include="test_delegate.txt" />
+    <None Include="vartest.dkm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\compiler\diksam.h" />
+    <ClInclude Include="..\..\compiler\diksamc.h" />
+    <ClInclude Include="..\..\compiler\y.tab.h" />
+    <ClInclude Include="..\..\debug\debug.h" />
+    <ClInclude Include="..\..\dvm\dvm_pri.h" />
+    <ClInclude Include="..\..\include\DBG.h" />
+    <ClInclude Include="..\..\include\DKC.h" />
+    <ClInclude Include="..\..\include\DVM.h" />
+    <ClInclude Include="..\..\include\DVM_code.h" />
+    <ClInclude Include="..\..\include\DVM_dev.h" />
+    <ClInclude Include="..\..\include\MEM.h" />
+    <ClInclude Include="..\..\include\share.h" />
+    <ClInclude Include="..\..\memory\memory.h" />
+    <ClInclude Include="BdArrayCache.h" />
+    <ClInclude Include="BdCompile.h" />
+    <ClInclude Include="BdDynLdr.h" />
+    <ClInclude Include="BdException.h" />
+    <ClInclude Include="BdExec.h" />
+    <ClInclude Include="BdHashMap.h" />
+    <ClInclude Include="BirdeeDef.h" />
+    <ClInclude Include="Conf.h" />
+    <ClInclude Include="Dumper.h" />
+    <ClInclude Include="BdVarients.h" />
+    <ClInclude Include="Loader.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="UnportableAPI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\libLLVMlite\llvm-3.4.2.src\lib\Transforms\Instrumentation\BoundsChecking.cpp" />
+    <ClCompile Include="..\..\compiler\builtin\builtin.c" />
+    <ClCompile Include="..\..\compiler\builtin\builtin_conv.c" />
+    <ClCompile Include="..\..\compiler\create.c" />
+    <ClCompile Include="..\..\compiler\error_compiler.c" />
+    <ClCompile Include="..\..\compiler\error_message_compiler.c" />
+    <ClCompile Include="..\..\compiler\fix_tree.c" />
+    <ClCompile Include="..\..\compiler\generate.cpp" />
+    <ClCompile Include="..\..\compiler\interface.c" />
+    <ClCompile Include="..\..\compiler\lex.yy.c" />
+    <ClCompile Include="..\..\compiler\string.c" />
+    <ClCompile Include="..\..\compiler\util_compiler.c" />
+    <ClCompile Include="..\..\compiler\wchar_compiler.c" />
+    <ClCompile Include="..\..\compiler\y.tab.c" />
+    <ClCompile Include="..\..\debug\debug.c" />
+    <ClCompile Include="..\..\dvm\error_dvm.c" />
+    <ClCompile Include="..\..\dvm\error_message_dvm.c" />
+    <ClCompile Include="..\..\dvm\execute.c" />
+    <ClCompile Include="..\..\dvm\heap.c" />
+    <ClCompile Include="..\..\dvm\load.c" />
+    <ClCompile Include="..\..\dvm\native.c" />
+    <ClCompile Include="..\..\dvm\nativeif.c" />
+    <ClCompile Include="..\..\dvm\util_dvm.c" />
+    <ClCompile Include="..\..\dvm\wchar_dvm.c" />
+    <ClCompile Include="..\..\main\main.c" />
+    <ClCompile Include="..\..\main\test\mathtest.c" />
+    <ClCompile Include="..\..\memory\memory.c" />
+    <ClCompile Include="..\..\memory\storage.c" />
+    <ClCompile Include="..\..\share\disassemble.c" />
+    <ClCompile Include="..\..\share\dispose.c" />
+    <ClCompile Include="..\..\share\opcode.c" />
+    <ClCompile Include="..\..\share\util.c" />
+    <ClCompile Include="..\..\share\wchar_share.c" />
+    <ClCompile Include="BdArrayCache.cpp" />
+    <ClCompile Include="BdCompile.cpp" />
+    <ClCompile Include="BdDynLdr.cpp" />
+    <ClCompile Include="BdException.cpp" />
+    <ClCompile Include="BdExec.cpp" />
+    <ClCompile Include="BdHashMap.cpp" />
+    <ClCompile Include="BdVarients.cpp" />
+    <ClCompile Include="Birdee.cpp" />
+    <ClCompile Include="BdDumper.cpp" />
+    <ClCompile Include="BdLoader.cpp" />
+    <ClCompile Include="UnportableAPI.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

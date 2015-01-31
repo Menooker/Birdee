@@ -1,0 +1,56 @@
+class clsa
+	dim a as int
+	dim b as var
+	function ab() as clsa
+
+		dim a1 as int[]
+
+		println(a1.size())
+		return this
+	end
+end
+
+sub a()
+	println("a")
+	b()
+end
+
+sub b() 
+	println("b")
+	dim oa as clsa=new clsa() 
+	oa.ab()
+
+end
+
+
+function k( pa as int,pb as int,pc as string,...) as int 
+	dim a as int=1
+	dim b as int=2
+	println(""+a+" "+b+" "+pa+" "+pb+" "+pc)
+end
+
+function k2( pa as int,pb as int,pc as string,pd as int) as int 
+	dim a as int=1
+	dim b as int=2
+	println(""+pa+" "+pb+" "+pc)
+end
+
+
+delegate dele_k( pa as int,pb as int,pc as string) as int
+delegate dele_k2( pa as int,pb as int,pc as int) as int
+dim p as int
+dim fun as dele_k
+dim fun2 as dele_k
+fun=new delegate()
+GetFunction(fun,null,"k")
+fun2=fun
+fun2(1,2,"llll")
+
+
+//k2(1,2,"d",p)
+/*
+try
+	a()
+catch NullPointerException e
+	e.print_stack_trace()
+end*/

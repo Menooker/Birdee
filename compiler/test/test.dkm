@@ -1,0 +1,9 @@
+lib AAA
+	declare sub sb()
+end
+sb()
+println("KKK")
+dim N as int =10000
+dim j as int
+println("KKK"+j)
+
