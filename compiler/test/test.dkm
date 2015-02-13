@@ -1,9 +1,16 @@
-lib AAA
+require ab
+println("This is a test")
+sb()
+dim a  as TestLib=new TestLib()
+a.fielda=123
+a.method()
+
+/*lib AAA
 	declare sub sb()
 end
 sb()
 println("KKK")
 dim N as int =10000
 dim j as int
-println("KKK"+j)
+println("KKK"+j)*/
 

@@ -93,7 +93,7 @@
 %type   <enumerator> enumerator_list
 %%
 translation_unit
-        : initial_declaration definition_or_statement
+        : initial_declaration 
         | translation_unit definition_or_statement
         ;
 initial_declaration
@@ -237,7 +237,7 @@ type_specifier
 lib_function
 		:
 		LIB IDENTIFIER
-		{   //fix-me : should be package_name here!!! 
+		{   
 			BcGetCurrentCompilerContext()->libname=$2;
 		}
 		CR lib_function_declaration_list END
@@ -249,6 +249,7 @@ lib_function_declaration_list
 		:
 		
 		|lib_function_declaration_list function_declaration
+		|lib_function_declaration_list class_definition
 		;
 function_declaration
 		: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause CR

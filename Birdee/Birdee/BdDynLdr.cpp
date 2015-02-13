@@ -13,10 +13,56 @@ extern "C"{
 #include <stdio.h>
 #include <io.h>
 
-std::hash_map<std::string,DVM_ExecutableList> LoadedModules;
+std::hash_map<std::string,DVM_ExecutableList> LoadedLibs;
+std::hash_map<std::string,ExecutableEntry*> LoadedMods;
+std::hash_map<std::string,ExecutableEntry*> LoadedReqMods;
+
 //std::hash_map<std::string,std::string> BuiltinModules;
 //FILENAME_MAX
 
+ExecutableEntry* LdGetLoadedRequiredModule(char* name)
+{
+	if(!name)
+		name="";
+	if(LoadedReqMods.find(name)!=LoadedReqMods.end())
+	{
+		return LoadedReqMods[name];
+	}
+	return 0;
+}
+
+ExecutableEntry* LdPushRequiredModule(char* name,ExecutableEntry* ee)
+{
+	if(!name)
+		name="";
+	ExecutableEntry* ret=LdGetLoadedRequiredModule(name);
+	if(ret)
+		return ret;
+	LoadedReqMods[name]=ee;
+	return 0;
+}
+
+ExecutableEntry* LdGetLoadedModule(char* name)
+{
+	if(!name)
+		name="";
+	if(LoadedMods.find(name)!=LoadedMods.end())
+	{
+		return LoadedMods[name];
+	}
+	return 0;
+}
+
+ExecutableEntry* LdPushModule(char* name,ExecutableEntry* ee)
+{
+	if(!name)
+		name="";
+	ExecutableEntry* ret=LdGetLoadedModule(name);
+	if(ret)
+		return ret;
+	LoadedMods[name]=ee;
+	return 0;
+}
 
 void my_make_search_path_impl(char *package_name, char *buf)
 {
@@ -128,7 +174,7 @@ extern "C" void initialize_constant(DVM_VirtualMachine *dvm, ExecutableEntry *ee
 void ExFreeDynamicLibraries()
 {
 	std::hash_map<std::string,DVM_ExecutableList*>::iterator it;
-	for(it=LoadedModules.begin();it!=LoadedModules.end();it++)
+	for(it=LoadedLibs.begin();it!=LoadedLibs.end();it++)
 	{
 		DVM_dispose_executable_list(it->second);
 	}
@@ -138,36 +184,57 @@ DVM_ExecutableItem* LdLoadDynamicLibrary(DVM_VirtualMachine *dvm,char* path,char
 {
     DVM_ExecutableItem *pos,*lastitm;
     ExecutableEntry *ee;
-	DVM_ExecutableList list;
+	DVM_ExecutableList list={0};
     //dvm->executable_list = list;
-	BdStatus status=LdLoadCode(libname,&list);
+	BdStatus status=LdLoadCode(path,&list);
 	if(status)
 	{
 		printf("ERROR Loading Code %d\n",status);
 		__asm int 3
 		return 0;
 	}
-	LoadedModules[libname]=list;
-    for (lastitm = dvm->executable_list->list ; lastitm; lastitm = pos->next)
+	LoadedLibs[libname]=list;
+    lastitm = dvm->executable_list->list;
+	if(lastitm)
 	{
-    }
+		for(;;)
+		{
+			if(lastitm->next)
+				lastitm = lastitm->next;
+			else
+				break;
+		}
+	}
     for (pos = list.list; pos; pos = pos->next) {
+		pos->executable->isDyn=DVM_TRUE;
+		pos->executable->class_count=0; //fix-me : may lead to memory leak
 
-        ee = add_executable_to_dvm(dvm, pos->executable,DVM_FALSE);
-		lastitm->next=pos;
+		if(lastitm)
+			lastitm->next=pos;
+		else
+			dvm->executable_list->list=pos;
 		lastitm=pos;
-        initialize_constant(dvm, ee);
+
+		if(pos->executable->package_name !=NULL)
+		{
+			ee = add_executable_to_dvm(dvm, pos->executable,DVM_FALSE);
+			initialize_constant(dvm, ee);
+			if(ee->executable->is_required)
+				LdPushRequiredModule(ee->executable->package_name,ee);
+			else
+				LdPushModule(ee->executable->package_name,ee);
+		}
     }
-	pos->next=0;
+	lastitm->next=0;
 	return list.list;
 }
 
 
 DVM_ExecutableItem* LdLoadPackage(DVM_VirtualMachine *dvm,char* libname,char* packagename)
 {
-	if(LoadedModules.find(libname)!=LoadedModules.end())
+	if(LoadedLibs.find(libname)!=LoadedLibs.end())
 	{
-		return LoadedModules[libname].list;
+		return LoadedLibs[libname].list;
 	}
 	char found_path[FILENAME_MAX],search_file[FILENAME_MAX];
 	if(LdGetDynamicLibPath(libname,found_path,search_file)==BdSuccess)

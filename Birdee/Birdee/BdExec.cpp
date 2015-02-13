@@ -756,6 +756,8 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 //*/
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
+	//if(ee->executable->is_required)
+	//	return 0;
 	Module* m=(Module*)mod->mod;
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	mod->pass=pm;

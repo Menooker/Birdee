@@ -1,7 +1,0 @@
-require ab
-require req2
-require diksam.lang
-sub println2 (str1 as string) 
-	sb()
-end
-

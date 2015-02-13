@@ -42,15 +42,12 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
 		if(!ee->executable->function[src_idx].is_implemented && ee->executable->function[src_idx].libname)
 		{
 			//here to add dyn load codes
-			if(LdLoadPackage(dvm,ee->executable->function[src_idx].libname,ee->executable->function[src_idx].package_name))
+			if(!LdLoadPackage(dvm,ee->executable->function[src_idx].libname,ee->executable->function[src_idx].package_name))
 			{
-				__asm int 3
+				
 					dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
 								LOAD_FILE_NOT_FOUND_ERR,
-								DVM_STRING_MESSAGE_ARGUMENT, "package",
-								ee->executable->function[src_idx].package_name,
-								DVM_STRING_MESSAGE_ARGUMENT, "name",
-								ee->executable->function[src_idx].name,
+								DVM_STRING_MESSAGE_ARGUMENT, "file", ee->executable->function[src_idx].libname ? ee->executable->function[src_idx].libname : "(null)",
 								DVM_MESSAGE_ARGUMENT_END);
 			}
 		}
@@ -65,7 +62,10 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
                                             [src_idx].package_name)) { // if already defined in DVM
                 if (ee->executable->function[src_idx].is_implemented //modified (if re-define a function, report an error)
                     && dvm->function[dest_idx]->is_implemented) {
-                    char *package_name;
+						//fix-me : redefining should be reported
+						printf("Loader Warning: Duplicate function-%s @ %s\n",dvm->function[dest_idx]->name,
+							dvm->function[dest_idx]->package_name);
+                    /*char *package_name;
 
                     if (dvm->function[dest_idx]->package_name) {
                         package_name = dvm->function[dest_idx]->package_name;
@@ -78,7 +78,7 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
                                 package_name,
                                 DVM_STRING_MESSAGE_ARGUMENT, "name",
                                 dvm->function[dest_idx]->name,
-                                DVM_MESSAGE_ARGUMENT_END);
+                                DVM_MESSAGE_ARGUMENT_END);*/
                 }
                 new_func_flags[src_idx] = DVM_FALSE;
                 if (ee->executable->function[src_idx].is_implemented) { //if the function is defined, but not implemented, it is okay
@@ -661,7 +661,8 @@ add_classes(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
     DVM_Boolean *new_class_flags;
     int old_class_count;
     DVM_Executable *exe = ee->executable;
-
+	if(exe->isDyn==DVM_TRUE)
+		return;
     new_class_flags = MEM_malloc(sizeof(DVM_Boolean)
                                  * exe->class_count);
 
@@ -816,10 +817,26 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
 
     old_class_count = dvm->class_count;
     for (pos = list->list; pos; pos = pos->next) {
-
-        ee = add_executable_to_dvm(dvm, pos->executable,
+		if(pos->executable->is_required)
+		{
+			if( !LdGetLoadedRequiredModule(pos->executable->package_name)) // makes sure every require executes for one time
+			{
+				ee = add_executable_to_dvm(dvm, pos->executable,
+									   (pos->executable == list->top_level));
+				initialize_constant(dvm, ee);
+				LdPushRequiredModule(pos->executable->package_name,ee);
+			}
+		}
+		else if( !LdGetLoadedModule(pos->executable->package_name))// makes sure every module is included for one time
+		{
+			ee = add_executable_to_dvm(dvm, pos->executable,
                                    (pos->executable == list->top_level));
-        initialize_constant(dvm, ee);
+			initialize_constant(dvm, ee);
+			LdPushModule(pos->executable->package_name,ee);
+
+		}
+		
+        
     }
 }
 

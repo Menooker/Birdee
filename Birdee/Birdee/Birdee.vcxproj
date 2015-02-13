@@ -83,11 +83,12 @@
     <None Include="..\..\compiler\test\test.dkm" />
     <None Include="8Queens.txt" />
     <None Include="ab.dkh" />
-    <None Include="ab.dkm" />
+    <None Include="adb.dkm" />
     <None Include="ArrayCacheTest.txt" />
     <None Include="ArrayCacheTest_Reg.txt" />
     <None Include="backup.txt" />
     <None Include="Bubbles.txt" />
+    <None Include="Exceptions.dkh" />
     <None Include="ReadMe.txt" />
     <None Include="req2.dkh" />
     <None Include="test_delegate.txt" />

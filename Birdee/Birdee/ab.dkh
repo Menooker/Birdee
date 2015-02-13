@@ -1,3 +1,12 @@
-require req2
-declare sub println2 (str1 as string)
+lib AAA
+	declare sub sb()
+	public class TestLib
+		public fielda as int
+		public declare constructor initialize()
+		public declare sub method()
+
+	end
+end
+
+
 

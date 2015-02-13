@@ -360,7 +360,7 @@ struct DVM_Executable_tag {
     DVM_CodeBlock       top_level;
     DVM_CodeBlock       constant_initializer;
 	struct LLVM_Data			module; //modified //it is actually llvm::Module
-	
+	int					isDyn;
 	
 };
 

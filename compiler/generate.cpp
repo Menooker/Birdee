@@ -59,7 +59,7 @@ alloc_executable(PackageName *package_name)
     exe->type_specifier = NULL;
     exe->top_level.code_size = 0;
     exe->top_level.code = NULL;
-
+	exe->isDyn=0;
     return exe;
 }
 

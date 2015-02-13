@@ -1,0 +1,4 @@
+sub sb () 
+	print("OKOKOKOK\n")
+end
+
