@@ -63,7 +63,7 @@ void ExStackTrace(DVM_ObjectRef e)
 
 	TraceParams para;
     para.cls_trace_index  = DVM_search_class(curdvm,
-                                   DVM_DIKSAM_DEFAULT_PACKAGE,
+                                   "Exceptions",
                                    DIKSAM_STACK_TRACE_CLASS);
 
     para.stack_trace_index = DVM_get_field_index(curdvm, e,"stack_trace");
@@ -162,11 +162,14 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 		__asm int 3;
 	}
 	ExecutableEntry * exe=(ExecutableEntry *)ExTopJumpBuffer()->exe ;
-    class_index = EXE_search_class(exe->executable  , DVM_DIKSAM_DEFAULT_PACKAGE,
+    class_index = DVM_search_class(curdvm  , "Exceptions",
                                    class_name);
+
 	//for(int i=0;i<=exe->class_table;
 	if(clsindex)
-		*clsindex=class_index;
+	{
+		*clsindex=	EXE_search_class(exe->executable , "Exceptions",class_name);
+	}
     obj = dvm_create_class_object_i(dvm, class_index);
 
 
@@ -176,6 +179,11 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 
     message_index
         = DVM_get_field_index(dvm, obj, "message");
+	if(message_index==FIELD_NOT_FOUND)
+	{
+		printf("exception field not found in : %s",class_name);
+		__asm int 3;
+	}
     obj.data->u.class_object.field[message_index].object
         = dvm_create_dvm_string_i(dvm, message.string);
 

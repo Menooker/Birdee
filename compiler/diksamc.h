@@ -18,6 +18,7 @@ extern "C"
 typedef struct 
 {
 	char* libname;
+	int isLib;
 }CompilerContext;
 extern CompilerContext default_context;
 #define BcGetCurrentCompilerContext() (&default_context)
@@ -159,6 +160,7 @@ typedef enum {
     EOF_IN_C_COMMENT_ERR,
     EOF_IN_STRING_LITERAL_ERR,
     TOO_LONG_CHARACTER_LITERAL_ERR,
+	MULTIPLE_LIB_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -729,7 +731,7 @@ struct FunctionDefinition_tag {
     int                 end_line_number;
 	int isApose;
 	int param_cnt;
-	char* libname;
+	DVM_Boolean isLib;
     struct FunctionDefinition_tag       *next;
 };
 

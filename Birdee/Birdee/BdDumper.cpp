@@ -203,9 +203,9 @@ BdStatus CpDumpFunction(DVM_Function* func,CPBuffer* pbuf)
 	}*/
 	CpDumpVar(FUN_MAGIC,pbuf);
 	CpDumpVar(func->is_implemented,pbuf);
-	CpDumpString(func->libname ,pbuf);
 	CpDumpString(func->package_name,pbuf);
 	CpDumpString(func->name,pbuf);
+	CpDumpVar(func->isLib,pbuf);
 	CpDumpTypeSpecifier(func->type,pbuf);
 	CpDumpBuffer(&func->local_variable_count,sizeof(func->local_variable_count),pbuf);
 	for(i=0;i<func->local_variable_count;i++)
@@ -346,6 +346,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 	CpDumpString(exe->package_name,&buf);
 	CpDumpBuffer(&exe->is_required,sizeof(BINT),&buf);
 	CpDumpString(exe->path,&buf);
+	CpDumpString(exe->libname ,&buf);
 	CpDumpBuffer(&exe->constant_pool_count,sizeof(exe->constant_pool_count),&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{

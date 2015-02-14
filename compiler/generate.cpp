@@ -2031,7 +2031,7 @@ add_function(DVM_Executable *exe,
              DVM_Boolean in_this_exe,ClassDefinition* cdef)
 {
     OpcodeBuf           ob;
-
+	dest->isLib=src->isLib;
     dest->type = dkc_copy_type_specifier(src->type);
     dest->parameter = copy_parameter_list(src->parameter,
                                           &dest->parameter_count);
@@ -2063,14 +2063,14 @@ add_function(DVM_Executable *exe,
         dest->code_block.need_stack_size //fix-me : should i implement stack size?
             = calc_need_stack_size(dest->code_block.code,
                                    dest->code_block.code_size);*/
-		dest->libname=0;
+
         dest->local_variable
             = copy_local_variables(src, dest->parameter_count);
         dest->local_variable_count
             = src->local_variable_count - dest->parameter_count;
     } else {
 		//printf("EMPTY:%s %s\n",src->name,src->package_name);
-        dest->libname = src->libname;
+
 		dest->is_implemented = DVM_FALSE;
         dest->local_variable = NULL;
         dest->local_variable_count = 0;

@@ -39,10 +39,10 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
                                 * ee->executable->function_count);
 
     for (src_idx = 0; src_idx < ee->executable->function_count; src_idx++) {
-		if(!ee->executable->function[src_idx].is_implemented && ee->executable->function[src_idx].libname)
+		/*if(!ee->executable->function[src_idx].is_implemented && ee->executable->function[src_idx].isLib)
 		{
 			//here to add dyn load codes
-			if(!LdLoadPackage(dvm,ee->executable->function[src_idx].libname,ee->executable->function[src_idx].package_name))
+			if(!LdLoadPackage(dvm,ee->executable->function[src_idx].isLib,ee->executable->function[src_idx].package_name))
 			{
 				
 					dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
@@ -50,7 +50,7 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
 								DVM_STRING_MESSAGE_ARGUMENT, "file", ee->executable->function[src_idx].libname ? ee->executable->function[src_idx].libname : "(null)",
 								DVM_MESSAGE_ARGUMENT_END);
 			}
-		}
+		}*/
 
 
         for (dest_idx = 0; dest_idx < dvm->function_count; dest_idx++) {
@@ -761,7 +761,17 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
             ;
         ee_pos->next = new_entry;
     }
-    
+    if(executable->libname)
+	{
+		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
+		{
+				
+				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
+							LOAD_FILE_NOT_FOUND_ERR,
+							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
+							DVM_MESSAGE_ARGUMENT_END);
+		}
+	}
     add_functions(dvm, new_entry);
     add_enums(dvm, new_entry);
     add_constants(dvm, new_entry);

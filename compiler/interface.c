@@ -426,6 +426,9 @@ do_compile(DKC_Compiler *compiler, DVM_ExecutableList *list,
     }
     // dvm_disassemble(exe);
 
+	exe->libname=BcGetCurrentCompilerContext()->libname?MEM_strdup(BcGetCurrentCompilerContext()->libname):0;
+	BcGetCurrentCompilerContext()->libname=0;
+
     exe->is_required = is_required;
     if (!add_exe_to_list(exe, list)) {
         dvm_dispose_executable(exe);
@@ -537,7 +540,7 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 		fcnt=pCur->executable->function_count;
 		for(i=0;i<fcnt;i++)
 		{
-			if(!pCur->executable->function[i].libname  && !pCur->executable->function[i].is_implemented
+			if(!pCur->executable->function[i].isLib  && !pCur->executable->function[i].is_implemented
 				&& !isPackageInBuiltIn(pCur->executable->function[i].package_name))
 			{
 

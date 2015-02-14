@@ -246,9 +246,8 @@ dkc_create_function_definition(TypeSpecifier *type, char *identifier,
     fd->throws = throws;
     fd->end_line_number = compiler->current_line_number;
 	fd->isApose=isApose;
-	fd->libname=BcGetCurrentCompilerContext()->libname?MEM_strdup(BcGetCurrentCompilerContext()->libname):0; //fix-me : free!!!
     fd->next = NULL;
-
+	fd->isLib= (DVM_Boolean)BcGetCurrentCompilerContext()->isLib;
     if (block) {
         block->type = FUNCTION_BLOCK;
         block->parent.function.function = fd;
@@ -1330,7 +1329,7 @@ dkc_create_method_member(ClassOrMemberModifierList *modifier,
                               MESSAGE_ARGUMENT_END);
         }
     } else {
-        if (function_definition->block == NULL && BcGetCurrentCompilerContext()->libname==NULL) { // modified
+        if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0) { // modified
             dkc_compile_error(compiler->current_line_number,
                               CONCRETE_METHOD_HAS_NO_BODY_ERR,
                               MESSAGE_ARGUMENT_END);

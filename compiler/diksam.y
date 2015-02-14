@@ -113,7 +113,7 @@ initial_declaration
         {
             dkc_set_require_and_rename_list(NULL, $1);
         }
-		| lib_function
+		| initial_declaration lib_function
 		{
             dkc_set_require_and_rename_list(NULL, NULL);
 		}
@@ -238,11 +238,17 @@ lib_function
 		:
 		LIB IDENTIFIER
 		{   
+			if(BcGetCurrentCompilerContext()->libname)
+			{
+				    dkc_compile_error(dkc_get_current_compiler()->current_line_number,
+                      MULTIPLE_LIB_ERR,MESSAGE_ARGUMENT_END);
+			}
 			BcGetCurrentCompilerContext()->libname=$2;
+			BcGetCurrentCompilerContext()->isLib=1;
 		}
 		CR lib_function_declaration_list END
 		{
-			BcGetCurrentCompilerContext()->libname=0;
+			BcGetCurrentCompilerContext()->isLib=0;
 		}
 		;
 lib_function_declaration_list
@@ -266,7 +272,7 @@ function_declaration
         }
         | DECLARE BSUB IDENTIFIER LP apostrophe RP  throws_clause CR
         {
-			printf("lib:%s\n",BcGetCurrentCompilerContext()->libname);
+			//printf("lib:%s\n",BcGetCurrentCompilerContext()->libname);
             dkc_function_define(0, $3, NULL, $7, NULL,$5);
         }
 		;

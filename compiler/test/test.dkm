@@ -1,10 +1,41 @@
+require Exceptions
 require ab
+
+sb()
+try
+	a()
+
+catch NullPointerException e
+	BreakPoint()
+	println(e.message)
+
+	e.print_stack_trace()
+end
+
+sub a() 
+	b()
+end
+
+sub b()
+	c()
+end
+
+sub c()
+	dim a  as TestLib
+	a.method()
+end
+
+
+
+
+
+/*require ab
 println("This is a test")
 sb()
 dim a  as TestLib=new TestLib()
 a.fielda=123
 a.method()
-
+*/
 /*lib AAA
 	declare sub sb()
 end

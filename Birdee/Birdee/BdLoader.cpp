@@ -196,9 +196,9 @@ BdStatus LdFunction(DVM_Function* func,CPBuffer* pbuf)
 	if(i!=FUN_MAGIC)
 		throw BdBadMagicNum;
 	LdLoadVar(func->is_implemented,pbuf);
-	LdString(&func->libname ,pbuf);
 	LdString(&func->package_name,pbuf);
 	LdString(&func->name,pbuf);
+	LdLoadVar(func->isLib,pbuf);
 	func->type=LdAlloc(1,DVM_TypeSpecifier);
 	LdTypeSpecifier(func->type,pbuf);
 	LdArray(func->local_variable_count,func->local_variable,DVM_LocalVariable,pbuf);
@@ -352,9 +352,11 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 		return BdBadMagicNum;
 	}
 	//CpDisplayBuffer(&buf,1);
+
 	LdString(&exe->package_name,&buf);
 	LdLoadVar(exe->is_required,&buf);
 	LdString(&exe->path,&buf);
+	LdString(&exe->libname ,&buf);
 	LdArray(exe->constant_pool_count,exe->constant_pool,DVM_ConstantPool,&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{

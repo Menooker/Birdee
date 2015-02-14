@@ -127,6 +127,7 @@ dvm_dispose_executable_Ex(DVM_Executable *exe,int shouldFreeExe)
 {
     int i;
 
+	MEM_free(exe->libname);
     MEM_free(exe->package_name);
     MEM_free(exe->path);
 

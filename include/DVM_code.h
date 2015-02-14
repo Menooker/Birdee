@@ -268,7 +268,7 @@ typedef struct {
     int                 local_variable_count;
     DVM_LocalVariable   *local_variable;
     DVM_CodeBlock       code_block;
-	char* libname;
+	DVM_Boolean			isLib;
 	//LLVMPFun		    pllvmfun; //modified
 } DVM_Function;
 
@@ -361,6 +361,7 @@ struct DVM_Executable_tag {
     DVM_CodeBlock       constant_initializer;
 	struct LLVM_Data			module; //modified //it is actually llvm::Module
 	int					isDyn;
+	char*				libname;
 	
 };
 

@@ -55,11 +55,14 @@
     <None Include="req2.dkh">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="adb.dkm">
+    <None Include="ab.dkm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="Exceptions2.dkh">
       <Filter>资源文件</Filter>
     </None>
     <None Include="Exceptions.dkh">
-      <Filter>源文件</Filter>
+      <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

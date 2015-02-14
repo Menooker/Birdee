@@ -1,54 +1,59 @@
 lib Exceptions
+	class StackTrace 
+		public line_number as int
+		dim file_name as string
+		dim function_name as string
+		public declare   constructor initialize() 
+	end
 
-class StackTrace 
-    public line_number as int
-    dim file_name as string
-    dim function_name as string
+	abstract public class Exception 
+		public message as string
+		public stack_trace as StackTrace[]
+		public declare sub print_stack_trace()
+		public virtual declare   constructor initialize() 
+	end
+
+	abstract public class BugException : Exception 
+		public virtual override declare   constructor initialize() 
+	end
+
+	abstract public class RuntimeException : Exception 
+		public virtual override declare   constructor initialize() 
+	end
+
+	public class NullPointerException : BugException 
+		public virtual override declare   constructor initialize() 
+	end
+
+	public class ArrayIndexOutOfBoundsException : BugException
+		public virtual override declare   constructor initialize()  
+	end
+
+	public class StringIndexOutOfBoundsException : BugException
+		public virtual override declare   constructor initialize()  
+	end
+
+	public class DivisionByZeroException : RuntimeException 
+		public virtual override declare   constructor initialize() 
+	end
+
+	public class MultibyteCharacterConvertionException : RuntimeException
+		public virtual override declare   constructor initialize()  
+	end
+
+	public class ClassCastException : BugException 
+		public virtual override declare   constructor initialize() 
+	end
+
+	public abstract class ApplicationException : Exception 
+		public virtual override declare   constructor initialize() 
+	end
+
+	public class NumberFormatException : ApplicationException 
+		public virtual override declare   constructor initialize() 
+	end
+
+	
+
 end
 
-abstract public class Exception 
-    public message as string
-    public stack_trace as StackTrace[]
-    public sub print_stack_trace() 
-		dim i as int
-		println("Exception occured. " + this.message + "\nStack Trace:" )
-		for i=0;i<this.stack_trace.size();i++
-			println(this.stack_trace[i].function_name)
-		end
-    end
-    public virtual constructor initialize() 
-		this.stack_trace = new StackTrace[0]
-    end
-end
-
-abstract public class BugException : Exception 
-end
-
-abstract public class RuntimeException : Exception 
-end
-
-public class NullPointerException : BugException 
-end
-
-public class ArrayIndexOutOfBoundsException : BugException 
-end
-
-public class StringIndexOutOfBoundsException : BugException 
-end
-
-public class DivisionByZeroException : RuntimeException 
-end
-
-public class MultibyteCharacterConvertionException : RuntimeException 
-end
-
-public class ClassCastException : BugException 
-end
-
-public abstract class ApplicationException : Exception 
-end
-
-public class NumberFormatException : ApplicationException 
-end
-
-end
