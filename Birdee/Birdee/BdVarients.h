@@ -17,6 +17,10 @@ extern "C"
 {
 #endif
 
+
+#define AvGetTopContext() (curdvm->avstack[curdvm->asp -1])
+void AvPushNullContext();
+void AvPopContext();
 void AvGets();
 void AvGetd();
 void AvGeti();
@@ -32,7 +36,7 @@ void AvMod();
 void AvCmp();
 DVM_ObjectRef AvGetVar(char* name);
 DVM_ObjectRef AvGetOrCreateVar(char* name);
-void AvDisposeMap();
+void AvDisposeMainMap();
 #ifdef __cplusplus
 }
 #endif

@@ -1,19 +1,23 @@
 require Exceptions
 require ab
 
+$a=1
+#s=33
 sb()
 try
 	a()
 
 catch NullPointerException e
-	BreakPoint()
 	println(e.message)
-
 	e.print_stack_trace()
 end
 
+println("S=" + #s)
+
 sub a() 
+	#b=2
 	b()
+	println(#b)
 end
 
 sub b()
@@ -21,6 +25,9 @@ sub b()
 end
 
 sub c()
+	#b=1000
+	println($a)
+
 	dim a  as TestLib
 	a.method()
 end

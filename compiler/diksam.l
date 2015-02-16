@@ -258,7 +258,7 @@ DVM_Boolean st_character_literal_state;
 		BEGIN INITIAL;
         
 		};
-<INITIAL>#[A-Za-z_][A-Za-z_0-9]* {
+<INITIAL>[#$][A-Za-z_][A-Za-z_0-9]* {
     yylval.identifier = dkc_create_identifier(yytext);
     return AUTOVAR;
 }

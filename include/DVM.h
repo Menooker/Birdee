@@ -16,6 +16,10 @@ typedef enum {
 } DVM_Boolean;
 
 typedef struct DVM_VTable_tag DVM_VTable;
+typedef struct
+{
+	void* p;
+}AutoVarContext,*PAutoVarContext;
 
 typedef struct {
 	DVM_Object *data;

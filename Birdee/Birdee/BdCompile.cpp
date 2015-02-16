@@ -393,7 +393,7 @@ Function* BcBuildPush(char* name,int isptr,Type* ty)
 Value* BcGenerateAutoVar(Expression *expr,Function* f)
 {
 	std::vector<Value*> args;
-	args.push_back(GetStrValue(expr->u.identifier.name+1));//builder.CreateGlobalStringPtr(expr->u.identifier.name));
+	args.push_back(GetStrValue(expr->u.identifier.name));//builder.CreateGlobalStringPtr(expr->u.identifier.name));
 	return builder.CreateCall(f,args);
 }
 

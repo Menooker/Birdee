@@ -301,6 +301,9 @@ struct DVM_VirtualMachine_tag {
 	BINT				bpc;
 	PExExceptionItem	estack;
 	BINT				esp;
+
+	PAutoVarContext     avstack;
+	BINT				asp;
 };
 
 typedef struct RefInNativeFunc_tag {

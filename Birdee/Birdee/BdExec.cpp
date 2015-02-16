@@ -226,7 +226,9 @@ void  ExDoInvoke(BINT transindex)
 
 	curdvm->stack.stack_pointer += bf->local_cnt ;
     BcInitLocalVar(curdvm, bf,oldsp);
+	AvPushNullContext();
 	bf->pfun(base,transindex);
+	AvPopContext();
 	curdvm->stack.stack_pointer=oldsp - bf->param_cnt;
 	curdvm->current_executable=ee;
 }
@@ -460,6 +462,7 @@ extern "C" void ExGoMain()
 	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curdvm->current_executable =curdvm->top_level;
+	AvPushNullContext();
 	ExecutionEngine* eng =(ExecutionEngine*)curdvm->exe_engine;
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));

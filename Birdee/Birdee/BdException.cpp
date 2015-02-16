@@ -1,6 +1,7 @@
 
 #include "BirdeeDef.h"
 #include "BdException.h"
+#include "BdVarients.h"
 #include "UnportableAPI.h"
 #include <stdio.h>
 #include <string.h>
@@ -115,6 +116,7 @@ ExJumpBuf*  ExPushJumpBuffer()
 	ret->exe=curdvm->current_executable ;
 	ret->ths=curdvm->ths;
 	ret->cur_exception=curdvm->current_exception;
+	ret->asp=curdvm->asp;
 	curdvm->esp+=1;
 	return &ret->jmpbuf;
 }
@@ -222,6 +224,15 @@ void ExRaiseException(BINT eindex)
 	PExExceptionItem pit=ExTopJumpBuffer();
 	curdvm->current_executable=(ExecutableEntry*)pit->exe ;
 	curdvm->ths=pit->ths;
+	if(pit->asp>curdvm->asp)
+	{
+		//bad asp
+		__asm int 3
+	}
+	while(pit->asp<curdvm->asp)
+	{
+		AvPopContext();
+	}
 	//curdvm->current_exception =pit->cur_exception;
 	ExJumpBuf mybuf=pit->jmpbuf;
 	ExPopJumpBuffer();

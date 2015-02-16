@@ -12,7 +12,48 @@ extern "C"
 #include "../../include/MEM.h"
 DVM_VirtualMachine_tag* curdvm;
 
-hash_map<string,DVM_ObjectRef> MainMap;
+
+typedef hash_map<string,DVM_ObjectRef> AvMap;
+AvMap MainMap;
+
+
+void AvDisposeMap(AvMap* mp)
+{
+	hash_map<string,DVM_ObjectRef>::iterator it;
+	for(it=(*mp).begin();it!=(*mp).end();it++)
+	{
+		MEM_free(it->second.data);
+	}
+}
+
+void AvPushNullContext()
+{
+	curdvm->avstack[curdvm->asp].p=0;
+	curdvm->asp++;
+}
+
+void AvPopContext()
+{
+	curdvm->asp--;
+	AvMap* pp=(AvMap*)curdvm->avstack[curdvm->asp].p;
+	if(pp)
+	{
+		AvDisposeMap(pp);//fix-me : should we disopse the Varients here or let GC do the clean work?
+		pp->~ hash_map<string,DVM_ObjectRef>();
+		MEM_free(pp);
+	}
+}
+
+void AvPutContext()
+{
+	AvMap* newmap=(AvMap*)MEM_malloc(sizeof(AvMap));
+	
+	newmap=new(newmap)AvMap(); //check-me
+	curdvm->avstack[curdvm->asp-1].p=newmap;
+
+}
+
+
 
 BdStatus AvDoGeti(ExVarient* va,BINT* ret)
 {
@@ -502,26 +543,71 @@ void AvCmp()
 DVM_ObjectRef AvGetOrCreateVar(char* name)
 {
 	DVM_ObjectRef ret;
-	if(MainMap.find(name)==MainMap.end())
+	if(*name=='#')
 	{
-		ret= ExLoadStaticVar(curdvm,(ExVarient*)MEM_malloc(sizeof(ExVarient*)));
-		MainMap[name]=ret;
+		name++;
+		AvMap* mp=(AvMap*)AvGetTopContext().p;
+		if(mp == NULL)
+		{
+			AvPutContext();
+			mp=(AvMap*)AvGetTopContext().p;
+		}
+		if((*mp).find(name)!=(*mp).end())
+		{
+			return (*mp)[name];
+		}
+		else
+		{
+			ret= ExLoadStaticVar(curdvm,(ExVarient*)MEM_malloc(sizeof(ExVarient*)));
+			(*mp)[name]=ret;
+			return ret;
+		}
 	}
-	else
-		ret=MainMap[name];
-	return ret;
+	else if(*name=='$')
+	{
+		name++;
+		if(MainMap.find(name)==MainMap.end())
+		{
+			ret= ExLoadStaticVar(curdvm,(ExVarient*)MEM_malloc(sizeof(ExVarient*)));
+			MainMap[name]=ret;
+		}
+		else
+			ret=MainMap[name];
+		return ret;
+	}
+	return dvm_null_object_ref;
 	
 }
 
+
+
 DVM_ObjectRef AvGetVar(char* name)
 {
-	if(MainMap.find(name)!=MainMap.end())
+	if(*name=='#') 
 	{
-		return MainMap[name];
-	}
-	else
-	{
+		name++;
+		AvMap* mp=(AvMap*)AvGetTopContext().p;
+		if(mp != NULL)
+		{
+			if((*mp).find(name)!=(*mp).end())
+			{
+				return (*mp)[name];
+			}
+		}
+		//if no context or var not found
 		ExRaiseException(ExVarUseBeforeSet);
+	}
+	else if(*name=='$') 
+	{
+		name++;
+		if(MainMap.find(name)!=MainMap.end())
+		{
+			return MainMap[name];
+		}
+		else
+		{
+			ExRaiseException(ExVarUseBeforeSet);
+		}
 	}
 	return dvm_null_object_ref;
 }
@@ -536,6 +622,18 @@ void AvMarkObjects()
 		gc_mark(&it->second);
 
 	}
+	for(int i=0;i<curdvm->asp ;i++)
+	{	
+		AvMap* pp=(AvMap*)curdvm->avstack[i].p;
+		if(pp)
+		{
+			for(it=(*pp).begin();it!=(*pp).end();it++)
+			{
+				gc_mark(&it->second);
+
+			}
+		}
+	}
 }
 
 /*
@@ -547,14 +645,12 @@ void AvSetVar(char* name,DVM_ObjectRef v)
 	}
 	*MainMap[name]=*v.data->u.var.pobj;
 }*/
-void AvDisposeMap()
+
+
+
+void AvDisposeMainMap()
 {
-	hash_map<string,DVM_ObjectRef>::iterator it;
-	for(it=MainMap.begin();it!=MainMap.end();it++)
-	{
-		MEM_free(it->second.data);
-		MainMap.erase(it);
-	}
+	AvDisposeMap(&MainMap);
 }
 
 }

@@ -905,6 +905,8 @@ DVM_create_virtual_machine(void)
     dvm->stack.stack = UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
 	dvm->esp=0;
 	dvm->estack=UaGuardAlloc(sizeof(ExExceptionItem)*1024);
+	dvm->asp=0;
+	dvm->avstack=UaGuardAlloc(sizeof(AutoVarContext)*1024);
     dvm->stack.pointer_flags
         = MEM_malloc(sizeof(DVM_Boolean) * STACK_ALLOC_SIZE);
     dvm->stack.stack_pointer = 0;

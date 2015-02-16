@@ -2033,14 +2033,14 @@ dispose_v_table(DVM_VTable *v_table)
 }
 
 
-extern void AvDisposeMap();
+extern void AvDisposeMainMap();
 void
 DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
 {
     ExecutableEntry *ee_temp;
     int i;
     int j;
-	AvDisposeMap();
+	AvDisposeMainMap();
 	//UaRestoreBufferStatus(&dvm->stack.stack[STACK_ALLOC_SIZE],sizeof(DVM_Value)*2,dvm->stack.oldProtect);
     while (dvm->executable_entry) {
         ee_temp = dvm->executable_entry;
@@ -2057,6 +2057,8 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
 
 
 	UaGuardFree(dvm->stack.stack);
+	UaGuardFree(dvm->avstack);
+	UaGuardFree(dvm->estack);
     //MEM_free(dvm->stack.stack); //modified
     MEM_free(dvm->stack.pointer_flags);
 

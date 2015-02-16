@@ -14,6 +14,7 @@ typedef struct {
 	DVM_ObjectRef ths;
 	DVM_ObjectRef cur_exception;
 	void* exe;
+	int asp;
 } ExExceptionItem,*PExExceptionItem;
 
 
