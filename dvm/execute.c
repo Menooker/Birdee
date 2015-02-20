@@ -2041,6 +2041,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
     int i;
     int j;
 	AvDisposeMainMap();
+	RtlDisposeHashmap(dvm->static_str_map);
 	//UaRestoreBufferStatus(&dvm->stack.stack[STACK_ALLOC_SIZE],sizeof(DVM_Value)*2,dvm->stack.oldProtect);
     while (dvm->executable_entry) {
         ee_temp = dvm->executable_entry;

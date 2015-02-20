@@ -1,5 +1,6 @@
-require Exceptions
-require ab
+//require ab
+/*require Exceptions
+
 
 $a=1
 #s=33
@@ -11,44 +12,30 @@ catch NullPointerException e
 	println(e.message)
 	e.print_stack_trace()
 end
-
-println("S=" + #s)
-
-sub a() 
-	#b=2
-	b()
-	println(#b)
-end
-
-sub b()
-	c()
-end
-
-sub c()
-	#b=1000
-	println($a)
-
-	dim a  as TestLib
-	a.method()
-end
-
-
-
-
-
-/*require ab
-println("This is a test")
-sb()
-dim a  as TestLib=new TestLib()
-a.fielda=123
-a.method()
 */
-/*lib AAA
-	declare sub sb()
-end
-sb()
-println("KKK")
-dim N as int =10000
-dim j as int
-println("KKK"+j)*/
+	public class TestLib
+		public fielda as int
+		public fieldb as double
+		public fieldc as string
+		public  sub method()
+			println(this.fielda+1)
+		end
+	end
+
+
+dim a as TestLib=new TestLib()
+a.fielda=1
+a.fieldb=1.2
+a.fieldc="HHHH"
+println(a.fielda)
+println(a.fieldb)
+println(a.fieldc)
+a.method()
+
+
+
+
+
+
+
 

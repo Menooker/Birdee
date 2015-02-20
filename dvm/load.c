@@ -901,6 +901,7 @@ DVM_create_virtual_machine(void)
     DVM_VirtualMachine *dvm;
 	ExInitExeEngine();
     dvm = MEM_malloc(sizeof(DVM_VirtualMachine));
+	dvm->static_str_map=RtlCreateHashmap();
     dvm->stack.alloc_size = STACK_ALLOC_SIZE+2;
     dvm->stack.stack = UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
 	dvm->esp=0;

@@ -19,11 +19,11 @@ AvMap MainMap;
 
 void AvDisposeMap(AvMap* mp)
 {
-	hash_map<string,DVM_ObjectRef>::iterator it;
+	/*hash_map<string,DVM_ObjectRef>::iterator it;
 	for(it=(*mp).begin();it!=(*mp).end();it++)
 	{
 		MEM_free(it->second.data);
-	}
+	}*/
 }
 
 void AvPushNullContext()

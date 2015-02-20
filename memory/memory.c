@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include "memory.h"
 
+
+void** ppppp;
 static void default_error_handler(MEM_Controller controller,
                                   char *filename, int line, char *msg);
 
@@ -274,6 +276,7 @@ void
 MEM_free_func(MEM_Controller controller, void *ptr)
 {
     void        *real_ptr;
+
 #ifdef DEBUG
     int size;
 #endif

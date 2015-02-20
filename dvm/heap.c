@@ -3,6 +3,8 @@
 #include "..\include\MEM.h"
 #include "..\include\DBG.h"
 #include "dvm_pri.h"
+#include "..\Birdee\Birdee\BdHashMap.h"
+extern DVM_VirtualMachine* curdvm;
 
 void
 DVM_check_gc(DVM_VirtualMachine *dvm)
@@ -89,13 +91,17 @@ DVM_ObjectRef
 dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str)
 {
     DVM_ObjectRef ret;
-
+	ret=RtlHashmapGet(curdvm->static_str_map,(BdIntPtr)str);
+	if(ret.data )
+	{
+			return ret;
+	}
     ret = alloc_object(dvm, STRING_OBJECT);
     ret.v_table = dvm->string_v_table;
     ret.data->u.string.string = str;
     ret.data->u.string.length = dvm_wcslen(str);
     ret.data->u.string.is_literal = DVM_TRUE;
-
+	RtlHashmapPut(curdvm->static_str_map,(BdIntPtr)str,ret);
     return ret;
 }
 
@@ -464,6 +470,7 @@ static DVM_Boolean
 gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
 {
     DVM_Boolean call_finalizer = DVM_FALSE;
+
     switch (obj->type) {
     case STRING_OBJECT:
         if (!obj->u.string.is_literal) {
@@ -471,6 +478,10 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
                 -= sizeof(DVM_Char) * (dvm_wcslen(obj->u.string.string) + 1);
             MEM_free(obj->u.string.string);
         }
+		else
+		{
+			RtlHashmapPut(curdvm->static_str_map,(BdIntPtr)obj->u.string.string,dvm_null_object_ref);
+		}
         break;
 	case AUTOVAR_OBJECT:
 		if(!obj->u.var.is_literal)
@@ -526,6 +537,7 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
         DBG_assert(0, ("bad type..%d\n", obj->type));
     }
     dvm->heap.current_heap_size -= sizeof(DVM_Object);
+	obj->type = ExHeapFreedType;
     MEM_free(obj);
 
     return call_finalizer;

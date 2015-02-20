@@ -5,8 +5,11 @@
 #include "..\include\share.h"
 #include "..\Birdee\Birdee\BdException.h"
 #include "..\Birdee\Birdee\BirdeeDef.h"
+#include "..\Birdee\Birdee\BdHashMap.h"
 #include <stdarg.h>
 
+#define ExHeapFreedType 0xfeeeaeee
+typedef struct _RtlHashMap mRtlHashMap ;
 #define STACK_ALLOC_SIZE (4096)
 #define HEAP_THRESHOLD_SIZE     (1024 * 256)
 #define ARRAY_ALLOC_SIZE (256)
@@ -304,6 +307,9 @@ struct DVM_VirtualMachine_tag {
 
 	PAutoVarContext     avstack;
 	BINT				asp;
+
+	mRtlHashMap*			static_str_map;
+
 };
 
 typedef struct RefInNativeFunc_tag {
