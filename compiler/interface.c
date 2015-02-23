@@ -538,6 +538,7 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 	for(pCur=list->list;pCur;pCur=pCur->next)//modified
 	{
 		fcnt=pCur->executable->function_count;
+		pCur->executable->inline_module.mod=BcGetCurrentCompilerContext()->inline_module;
 		for(i=0;i<fcnt;i++)
 		{
 			if(!pCur->executable->function[i].isLib  && !pCur->executable->function[i].is_implemented

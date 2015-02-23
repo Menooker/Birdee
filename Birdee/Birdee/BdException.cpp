@@ -239,5 +239,18 @@ void ExRaiseException(BINT eindex)
 	longjmp(mybuf.buf ,eindex);
 }
 
+void ExSystemRaise(ExExceptions e)
+{
+	if(e<ExLastSystemError)
+	{
+		switch(e)
+		{
+		case ExNullPointerErr:
+			ExNullPointerException();
+			break;
+		}
+	}
+	__asm int 3
+}
 
 }

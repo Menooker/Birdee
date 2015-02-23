@@ -180,8 +180,8 @@ struct DVM_Array_tag {
 };
 
 typedef struct {
+	DVM_Value   *field;
     int         field_count;
-    DVM_Value   *field;
 } DVM_ClassObject;
 
 typedef struct {

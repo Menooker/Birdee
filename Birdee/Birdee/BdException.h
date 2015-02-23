@@ -17,7 +17,17 @@ typedef struct {
 	int asp;
 } ExExceptionItem,*PExExceptionItem;
 
-
+enum ExExceptions{
+	ExNullPointerErr=1,
+	ExLastSystemError,
+	ExVarStringOpNotSupported,
+	ExVarUseBeforeSet,
+	ExVarBadStringForNumber,
+	ExBadParameterType,
+	ExFunctionNotFound,
+	ExBadParameterNum,
+	ExBadFunctionIndex
+};
 
 #ifdef __cplusplus
 extern "C"
@@ -30,19 +40,13 @@ void ExRaiseException(BINT eindex);
 void ExLeaveTry();
 void ExNullPointerException();
 void ExStackTrace(DVM_ObjectRef e);
+void ExSystemRaise(enum ExExceptions e);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-enum ExExceptions{
-	ExVarStringOpNotSupported=1,
-	ExVarUseBeforeSet,
-	ExVarBadStringForNumber,
-	ExBadParameterType,
-	ExFunctionNotFound,
-	ExBadParameterNum,
-	ExBadFunctionIndex
-};
+
 
 #endif

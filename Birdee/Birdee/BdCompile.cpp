@@ -38,7 +38,7 @@ static Module *module;
 static IRBuilder<> builder(getGlobalContext());
 static LLVMContext& context=getGlobalContext();
 static FunctionType *FT;
-static StructType *TyObjectRef;
+StructType *TyObjectRef;
 Type* TypStack;
 Type* TypInt;
 Function* fLoadStringFromPool;
@@ -70,18 +70,19 @@ Function *fArrPuti;
 Function *fArrPutd;
 Function *fArrPuto;
 
-Function *fFldGeti; //obj,idx,(v)
+/*Function *fFldGeti; //obj,idx,(v)
 Function *fFldGetd;
 Function *fFldGeto;
 Function *fFldPuti;
 Function *fFldPutd;
-Function *fFldPuto;
+Function *fFldPuto;*/
 Function *fNew;
 Function *fGetSuper;
 Function *fGetVar;
 Function *fGetOrCreateVar;
 
 Function *fArrBdChk;
+Function *fPop;
 Function *fArrAddr;
 Function *fFailure;
 Function *fSetjmp;
@@ -90,6 +91,8 @@ Function *fRaise;
 Function *fLeaveTry;
 Function *fNewDelegate;
 Function *fInvokeDelegate;
+Function *fSystemRaise;
+
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -125,7 +128,7 @@ extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
-Function* ArrGet[3];Function* ArrPut[3];Function* FldGet[3];Function* FldPut[3];
+Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
 extern "C" int get_method_index(MemberExpression *member);
@@ -183,7 +186,7 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 		if(isLocal)
 		{
 			
-			v=builder.CreateAlloca(Type::getInt32PtrTy(context));
+			v=builder.CreateAlloca(TyObjectRef->getPointerTo());
 			if(isParam)
 			{
 
@@ -197,7 +200,7 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 		}
 		else
 		{
-			v=builder.CreateAlloca(Type::getInt32PtrTy(context));
+			v=builder.CreateAlloca(TyObjectRef->getPointerTo());
 			Value* vstatic=builder.CreateLoad(pstatic);
 			Value* ptr=builder.CreateGEP(vstatic,ConstInt(32,index));
 			vstatic=builder.CreateLoad(ptr);
@@ -301,14 +304,34 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
 }
 
 
-void BcBuildArrPtr(Type* ty)
+void BcBuildPop()
+{
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	std::vector<Type*> Args2;
+	Args2.push_back(Type::getInt32Ty(context));
+	Type* ty2=Type::getVoidTy(context);
+	FunctionType* FT8 = FunctionType::get(ty2,Args2, false);
+	fPop=Function::Create(FT8, Function::LinkOnceAnyLinkage ,"systemi!Pop", module);
+	fPop->addFnAttr(llvm::Attribute::AlwaysInline);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fPop);
+	SwitchBlock(BB);
+	Value* pp=builder.CreateLoad(bsp);
+	Value* p1=builder.CreateSub(pp,fPop->arg_begin());
+	builder.CreateStore(p1,bsp,true);
+	builder.CreateRetVoid();
+	builder.restoreIP(IP);
+	return ;
+}
+
+
+Function* BcBuildArrPtrImp(Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
-	fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage ,"systemi!ArrAddr", module);
+	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrImp", module);
 	fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fArrAddr);
 	SwitchBlock(BB);
@@ -324,8 +347,22 @@ void BcBuildArrPtr(Type* ty)
 	builder.CreateRet(builder.CreateLoad(p1));
 
 	builder.SetInsertPoint(ifNull);
+	builder.CreateCall(fSystemRaise,ConstInt(32,1)); //raise ExNullPointerErr
 	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
 	builder.restoreIP(IP);
+	return fArrAddr;
+}
+
+void BcBuildArrPtr(Type* ty)
+{
+
+/*	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	Type* ty2=ty->getPointerTo()->getPointerTo();
+	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
+	fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);*/
+	fArrAddr=BcBuildArrPtrImp(ty);
+	
 	return ;
 }
 void BcBuildArrBdChk()
@@ -356,12 +393,25 @@ void BcBuildArrBdChk()
 	builder.restoreIP(IP);
 	return ;*/
 }
+
+
+
+
+Function* GetPop()
+{
+	if(!fPop)
+	{
+		BcBuildPop();
+	}
+	return fPop;
+}
+
 Function* GetArrAddr()
 {
 	if(!fArrAddr)
 	{
 		BcBuildArrBdChk();
-		BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
+		BcBuildArrPtr(TyObjectRef->getPointerTo());
 	}
 	return fArrAddr;
 
@@ -420,6 +470,9 @@ extern "C" void* BcNewModule(char* name)
 	fPushd=0;
 	fPusho=0;
 	fArrAddr=0;
+	fPop=0;
+	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
+	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
 
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
@@ -456,22 +509,23 @@ extern "C" void* BcNewModule(char* name)
 	fSetjmp = Function::Create(nft, Function::ExternalLinkage,"system!Setjmp", module);
 	nft = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	fRaise = Function::Create(nft, Function::ExternalLinkage,"system!Raise", module);
+	fSystemRaise=Function::Create(nft, Function::ExternalLinkage,"system!SystemRaise", module);
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fLeaveTry = Function::Create(nft, Function::ExternalLinkage,"system!LeaveTry", module);
 
 	std::vector<Type*> ArgsObjInt;  ArgsObjInt.push_back(Type::getInt32Ty(context));
 	nft = FunctionType::get(Type::getInt32Ty(context),ArgsObjInt, false);
 	fArrGeti = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeti", module);
-	fFldGeti = Function::Create(nft, Function::ExternalLinkage,"system!FldGeti", module);
+	//fFldGeti = Function::Create(nft, Function::ExternalLinkage,"system!FldGeti", module);
 	fArrGetCh = Function::Create(nft, Function::ExternalLinkage,"system!ArrGetCh", module);
 	nft = FunctionType::get(Type::getDoubleTy(context),ArgsObjInt, false);
 	fArrGetd = Function::Create(nft, Function::ExternalLinkage,"system!ArrGetd", module);
-	fFldGetd = Function::Create(nft, Function::ExternalLinkage,"system!FldGetd", module);
+	//fFldGetd = Function::Create(nft, Function::ExternalLinkage,"system!FldGetd", module);
 	nft = FunctionType::get(TyObjectRef,ArgsObjInt, false);
 	fArrGeto = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeto", module);
-	fFldGeto = Function::Create(nft, Function::ExternalLinkage,"system!FldGeto", module);
+	//fFldGeto = Function::Create(nft, Function::ExternalLinkage,"system!FldGeto", module);
 	ArrGet[0]=fArrGeti;	ArrGet[1]=fArrGetd;ArrGet[2]=fArrGeto;
-	FldGet[0]=fFldGeti;	FldGet[1]=fFldGetd;FldGet[2]=fFldGeto;
+	//FldGet[0]=fFldGeti;	FldGet[1]=fFldGetd;FldGet[2]=fFldGeto;
 
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
@@ -483,17 +537,17 @@ extern "C" void* BcNewModule(char* name)
 	fArrPuti = Function::Create(nft, Function::ExternalLinkage,"system!ArrPuti", module);
 //	fArrPuti->setCallingConv(llvm::CallingConv::X86_FastCall  );
 
-	fFldPuti = Function::Create(nft, Function::ExternalLinkage,"system!FldPuti", module);
+	//fFldPuti = Function::Create(nft, Function::ExternalLinkage,"system!FldPuti", module);
 	std::vector<Type*> ArgsOID; ArgsOID.push_back(Type::getInt32Ty(context));ArgsOID.push_back(Type::getDoubleTy(context));
 	nft = FunctionType::get(Type::getVoidTy(context),ArgsOID, false);
 	fArrPutd = Function::Create(nft, Function::ExternalLinkage,"system!ArrPutd", module);
-	fFldPutd = Function::Create(nft, Function::ExternalLinkage,"system!FldPutd", module);
+	//fFldPutd = Function::Create(nft, Function::ExternalLinkage,"system!FldPutd", module);
 	std::vector<Type*> ArgsOIO;  ArgsOIO.push_back(Type::getInt32Ty(context));
 	nft = FunctionType::get(Type::getVoidTy(context),ArgsOIO, false);
 	fArrPuto = Function::Create(nft, Function::ExternalLinkage,"system!ArrPuto", module);
-	fFldPuto = Function::Create(nft, Function::ExternalLinkage,"system!FldPuto", module);
+	//fFldPuto = Function::Create(nft, Function::ExternalLinkage,"system!FldPuto", module);
 	ArrPut[0]=fArrPuti;	ArrPut[1]=fArrPutd;ArrPut[2]=fArrPuto;
-	FldPut[0]=fFldPuti;	FldPut[1]=fFldPutd;FldPut[2]=fFldPuto;
+	//FldPut[0]=fFldPuti;	FldPut[1]=fFldPutd;FldPut[2]=fFldPuto;
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fFailure=Function::Create(nft, Function::ExternalLinkage,"system!Failure", module);
@@ -533,6 +587,12 @@ extern "C" void* BcNewModule(char* name)
 	nft= FunctionType::get(TyObjectRef,ArgPStr, false);
 	fGetVar= Function::Create(nft, Function::ExternalLinkage,"autovar!get", module);
 	fGetOrCreateVar= Function::Create(nft, Function::ExternalLinkage,"autovar!getorcreate", module);
+
+	if(!strcmp(name,"diksam.lang"))
+	{
+		//BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+		BcGetCurrentCompilerContext()->inline_module=module;
+	}
 	return module;
 }
 
@@ -1050,7 +1110,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
     }
 	if(ty==-1)
 	{
-		std::vector<Value*> arg;
+/*		std::vector<Value*> arg;
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		int mty=get_opcode_type_offset(member->u.field.type);
 		if(mty==2)
@@ -1062,14 +1122,31 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 			arg.push_back(v);
 		}
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
-		builder.CreateCall(FldPut[mty],arg);
+		builder.CreateCall(FldPut[mty],arg);*/
+		
+		int mty=get_opcode_type_offset(member->u.field.type); //fix-me : code size optmization here
+		if(mty==2)
+		{
+			builder.CreateCall(GetPush(2),v);
+		}	
+		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
+		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
+		builder.CreateStore(v,fld);
+		if(mty==2)
+			builder.CreateCall(GetPop(),ConstInt(32,1));
+
 	}
 	else
 	{
-		std::vector<Value*> arg;
+		/*std::vector<Value*> arg;
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
-		Value* to=builder.CreateCall(FldGet[2],arg);
+		Value* to=builder.CreateCall(FldGet[2],arg);*/
+		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
+		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
+		Value* to= builder.CreateLoad(fld);
 		builder.CreateCall(GetPush(ty),v);
 		builder.CreateCall(GetPush(2),to);
 		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));		
@@ -1337,7 +1414,8 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
         return builder.CreateCall(fArrGetCh,idx);
     } else {
-		
+		arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
+		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);	
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 		Value* p;
@@ -1379,13 +1457,15 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
     } else {
         DBG_assert(member->kind == FIELD_MEMBER,
                    ("member->u.kind..%d", member->kind));
-		std::vector<Value*> arg;
+/*		std::vector<Value*> arg;
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
-		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);
-        /*generate_code(ob, expr->line_number,
-                      DVM_PUSH_FIELD_INT + get_opcode_type_offset(expr->type),
-                      member->u.field.field_index);*/
+		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);*/
+		
+		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
+		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
+		return builder.CreateLoad(fld);
     }
 }
 
@@ -2197,11 +2277,17 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
                 continue;
 
             if (member_pos->u.field.initializer) {
-				std::vector<Value*>arg;
+/*				std::vector<Value*>arg;
 				builder.CreateCall(GetPush(2),(builder.CreateLoad(pthis)));
 				arg.push_back(ConstInt(32,member_pos->u.field.field_index));
 				arg.push_back(BcGenerateExpression(exe, NULL, member_pos->u.field.initializer));
-                builder.CreateCall(FldPut[get_opcode_type_offset(member_pos->u.field.type)],arg);
+                builder.CreateCall(FldPut[get_opcode_type_offset(member_pos->u.field.type)],arg);*/
+				int mty=get_opcode_type_offset(member_pos->u.field.type); //fix-me : code size optmization here
+				Value* vv=BcGenerateExpression(exe, NULL, member_pos->u.field.initializer);
+				Value* obj=builder.CreateLoad(pthis);
+				Value* fld=builder.CreateCall(GetArrAddr(),obj);
+				fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member_pos->u.field.field_index)),TypeSwitch[mty]);
+				builder.CreateStore(v,fld);
             }
         }
     }

@@ -2168,7 +2168,9 @@ dkc_generate(DKC_Compiler *compiler)
 {
     DVM_Executable      *exe;
 	void* mod;
+	char* strname;
 
+	strname=dkc_package_name_to_string(compiler->package_name);
     exe = alloc_executable(compiler->package_name);
 
     exe->function_count = compiler->dvm_function_count;
@@ -2181,9 +2183,11 @@ dkc_generate(DKC_Compiler *compiler)
     exe->constant_definition = compiler->dvm_constant;
 	
 	if(compiler->package_name)
-		mod=BcNewModule(compiler->package_name->name);
+		mod=BcNewModule(strname);
 	else
 		mod=BcNewModule("");
+	MEM_free(strname);
+		
 	exe->module.mod =mod;
     add_global_variable(compiler, exe);
     add_classes(compiler, exe);

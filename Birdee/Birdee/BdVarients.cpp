@@ -83,7 +83,7 @@ void AvGeti()
 	ExVarient* va=v->data->u.var.pobj;
 	if(AvDoGeti(va,&curdvm->retvar.int_value))
 	{
-		ExRaiseException(ExVarBadStringForNumber); 
+		ExSystemRaise(ExVarBadStringForNumber); 
 	}
 	curdvm->stack.stack_pointer--;
 }
@@ -116,7 +116,7 @@ void AvGetd()
 	ExVarient* va=v->data->u.var.pobj;
 	if(AvDoGetd(va,&curdvm->retvar.double_value))
 	{
-		ExRaiseException(ExVarBadStringForNumber); //fix-me : built-in exceptions
+		ExSystemRaise(ExVarBadStringForNumber); 
 	}
 	curdvm->stack.stack_pointer--;
 }
@@ -279,7 +279,7 @@ DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.int_value-b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -296,13 +296,13 @@ DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.double_value-b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
 	if(a->type == AV_STRING )
 	{
-		ExRaiseException(ExVarStringOpNotSupported);
+		ExSystemRaise(ExVarStringOpNotSupported);
 		return ret;
 	}
 }
@@ -335,7 +335,7 @@ DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.int_value*b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -352,13 +352,13 @@ DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.double_value*b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
 	if(a->type == AV_STRING )
 	{
-		ExRaiseException(ExVarStringOpNotSupported);
+		ExSystemRaise(ExVarStringOpNotSupported);
 		return ret;
 	}
 }
@@ -391,7 +391,7 @@ DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.int_value/b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -408,13 +408,13 @@ DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.double_value/b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
 	if(a->type == AV_STRING )
 	{
-		ExRaiseException(ExVarStringOpNotSupported);
+		ExSystemRaise(ExVarStringOpNotSupported);
 		return ret;
 	}
 }
@@ -447,7 +447,7 @@ DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
 			r->v.double_value =a->v.int_value%(int)b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -464,13 +464,13 @@ DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
 			r->v.double_value =(int)a->v.double_value%(int)b->v.double_value;
 			return ret;
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
 	if(a->type == AV_STRING )
 	{
-		ExRaiseException(ExVarStringOpNotSupported);
+		ExSystemRaise(ExVarStringOpNotSupported);
 		return ret;
 	}
 }
@@ -508,7 +508,7 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 		case AV_DOUBLE:
 			return AvCmpDouble((double)a->v.int_value-b->v.double_value);
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -521,7 +521,7 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 		case AV_DOUBLE:
 			return AvCmpDouble(a->v.double_value-b->v.double_value);
 		case AV_STRING:
-			ExRaiseException(ExVarStringOpNotSupported);
+			ExSystemRaise(ExVarStringOpNotSupported);
 			return ret;
 		}
 	}
@@ -529,7 +529,7 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 	{
 		if(b->type ==AV_STRING)
 			return dvm_wcscmp(a->v.object.data->u.string.string,b->v.object.data->u.string.string);
-		ExRaiseException(ExVarStringOpNotSupported);
+		ExSystemRaise(ExVarStringOpNotSupported);
 	}
 }
 void AvCmp()
@@ -595,7 +595,7 @@ DVM_ObjectRef AvGetVar(char* name)
 			}
 		}
 		//if no context or var not found
-		ExRaiseException(ExVarUseBeforeSet);
+		ExSystemRaise(ExVarUseBeforeSet);
 	}
 	else if(*name=='$') 
 	{
@@ -606,7 +606,7 @@ DVM_ObjectRef AvGetVar(char* name)
 		}
 		else
 		{
-			ExRaiseException(ExVarUseBeforeSet);
+			ExSystemRaise(ExVarUseBeforeSet);
 		}
 	}
 	return dvm_null_object_ref;

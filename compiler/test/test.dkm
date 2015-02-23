@@ -14,24 +14,29 @@ catch NullPointerException e
 end
 */
 	public class TestLib
-		public fielda as int
 		public fieldb as double
+		public fielda as int
 		public fieldc as string
+
 		public  sub method()
 			println(this.fielda+1)
 		end
 	end
 
 
-dim a as TestLib=new TestLib()
-a.fielda=1
-a.fieldb=1.2
-a.fieldc="HHHH"
-println(a.fielda)
-println(a.fieldb)
-println(a.fieldc)
-a.method()
-
+dim a as TestLib
+//=new TestLib()
+dim i as int
+dim t as int=GetClock()
+dim k as int
+for i=0;i<10000000;i++
+	a.fielda=i
+	//println(a.fielda)
+end
+for i=0;i<10000000;i++
+	k=a.fielda
+end
+println(GetClock()-t)
 
 
 

@@ -31,6 +31,7 @@ void CpDisplayBuffer(CPBuffer* p,int s);
 
 BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 {
+	void* inline_module=0;
 	FILE* f=fopen(path,"rb");
 	BINT sz=0,index;
 	char MagicHead[11];
@@ -71,12 +72,21 @@ BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 			}
 			if(index==i)
 				exelist->top_level=&exe[i];
+			if(exe[i].package_name && !strcmp(exe[i].package_name,"diksam.lang"))
+			{
+				inline_module=exe[i].module.mod;
+			}
 		}
 		catch(BdStatus &s)
 		{
 			printf("Error %d\n",s);
 			return s;
 		}
+	}
+	DVM_ExecutableItem* pCur;
+	for(pCur=exelist->list;pCur;pCur=pCur->next)//modified
+	{
+		pCur->executable->inline_module.mod=inline_module;
 	}
 	fclose(f);
 	return BdSuccess;

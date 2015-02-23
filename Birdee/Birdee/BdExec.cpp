@@ -327,7 +327,7 @@ int ExCheckArgument(int index,DVM_Value* v)
 	int ta,tp;
 	BFunction* bf=curdvm->function[index];
 	if(curdvm->bpc < bf->param_cnt)
-		ExRaiseException(ExBadParameterNum);
+		ExSystemRaise(ExBadParameterNum);
 	for(int i=0;i<bf->param_cnt;i++)
 	{
 		ta=ExGetStackType(base-i-1);
@@ -364,21 +364,21 @@ void  ExGetFunction(DVM_Value* v)
 		else if((v+1)->object.data->type==STRING_OBJECT )
 			mod=ExConvertAndAllocWchar((v+1)->object.data->u.string.string);
 		else
-			ExRaiseException(ExBadParameterType);
+			ExSystemRaise(ExBadParameterType);
 		char* fun=ExConvertAndAllocWchar((v)->object.data->u.string.string);
 		int index=ExFindFunctionByName(mod,fun);
 		if(mod)
 			free(mod);
 		free(fun);
 		if(index==-1)
-			ExRaiseException(ExFunctionNotFound);
+			ExSystemRaise(ExFunctionNotFound);
         if(is_null_pointer(&(v+2)->object))
 			ExNullPointerException();
 		(v+2)->object.data->u.delegate.index=index;//fix-me : check arguments
 	}
 	else
 	{
-		ExRaiseException(ExBadParameterType);
+		ExSystemRaise(ExBadParameterType);
 	}
 }
 
@@ -399,16 +399,16 @@ void  ExInvokeByName(DVM_Value* v)
 		else if((v+1)->object.data->type==STRING_OBJECT )
 			mod=ExConvertAndAllocWchar((v+1)->object.data->u.string.string);
 		else
-			ExRaiseException(ExBadParameterType);
+			ExSystemRaise(ExBadParameterType);
 		char* fun=ExConvertAndAllocWchar((v)->object.data->u.string.string);
 		int index=ExFindFunctionByName(mod,fun);
 		if(mod)
 			free(mod);
 		free(fun);
 		if(index==-1)
-			ExRaiseException(ExFunctionNotFound);
+			ExSystemRaise(ExFunctionNotFound);
 		if(!ExCheckArgument(index,v))
-			ExRaiseException(ExBadParameterNum);
+			ExSystemRaise(ExBadParameterNum);
 
 		bpc=curdvm->bpc;
 		if(curdvm->function[index]->param_cnt != bpc)
@@ -430,7 +430,7 @@ void  ExInvokeByName(DVM_Value* v)
 	}
 	else
 	{
-		ExRaiseException(ExBadParameterType);
+		ExSystemRaise(ExBadParameterType);
 	}
 }
 
@@ -767,7 +767,7 @@ void ExInvokeDelegate()
 	if(is_null_pointer(&del_obj))
 		ExNullPointerException();
     if(del_obj.data->u.delegate.index<0)
-		ExRaiseException(ExBadFunctionIndex);
+		ExSystemRaise(ExBadFunctionIndex);
     if (is_null_pointer(&del_obj.data->u.delegate.object)) {
         func_idx = del_obj.data->u.delegate.index;
     } else {
@@ -802,6 +802,8 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	OurFPM.doInitialization();
 }
 //*/
+
+		extern StructType* TyObjectRef;
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
 	//if(ee->executable->is_required)
@@ -893,7 +895,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!ArrPuto");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuto);
 
-	f=m->getFunction("system!FldGeti");
+	f=m->getFunction("system!SystemRaise");
+	TheExecutionEngine->addGlobalMapping(f,ExSystemRaise);
+	/*f=m->getFunction("system!FldGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExFldGeti);
 	f=m->getFunction("system!FldGetd");
 	TheExecutionEngine->addGlobalMapping(f,ExFldGetd);
@@ -904,7 +908,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!FldPutd");
 	TheExecutionEngine->addGlobalMapping(f,ExFldPutd);
 	f=m->getFunction("system!FldPuto");
-	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);
+	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);*/
+	
 
 	f=m->getFunction("system!ArrayLiteral");
 	TheExecutionEngine->addGlobalMapping(f,ExArrayLiteral);
@@ -932,16 +937,29 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,AvGetVar);
 	f=m->getFunction("autovar!getorcreate");
 	TheExecutionEngine->addGlobalMapping(f,AvGetOrCreateVar);
-	/*ext=m->getFunction("ext");
-	bbp=m->getGlobalVariable("bbp");
-	TheExecutionEngine->addGlobalMapping(ext,aaa);
-	TheExecutionEngine->addGlobalMapping(bsp,&a);
-	TheExecutionEngine->addGlobalMapping(bbp,&ps);
-	F=m->getFunction("HEHE");
-//	__asm int 3
-	void *FPtr = TheExecutionEngine->getPointerToFunction(F);
-	typedef int (*ptFun)(int);
-	ptFun p=(ptFun)FPtr;
+
+/*	f=m->getFunction("systemi!ArrAddr");
+	if(f)
+	{
+		Module* md=(Module*)ee->executable->inline_module.mod;
+		/*std::vector<Type*> Args2;
+		Args2.push_back(TyObjectRef);
+		//Type* ty2=->getPointerTo()->getPointerTo();
+		FunctionType* FT8 = FunctionType::get(TyObjectRef->getPointerTo(),Args2, false);
+		Function* fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", m);
+		fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
+		TyObjectRef->dump();
+		printf("\n");
+		f->getType()->dump();
+		printf("\n");
+		fArrAddr->getType()->dump();*/
+		//md->dump();
+	/*
+		f->getType()->dump();
+		printf("\n");
+		md->getFunction("systemi!ArrAddrImp")->getType()->dump();
+		f->replaceAllUsesWith(md->getFunction("systemi!ArrAddrImp"));
+	}
 	*/
 	return TheExecutionEngine;
 }
