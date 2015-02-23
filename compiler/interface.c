@@ -3,6 +3,7 @@
 #include "..\include\DBG.h"
 #include "diksamc.h"
 
+
 #define UTF_8_SOURCE
 
 static CompilerList *st_compiler_list = NULL;
@@ -508,7 +509,7 @@ dkc_dynamic_compile2(DKC_Compiler *compiler, char *package_name,
 
     return SEARCH_FILE_SUCCESS;
 }
-
+extern void BcBuildInlines(void* mod);
 DVM_ExecutableList *
 DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 {
@@ -534,7 +535,7 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
     exe->path = MEM_strdup(path);
     list->top_level = exe;
 
-
+	BcBuildInlines(BcGetCurrentCompilerContext()->inline_module);
 	for(pCur=list->list;pCur;pCur=pCur->next)//modified
 	{
 		fcnt=pCur->executable->function_count;

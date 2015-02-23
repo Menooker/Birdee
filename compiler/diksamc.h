@@ -20,6 +20,7 @@ typedef struct
 	char* libname;
 	int isLib;
 	void* inline_module;
+	int FunctionUse[20];
 }CompilerContext;
 extern CompilerContext default_context;
 #define BcGetCurrentCompilerContext() (&default_context)

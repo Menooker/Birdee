@@ -172,9 +172,10 @@ struct DVM_Array_tag {
         DVM_ObjectRef   *object;
         int             *function_index;
     } u;
+	int         size;
 	BINT* truebuffer;
     DVM_ArrayType   type;
-    int         size;
+    
     int         alloc_size;
 
 };

@@ -19,6 +19,7 @@ typedef struct {
 
 enum ExExceptions{
 	ExNullPointerErr=1,
+	ExArrayOverLenghErr,
 	ExLastSystemError,
 	ExVarStringOpNotSupported,
 	ExVarUseBeforeSet,

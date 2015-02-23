@@ -84,6 +84,7 @@ Function *fGetOrCreateVar;
 Function *fArrBdChk;
 Function *fPop;
 Function *fArrAddr;
+Function *fArrAddrSafe;
 Function *fFailure;
 Function *fSetjmp;
 Function *fPushException;
@@ -119,6 +120,20 @@ public:
 		violated=0;
 	}
 };
+
+enum BcInlineFunctions
+{
+	FunArrAddr,
+	FunPushi,
+	FunPushd,
+	FunPusho,
+	FunPop,
+	FunArrAddrSafe,
+	FunMax
+};
+
+
+
 std::vector<BcParameter> bparameters;
 Value* psta=0;
 std::vector<BcParameter> bstatic;
@@ -226,6 +241,7 @@ Value* GetStrValue(char* str)
 
 Function* GetPush(int ty)
 {
+	BcGetCurrentCompilerContext()->FunctionUse[FunPushi+ty]=1;
 	switch(ty)
 	{
 	case 0:
@@ -303,15 +319,24 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
     return offset;
 }
 
-
 void BcBuildPop()
 {
+	std::vector<Type*> Args2;
+	Args2.push_back(Type::getInt32Ty(context));
+	Type* ty2=Type::getVoidTy(context);
+	FunctionType* FT8 = FunctionType::get(ty2,Args2, false);
+	fPop=Function::Create(FT8, Function::ExternalLinkage ,"systemi!Pop", module);
+	return ;
+}
+void BcBuildPopImp()
+{
+	BcGetCurrentCompilerContext()->FunctionUse[FunPop]=1;
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2;
 	Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=Type::getVoidTy(context);
 	FunctionType* FT8 = FunctionType::get(ty2,Args2, false);
-	fPop=Function::Create(FT8, Function::LinkOnceAnyLinkage ,"systemi!Pop", module);
+	fPop=Function::Create(FT8, Function::LinkOnceAnyLinkage ,"systemi!PopImp", module);
 	fPop->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fPop);
 	SwitchBlock(BB);
@@ -324,11 +349,54 @@ void BcBuildPop()
 }
 
 
+Function* BcBuildArrPtrSafeImp(Type* ty)
+{
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	Args2.push_back(Type::getInt32Ty(context));
+	Type* ty2=ty->getPointerTo()->getPointerTo();
+	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
+	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrImp", module);
+	fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fArrAddr);
+	SwitchBlock(BB);
+	Value* p=builder.CreateAlloca(TyObjectRef);
+	builder.CreateStore(fArrAddr->arg_begin(),p);
+	Value* pp=builder.CreatePointerCast(builder.CreateStructGEP(p,0),ty2);
+	Value* p1=builder.CreateLoad(pp);
+
+	BasicBlock* ifNull=BasicBlock::Create(context,"",fArrAddr,0);
+	BasicBlock* ifNotNull=BasicBlock::Create(context,"",fArrAddr,0);
+	BasicBlock* ifOverLen=BasicBlock::Create(context,"",fArrAddr,0);
+	BasicBlock* ifOk=BasicBlock::Create(context,"",fArrAddr,0);
+	builder.CreateCondBr(builder.CreateIsNotNull(p1),ifNotNull,ifNull);
+
+	builder.SetInsertPoint(ifNotNull);
+	Value* len=builder.CreateGEP(builder.CreateBitCast(p1,Type::getInt32PtrTy(context)),ConstInt(32,1));
+	len=builder.CreateLoad(len);
+	builder.CreateCondBr(builder.CreateICmpSLT(fArrAddr->arg_begin()++,len),ifOk,ifOverLen);
+
+	builder.SetInsertPoint(ifOverLen);
+	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,2)); //raise ExArrayOverLengthErr
+	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));	
+
+	builder.SetInsertPoint(ifOk);
+	builder.CreateRet(builder.CreateLoad(p1));
+
+	builder.SetInsertPoint(ifNull);
+	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,1)); //raise ExNullPointerErr
+	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
+	builder.restoreIP(IP);
+	return fArrAddr;
+}
+
 Function* BcBuildArrPtrImp(Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
+	Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrImp", module);
@@ -347,15 +415,27 @@ Function* BcBuildArrPtrImp(Type* ty)
 	builder.CreateRet(builder.CreateLoad(p1));
 
 	builder.SetInsertPoint(ifNull);
-	builder.CreateCall(fSystemRaise,ConstInt(32,1)); //raise ExNullPointerErr
+	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,1)); //raise ExNullPointerErr
 	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
 	builder.restoreIP(IP);
 	return fArrAddr;
 }
 
+void BcBuildArrPtrSafe(Type* ty)
+{
+	BcGetCurrentCompilerContext()->FunctionUse[FunArrAddrSafe]=1;
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	Type* ty2=ty->getPointerTo()->getPointerTo();
+	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
+	fArrAddrSafe=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);
+	
+	return ;
+}
+
 void BcBuildArrPtr(Type* ty)
 {
-
+	BcGetCurrentCompilerContext()->FunctionUse[FunArrAddr]=1;
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
 	Type* ty2=ty->getPointerTo()->getPointerTo();
@@ -405,6 +485,17 @@ Function* GetPop()
 	return fPop;
 }
 
+Function* GetArrAddrSafe()
+{
+	if(!fArrAddrSafe)
+	{
+
+		BcBuildArrPtrSafe(TyObjectRef->getPointerTo());
+	}
+	return fArrAddrSafe;
+
+}
+
 Function* GetArrAddr()
 {
 	if(!fArrAddr)
@@ -417,8 +508,15 @@ Function* GetArrAddr()
 }
 
 
-
 Function* BcBuildPush(char* name,int isptr,Type* ty)
+{
+	std::vector<Type*> Args2(1,ty);
+	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, true);
+	Function* fret=Function::Create(FT8, Function::ExternalLinkage,name, module);
+
+	return fret;
+}
+Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2(1,ty);
@@ -426,6 +524,7 @@ Function* BcBuildPush(char* name,int isptr,Type* ty)
 	Function* fret=Function::Create(FT8, Function::LinkOnceAnyLinkage,name, module);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
 	SwitchBlock(BB);
+	
 	Value* vbsp=builder.CreateLoad(bsp);
 	Value* vbbp=builder.CreateLoad(bbp);
 	Value* varr=builder.CreateLoad(arr_is_pointer);
@@ -454,6 +553,37 @@ extern "C" void BcDumpModule()
 	module->dump();
 }
 
+extern "C" void BcBuildInlines(void* mod)
+{
+	module=(Module*) mod;
+	bsp=module->getGlobalVariable("bsp");
+	bbp=module->getGlobalVariable("bbp");
+	arr_is_pointer=module->getGlobalVariable("arr_is_pointer");
+	for(int i=0;i<FunMax;i++)
+	{
+		if(BcGetCurrentCompilerContext()->FunctionUse[i])
+		{
+			switch(i)
+			{
+			case FunArrAddr:
+				BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+				break;
+			case FunPushi: 
+				BcBuildPushImp("systemi!PushiImp",0,Type::getInt32Ty(context));
+				break;
+			case FunPushd:
+				BcBuildPushImp("systemi!PushdImp",0,Type::getDoubleTy(context));
+				break;
+			case FunPusho:
+				BcBuildPushImp("systemi!PushoImp",1,TyObjectRef);
+				break;
+			case FunPop:
+				BcBuildPopImp();
+				break;
+			}
+		}
+	}
+}
 
 
 
@@ -589,7 +719,7 @@ extern "C" void* BcNewModule(char* name)
 
 	if(!strcmp(name,"diksam.lang"))
 	{
-		BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+		//BcBuildArrPtrImp(TyObjectRef->getPointerTo());
 		//module->dump();
 
 		BcGetCurrentCompilerContext()->inline_module=module;

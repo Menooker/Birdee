@@ -802,15 +802,14 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	OurFPM.doInitialization();
 }
 //*/
-void replaceAllUsesWith(Value* ths,Value *New);
-		extern StructType* TyObjectRef;
+void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
+
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
 	//if(ee->executable->is_required)
 	//	return 0;
 	Module* m=(Module*)mod->mod;
-	FunctionPassManager* pm=new FunctionPassManager(m);
-	mod->pass=pm;
+
 
 	std::string ErrStr;
 	ExecutionEngine* TheExecutionEngine;
@@ -834,7 +833,6 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 		dvm->exe_engine=TheExecutionEngine;
 	}
 
-	InitOptimizer(*pm,TheExecutionEngine);
 
 	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
@@ -938,15 +936,16 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("autovar!getorcreate");
 	TheExecutionEngine->addGlobalMapping(f,AvGetOrCreateVar);
 
-	f=m->getFunction("systemi!ArrAddr");
-	if(f)
-	{
-		Module* md=(Module*)ee->executable->inline_module.mod;		
-		replaceAllUsesWith(f,md->getFunction("systemi!ArrAddrImp"));
-	}
+	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
+
+	FunctionPassManager* pm=new FunctionPassManager(m);
+	mod->pass=pm;
+	InitOptimizer(*pm,TheExecutionEngine);
 
 	return TheExecutionEngine;
 }
+
+
 
 
 void replaceAllUsesWith(Value* ths,Value *New) {
@@ -972,4 +971,30 @@ void replaceAllUsesWith(Value* ths,Value *New) {
 
   if (BasicBlock *BB = dyn_cast<BasicBlock>(ths))
     BB->replaceSuccessorsPhiUsesWith(cast<BasicBlock>(New));
+}
+void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
+{
+	inline_mod->dump();
+
+	Function* f;
+	f=m->getFunction("systemi!ArrAddr");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrImp"));
+	}
+	f=m->getFunction("systemi!Pushi");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushiImp"));
+	}
+	f=m->getFunction("systemi!Pusho");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushoImp"));
+	}
+	f=m->getFunction("systemi!Pushd");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushdImp"));
+	}
 }
