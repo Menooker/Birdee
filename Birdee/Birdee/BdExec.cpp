@@ -802,7 +802,7 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	OurFPM.doInitialization();
 }
 //*/
-
+void replaceAllUsesWith(Value* ths,Value *New);
 		extern StructType* TyObjectRef;
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
@@ -938,28 +938,38 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("autovar!getorcreate");
 	TheExecutionEngine->addGlobalMapping(f,AvGetOrCreateVar);
 
-/*	f=m->getFunction("systemi!ArrAddr");
+	f=m->getFunction("systemi!ArrAddr");
 	if(f)
 	{
-		Module* md=(Module*)ee->executable->inline_module.mod;
-		/*std::vector<Type*> Args2;
-		Args2.push_back(TyObjectRef);
-		//Type* ty2=->getPointerTo()->getPointerTo();
-		FunctionType* FT8 = FunctionType::get(TyObjectRef->getPointerTo(),Args2, false);
-		Function* fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", m);
-		fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
-		TyObjectRef->dump();
-		printf("\n");
-		f->getType()->dump();
-		printf("\n");
-		fArrAddr->getType()->dump();*/
-		//md->dump();
-	/*
-		f->getType()->dump();
-		printf("\n");
-		md->getFunction("systemi!ArrAddrImp")->getType()->dump();
-		f->replaceAllUsesWith(md->getFunction("systemi!ArrAddrImp"));
+		Module* md=(Module*)ee->executable->inline_module.mod;		
+		replaceAllUsesWith(f,md->getFunction("systemi!ArrAddrImp"));
 	}
-	*/
+
 	return TheExecutionEngine;
+}
+
+
+void replaceAllUsesWith(Value* ths,Value *New) {
+
+
+  // Notify all ValueHandles (if present) that this value is going away.
+  if (ths->hasValueHandle())
+    ValueHandleBase::ValueIsRAUWd(ths, New);
+
+  while (!ths->use_empty()) {
+    Use &U = ths->use_begin().getUse();
+    // Must handle Constants specially, we cannot call replaceUsesOfWith on a
+    // constant because they are uniqued.
+    if (Constant *C = dyn_cast<Constant>(U.getUser())) {
+      if (!isa<GlobalValue>(C)) {
+        C->replaceUsesOfWithOnConstant(ths, New, &U);
+        continue;
+      }
+    }
+
+    U.set(New);
+  }
+
+  if (BasicBlock *BB = dyn_cast<BasicBlock>(ths))
+    BB->replaceSuccessorsPhiUsesWith(cast<BasicBlock>(New));
 }

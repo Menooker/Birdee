@@ -24,13 +24,16 @@ end
 	end
 
 
-dim a as TestLib
+dim a as TestLib =new TestLib()
 //=new TestLib()
 dim i as int
 dim t as int=GetClock()
 dim k as int
 for i=0;i<10000000;i++
 	a.fielda=i
+	if(a.fielda!=i) then
+		println("err!")
+	end
 	//println(a.fielda)
 end
 for i=0;i<10000000;i++

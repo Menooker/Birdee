@@ -356,12 +356,11 @@ Function* BcBuildArrPtrImp(Type* ty)
 void BcBuildArrPtr(Type* ty)
 {
 
-/*	std::vector<Type*> Args2;
+	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
-	fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);*/
-	fArrAddr=BcBuildArrPtrImp(ty);
+	fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);
 	
 	return ;
 }
@@ -590,7 +589,9 @@ extern "C" void* BcNewModule(char* name)
 
 	if(!strcmp(name,"diksam.lang"))
 	{
-		//BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+		BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+		//module->dump();
+
 		BcGetCurrentCompilerContext()->inline_module=module;
 	}
 	return module;
