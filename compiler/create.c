@@ -905,15 +905,24 @@ dkc_alloc_block(void)
 }
 
 Block *
-dkc_open_block(void)
+dkc_open_block(int unsafe)
 {
     Block *new_block;
 
     DKC_Compiler *compiler = dkc_get_current_compiler();
     new_block = dkc_alloc_block();
     new_block->outer_block = compiler->current_block;
-    compiler->current_block = new_block;
+	if(unsafe!=0)
+	{
+		new_block->unsafe = (unsafe>0); 
+	}
+	else
+	{
+		if(compiler->current_block)
+			new_block->unsafe=compiler->current_block->unsafe;
+	}
 
+    compiler->current_block = new_block;
     return new_block;
 }
 

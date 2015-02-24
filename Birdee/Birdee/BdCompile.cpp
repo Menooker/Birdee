@@ -84,6 +84,7 @@ Function *fGetOrCreateVar;
 Function *fArrBdChk;
 Function *fPop;
 Function *fArrAddr;
+Function *fFldAddr;
 Function *fArrAddrSafe;
 Function *fFailure;
 Function *fSetjmp;
@@ -129,6 +130,7 @@ enum BcInlineFunctions
 	FunPusho,
 	FunPop,
 	FunArrAddrSafe,
+	FunFldAddr,
 	FunMax
 };
 
@@ -150,6 +152,7 @@ extern "C" int get_method_index(MemberExpression *member);
 extern "C" int get_method_index_Ex(MemberExpression *member,int* outParamCnt);
 Function* BcBuildPush(char* name,int isptr,Type* ty);
 Function* GetArrAddr();
+Function* GetFldAddr();
 
  int
 get_opcode_type_offset3(int type)
@@ -183,6 +186,16 @@ get_opcode_type_offset3(int type)
     return 0;
 }
 
+bool isArrayAddressSet(int index,int isLocal)
+{
+	int cacheindex=index;
+	if(index>=2000)
+		DBG_panic(("too many parameters")); 
+	if(!isLocal)
+		cacheindex+=2000;
+	return barrays.find(cacheindex)!=barrays.end();
+}
+
 Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 {
 	int cacheindex=index;
@@ -194,36 +207,36 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 	if(barrays.find(cacheindex)==barrays.end())
 	{
 		IRBuilderBase::InsertPoint ip=builder.saveIP();
-
 		builder.SetInsertPoint(mainblock->begin());
 		//builder.SetInsertPoint(IP);
 		builder.SetCurrentDebugLocation (*dbgloc);
+		v=builder.CreateAlloca(TyObjectRef->getPointerTo());
+		builder.restoreIP(ip);
 		if(isLocal)
 		{
 			
-			v=builder.CreateAlloca(TyObjectRef->getPointerTo());
+			
 			if(isParam)
 			{
 
 				Value* addr=curfun->arg_begin();
-				addr->getType()->dump();
 				addr=builder.CreateGEP(addr,ConstInt(32,index));
 				addr=builder.CreateLoad(addr);
 				
-				builder.CreateStore(builder.CreateCall(GetArrAddr(),addr),v);
+				builder.CreateStore(builder.CreateCall(GetFldAddr(),addr),v);
 			}
 		}
 		else
 		{
-			v=builder.CreateAlloca(TyObjectRef->getPointerTo());
+
 			Value* vstatic=builder.CreateLoad(pstatic);
 			Value* ptr=builder.CreateGEP(vstatic,ConstInt(32,index));
 			vstatic=builder.CreateLoad(ptr);
-			vstatic=builder.CreateCall(GetArrAddr(),vstatic);
+			vstatic=builder.CreateCall(GetFldAddr(),vstatic);
 			builder.CreateStore(vstatic,v);
 		}
 		barrays[cacheindex]=v;
-		builder.restoreIP(ip);
+		//builder.restoreIP(ip);
 		return v;
 	}
 	else
@@ -357,7 +370,7 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 	Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
-	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrImp", module);
+	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrSafeImp", module);
 	fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fArrAddr);
 	SwitchBlock(BB);
@@ -375,7 +388,9 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 	builder.SetInsertPoint(ifNotNull);
 	Value* len=builder.CreateGEP(builder.CreateBitCast(p1,Type::getInt32PtrTy(context)),ConstInt(32,1));
 	len=builder.CreateLoad(len);
-	builder.CreateCondBr(builder.CreateICmpSLT(fArrAddr->arg_begin()++,len),ifOk,ifOverLen);
+	Value* cond=builder.CreateAnd(builder.CreateICmpSLT(++fArrAddr->arg_begin(),len),
+		builder.CreateICmpSGE(++fArrAddr->arg_begin(),zero));
+	builder.CreateCondBr(cond,ifOk,ifOverLen);
 
 	builder.SetInsertPoint(ifOverLen);
 	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,2)); //raise ExArrayOverLengthErr
@@ -407,6 +422,41 @@ Function* BcBuildArrPtrImp(Type* ty)
 	builder.CreateStore(fArrAddr->arg_begin(),p);
 	Value* pp=builder.CreatePointerCast(builder.CreateStructGEP(p,0),ty2);
 	Value* p1=builder.CreateLoad(pp);
+	builder.CreateRet(builder.CreateLoad(p1));
+
+	builder.restoreIP(IP);
+	return fArrAddr;
+}
+
+void BcBuildArrPtrSafe(Type* ty)
+{
+	BcGetCurrentCompilerContext()->FunctionUse[FunArrAddrSafe]=1;
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	Args2.push_back(Type::getInt32Ty(context));
+	Type* ty2=ty->getPointerTo()->getPointerTo();
+	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
+	fArrAddrSafe=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddrSafe", module);
+	
+	return ;
+}
+
+Function* BcBuildFldPtrImp(Type* ty)
+{
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	Args2.push_back(Type::getInt32Ty(context));
+	Type* ty2=ty->getPointerTo()->getPointerTo();
+	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
+	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!FldAddrImp", module);
+	fArrAddr->addFnAttr(llvm::Attribute::AlwaysInline);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fArrAddr);
+	SwitchBlock(BB);
+	Value* p=builder.CreateAlloca(TyObjectRef);
+	builder.CreateStore(fArrAddr->arg_begin(),p);
+	Value* pp=builder.CreatePointerCast(builder.CreateStructGEP(p,0),ty2);
+	Value* p1=builder.CreateLoad(pp);
 	BasicBlock* ifNull=BasicBlock::Create(context,"",fArrAddr,0);
 	BasicBlock* ifOk=BasicBlock::Create(context,"",fArrAddr,0);
 	builder.CreateCondBr(builder.CreateIsNotNull(p1),ifOk,ifNull);
@@ -420,15 +470,14 @@ Function* BcBuildArrPtrImp(Type* ty)
 	builder.restoreIP(IP);
 	return fArrAddr;
 }
-
-void BcBuildArrPtrSafe(Type* ty)
+void BcBuildFldPtr(Type* ty)
 {
-	BcGetCurrentCompilerContext()->FunctionUse[FunArrAddrSafe]=1;
+	BcGetCurrentCompilerContext()->FunctionUse[FunFldAddr]=1;
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
-	fArrAddrSafe=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);
+	fFldAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!FldAddr", module);
 	
 	return ;
 }
@@ -493,6 +542,16 @@ Function* GetArrAddrSafe()
 		BcBuildArrPtrSafe(TyObjectRef->getPointerTo());
 	}
 	return fArrAddrSafe;
+
+}
+
+Function* GetFldAddr()
+{
+	if(!fFldAddr)
+	{
+		BcBuildFldPtr(TyObjectRef->getPointerTo());
+	}
+	return fFldAddr;
 
 }
 
@@ -579,6 +638,12 @@ extern "C" void BcBuildInlines(void* mod)
 				break;
 			case FunPop:
 				BcBuildPopImp();
+				break;
+			case FunArrAddrSafe:
+				BcBuildArrPtrSafeImp(TyObjectRef->getPointerTo());
+				break;
+			case FunFldAddr:
+				BcBuildFldPtrImp(TyObjectRef->getPointerTo());
 				break;
 			}
 		}
@@ -1176,10 +1241,15 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				bparameters[decl->variable_index].violated=1;
 				//}
 				builder.CreateStore(v,builder.CreateBitCast(t1,TypeSwitch[ty])); 
-				if(dkc_is_array(decl->type))
+				if(dkc_is_array(decl->type))//Full_arr_chk
 				{
-					Value* addr=builder.CreateCall(GetArrAddr(),v);
-					builder.CreateStore(addr,GetArrayAddress(decl->variable_index,1,decl->is_param));
+					if(isArrayAddressSet(decl->variable_index,1))
+					{
+						Value* addr=builder.CreateCall(GetFldAddr(),v);
+						builder.CreateStore(addr,GetArrayAddress(decl->variable_index,1,decl->is_param));
+					}
+					else
+						GetArrayAddress(decl->variable_index,1,decl->is_param);
 				}
 			}
 		}
@@ -1209,16 +1279,20 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				bstatic[decl->variable_index].violated=1;
 				//}
 				builder.CreateStore(v,p2);
-				if(dkc_is_array(decl->type))
+				if(dkc_is_array(decl->type)) //Full_arr_chk
 				{
-					Value* addr=builder.CreateCall(GetArrAddr(),v);
-					builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
-				}
+					if(isArrayAddressSet(decl->variable_index,0))
+					{
+						Value* addr=builder.CreateCall(GetFldAddr(),v);
+						builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
+					}
+					else
+						GetArrayAddress(decl->variable_index,0);
+				}//*/
 			}
 		}
 		else
 		{
-			//v->getType()->dump();
 			builder.CreateCall(GetPush(vartype),v);
 			builder.CreateCall(GetPush(2),builder.CreateLoad(p));
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
@@ -1261,7 +1335,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 			builder.CreateCall(GetPush(2),v);
 		}	
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
 		builder.CreateStore(v,fld);
 		if(mty==2)
@@ -1275,7 +1349,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		Value* to=builder.CreateCall(FldGet[2],arg);*/
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		Value* to= builder.CreateLoad(fld);
 		builder.CreateCall(GetPush(ty),v);
@@ -1322,18 +1396,21 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 			//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 			Value* p;
-			if(decl)
+			if(block->unsafe)
 			{
-				p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-					TypeSwitch[get_opcode_type_offset(expr->type)]);
-			
+				if(decl) ////Full_arr_chk
+				{
+					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+						TypeSwitch[get_opcode_type_offset(expr->type)]);
+				}
+				else
+					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);//*/
 			}
 			else
-				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
-			//builder.GetInsertBlock()->dump();
+				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[get_opcode_type_offset(expr->type)]);
+			//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 			builder.CreateStore(v,builder.CreateGEP(p,idx));
-			//builder.GetInsertBlock()->dump();
-			//__asm int 3
+
 		}
 		else
 		{
@@ -1535,6 +1612,8 @@ Value* BcGenerateArrayCreationExpression(DVM_Executable *exe, Block *block,Expre
 }
 
 Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *expr)//temp : fix-me : fast arr should mark the array
+	//fix-me : array base cache disabled
+	//fix-me : array cache can be used here
 {
     Value* arr;
     Value* idx;
@@ -1550,17 +1629,23 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 		Value* p;
-		Declaration* decl=0;
-		if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
-				decl=expr->u.index_expression.barray->u.identifier.u.declaration;
-		if(decl)
+		if(block->unsafe)
 		{
-			p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-				TypeSwitch[get_opcode_type_offset(expr->type)]);
+			Declaration* decl=0;///Full_arr_chk
+			if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
+					decl=expr->u.index_expression.barray->u.identifier.u.declaration;
+			if(decl)
+			{
+				p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+					TypeSwitch[get_opcode_type_offset(expr->type)]);
 			
+			}
+			else
+				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);//*/
 		}
 		else
-			p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
+			p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[get_opcode_type_offset(expr->type)]);
+		//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		return builder.CreateLoad(builder.CreateInBoundsGEP(p,idx));
         //return builder.CreateCall(ArrGet[get_opcode_type_offset(expr->type)],arg);
     }
@@ -1594,7 +1679,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);*/
 		
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetArrAddr(),obj);
+		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		return builder.CreateLoad(fld);
     }
@@ -2416,7 +2501,7 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
 				int mty=get_opcode_type_offset(member_pos->u.field.type); //fix-me : code size optmization here
 				Value* vv=BcGenerateExpression(exe, NULL, member_pos->u.field.initializer);
 				Value* obj=builder.CreateLoad(pthis);
-				Value* fld=builder.CreateCall(GetArrAddr(),obj);
+				Value* fld=builder.CreateCall(GetFldAddr(),obj);
 				fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member_pos->u.field.field_index)),TypeSwitch[mty]);
 				builder.CreateStore(v,fld);
             }

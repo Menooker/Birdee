@@ -238,6 +238,17 @@ void ExRaiseException(BINT eindex)
 	ExPopJumpBuffer();
 	longjmp(mybuf.buf ,eindex);
 }
+void ExArrayOutOfBoundException()
+{
+	BINT eindex;
+        curdvm->current_exception  = ExCreateExceptionEx(curdvm, ARRAY_INDEX_EXCEPTION_NAME,&eindex,
+                                   INDEX_OUT_OF_BOUNDS_ERR,
+                                   DVM_INT_MESSAGE_ARGUMENT, "index", -1,
+                                   DVM_INT_MESSAGE_ARGUMENT, "size",
+                                   0,
+                                   DVM_MESSAGE_ARGUMENT_END);
+		ExRaiseException(eindex+1);
+}
 
 void ExSystemRaise(ExExceptions e)
 {
@@ -247,6 +258,9 @@ void ExSystemRaise(ExExceptions e)
 		{
 		case ExNullPointerErr:
 			ExNullPointerException();
+			break;
+		case ExArrayIndexOutOfBoundErr:
+			ExArrayOutOfBoundException();
 			break;
 		}
 	}

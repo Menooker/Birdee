@@ -49,8 +49,9 @@
         CLASS_T INTERFACE_T PUBLIC_T PRIVATE_T VIRTUAL_T OVERRIDE_T
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
         DOWN_CAST_BEGIN DOWN_CAST_END DELEGATE FINAL ENUM CONST
-		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB
+		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE
 %type   <apost> apostrophe
+%type   <apost> unsafe
 %type   <package_name> package_name
 %type   <require_list> require_list require_declaration
 %type   <rename_list> rename_list rename_declaration
@@ -853,7 +854,7 @@ declaration_statement
 block
         : LC
         {
-            $<block>$ = dkc_open_block();
+            $<block>$ = dkc_open_block(0);
         }
           statement_list RC
         {
@@ -861,7 +862,7 @@ block
         }
         | LC RC
         {
-            Block *empty_block = dkc_open_block();
+            Block *empty_block = dkc_open_block(0);
             $<block>$ = dkc_close_block(empty_block, NULL);
         }
         ;
@@ -1148,20 +1149,34 @@ const_definition
             dkc_create_const_definition($2, $3, NULL);
         }
         ;
+unsafe
+		: //empty
+		{
+			$$=0;
+		}
+		| UNSAFE CR
+		{
+			$$=1;
+		}
+		| SAFE CR
+		{
+			$$=-1;
+		}
+		;
 myblock
-        : CR
+        : CR  unsafe
         {
-            $<block>$ = dkc_open_block();
+            $<block>$ = dkc_open_block($2);
 			//printf("E1 %d\n",dkc_get_current_compiler());
         }
           statement_list END 
         {
-            $<block>$ = dkc_close_block($<block>2, $3);
+            $<block>$ = dkc_close_block($<block>3, $4);
 			//printf("C1 %d\n",dkc_get_current_compiler()->current_line_number);
         }
         | CR END 
         {
-            Block *empty_block = dkc_open_block();
+            Block *empty_block = dkc_open_block(0);
             $<block>$ = dkc_close_block(empty_block, NULL);
 			//printf("C2 %d\n",dkc_get_current_compiler()->current_line_number);
         }

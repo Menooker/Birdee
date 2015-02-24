@@ -138,7 +138,9 @@
      DECLARE = 354,
      BSUB = 355,
      APOSTROPHE = 356,
-     LIB = 357
+     LIB = 357,
+     UNSAFE = 358,
+     SAFE = 359
    };
 #endif
 /* Tokens.  */
@@ -242,6 +244,8 @@
 #define BSUB 355
 #define APOSTROPHE 356
 #define LIB 357
+#define UNSAFE 358
+#define SAFE 359
 
 
 
@@ -283,7 +287,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 287 "y.tab.h"
+#line 291 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -974,7 +974,7 @@ void replaceAllUsesWith(Value* ths,Value *New) {
 }
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
-	inline_mod->dump();
+
 
 	Function* f;
 	f=m->getFunction("systemi!ArrAddr");
@@ -996,5 +996,15 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	if(f)
 	{
 		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushdImp"));
+	}
+	f=m->getFunction("systemi!ArrAddrSafe");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrSafeImp"));
+	}
+	f=m->getFunction("systemi!FldAddr");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!FldAddrImp"));
 	}
 }

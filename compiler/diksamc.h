@@ -588,6 +588,7 @@ typedef struct {
 
 typedef struct Block_tag {
     BlockType           type;
+	int unsafe;
     struct Block_tag    *outer_block;
     StatementList       *statement_list;
     DeclarationList     *declaration_list;
@@ -1019,7 +1020,7 @@ Statement *dkc_create_for_statement(char *label,
 Statement *dkc_create_do_while_statement(char *label, Block *block,
                                          Expression *condition);
 Block *dkc_alloc_block(void);
-Block * dkc_open_block(void);
+Block * dkc_open_block(int unsafe);
 Block *dkc_close_block(Block *block, StatementList *statement_list);
 
 

@@ -165,6 +165,8 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"("            return LP;
 <INITIAL>")"            return RP;
 <INITIAL>"..."          return APOSTROPHE;
+<INITIAL>"unsafe"          return UNSAFE;
+<INITIAL>"safe"          return SAFE;
 
 <INITIAL>"{\n"          {increment_line_number();  return LC;}
 <INITIAL>"}\n"          {increment_line_number();  return RC;}

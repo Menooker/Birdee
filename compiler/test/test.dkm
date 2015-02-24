@@ -23,21 +23,20 @@ end
 		end
 	end
 
-
-dim a as TestLib =new TestLib()
+dim kp as int[]=new int[10]
+//dim a as TestLib =new TestLib()
 //=new TestLib()
 dim i as int
+dim j as int
 dim t as int=GetClock()
 dim k as int
-for i=0;i<10000000;i++
-	a.fielda=i
-	if(a.fielda!=i) then
-		println("err!")
+for j=0;j<3;j++
+safe
+	kp[1]=j
+	for i=0;i<100000000;i++
+		kp[3]=i
+		//println(a.fielda)
 	end
-	//println(a.fielda)
-end
-for i=0;i<10000000;i++
-	k=a.fielda
 end
 println(GetClock()-t)
 

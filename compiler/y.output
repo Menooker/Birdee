@@ -353,10 +353,14 @@ Grammar
   256 const_definition: CONST IDENTIFIER ASSIGN_T expression CR
   257                 | CONST type_specifier IDENTIFIER CR
 
-  258 @8: /* empty */
+  258 unsafe: /* empty */
+  259       | UNSAFE CR
+  260       | SAFE CR
 
-  259 myblock: CR @8 statement_list END
-  260        | CR END
+  261 @8: /* empty */
+
+  262 myblock: CR unsafe @8 statement_list END
+  263        | CR END
 
 
 Terminals, with rules where they appear
@@ -463,214 +467,218 @@ AS (349) 42 43 46 47 51 52 188 189 190 191 223 224 225 226 245 246
     247 248 249 250 251
 THEN (350) 151 152 153 154 157
 DIM (351) 188 189 245
-END (352) 38 196 198 200 202 259 260
+END (352) 38 196 198 200 202 262 263
 CR (353) 10 15 38 42 43 44 45 137 150 160 170 174 177 178 186 187 188
     189 190 191 196 198 200 202 225 226 229 230 239 240 245 246 247
-    248 249 250 251 256 257 259 260
+    248 249 250 251 256 257 259 260 262 263
 DECLARE (354) 42 43 44 45 225 226 229 230 239 240
 BSUB (355) 44 45 48 49 227 228 229 230
 APOSTROPHE (356) 232
 LIB (357) 38
+UNSAFE (358) 259
+SAFE (359) 260
 
 
 Nonterminals, with rules where they appear
 
-$accept (103)
+$accept (105)
     on left: 0
-translation_unit (104)
+translation_unit (106)
     on left: 1 2, on right: 0 2
-initial_declaration (105)
+initial_declaration (107)
     on left: 3 4 5 6 7, on right: 1 7
-require_list (106)
+require_list (108)
     on left: 8 9, on right: 4 5 9
-require_declaration (107)
+require_declaration (109)
     on left: 10, on right: 8 9
-package_name (108)
+package_name (110)
     on left: 11 12, on right: 10 12 15
-rename_list (109)
+rename_list (111)
     on left: 13 14, on right: 4 6 14
-rename_declaration (110)
+rename_declaration (112)
     on left: 15, on right: 13 14
-definition_or_statement (111)
+definition_or_statement (113)
     on left: 16 17 18 19 20 21, on right: 2
-basic_type_specifier (112)
+basic_type_specifier (114)
     on left: 22 23 24 25 26 27 28 29, on right: 31 34 125 126
-identifier_type_specifier (113)
+identifier_type_specifier (115)
     on left: 30, on right: 36 127 128
-array_type_specifier (114)
+array_type_specifier (116)
     on left: 31 32 33, on right: 33 35
-type_specifier (115)
+type_specifier (117)
     on left: 34 35 36, on right: 42 43 46 47 51 52 96 107 185 188 189
     190 191 223 224 225 226 245 246 247 248 249 250 251 257
-lib_function (116)
+lib_function (118)
     on left: 38, on right: 7
-$@1 (117)
+$@1 (119)
     on left: 37, on right: 38
-lib_function_declaration_list (118)
+lib_function_declaration_list (120)
     on left: 39 40 41, on right: 38 40 41
-function_declaration (119)
+function_declaration (121)
     on left: 42 43 44 45, on right: 40 50
-function_definition (120)
+function_definition (122)
     on left: 46 47 48 49 50, on right: 16
-parameter_list (121)
+parameter_list (123)
     on left: 51 52, on right: 42 44 46 48 52 223 225 227 229 237 239
     250
-argument_list (122)
+argument_list (124)
     on left: 53 54, on right: 54 104 120 122
-statement_list (123)
-    on left: 55 56, on right: 56 193 259
-expression (124)
+statement_list (125)
+    on left: 55 56, on right: 56 193 262
+expression (126)
     on left: 57 58, on right: 58 101 102 106 131 137 151 152 153 154
     157 160 168 170 171 173 186 189 191 244 256
-assignment_expression (125)
+assignment_expression (127)
     on left: 59 60, on right: 53 54 57 58 60 135 136 166 167
-assignment_operator (126)
+assignment_operator (128)
     on left: 61 62 63 64 65 66, on right: 60
-logical_or_expression (127)
+logical_or_expression (129)
     on left: 67 68, on right: 59 68
-logical_and_expression (128)
+logical_and_expression (130)
     on left: 69 70, on right: 67 68 70
-equality_expression (129)
+equality_expression (131)
     on left: 71 72 73, on right: 69 70 72 73
-relational_expression (130)
+relational_expression (132)
     on left: 74 75 76 77 78, on right: 71 72 73 75 76 77 78
-additive_expression (131)
+additive_expression (133)
     on left: 79 80 81, on right: 74 75 76 77 78 80 81
-multiplicative_expression (132)
+multiplicative_expression (134)
     on left: 82 83 84 85 86 87 88, on right: 79 80 81 83 84 85 86 87
     88
-unary_expression (133)
+unary_expression (135)
     on left: 89 90 91 92, on right: 82 83 84 85 86 87 88 90 91 92
-postfix_expression (134)
+postfix_expression (136)
     on left: 93 94 95 96, on right: 89
-primary_expression (135)
+primary_expression (137)
     on left: 97 98 99 100, on right: 60 93 94 95 96 103 104 105 107
-primary_no_new_array (136)
+primary_no_new_array (138)
     on left: 101 102 103 104 105 106 107 108 109 110 111 112 113 114
     115 116 117 118 119 120 121 122, on right: 97 101
-array_literal (137)
+array_literal (139)
     on left: 123 124, on right: 115
-array_creation (138)
+array_creation (140)
     on left: 125 126 127 128, on right: 98
-dimension_expression_list (139)
+dimension_expression_list (141)
     on left: 129 130, on right: 125 126 127 128 130
-dimension_expression (140)
+dimension_expression (142)
     on left: 131, on right: 129 130
-dimension_list (141)
+dimension_list (143)
     on left: 132 133, on right: 126 128 133
-expression_list (142)
+expression_list (144)
     on left: 134 135 136, on right: 123 124 136 167
-statement (143)
+statement (145)
     on left: 137 138 139 140 141 142 143 144 145 146 147 148 149 150,
     on right: 18 55 56
-if_statement (144)
+if_statement (146)
     on left: 151 152 153 154, on right: 138
-elsif_list (145)
+elsif_list (147)
     on left: 155 156, on right: 153 154 156
-elsif (146)
+elsif (148)
     on left: 157, on right: 155 156
-label_opt (147)
+label_opt (149)
     on left: 158 159, on right: 168 169 170 171
-switch_statement (148)
+switch_statement (150)
     on left: 160, on right: 139
-case_list (149)
+case_list (151)
     on left: 161 162, on right: 160 162
-one_case (150)
+one_case (152)
     on left: 163, on right: 161 162
-default_opt (151)
+default_opt (153)
     on left: 164 165, on right: 160
-case_expression_list (152)
+case_expression_list (154)
     on left: 166 167, on right: 163
-while_statement (153)
+while_statement (155)
     on left: 168, on right: 140
-for_statement (154)
+for_statement (156)
     on left: 169, on right: 141
-do_while_statement (155)
+do_while_statement (157)
     on left: 170, on right: 142
-foreach_statement (156)
+foreach_statement (158)
     on left: 171, on right: 143
-expression_opt (157)
+expression_opt (159)
     on left: 172 173, on right: 169 174
-return_statement (158)
+return_statement (160)
     on left: 174, on right: 144
-identifier_opt (159)
+identifier_opt (161)
     on left: 175 176, on right: 177 178
-break_statement (160)
+break_statement (162)
     on left: 177, on right: 145
-continue_statement (161)
+continue_statement (163)
     on left: 178, on right: 146
-try_statement (162)
+try_statement (164)
     on left: 179 180 181, on right: 147
-catch_list (163)
+catch_list (165)
     on left: 182 183, on right: 179 181 183
-catch_clause (164)
+catch_clause (166)
     on left: 185, on right: 182 183
-@2 (165)
+@2 (167)
     on left: 184, on right: 185
-throw_statement (166)
+throw_statement (168)
     on left: 186 187, on right: 148
-declaration_statement (167)
+declaration_statement (169)
     on left: 188 189 190 191, on right: 149
-block (168)
+block (170)
     on left: 193 194, on right: 170 171 180
-@3 (169)
+@3 (171)
     on left: 192, on right: 193
-class_definition (170)
+class_definition (172)
     on left: 196 198 200 202, on right: 17 41
-$@4 (171)
+$@4 (173)
     on left: 195, on right: 196
-$@5 (172)
+$@5 (174)
     on left: 197, on right: 198
-$@6 (173)
+$@6 (175)
     on left: 199, on right: 200
-$@7 (174)
+$@7 (176)
     on left: 201, on right: 202
-class_or_member_modifier_list (175)
+class_or_member_modifier_list (177)
     on left: 203 204, on right: 198 202 204 220 222 246 248 249
-class_or_member_modifier (176)
+class_or_member_modifier (178)
     on left: 205 206 207 208, on right: 203 204
-class_or_interface (177)
+class_or_interface (179)
     on left: 209 210, on right: 196 198 200 202
-extends (178)
+extends (180)
     on left: 211 212, on right: 196 198 200 202
-extends_list (179)
+extends_list (181)
     on left: 213 214, on right: 212 214
-member_declaration_list (180)
+member_declaration_list (182)
     on left: 215 216, on right: 196 198 216
-member_declaration (181)
+member_declaration (183)
     on left: 217 218, on right: 215 216
-method_member (182)
+method_member (184)
     on left: 219 220 221 222, on right: 217
-method_function_definition (183)
+method_function_definition (185)
     on left: 223 224 225 226 227 228 229 230, on right: 219 220
-apostrophe (184)
+apostrophe (186)
     on left: 231 232, on right: 42 43 44 45 46 47 48 49 250 251
-throws_clause (185)
+throws_clause (187)
     on left: 233 234, on right: 42 43 44 45 46 47 48 49 223 224 225
     226 227 228 229 230 237 238 239 240 250 251
-exception_list (186)
+exception_list (188)
     on left: 235 236, on right: 234 236
-constructor_definition (187)
+constructor_definition (189)
     on left: 237 238 239 240, on right: 221 222
-access_modifier (188)
+access_modifier (190)
     on left: 241 242, on right: 205
-initializer_opt (189)
+initializer_opt (191)
     on left: 243 244, on right: 245 246 247 248 249
-field_member (190)
+field_member (192)
     on left: 245 246 247 248 249, on right: 218
-delegate_definition (191)
+delegate_definition (193)
     on left: 250 251, on right: 19
-enum_definition (192)
+enum_definition (194)
     on left: 252 253, on right: 20
-enumerator_list (193)
+enumerator_list (195)
     on left: 254 255, on right: 252 253 255
-const_definition (194)
+const_definition (196)
     on left: 256 257, on right: 21
-myblock (195)
-    on left: 259 260, on right: 46 47 48 49 151 152 153 154 157 163
+unsafe (197)
+    on left: 258 259 260, on right: 262
+myblock (198)
+    on left: 262 263, on right: 46 47 48 49 151 152 153 154 157 163
     165 168 169 179 180 181 185 223 224 227 228 237 238
-@8 (196)
-    on left: 258, on right: 259
+@8 (199)
+    on left: 261, on right: 262
 
 
 state 0
@@ -2093,14 +2101,16 @@ state 116
 
 state 117
 
-  259 myblock: CR . @8 statement_list END
-  260        | CR . END
+  262 myblock: CR . unsafe @8 statement_list END
+  263        | CR . END
 
-    END  shift, and go to state 197
+    END     shift, and go to state 197
+    UNSAFE  shift, and go to state 198
+    SAFE    shift, and go to state 199
 
-    $default  reduce using rule 258 (@8)
+    $default  reduce using rule 258 (unsafe)
 
-    @8  go to state 198
+    unsafe  go to state 200
 
 
 state 118
@@ -2109,11 +2119,11 @@ state 118
   180              | TRY myblock . FINALLY block
   181              | TRY myblock . catch_list
 
-    CATCH    shift, and go to state 199
-    FINALLY  shift, and go to state 200
+    CATCH    shift, and go to state 201
+    FINALLY  shift, and go to state 202
 
-    catch_list    go to state 201
-    catch_clause  go to state 202
+    catch_list    go to state 203
+    catch_clause  go to state 204
 
 
 state 119
@@ -2129,7 +2139,7 @@ state 120
   186 throw_statement: THROW expression . CR
 
     COMMA  shift, and go to state 146
-    CR     shift, and go to state 203
+    CR     shift, and go to state 205
 
 
 state 121
@@ -2140,8 +2150,8 @@ state 121
   121                     | NEW IDENTIFIER . DOT IDENTIFIER LP RP
   122                     | NEW IDENTIFIER . DOT IDENTIFIER LP argument_list RP
 
-    LP   shift, and go to state 204
-    DOT  shift, and go to state 205
+    LP   shift, and go to state 206
+    DOT  shift, and go to state 207
 
     $default  reduce using rule 30 (identifier_type_specifier)
 
@@ -2200,7 +2210,7 @@ state 129
    29 basic_type_specifier: DELEGATE .
   118 primary_no_new_array: NEW DELEGATE . LP RP
 
-    LP  shift, and go to state 206
+    LP  shift, and go to state 208
 
     $default  reduce using rule 29 (basic_type_specifier)
 
@@ -2210,10 +2220,10 @@ state 130
   125 array_creation: NEW basic_type_specifier . dimension_expression_list
   126               | NEW basic_type_specifier . dimension_expression_list dimension_list
 
-    LB  shift, and go to state 207
+    LB  shift, and go to state 209
 
-    dimension_expression_list  go to state 208
-    dimension_expression       go to state 209
+    dimension_expression_list  go to state 210
+    dimension_expression       go to state 211
 
 
 state 131
@@ -2221,10 +2231,10 @@ state 131
   127 array_creation: NEW identifier_type_specifier . dimension_expression_list
   128               | NEW identifier_type_specifier . dimension_expression_list dimension_list
 
-    LB  shift, and go to state 207
+    LB  shift, and go to state 209
 
-    dimension_expression_list  go to state 210
-    dimension_expression       go to state 209
+    dimension_expression_list  go to state 212
+    dimension_expression       go to state 211
 
 
 state 132
@@ -2232,7 +2242,7 @@ state 132
   250 delegate_definition: DELEGATE IDENTIFIER . LP parameter_list apostrophe RP AS type_specifier throws_clause CR
   251                    | DELEGATE IDENTIFIER . LP apostrophe RP AS type_specifier throws_clause CR
 
-    LP  shift, and go to state 211
+    LP  shift, and go to state 213
 
 
 state 133
@@ -2240,7 +2250,7 @@ state 133
   190 declaration_statement: FINAL IDENTIFIER . AS type_specifier CR
   191                      | FINAL IDENTIFIER . AS type_specifier ASSIGN_T expression CR
 
-    AS  shift, and go to state 212
+    AS  shift, and go to state 214
 
 
 state 134
@@ -2248,7 +2258,7 @@ state 134
   252 enum_definition: ENUM IDENTIFIER . LC enumerator_list RC
   253                | ENUM IDENTIFIER . LC enumerator_list COMMA RC
 
-    LC  shift, and go to state 213
+    LC  shift, and go to state 215
 
 
 state 135
@@ -2257,8 +2267,8 @@ state 135
    32 array_type_specifier: IDENTIFIER . LB RB
   256 const_definition: CONST IDENTIFIER . ASSIGN_T expression CR
 
-    LB        shift, and go to state 214
-    ASSIGN_T  shift, and go to state 215
+    LB        shift, and go to state 216
+    ASSIGN_T  shift, and go to state 217
 
     $default  reduce using rule 30 (identifier_type_specifier)
 
@@ -2275,7 +2285,7 @@ state 137
    31 array_type_specifier: basic_type_specifier . LB RB
    34 type_specifier: basic_type_specifier .
 
-    LB  shift, and go to state 216
+    LB  shift, and go to state 218
 
     $default  reduce using rule 34 (type_specifier)
 
@@ -2292,7 +2302,7 @@ state 139
    33 array_type_specifier: array_type_specifier . LB RB
    35 type_specifier: array_type_specifier .
 
-    LB  shift, and go to state 217
+    LB  shift, and go to state 219
 
     $default  reduce using rule 35 (type_specifier)
 
@@ -2301,7 +2311,7 @@ state 140
 
   257 const_definition: CONST type_specifier . IDENTIFIER CR
 
-    IDENTIFIER  shift, and go to state 218
+    IDENTIFIER  shift, and go to state 220
 
 
 state 141
@@ -2309,7 +2319,7 @@ state 141
    46 function_definition: FUNCTION IDENTIFIER . LP parameter_list apostrophe RP AS type_specifier throws_clause myblock
    47                    | FUNCTION IDENTIFIER . LP apostrophe RP AS type_specifier throws_clause myblock
 
-    LP  shift, and go to state 219
+    LP  shift, and go to state 221
 
 
 state 142
@@ -2317,7 +2327,7 @@ state 142
   188 declaration_statement: DIM IDENTIFIER . AS type_specifier CR
   189                      | DIM IDENTIFIER . AS type_specifier ASSIGN_T expression CR
 
-    AS  shift, and go to state 220
+    AS  shift, and go to state 222
 
 
 state 143
@@ -2325,7 +2335,7 @@ state 143
    42 function_declaration: DECLARE FUNCTION . IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause CR
    43                     | DECLARE FUNCTION . IDENTIFIER LP apostrophe RP AS type_specifier throws_clause CR
 
-    IDENTIFIER  shift, and go to state 221
+    IDENTIFIER  shift, and go to state 223
 
 
 state 144
@@ -2333,7 +2343,7 @@ state 144
    44 function_declaration: DECLARE BSUB . IDENTIFIER LP parameter_list apostrophe RP throws_clause CR
    45                     | DECLARE BSUB . IDENTIFIER LP apostrophe RP throws_clause CR
 
-    IDENTIFIER  shift, and go to state 222
+    IDENTIFIER  shift, and go to state 224
 
 
 state 145
@@ -2341,7 +2351,7 @@ state 145
    48 function_definition: BSUB IDENTIFIER . LP parameter_list apostrophe RP throws_clause myblock
    49                    | BSUB IDENTIFIER . LP apostrophe RP throws_clause myblock
 
-    LP  shift, and go to state 223
+    LP  shift, and go to state 225
 
 
 state 146
@@ -2366,7 +2376,7 @@ state 146
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    assignment_expression      go to state 224
+    assignment_expression      go to state 226
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -2410,7 +2420,7 @@ state 148
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    logical_and_expression     go to state 225
+    logical_and_expression     go to state 227
     equality_expression        go to state 60
     relational_expression      go to state 61
     additive_expression        go to state 62
@@ -2445,7 +2455,7 @@ state 149
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    equality_expression        go to state 226
+    equality_expression        go to state 228
     relational_expression      go to state 61
     additive_expression        go to state 62
     multiplicative_expression  go to state 63
@@ -2479,7 +2489,7 @@ state 150
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    relational_expression      go to state 227
+    relational_expression      go to state 229
     additive_expression        go to state 62
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
@@ -2512,7 +2522,7 @@ state 151
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    relational_expression      go to state 228
+    relational_expression      go to state 230
     additive_expression        go to state 62
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
@@ -2545,7 +2555,7 @@ state 152
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    additive_expression        go to state 229
+    additive_expression        go to state 231
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
     postfix_expression         go to state 65
@@ -2577,7 +2587,7 @@ state 153
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    additive_expression        go to state 230
+    additive_expression        go to state 232
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
     postfix_expression         go to state 65
@@ -2609,7 +2619,7 @@ state 154
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    additive_expression        go to state 231
+    additive_expression        go to state 233
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
     postfix_expression         go to state 65
@@ -2641,7 +2651,7 @@ state 155
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    additive_expression        go to state 232
+    additive_expression        go to state 234
     multiplicative_expression  go to state 63
     unary_expression           go to state 64
     postfix_expression         go to state 65
@@ -2673,7 +2683,7 @@ state 156
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    multiplicative_expression  go to state 233
+    multiplicative_expression  go to state 235
     unary_expression           go to state 64
     postfix_expression         go to state 65
     primary_expression         go to state 114
@@ -2704,7 +2714,7 @@ state 157
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    multiplicative_expression  go to state 234
+    multiplicative_expression  go to state 236
     unary_expression           go to state 64
     postfix_expression         go to state 65
     primary_expression         go to state 114
@@ -2735,7 +2745,7 @@ state 158
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 235
+    unary_expression      go to state 237
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2765,7 +2775,7 @@ state 159
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 236
+    unary_expression      go to state 238
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2795,7 +2805,7 @@ state 160
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 237
+    unary_expression      go to state 239
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2825,7 +2835,7 @@ state 161
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 238
+    unary_expression      go to state 240
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2855,7 +2865,7 @@ state 162
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 239
+    unary_expression      go to state 241
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2885,7 +2895,7 @@ state 163
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    unary_expression      go to state 240
+    unary_expression      go to state 242
     postfix_expression    go to state 65
     primary_expression    go to state 114
     primary_no_new_array  go to state 67
@@ -2906,7 +2916,7 @@ state 164
     AUTOVAR         shift, and go to state 18
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
-    RP              shift, and go to state 241
+    RP              shift, and go to state 243
     LC              shift, and go to state 26
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
@@ -2917,8 +2927,8 @@ state 164
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    argument_list              go to state 242
-    assignment_expression      go to state 243
+    argument_list              go to state 244
+    assignment_expression      go to state 245
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -2944,7 +2954,7 @@ state 166
 
   103 primary_no_new_array: primary_expression DOT . IDENTIFIER
 
-    IDENTIFIER  shift, and go to state 244
+    IDENTIFIER  shift, and go to state 246
 
 
 state 167
@@ -3000,7 +3010,7 @@ state 174
 
    96 postfix_expression: primary_expression INSTANCEOF . type_specifier
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -3013,14 +3023,14 @@ state 174
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 246
+    type_specifier             go to state 248
 
 
 state 175
 
   107 primary_no_new_array: primary_expression DOWN_CAST_BEGIN . type_specifier DOWN_CAST_END
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -3033,7 +3043,7 @@ state 175
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 247
+    type_specifier             go to state 249
 
 
 state 176
@@ -3058,7 +3068,7 @@ state 176
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    assignment_expression      go to state 248
+    assignment_expression      go to state 250
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -3095,7 +3105,7 @@ state 177
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 249
+    expression                 go to state 251
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -3133,7 +3143,7 @@ state 178
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 250
+    expression                 go to state 252
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -3153,9 +3163,9 @@ state 179
 
   170 do_while_statement: label_opt DO_T . block WHILE LP expression RP CR
 
-    LC  shift, and go to state 251
+    LC  shift, and go to state 253
 
-    block  go to state 252
+    block  go to state 254
 
 
 state 180
@@ -3196,14 +3206,14 @@ state 180
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    expression_opt             go to state 253
+    expression_opt             go to state 255
 
 
 state 181
 
   171 foreach_statement: label_opt FOREACH . LP IDENTIFIER COLON expression RP block
 
-    LP  shift, and go to state 254
+    LP  shift, and go to state 256
 
 
 state 182
@@ -3218,7 +3228,7 @@ state 183
   198 class_definition: class_or_member_modifier_list class_or_interface . IDENTIFIER extends CR $@5 member_declaration_list END
   202                 | class_or_member_modifier_list class_or_interface . IDENTIFIER extends CR $@7 END
 
-    IDENTIFIER  shift, and go to state 255
+    IDENTIFIER  shift, and go to state 257
 
 
 state 184
@@ -3226,11 +3236,11 @@ state 184
   196 class_definition: class_or_interface IDENTIFIER . extends CR $@4 member_declaration_list END
   200                 | class_or_interface IDENTIFIER . extends CR $@6 END
 
-    COLON  shift, and go to state 256
+    COLON  shift, and go to state 258
 
     $default  reduce using rule 211 (extends)
 
-    extends  go to state 257
+    extends  go to state 259
 
 
 state 185
@@ -3239,7 +3249,7 @@ state 185
 
     $default  reduce using rule 37 ($@1)
 
-    $@1  go to state 258
+    $@1  go to state 260
 
 
 state 186
@@ -3261,7 +3271,7 @@ state 188
    58 expression: expression . COMMA assignment_expression
   102 primary_no_new_array: IDENTIFIER LB expression . RB
 
-    RB     shift, and go to state 259
+    RB     shift, and go to state 261
     COMMA  shift, and go to state 146
 
 
@@ -3274,17 +3284,17 @@ state 189
 
     CR  shift, and go to state 117
 
-    myblock  go to state 260
+    myblock  go to state 262
 
 
 state 190
 
   160 switch_statement: SWITCH expression CR . case_list default_opt
 
-    CASE  shift, and go to state 261
+    CASE  shift, and go to state 263
 
-    case_list  go to state 262
-    one_case   go to state 263
+    case_list  go to state 264
+    one_case   go to state 265
 
 
 state 191
@@ -3336,7 +3346,7 @@ state 196
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
     LC              shift, and go to state 26
-    RC              shift, and go to state 264
+    RC              shift, and go to state 266
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
     TRUE_T          shift, and go to state 29
@@ -3346,7 +3356,7 @@ state 196
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    assignment_expression      go to state 265
+    assignment_expression      go to state 267
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -3363,123 +3373,81 @@ state 196
 
 state 197
 
-  260 myblock: CR END .
+  263 myblock: CR END .
 
-    $default  reduce using rule 260 (myblock)
+    $default  reduce using rule 263 (myblock)
 
 
 state 198
 
-  259 myblock: CR @8 . statement_list END
+  259 unsafe: UNSAFE . CR
 
-    INT_LITERAL     shift, and go to state 13
-    DOUBLE_LITERAL  shift, and go to state 14
-    STRING_LITERAL  shift, and go to state 15
-    REGEXP_LITERAL  shift, and go to state 16
-    IDENTIFIER      shift, and go to state 17
-    AUTOVAR         shift, and go to state 18
-    IF              shift, and go to state 19
-    SWITCH          shift, and go to state 20
-    RETURN_T        shift, and go to state 21
-    BREAK           shift, and go to state 22
-    CONTINUE        shift, and go to state 23
-    NULL_T          shift, and go to state 24
-    LP              shift, and go to state 25
-    LC              shift, and go to state 26
-    SUB             shift, and go to state 27
-    BIT_NOT         shift, and go to state 28
-    TRUE_T          shift, and go to state 29
-    FALSE_T         shift, and go to state 30
-    EXCLAMATION     shift, and go to state 31
-    TRY             shift, and go to state 32
-    THROW           shift, and go to state 33
-    NEW             shift, and go to state 34
-    THIS_T          shift, and go to state 42
-    SUPER_T         shift, and go to state 43
-    FINAL           shift, and go to state 45
-    DIM             shift, and go to state 49
-    CR              shift, and go to state 50
-
-    $default  reduce using rule 158 (label_opt)
-
-    statement_list             go to state 266
-    expression                 go to state 56
-    assignment_expression      go to state 57
-    logical_or_expression      go to state 58
-    logical_and_expression     go to state 59
-    equality_expression        go to state 60
-    relational_expression      go to state 61
-    additive_expression        go to state 62
-    multiplicative_expression  go to state 63
-    unary_expression           go to state 64
-    postfix_expression         go to state 65
-    primary_expression         go to state 66
-    primary_no_new_array       go to state 67
-    array_literal              go to state 68
-    array_creation             go to state 69
-    statement                  go to state 267
-    if_statement               go to state 71
-    label_opt                  go to state 72
-    switch_statement           go to state 73
-    while_statement            go to state 74
-    for_statement              go to state 75
-    do_while_statement         go to state 76
-    foreach_statement          go to state 77
-    return_statement           go to state 78
-    break_statement            go to state 79
-    continue_statement         go to state 80
-    try_statement              go to state 81
-    throw_statement            go to state 82
-    declaration_statement      go to state 83
+    CR  shift, and go to state 268
 
 
 state 199
+
+  260 unsafe: SAFE . CR
+
+    CR  shift, and go to state 269
+
+
+state 200
+
+  262 myblock: CR unsafe . @8 statement_list END
+
+    $default  reduce using rule 261 (@8)
+
+    @8  go to state 270
+
+
+state 201
 
   185 catch_clause: CATCH . @2 type_specifier IDENTIFIER myblock
 
     $default  reduce using rule 184 (@2)
 
-    @2  go to state 268
+    @2  go to state 271
 
 
-state 200
+state 202
 
   180 try_statement: TRY myblock FINALLY . block
 
-    LC  shift, and go to state 251
+    LC  shift, and go to state 253
 
-    block  go to state 269
+    block  go to state 272
 
 
-state 201
+state 203
 
   179 try_statement: TRY myblock catch_list . FINALLY myblock
   181              | TRY myblock catch_list .
   183 catch_list: catch_list . catch_clause
 
-    CATCH    shift, and go to state 199
-    FINALLY  shift, and go to state 270
+    CATCH    shift, and go to state 201
+    FINALLY  shift, and go to state 273
 
     $default  reduce using rule 181 (try_statement)
 
-    catch_clause  go to state 271
+    catch_clause  go to state 274
 
 
-state 202
+state 204
 
   182 catch_list: catch_clause .
 
     $default  reduce using rule 182 (catch_list)
 
 
-state 203
+state 205
 
   186 throw_statement: THROW expression CR .
 
     $default  reduce using rule 186 (throw_statement)
 
 
-state 204
+state 206
 
   119 primary_no_new_array: NEW IDENTIFIER LP . RP
   120                     | NEW IDENTIFIER LP . argument_list RP
@@ -3492,7 +3460,7 @@ state 204
     AUTOVAR         shift, and go to state 18
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
-    RP              shift, and go to state 272
+    RP              shift, and go to state 275
     LC              shift, and go to state 26
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
@@ -3503,8 +3471,8 @@ state 204
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    argument_list              go to state 273
-    assignment_expression      go to state 243
+    argument_list              go to state 276
+    assignment_expression      go to state 245
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -3519,22 +3487,22 @@ state 204
     array_creation             go to state 69
 
 
-state 205
+state 207
 
   121 primary_no_new_array: NEW IDENTIFIER DOT . IDENTIFIER LP RP
   122                     | NEW IDENTIFIER DOT . IDENTIFIER LP argument_list RP
 
-    IDENTIFIER  shift, and go to state 274
+    IDENTIFIER  shift, and go to state 277
 
 
-state 206
+state 208
 
   118 primary_no_new_array: NEW DELEGATE LP . RP
 
-    RP  shift, and go to state 275
+    RP  shift, and go to state 278
 
 
-state 207
+state 209
 
   131 dimension_expression: LB . expression RB
 
@@ -3556,7 +3524,7 @@ state 207
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 276
+    expression                 go to state 279
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -3572,61 +3540,61 @@ state 207
     array_creation             go to state 69
 
 
-state 208
+state 210
 
   125 array_creation: NEW basic_type_specifier dimension_expression_list .
   126               | NEW basic_type_specifier dimension_expression_list . dimension_list
   130 dimension_expression_list: dimension_expression_list . dimension_expression
 
-    LB  shift, and go to state 277
+    LB  shift, and go to state 280
 
     $default  reduce using rule 125 (array_creation)
 
-    dimension_expression  go to state 278
-    dimension_list        go to state 279
+    dimension_expression  go to state 281
+    dimension_list        go to state 282
 
 
-state 209
+state 211
 
   129 dimension_expression_list: dimension_expression .
 
     $default  reduce using rule 129 (dimension_expression_list)
 
 
-state 210
+state 212
 
   127 array_creation: NEW identifier_type_specifier dimension_expression_list .
   128               | NEW identifier_type_specifier dimension_expression_list . dimension_list
   130 dimension_expression_list: dimension_expression_list . dimension_expression
 
-    LB  shift, and go to state 277
+    LB  shift, and go to state 280
 
     $default  reduce using rule 127 (array_creation)
 
-    dimension_expression  go to state 278
-    dimension_list        go to state 280
+    dimension_expression  go to state 281
+    dimension_list        go to state 283
 
 
-state 211
+state 213
 
   250 delegate_definition: DELEGATE IDENTIFIER LP . parameter_list apostrophe RP AS type_specifier throws_clause CR
   251                    | DELEGATE IDENTIFIER LP . apostrophe RP AS type_specifier throws_clause CR
 
-    IDENTIFIER  shift, and go to state 281
-    COMMA       shift, and go to state 282
+    IDENTIFIER  shift, and go to state 284
+    COMMA       shift, and go to state 285
 
     $default  reduce using rule 231 (apostrophe)
 
-    parameter_list  go to state 283
-    apostrophe      go to state 284
+    parameter_list  go to state 286
+    apostrophe      go to state 287
 
 
-state 212
+state 214
 
   190 declaration_statement: FINAL IDENTIFIER AS . type_specifier CR
   191                      | FINAL IDENTIFIER AS . type_specifier ASSIGN_T expression CR
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -3639,27 +3607,27 @@ state 212
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 285
+    type_specifier             go to state 288
 
 
-state 213
+state 215
 
   252 enum_definition: ENUM IDENTIFIER LC . enumerator_list RC
   253                | ENUM IDENTIFIER LC . enumerator_list COMMA RC
 
-    IDENTIFIER  shift, and go to state 286
+    IDENTIFIER  shift, and go to state 289
 
-    enumerator_list  go to state 287
+    enumerator_list  go to state 290
 
 
-state 214
+state 216
 
    32 array_type_specifier: IDENTIFIER LB . RB
 
-    RB  shift, and go to state 288
+    RB  shift, and go to state 291
 
 
-state 215
+state 217
 
   256 const_definition: CONST IDENTIFIER ASSIGN_T . expression CR
 
@@ -3681,7 +3649,7 @@ state 215
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 289
+    expression                 go to state 292
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -3697,47 +3665,47 @@ state 215
     array_creation             go to state 69
 
 
-state 216
+state 218
 
    31 array_type_specifier: basic_type_specifier LB . RB
 
-    RB  shift, and go to state 290
-
-
-state 217
-
-   33 array_type_specifier: array_type_specifier LB . RB
-
-    RB  shift, and go to state 291
-
-
-state 218
-
-  257 const_definition: CONST type_specifier IDENTIFIER . CR
-
-    CR  shift, and go to state 292
+    RB  shift, and go to state 293
 
 
 state 219
 
-   46 function_definition: FUNCTION IDENTIFIER LP . parameter_list apostrophe RP AS type_specifier throws_clause myblock
-   47                    | FUNCTION IDENTIFIER LP . apostrophe RP AS type_specifier throws_clause myblock
+   33 array_type_specifier: array_type_specifier LB . RB
 
-    IDENTIFIER  shift, and go to state 281
-    COMMA       shift, and go to state 282
-
-    $default  reduce using rule 231 (apostrophe)
-
-    parameter_list  go to state 293
-    apostrophe      go to state 294
+    RB  shift, and go to state 294
 
 
 state 220
 
+  257 const_definition: CONST type_specifier IDENTIFIER . CR
+
+    CR  shift, and go to state 295
+
+
+state 221
+
+   46 function_definition: FUNCTION IDENTIFIER LP . parameter_list apostrophe RP AS type_specifier throws_clause myblock
+   47                    | FUNCTION IDENTIFIER LP . apostrophe RP AS type_specifier throws_clause myblock
+
+    IDENTIFIER  shift, and go to state 284
+    COMMA       shift, and go to state 285
+
+    $default  reduce using rule 231 (apostrophe)
+
+    parameter_list  go to state 296
+    apostrophe      go to state 297
+
+
+state 222
+
   188 declaration_statement: DIM IDENTIFIER AS . type_specifier CR
   189                      | DIM IDENTIFIER AS . type_specifier ASSIGN_T expression CR
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -3750,47 +3718,47 @@ state 220
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 295
-
-
-state 221
-
-   42 function_declaration: DECLARE FUNCTION IDENTIFIER . LP parameter_list apostrophe RP AS type_specifier throws_clause CR
-   43                     | DECLARE FUNCTION IDENTIFIER . LP apostrophe RP AS type_specifier throws_clause CR
-
-    LP  shift, and go to state 296
-
-
-state 222
-
-   44 function_declaration: DECLARE BSUB IDENTIFIER . LP parameter_list apostrophe RP throws_clause CR
-   45                     | DECLARE BSUB IDENTIFIER . LP apostrophe RP throws_clause CR
-
-    LP  shift, and go to state 297
+    type_specifier             go to state 298
 
 
 state 223
 
-   48 function_definition: BSUB IDENTIFIER LP . parameter_list apostrophe RP throws_clause myblock
-   49                    | BSUB IDENTIFIER LP . apostrophe RP throws_clause myblock
+   42 function_declaration: DECLARE FUNCTION IDENTIFIER . LP parameter_list apostrophe RP AS type_specifier throws_clause CR
+   43                     | DECLARE FUNCTION IDENTIFIER . LP apostrophe RP AS type_specifier throws_clause CR
 
-    IDENTIFIER  shift, and go to state 281
-    COMMA       shift, and go to state 282
-
-    $default  reduce using rule 231 (apostrophe)
-
-    parameter_list  go to state 298
-    apostrophe      go to state 299
+    LP  shift, and go to state 299
 
 
 state 224
+
+   44 function_declaration: DECLARE BSUB IDENTIFIER . LP parameter_list apostrophe RP throws_clause CR
+   45                     | DECLARE BSUB IDENTIFIER . LP apostrophe RP throws_clause CR
+
+    LP  shift, and go to state 300
+
+
+state 225
+
+   48 function_definition: BSUB IDENTIFIER LP . parameter_list apostrophe RP throws_clause myblock
+   49                    | BSUB IDENTIFIER LP . apostrophe RP throws_clause myblock
+
+    IDENTIFIER  shift, and go to state 284
+    COMMA       shift, and go to state 285
+
+    $default  reduce using rule 231 (apostrophe)
+
+    parameter_list  go to state 301
+    apostrophe      go to state 302
+
+
+state 226
 
    58 expression: expression COMMA assignment_expression .
 
     $default  reduce using rule 58 (expression)
 
 
-state 225
+state 227
 
    68 logical_or_expression: logical_or_expression LOGICAL_OR logical_and_expression .
    70 logical_and_expression: logical_and_expression . LOGICAL_AND equality_expression
@@ -3800,7 +3768,7 @@ state 225
     $default  reduce using rule 68 (logical_or_expression)
 
 
-state 226
+state 228
 
    70 logical_and_expression: logical_and_expression LOGICAL_AND equality_expression .
    72 equality_expression: equality_expression . EQ relational_expression
@@ -3812,7 +3780,7 @@ state 226
     $default  reduce using rule 70 (logical_and_expression)
 
 
-state 227
+state 229
 
    72 equality_expression: equality_expression EQ relational_expression .
    75 relational_expression: relational_expression . GT additive_expression
@@ -3828,7 +3796,7 @@ state 227
     $default  reduce using rule 72 (equality_expression)
 
 
-state 228
+state 230
 
    73 equality_expression: equality_expression NE relational_expression .
    75 relational_expression: relational_expression . GT additive_expression
@@ -3844,7 +3812,7 @@ state 228
     $default  reduce using rule 73 (equality_expression)
 
 
-state 229
+state 231
 
    75 relational_expression: relational_expression GT additive_expression .
    80 additive_expression: additive_expression . ADD multiplicative_expression
@@ -3856,7 +3824,7 @@ state 229
     $default  reduce using rule 75 (relational_expression)
 
 
-state 230
+state 232
 
    76 relational_expression: relational_expression GE additive_expression .
    80 additive_expression: additive_expression . ADD multiplicative_expression
@@ -3868,7 +3836,7 @@ state 230
     $default  reduce using rule 76 (relational_expression)
 
 
-state 231
+state 233
 
    77 relational_expression: relational_expression LT additive_expression .
    80 additive_expression: additive_expression . ADD multiplicative_expression
@@ -3880,7 +3848,7 @@ state 231
     $default  reduce using rule 77 (relational_expression)
 
 
-state 232
+state 234
 
    78 relational_expression: relational_expression LE additive_expression .
    80 additive_expression: additive_expression . ADD multiplicative_expression
@@ -3892,7 +3860,7 @@ state 232
     $default  reduce using rule 78 (relational_expression)
 
 
-state 233
+state 235
 
    80 additive_expression: additive_expression ADD multiplicative_expression .
    83 multiplicative_expression: multiplicative_expression . MUL unary_expression
@@ -3912,7 +3880,7 @@ state 233
     $default  reduce using rule 80 (additive_expression)
 
 
-state 234
+state 236
 
    81 additive_expression: additive_expression SUB multiplicative_expression .
    83 multiplicative_expression: multiplicative_expression . MUL unary_expression
@@ -3932,119 +3900,119 @@ state 234
     $default  reduce using rule 81 (additive_expression)
 
 
-state 235
+state 237
 
    83 multiplicative_expression: multiplicative_expression MUL unary_expression .
 
     $default  reduce using rule 83 (multiplicative_expression)
 
 
-state 236
+state 238
 
    84 multiplicative_expression: multiplicative_expression DIV unary_expression .
 
     $default  reduce using rule 84 (multiplicative_expression)
 
 
-state 237
+state 239
 
    85 multiplicative_expression: multiplicative_expression MOD unary_expression .
 
     $default  reduce using rule 85 (multiplicative_expression)
 
 
-state 238
+state 240
 
    86 multiplicative_expression: multiplicative_expression BIT_AND unary_expression .
 
     $default  reduce using rule 86 (multiplicative_expression)
 
 
-state 239
+state 241
 
    87 multiplicative_expression: multiplicative_expression BIT_OR unary_expression .
 
     $default  reduce using rule 87 (multiplicative_expression)
 
 
-state 240
+state 242
 
    88 multiplicative_expression: multiplicative_expression BIT_XOR unary_expression .
 
     $default  reduce using rule 88 (multiplicative_expression)
 
 
-state 241
+state 243
 
   105 primary_no_new_array: primary_expression LP RP .
 
     $default  reduce using rule 105 (primary_no_new_array)
 
 
-state 242
+state 244
 
    54 argument_list: argument_list . COMMA assignment_expression
   104 primary_no_new_array: primary_expression LP argument_list . RP
 
-    RP     shift, and go to state 300
-    COMMA  shift, and go to state 301
+    RP     shift, and go to state 303
+    COMMA  shift, and go to state 304
 
 
-state 243
+state 245
 
    53 argument_list: assignment_expression .
 
     $default  reduce using rule 53 (argument_list)
 
 
-state 244
+state 246
 
   103 primary_no_new_array: primary_expression DOT IDENTIFIER .
 
     $default  reduce using rule 103 (primary_no_new_array)
 
 
-state 245
+state 247
 
    30 identifier_type_specifier: IDENTIFIER .
    32 array_type_specifier: IDENTIFIER . LB RB
 
-    LB  shift, and go to state 214
+    LB  shift, and go to state 216
 
     $default  reduce using rule 30 (identifier_type_specifier)
 
 
-state 246
+state 248
 
    96 postfix_expression: primary_expression INSTANCEOF type_specifier .
 
     $default  reduce using rule 96 (postfix_expression)
 
 
-state 247
+state 249
 
   107 primary_no_new_array: primary_expression DOWN_CAST_BEGIN type_specifier . DOWN_CAST_END
 
-    DOWN_CAST_END  shift, and go to state 302
+    DOWN_CAST_END  shift, and go to state 305
 
 
-state 248
+state 250
 
    60 assignment_expression: primary_expression assignment_operator assignment_expression .
 
     $default  reduce using rule 60 (assignment_expression)
 
 
-state 249
+state 251
 
    58 expression: expression . COMMA assignment_expression
   101 primary_no_new_array: primary_no_new_array LB expression . RB
 
-    RB     shift, and go to state 303
+    RB     shift, and go to state 306
     COMMA  shift, and go to state 146
 
 
-state 250
+state 252
 
    58 expression: expression . COMMA assignment_expression
   168 while_statement: label_opt WHILE expression . myblock
@@ -4052,102 +4020,102 @@ state 250
     COMMA  shift, and go to state 146
     CR     shift, and go to state 117
 
-    myblock  go to state 304
-
-
-state 251
-
-  193 block: LC . @3 statement_list RC
-  194      | LC . RC
-
-    RC  shift, and go to state 305
-
-    $default  reduce using rule 192 (@3)
-
-    @3  go to state 306
-
-
-state 252
-
-  170 do_while_statement: label_opt DO_T block . WHILE LP expression RP CR
-
-    WHILE  shift, and go to state 307
+    myblock  go to state 307
 
 
 state 253
 
-  169 for_statement: label_opt FOR expression_opt . SEMICOLON expression_opt SEMICOLON expression_opt myblock
+  193 block: LC . @3 statement_list RC
+  194      | LC . RC
 
-    SEMICOLON  shift, and go to state 308
+    RC  shift, and go to state 308
+
+    $default  reduce using rule 192 (@3)
+
+    @3  go to state 309
 
 
 state 254
 
-  171 foreach_statement: label_opt FOREACH LP . IDENTIFIER COLON expression RP block
+  170 do_while_statement: label_opt DO_T block . WHILE LP expression RP CR
 
-    IDENTIFIER  shift, and go to state 309
+    WHILE  shift, and go to state 310
 
 
 state 255
 
-  198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER . extends CR $@5 member_declaration_list END
-  202                 | class_or_member_modifier_list class_or_interface IDENTIFIER . extends CR $@7 END
+  169 for_statement: label_opt FOR expression_opt . SEMICOLON expression_opt SEMICOLON expression_opt myblock
 
-    COLON  shift, and go to state 256
-
-    $default  reduce using rule 211 (extends)
-
-    extends  go to state 310
+    SEMICOLON  shift, and go to state 311
 
 
 state 256
 
-  212 extends: COLON . extends_list
+  171 foreach_statement: label_opt FOREACH LP . IDENTIFIER COLON expression RP block
 
-    IDENTIFIER  shift, and go to state 311
-
-    extends_list  go to state 312
+    IDENTIFIER  shift, and go to state 312
 
 
 state 257
 
-  196 class_definition: class_or_interface IDENTIFIER extends . CR $@4 member_declaration_list END
-  200                 | class_or_interface IDENTIFIER extends . CR $@6 END
+  198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER . extends CR $@5 member_declaration_list END
+  202                 | class_or_member_modifier_list class_or_interface IDENTIFIER . extends CR $@7 END
 
-    CR  shift, and go to state 313
+    COLON  shift, and go to state 258
+
+    $default  reduce using rule 211 (extends)
+
+    extends  go to state 313
 
 
 state 258
 
-   38 lib_function: LIB IDENTIFIER $@1 . CR lib_function_declaration_list END
+  212 extends: COLON . extends_list
 
-    CR  shift, and go to state 314
+    IDENTIFIER  shift, and go to state 314
+
+    extends_list  go to state 315
 
 
 state 259
+
+  196 class_definition: class_or_interface IDENTIFIER extends . CR $@4 member_declaration_list END
+  200                 | class_or_interface IDENTIFIER extends . CR $@6 END
+
+    CR  shift, and go to state 316
+
+
+state 260
+
+   38 lib_function: LIB IDENTIFIER $@1 . CR lib_function_declaration_list END
+
+    CR  shift, and go to state 317
+
+
+state 261
 
   102 primary_no_new_array: IDENTIFIER LB expression RB .
 
     $default  reduce using rule 102 (primary_no_new_array)
 
 
-state 260
+state 262
 
   151 if_statement: IF expression THEN myblock .
   152             | IF expression THEN myblock . ELSE myblock
   153             | IF expression THEN myblock . elsif_list
   154             | IF expression THEN myblock . elsif_list ELSE myblock
 
-    ELSE   shift, and go to state 315
-    ELSIF  shift, and go to state 316
+    ELSE   shift, and go to state 318
+    ELSIF  shift, and go to state 319
 
     $default  reduce using rule 151 (if_statement)
 
-    elsif_list  go to state 317
-    elsif       go to state 318
+    elsif_list  go to state 320
+    elsif       go to state 321
 
 
-state 261
+state 263
 
   163 one_case: CASE . case_expression_list myblock
 
@@ -4171,7 +4139,7 @@ state 261
 
     $default  reduce using rule 134 (expression_list)
 
-    assignment_expression      go to state 319
+    assignment_expression      go to state 322
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -4184,49 +4152,62 @@ state 261
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    expression_list            go to state 320
-    case_expression_list       go to state 321
+    expression_list            go to state 323
+    case_expression_list       go to state 324
 
 
-state 262
+state 264
 
   160 switch_statement: SWITCH expression CR case_list . default_opt
   162 case_list: case_list . one_case
 
-    CASE       shift, and go to state 261
-    DEFAULT_T  shift, and go to state 322
+    CASE       shift, and go to state 263
+    DEFAULT_T  shift, and go to state 325
 
     $default  reduce using rule 164 (default_opt)
 
-    one_case     go to state 323
-    default_opt  go to state 324
+    one_case     go to state 326
+    default_opt  go to state 327
 
 
-state 263
+state 265
 
   161 case_list: one_case .
 
     $default  reduce using rule 161 (case_list)
 
 
-state 264
+state 266
 
   124 array_literal: LC expression_list COMMA RC .
 
     $default  reduce using rule 124 (array_literal)
 
 
-state 265
+state 267
 
   136 expression_list: expression_list COMMA assignment_expression .
 
     $default  reduce using rule 136 (expression_list)
 
 
-state 266
+state 268
 
-   56 statement_list: statement_list . statement
-  259 myblock: CR @8 statement_list . END
+  259 unsafe: UNSAFE CR .
+
+    $default  reduce using rule 259 (unsafe)
+
+
+state 269
+
+  260 unsafe: SAFE CR .
+
+    $default  reduce using rule 260 (unsafe)
+
+
+state 270
+
+  262 myblock: CR unsafe @8 . statement_list END
 
     INT_LITERAL     shift, and go to state 13
     DOUBLE_LITERAL  shift, and go to state 14
@@ -4254,11 +4235,11 @@ state 266
     SUPER_T         shift, and go to state 43
     FINAL           shift, and go to state 45
     DIM             shift, and go to state 49
-    END             shift, and go to state 325
     CR              shift, and go to state 50
 
     $default  reduce using rule 158 (label_opt)
 
+    statement_list             go to state 328
     expression                 go to state 56
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
@@ -4273,7 +4254,7 @@ state 266
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    statement                  go to state 326
+    statement                  go to state 329
     if_statement               go to state 71
     label_opt                  go to state 72
     switch_statement           go to state 73
@@ -4289,18 +4270,11 @@ state 266
     declaration_statement      go to state 83
 
 
-state 267
-
-   55 statement_list: statement .
-
-    $default  reduce using rule 55 (statement_list)
-
-
-state 268
+state 271
 
   185 catch_clause: CATCH @2 . type_specifier IDENTIFIER myblock
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -4313,73 +4287,73 @@ state 268
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 327
+    type_specifier             go to state 330
 
 
-state 269
+state 272
 
   180 try_statement: TRY myblock FINALLY block .
 
     $default  reduce using rule 180 (try_statement)
 
 
-state 270
+state 273
 
   179 try_statement: TRY myblock catch_list FINALLY . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 328
+    myblock  go to state 331
 
 
-state 271
+state 274
 
   183 catch_list: catch_list catch_clause .
 
     $default  reduce using rule 183 (catch_list)
 
 
-state 272
+state 275
 
   119 primary_no_new_array: NEW IDENTIFIER LP RP .
 
     $default  reduce using rule 119 (primary_no_new_array)
 
 
-state 273
+state 276
 
    54 argument_list: argument_list . COMMA assignment_expression
   120 primary_no_new_array: NEW IDENTIFIER LP argument_list . RP
 
-    RP     shift, and go to state 329
-    COMMA  shift, and go to state 301
+    RP     shift, and go to state 332
+    COMMA  shift, and go to state 304
 
 
-state 274
+state 277
 
   121 primary_no_new_array: NEW IDENTIFIER DOT IDENTIFIER . LP RP
   122                     | NEW IDENTIFIER DOT IDENTIFIER . LP argument_list RP
 
-    LP  shift, and go to state 330
+    LP  shift, and go to state 333
 
 
-state 275
+state 278
 
   118 primary_no_new_array: NEW DELEGATE LP RP .
 
     $default  reduce using rule 118 (primary_no_new_array)
 
 
-state 276
+state 279
 
    58 expression: expression . COMMA assignment_expression
   131 dimension_expression: LB expression . RB
 
-    RB     shift, and go to state 331
+    RB     shift, and go to state 334
     COMMA  shift, and go to state 146
 
 
-state 277
+state 280
 
   131 dimension_expression: LB . expression RB
   132 dimension_list: LB . RB
@@ -4393,7 +4367,7 @@ state 277
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
     LC              shift, and go to state 26
-    RB              shift, and go to state 332
+    RB              shift, and go to state 335
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
     TRUE_T          shift, and go to state 29
@@ -4403,7 +4377,7 @@ state 277
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 276
+    expression                 go to state 279
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -4419,212 +4393,212 @@ state 277
     array_creation             go to state 69
 
 
-state 278
+state 281
 
   130 dimension_expression_list: dimension_expression_list dimension_expression .
 
     $default  reduce using rule 130 (dimension_expression_list)
 
 
-state 279
+state 282
 
   126 array_creation: NEW basic_type_specifier dimension_expression_list dimension_list .
   133 dimension_list: dimension_list . LB RB
 
-    LB  shift, and go to state 333
+    LB  shift, and go to state 336
 
     $default  reduce using rule 126 (array_creation)
 
 
-state 280
+state 283
 
   128 array_creation: NEW identifier_type_specifier dimension_expression_list dimension_list .
   133 dimension_list: dimension_list . LB RB
 
-    LB  shift, and go to state 333
+    LB  shift, and go to state 336
 
     $default  reduce using rule 128 (array_creation)
 
 
-state 281
+state 284
 
    51 parameter_list: IDENTIFIER . AS type_specifier
 
-    AS  shift, and go to state 334
-
-
-state 282
-
-  232 apostrophe: COMMA . APOSTROPHE
-
-    APOSTROPHE  shift, and go to state 335
-
-
-state 283
-
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list . apostrophe RP AS type_specifier throws_clause CR
-
-    COMMA  shift, and go to state 336
-
-    $default  reduce using rule 231 (apostrophe)
-
-    apostrophe  go to state 337
-
-
-state 284
-
-  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause CR
-
-    RP  shift, and go to state 338
+    AS  shift, and go to state 337
 
 
 state 285
 
-  190 declaration_statement: FINAL IDENTIFIER AS type_specifier . CR
-  191                      | FINAL IDENTIFIER AS type_specifier . ASSIGN_T expression CR
+  232 apostrophe: COMMA . APOSTROPHE
 
-    ASSIGN_T  shift, and go to state 339
-    CR        shift, and go to state 340
+    APOSTROPHE  shift, and go to state 338
 
 
 state 286
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list . apostrophe RP AS type_specifier throws_clause CR
+
+    COMMA  shift, and go to state 339
+
+    $default  reduce using rule 231 (apostrophe)
+
+    apostrophe  go to state 340
+
+
+state 287
+
+  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause CR
+
+    RP  shift, and go to state 341
+
+
+state 288
+
+  190 declaration_statement: FINAL IDENTIFIER AS type_specifier . CR
+  191                      | FINAL IDENTIFIER AS type_specifier . ASSIGN_T expression CR
+
+    ASSIGN_T  shift, and go to state 342
+    CR        shift, and go to state 343
+
+
+state 289
 
   254 enumerator_list: IDENTIFIER .
 
     $default  reduce using rule 254 (enumerator_list)
 
 
-state 287
+state 290
 
   252 enum_definition: ENUM IDENTIFIER LC enumerator_list . RC
   253                | ENUM IDENTIFIER LC enumerator_list . COMMA RC
   255 enumerator_list: enumerator_list . COMMA IDENTIFIER
 
-    RC     shift, and go to state 341
-    COMMA  shift, and go to state 342
+    RC     shift, and go to state 344
+    COMMA  shift, and go to state 345
 
 
-state 288
+state 291
 
    32 array_type_specifier: IDENTIFIER LB RB .
 
     $default  reduce using rule 32 (array_type_specifier)
 
 
-state 289
+state 292
 
    58 expression: expression . COMMA assignment_expression
   256 const_definition: CONST IDENTIFIER ASSIGN_T expression . CR
 
     COMMA  shift, and go to state 146
-    CR     shift, and go to state 343
+    CR     shift, and go to state 346
 
 
-state 290
+state 293
 
    31 array_type_specifier: basic_type_specifier LB RB .
 
     $default  reduce using rule 31 (array_type_specifier)
 
 
-state 291
+state 294
 
    33 array_type_specifier: array_type_specifier LB RB .
 
     $default  reduce using rule 33 (array_type_specifier)
 
 
-state 292
+state 295
 
   257 const_definition: CONST type_specifier IDENTIFIER CR .
 
     $default  reduce using rule 257 (const_definition)
 
 
-state 293
+state 296
 
    46 function_definition: FUNCTION IDENTIFIER LP parameter_list . apostrophe RP AS type_specifier throws_clause myblock
    52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
 
-    COMMA  shift, and go to state 336
+    COMMA  shift, and go to state 339
 
     $default  reduce using rule 231 (apostrophe)
 
-    apostrophe  go to state 344
-
-
-state 294
-
-   47 function_definition: FUNCTION IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause myblock
-
-    RP  shift, and go to state 345
-
-
-state 295
-
-  188 declaration_statement: DIM IDENTIFIER AS type_specifier . CR
-  189                      | DIM IDENTIFIER AS type_specifier . ASSIGN_T expression CR
-
-    ASSIGN_T  shift, and go to state 346
-    CR        shift, and go to state 347
-
-
-state 296
-
-   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP . parameter_list apostrophe RP AS type_specifier throws_clause CR
-   43                     | DECLARE FUNCTION IDENTIFIER LP . apostrophe RP AS type_specifier throws_clause CR
-
-    IDENTIFIER  shift, and go to state 281
-    COMMA       shift, and go to state 282
-
-    $default  reduce using rule 231 (apostrophe)
-
-    parameter_list  go to state 348
-    apostrophe      go to state 349
+    apostrophe  go to state 347
 
 
 state 297
 
-   44 function_declaration: DECLARE BSUB IDENTIFIER LP . parameter_list apostrophe RP throws_clause CR
-   45                     | DECLARE BSUB IDENTIFIER LP . apostrophe RP throws_clause CR
+   47 function_definition: FUNCTION IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause myblock
 
-    IDENTIFIER  shift, and go to state 281
-    COMMA       shift, and go to state 282
-
-    $default  reduce using rule 231 (apostrophe)
-
-    parameter_list  go to state 350
-    apostrophe      go to state 351
+    RP  shift, and go to state 348
 
 
 state 298
 
-   48 function_definition: BSUB IDENTIFIER LP parameter_list . apostrophe RP throws_clause myblock
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  188 declaration_statement: DIM IDENTIFIER AS type_specifier . CR
+  189                      | DIM IDENTIFIER AS type_specifier . ASSIGN_T expression CR
 
-    COMMA  shift, and go to state 336
-
-    $default  reduce using rule 231 (apostrophe)
-
-    apostrophe  go to state 352
+    ASSIGN_T  shift, and go to state 349
+    CR        shift, and go to state 350
 
 
 state 299
 
-   49 function_definition: BSUB IDENTIFIER LP apostrophe . RP throws_clause myblock
+   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP . parameter_list apostrophe RP AS type_specifier throws_clause CR
+   43                     | DECLARE FUNCTION IDENTIFIER LP . apostrophe RP AS type_specifier throws_clause CR
 
-    RP  shift, and go to state 353
+    IDENTIFIER  shift, and go to state 284
+    COMMA       shift, and go to state 285
+
+    $default  reduce using rule 231 (apostrophe)
+
+    parameter_list  go to state 351
+    apostrophe      go to state 352
 
 
 state 300
+
+   44 function_declaration: DECLARE BSUB IDENTIFIER LP . parameter_list apostrophe RP throws_clause CR
+   45                     | DECLARE BSUB IDENTIFIER LP . apostrophe RP throws_clause CR
+
+    IDENTIFIER  shift, and go to state 284
+    COMMA       shift, and go to state 285
+
+    $default  reduce using rule 231 (apostrophe)
+
+    parameter_list  go to state 353
+    apostrophe      go to state 354
+
+
+state 301
+
+   48 function_definition: BSUB IDENTIFIER LP parameter_list . apostrophe RP throws_clause myblock
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+
+    COMMA  shift, and go to state 339
+
+    $default  reduce using rule 231 (apostrophe)
+
+    apostrophe  go to state 355
+
+
+state 302
+
+   49 function_definition: BSUB IDENTIFIER LP apostrophe . RP throws_clause myblock
+
+    RP  shift, and go to state 356
+
+
+state 303
 
   104 primary_no_new_array: primary_expression LP argument_list RP .
 
     $default  reduce using rule 104 (primary_no_new_array)
 
 
-state 301
+state 304
 
    54 argument_list: argument_list COMMA . assignment_expression
 
@@ -4646,7 +4620,7 @@ state 301
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    assignment_expression      go to state 354
+    assignment_expression      go to state 357
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -4661,35 +4635,35 @@ state 301
     array_creation             go to state 69
 
 
-state 302
+state 305
 
   107 primary_no_new_array: primary_expression DOWN_CAST_BEGIN type_specifier DOWN_CAST_END .
 
     $default  reduce using rule 107 (primary_no_new_array)
 
 
-state 303
+state 306
 
   101 primary_no_new_array: primary_no_new_array LB expression RB .
 
     $default  reduce using rule 101 (primary_no_new_array)
 
 
-state 304
+state 307
 
   168 while_statement: label_opt WHILE expression myblock .
 
     $default  reduce using rule 168 (while_statement)
 
 
-state 305
+state 308
 
   194 block: LC RC .
 
     $default  reduce using rule 194 (block)
 
 
-state 306
+state 309
 
   193 block: LC @3 . statement_list RC
 
@@ -4723,7 +4697,7 @@ state 306
 
     $default  reduce using rule 158 (label_opt)
 
-    statement_list             go to state 355
+    statement_list             go to state 358
     expression                 go to state 56
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
@@ -4738,7 +4712,7 @@ state 306
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    statement                  go to state 267
+    statement                  go to state 329
     if_statement               go to state 71
     label_opt                  go to state 72
     switch_statement           go to state 73
@@ -4754,14 +4728,14 @@ state 306
     declaration_statement      go to state 83
 
 
-state 307
+state 310
 
   170 do_while_statement: label_opt DO_T block WHILE . LP expression RP CR
 
-    LP  shift, and go to state 356
+    LP  shift, and go to state 359
 
 
-state 308
+state 311
 
   169 for_statement: label_opt FOR expression_opt SEMICOLON . expression_opt SEMICOLON expression_opt myblock
 
@@ -4799,42 +4773,42 @@ state 308
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    expression_opt             go to state 357
+    expression_opt             go to state 360
 
 
-state 309
+state 312
 
   171 foreach_statement: label_opt FOREACH LP IDENTIFIER . COLON expression RP block
 
-    COLON  shift, and go to state 358
+    COLON  shift, and go to state 361
 
 
-state 310
+state 313
 
   198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends . CR $@5 member_declaration_list END
   202                 | class_or_member_modifier_list class_or_interface IDENTIFIER extends . CR $@7 END
 
-    CR  shift, and go to state 359
+    CR  shift, and go to state 362
 
 
-state 311
+state 314
 
   213 extends_list: IDENTIFIER .
 
     $default  reduce using rule 213 (extends_list)
 
 
-state 312
+state 315
 
   212 extends: COLON extends_list .
   214 extends_list: extends_list . COMMA IDENTIFIER
 
-    COMMA  shift, and go to state 360
+    COMMA  shift, and go to state 363
 
     $default  reduce using rule 212 (extends)
 
 
-state 313
+state 316
 
   196 class_definition: class_or_interface IDENTIFIER extends CR . $@4 member_declaration_list END
   200                 | class_or_interface IDENTIFIER extends CR . $@6 END
@@ -4842,29 +4816,29 @@ state 313
     END       reduce using rule 199 ($@6)
     $default  reduce using rule 195 ($@4)
 
-    $@4  go to state 361
-    $@6  go to state 362
+    $@4  go to state 364
+    $@6  go to state 365
 
 
-state 314
+state 317
 
    38 lib_function: LIB IDENTIFIER $@1 CR . lib_function_declaration_list END
 
     $default  reduce using rule 39 (lib_function_declaration_list)
 
-    lib_function_declaration_list  go to state 363
+    lib_function_declaration_list  go to state 366
 
 
-state 315
+state 318
 
   152 if_statement: IF expression THEN myblock ELSE . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 364
+    myblock  go to state 367
 
 
-state 316
+state 319
 
   157 elsif: ELSIF . expression THEN myblock
 
@@ -4886,7 +4860,7 @@ state 316
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 365
+    expression                 go to state 368
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -4902,28 +4876,28 @@ state 316
     array_creation             go to state 69
 
 
-state 317
+state 320
 
   153 if_statement: IF expression THEN myblock elsif_list .
   154             | IF expression THEN myblock elsif_list . ELSE myblock
   156 elsif_list: elsif_list . elsif
 
-    ELSE   shift, and go to state 366
-    ELSIF  shift, and go to state 316
+    ELSE   shift, and go to state 369
+    ELSIF  shift, and go to state 319
 
     $default  reduce using rule 153 (if_statement)
 
-    elsif  go to state 367
+    elsif  go to state 370
 
 
-state 318
+state 321
 
   155 elsif_list: elsif .
 
     $default  reduce using rule 155 (elsif_list)
 
 
-state 319
+state 322
 
   135 expression_list: assignment_expression .
   166 case_expression_list: assignment_expression .
@@ -4932,82 +4906,141 @@ state 319
     $default  reduce using rule 135 (expression_list)
 
 
-state 320
+state 323
 
   136 expression_list: expression_list . COMMA assignment_expression
   167 case_expression_list: expression_list . COMMA assignment_expression
 
-    COMMA  shift, and go to state 368
+    COMMA  shift, and go to state 371
 
 
-state 321
+state 324
 
   163 one_case: CASE case_expression_list . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 369
+    myblock  go to state 372
 
 
-state 322
+state 325
 
   165 default_opt: DEFAULT_T . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 370
+    myblock  go to state 373
 
 
-state 323
+state 326
 
   162 case_list: case_list one_case .
 
     $default  reduce using rule 162 (case_list)
 
 
-state 324
+state 327
 
   160 switch_statement: SWITCH expression CR case_list default_opt .
 
     $default  reduce using rule 160 (switch_statement)
 
 
-state 325
+state 328
 
-  259 myblock: CR @8 statement_list END .
+   56 statement_list: statement_list . statement
+  262 myblock: CR unsafe @8 statement_list . END
 
-    $default  reduce using rule 259 (myblock)
+    INT_LITERAL     shift, and go to state 13
+    DOUBLE_LITERAL  shift, and go to state 14
+    STRING_LITERAL  shift, and go to state 15
+    REGEXP_LITERAL  shift, and go to state 16
+    IDENTIFIER      shift, and go to state 17
+    AUTOVAR         shift, and go to state 18
+    IF              shift, and go to state 19
+    SWITCH          shift, and go to state 20
+    RETURN_T        shift, and go to state 21
+    BREAK           shift, and go to state 22
+    CONTINUE        shift, and go to state 23
+    NULL_T          shift, and go to state 24
+    LP              shift, and go to state 25
+    LC              shift, and go to state 26
+    SUB             shift, and go to state 27
+    BIT_NOT         shift, and go to state 28
+    TRUE_T          shift, and go to state 29
+    FALSE_T         shift, and go to state 30
+    EXCLAMATION     shift, and go to state 31
+    TRY             shift, and go to state 32
+    THROW           shift, and go to state 33
+    NEW             shift, and go to state 34
+    THIS_T          shift, and go to state 42
+    SUPER_T         shift, and go to state 43
+    FINAL           shift, and go to state 45
+    DIM             shift, and go to state 49
+    END             shift, and go to state 374
+    CR              shift, and go to state 50
+
+    $default  reduce using rule 158 (label_opt)
+
+    expression                 go to state 56
+    assignment_expression      go to state 57
+    logical_or_expression      go to state 58
+    logical_and_expression     go to state 59
+    equality_expression        go to state 60
+    relational_expression      go to state 61
+    additive_expression        go to state 62
+    multiplicative_expression  go to state 63
+    unary_expression           go to state 64
+    postfix_expression         go to state 65
+    primary_expression         go to state 66
+    primary_no_new_array       go to state 67
+    array_literal              go to state 68
+    array_creation             go to state 69
+    statement                  go to state 375
+    if_statement               go to state 71
+    label_opt                  go to state 72
+    switch_statement           go to state 73
+    while_statement            go to state 74
+    for_statement              go to state 75
+    do_while_statement         go to state 76
+    foreach_statement          go to state 77
+    return_statement           go to state 78
+    break_statement            go to state 79
+    continue_statement         go to state 80
+    try_statement              go to state 81
+    throw_statement            go to state 82
+    declaration_statement      go to state 83
 
 
-state 326
+state 329
 
-   56 statement_list: statement_list statement .
+   55 statement_list: statement .
 
-    $default  reduce using rule 56 (statement_list)
+    $default  reduce using rule 55 (statement_list)
 
 
-state 327
+state 330
 
   185 catch_clause: CATCH @2 type_specifier . IDENTIFIER myblock
 
-    IDENTIFIER  shift, and go to state 371
+    IDENTIFIER  shift, and go to state 376
 
 
-state 328
+state 331
 
   179 try_statement: TRY myblock catch_list FINALLY myblock .
 
     $default  reduce using rule 179 (try_statement)
 
 
-state 329
+state 332
 
   120 primary_no_new_array: NEW IDENTIFIER LP argument_list RP .
 
     $default  reduce using rule 120 (primary_no_new_array)
 
 
-state 330
+state 333
 
   121 primary_no_new_array: NEW IDENTIFIER DOT IDENTIFIER LP . RP
   122                     | NEW IDENTIFIER DOT IDENTIFIER LP . argument_list RP
@@ -5020,7 +5053,7 @@ state 330
     AUTOVAR         shift, and go to state 18
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
-    RP              shift, and go to state 372
+    RP              shift, and go to state 377
     LC              shift, and go to state 26
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
@@ -5031,8 +5064,8 @@ state 330
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    argument_list              go to state 373
-    assignment_expression      go to state 243
+    argument_list              go to state 378
+    assignment_expression      go to state 245
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -5047,32 +5080,32 @@ state 330
     array_creation             go to state 69
 
 
-state 331
+state 334
 
   131 dimension_expression: LB expression RB .
 
     $default  reduce using rule 131 (dimension_expression)
 
 
-state 332
+state 335
 
   132 dimension_list: LB RB .
 
     $default  reduce using rule 132 (dimension_list)
 
 
-state 333
+state 336
 
   133 dimension_list: dimension_list LB . RB
 
-    RB  shift, and go to state 374
+    RB  shift, and go to state 379
 
 
-state 334
+state 337
 
    51 parameter_list: IDENTIFIER AS . type_specifier
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -5085,124 +5118,42 @@ state 334
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 375
+    type_specifier             go to state 380
 
 
-state 335
+state 338
 
   232 apostrophe: COMMA APOSTROPHE .
 
     $default  reduce using rule 232 (apostrophe)
 
 
-state 336
+state 339
 
    52 parameter_list: parameter_list COMMA . IDENTIFIER AS type_specifier
   232 apostrophe: COMMA . APOSTROPHE
 
-    IDENTIFIER  shift, and go to state 376
-    APOSTROPHE  shift, and go to state 335
-
-
-state 337
-
-  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause CR
-
-    RP  shift, and go to state 377
-
-
-state 338
-
-  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause CR
-
-    AS  shift, and go to state 378
-
-
-state 339
-
-  191 declaration_statement: FINAL IDENTIFIER AS type_specifier ASSIGN_T . expression CR
-
-    INT_LITERAL     shift, and go to state 13
-    DOUBLE_LITERAL  shift, and go to state 14
-    STRING_LITERAL  shift, and go to state 15
-    REGEXP_LITERAL  shift, and go to state 16
-    IDENTIFIER      shift, and go to state 102
-    AUTOVAR         shift, and go to state 18
-    NULL_T          shift, and go to state 24
-    LP              shift, and go to state 25
-    LC              shift, and go to state 26
-    SUB             shift, and go to state 27
-    BIT_NOT         shift, and go to state 28
-    TRUE_T          shift, and go to state 29
-    FALSE_T         shift, and go to state 30
-    EXCLAMATION     shift, and go to state 31
-    NEW             shift, and go to state 34
-    THIS_T          shift, and go to state 42
-    SUPER_T         shift, and go to state 43
-
-    expression                 go to state 379
-    assignment_expression      go to state 57
-    logical_or_expression      go to state 58
-    logical_and_expression     go to state 59
-    equality_expression        go to state 60
-    relational_expression      go to state 61
-    additive_expression        go to state 62
-    multiplicative_expression  go to state 63
-    unary_expression           go to state 64
-    postfix_expression         go to state 65
-    primary_expression         go to state 66
-    primary_no_new_array       go to state 67
-    array_literal              go to state 68
-    array_creation             go to state 69
+    IDENTIFIER  shift, and go to state 381
+    APOSTROPHE  shift, and go to state 338
 
 
 state 340
 
-  190 declaration_statement: FINAL IDENTIFIER AS type_specifier CR .
-
-    $default  reduce using rule 190 (declaration_statement)
-
-
-state 341
-
-  252 enum_definition: ENUM IDENTIFIER LC enumerator_list RC .
-
-    $default  reduce using rule 252 (enum_definition)
-
-
-state 342
-
-  253 enum_definition: ENUM IDENTIFIER LC enumerator_list COMMA . RC
-  255 enumerator_list: enumerator_list COMMA . IDENTIFIER
-
-    IDENTIFIER  shift, and go to state 380
-    RC          shift, and go to state 381
-
-
-state 343
-
-  256 const_definition: CONST IDENTIFIER ASSIGN_T expression CR .
-
-    $default  reduce using rule 256 (const_definition)
-
-
-state 344
-
-   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause myblock
+  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause CR
 
     RP  shift, and go to state 382
 
 
-state 345
+state 341
 
-   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause myblock
+  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause CR
 
     AS  shift, and go to state 383
 
 
-state 346
+state 342
 
-  189 declaration_statement: DIM IDENTIFIER AS type_specifier ASSIGN_T . expression CR
+  191 declaration_statement: FINAL IDENTIFIER AS type_specifier ASSIGN_T . expression CR
 
     INT_LITERAL     shift, and go to state 13
     DOUBLE_LITERAL  shift, and go to state 14
@@ -5238,77 +5189,159 @@ state 346
     array_creation             go to state 69
 
 
+state 343
+
+  190 declaration_statement: FINAL IDENTIFIER AS type_specifier CR .
+
+    $default  reduce using rule 190 (declaration_statement)
+
+
+state 344
+
+  252 enum_definition: ENUM IDENTIFIER LC enumerator_list RC .
+
+    $default  reduce using rule 252 (enum_definition)
+
+
+state 345
+
+  253 enum_definition: ENUM IDENTIFIER LC enumerator_list COMMA . RC
+  255 enumerator_list: enumerator_list COMMA . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 385
+    RC          shift, and go to state 386
+
+
+state 346
+
+  256 const_definition: CONST IDENTIFIER ASSIGN_T expression CR .
+
+    $default  reduce using rule 256 (const_definition)
+
+
 state 347
+
+   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause myblock
+
+    RP  shift, and go to state 387
+
+
+state 348
+
+   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause myblock
+
+    AS  shift, and go to state 388
+
+
+state 349
+
+  189 declaration_statement: DIM IDENTIFIER AS type_specifier ASSIGN_T . expression CR
+
+    INT_LITERAL     shift, and go to state 13
+    DOUBLE_LITERAL  shift, and go to state 14
+    STRING_LITERAL  shift, and go to state 15
+    REGEXP_LITERAL  shift, and go to state 16
+    IDENTIFIER      shift, and go to state 102
+    AUTOVAR         shift, and go to state 18
+    NULL_T          shift, and go to state 24
+    LP              shift, and go to state 25
+    LC              shift, and go to state 26
+    SUB             shift, and go to state 27
+    BIT_NOT         shift, and go to state 28
+    TRUE_T          shift, and go to state 29
+    FALSE_T         shift, and go to state 30
+    EXCLAMATION     shift, and go to state 31
+    NEW             shift, and go to state 34
+    THIS_T          shift, and go to state 42
+    SUPER_T         shift, and go to state 43
+
+    expression                 go to state 389
+    assignment_expression      go to state 57
+    logical_or_expression      go to state 58
+    logical_and_expression     go to state 59
+    equality_expression        go to state 60
+    relational_expression      go to state 61
+    additive_expression        go to state 62
+    multiplicative_expression  go to state 63
+    unary_expression           go to state 64
+    postfix_expression         go to state 65
+    primary_expression         go to state 66
+    primary_no_new_array       go to state 67
+    array_literal              go to state 68
+    array_creation             go to state 69
+
+
+state 350
 
   188 declaration_statement: DIM IDENTIFIER AS type_specifier CR .
 
     $default  reduce using rule 188 (declaration_statement)
 
 
-state 348
+state 351
 
    42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list . apostrophe RP AS type_specifier throws_clause CR
    52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
 
-    COMMA  shift, and go to state 336
+    COMMA  shift, and go to state 339
 
     $default  reduce using rule 231 (apostrophe)
 
-    apostrophe  go to state 385
-
-
-state 349
-
-   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause CR
-
-    RP  shift, and go to state 386
-
-
-state 350
-
-   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list . apostrophe RP throws_clause CR
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-
-    COMMA  shift, and go to state 336
-
-    $default  reduce using rule 231 (apostrophe)
-
-    apostrophe  go to state 387
-
-
-state 351
-
-   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe . RP throws_clause CR
-
-    RP  shift, and go to state 388
+    apostrophe  go to state 390
 
 
 state 352
 
-   48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe . RP throws_clause myblock
+   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe . RP AS type_specifier throws_clause CR
 
-    RP  shift, and go to state 389
+    RP  shift, and go to state 391
 
 
 state 353
 
-   49 function_definition: BSUB IDENTIFIER LP apostrophe RP . throws_clause myblock
+   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list . apostrophe RP throws_clause CR
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
 
-    THROWS  shift, and go to state 390
+    COMMA  shift, and go to state 339
 
-    $default  reduce using rule 233 (throws_clause)
+    $default  reduce using rule 231 (apostrophe)
 
-    throws_clause  go to state 391
+    apostrophe  go to state 392
 
 
 state 354
+
+   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe . RP throws_clause CR
+
+    RP  shift, and go to state 393
+
+
+state 355
+
+   48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe . RP throws_clause myblock
+
+    RP  shift, and go to state 394
+
+
+state 356
+
+   49 function_definition: BSUB IDENTIFIER LP apostrophe RP . throws_clause myblock
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 396
+
+
+state 357
 
    54 argument_list: argument_list COMMA assignment_expression .
 
     $default  reduce using rule 54 (argument_list)
 
 
-state 355
+state 358
 
    56 statement_list: statement_list . statement
   193 block: LC @3 statement_list . RC
@@ -5327,7 +5360,7 @@ state 355
     NULL_T          shift, and go to state 24
     LP              shift, and go to state 25
     LC              shift, and go to state 26
-    RC              shift, and go to state 392
+    RC              shift, and go to state 397
     SUB             shift, and go to state 27
     BIT_NOT         shift, and go to state 28
     TRUE_T          shift, and go to state 29
@@ -5358,7 +5391,7 @@ state 355
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    statement                  go to state 326
+    statement                  go to state 375
     if_statement               go to state 71
     label_opt                  go to state 72
     switch_statement           go to state 73
@@ -5374,7 +5407,7 @@ state 355
     declaration_statement      go to state 83
 
 
-state 356
+state 359
 
   170 do_while_statement: label_opt DO_T block WHILE LP . expression RP CR
 
@@ -5396,7 +5429,7 @@ state 356
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 393
+    expression                 go to state 398
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -5412,14 +5445,14 @@ state 356
     array_creation             go to state 69
 
 
-state 357
+state 360
 
   169 for_statement: label_opt FOR expression_opt SEMICOLON expression_opt . SEMICOLON expression_opt myblock
 
-    SEMICOLON  shift, and go to state 394
+    SEMICOLON  shift, and go to state 399
 
 
-state 358
+state 361
 
   171 foreach_statement: label_opt FOREACH LP IDENTIFIER COLON . expression RP block
 
@@ -5441,7 +5474,7 @@ state 358
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 395
+    expression                 go to state 400
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -5457,7 +5490,7 @@ state 358
     array_creation             go to state 69
 
 
-state 359
+state 362
 
   198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR . $@5 member_declaration_list END
   202                 | class_or_member_modifier_list class_or_interface IDENTIFIER extends CR . $@7 END
@@ -5465,18 +5498,18 @@ state 359
     END       reduce using rule 201 ($@7)
     $default  reduce using rule 197 ($@5)
 
-    $@5  go to state 396
-    $@7  go to state 397
+    $@5  go to state 401
+    $@7  go to state 402
 
 
-state 360
+state 363
 
   214 extends_list: extends_list COMMA . IDENTIFIER
 
-    IDENTIFIER  shift, and go to state 398
+    IDENTIFIER  shift, and go to state 403
 
 
-state 361
+state 364
 
   196 class_definition: class_or_interface IDENTIFIER extends CR $@4 . member_declaration_list END
 
@@ -5485,32 +5518,32 @@ state 361
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    CONSTRUCTOR  shift, and go to state 399
-    FINAL        shift, and go to state 400
-    FUNCTION     shift, and go to state 401
-    DIM          shift, and go to state 402
-    DECLARE      shift, and go to state 403
-    BSUB         shift, and go to state 404
+    CONSTRUCTOR  shift, and go to state 404
+    FINAL        shift, and go to state 405
+    FUNCTION     shift, and go to state 406
+    DIM          shift, and go to state 407
+    DECLARE      shift, and go to state 408
+    BSUB         shift, and go to state 409
 
-    class_or_member_modifier_list  go to state 405
+    class_or_member_modifier_list  go to state 410
     class_or_member_modifier       go to state 86
-    member_declaration_list        go to state 406
-    member_declaration             go to state 407
-    method_member                  go to state 408
-    method_function_definition     go to state 409
-    constructor_definition         go to state 410
+    member_declaration_list        go to state 411
+    member_declaration             go to state 412
+    method_member                  go to state 413
+    method_function_definition     go to state 414
+    constructor_definition         go to state 415
     access_modifier                go to state 88
-    field_member                   go to state 411
+    field_member                   go to state 416
 
 
-state 362
+state 365
 
   200 class_definition: class_or_interface IDENTIFIER extends CR $@6 . END
 
-    END  shift, and go to state 412
+    END  shift, and go to state 417
 
 
-state 363
+state 366
 
    38 lib_function: LIB IDENTIFIER $@1 CR lib_function_declaration_list . END
    40 lib_function_declaration_list: lib_function_declaration_list . function_declaration
@@ -5523,50 +5556,50 @@ state 363
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    END          shift, and go to state 413
+    END          shift, and go to state 418
     DECLARE      shift, and go to state 51
 
-    function_declaration           go to state 414
-    class_definition               go to state 415
+    function_declaration           go to state 419
+    class_definition               go to state 420
     class_or_member_modifier_list  go to state 85
     class_or_member_modifier       go to state 86
     class_or_interface             go to state 87
     access_modifier                go to state 88
 
 
-state 364
+state 367
 
   152 if_statement: IF expression THEN myblock ELSE myblock .
 
     $default  reduce using rule 152 (if_statement)
 
 
-state 365
+state 368
 
    58 expression: expression . COMMA assignment_expression
   157 elsif: ELSIF expression . THEN myblock
 
     COMMA  shift, and go to state 146
-    THEN   shift, and go to state 416
+    THEN   shift, and go to state 421
 
 
-state 366
+state 369
 
   154 if_statement: IF expression THEN myblock elsif_list ELSE . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 417
+    myblock  go to state 422
 
 
-state 367
+state 370
 
   156 elsif_list: elsif_list elsif .
 
     $default  reduce using rule 156 (elsif_list)
 
 
-state 368
+state 371
 
   136 expression_list: expression_list COMMA . assignment_expression
   167 case_expression_list: expression_list COMMA . assignment_expression
@@ -5589,7 +5622,7 @@ state 368
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    assignment_expression      go to state 418
+    assignment_expression      go to state 423
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
     equality_expression        go to state 60
@@ -5604,78 +5637,92 @@ state 368
     array_creation             go to state 69
 
 
-state 369
+state 372
 
   163 one_case: CASE case_expression_list myblock .
 
     $default  reduce using rule 163 (one_case)
 
 
-state 370
+state 373
 
   165 default_opt: DEFAULT_T myblock .
 
     $default  reduce using rule 165 (default_opt)
 
 
-state 371
+state 374
+
+  262 myblock: CR unsafe @8 statement_list END .
+
+    $default  reduce using rule 262 (myblock)
+
+
+state 375
+
+   56 statement_list: statement_list statement .
+
+    $default  reduce using rule 56 (statement_list)
+
+
+state 376
 
   185 catch_clause: CATCH @2 type_specifier IDENTIFIER . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 419
+    myblock  go to state 424
 
 
-state 372
+state 377
 
   121 primary_no_new_array: NEW IDENTIFIER DOT IDENTIFIER LP RP .
 
     $default  reduce using rule 121 (primary_no_new_array)
 
 
-state 373
+state 378
 
    54 argument_list: argument_list . COMMA assignment_expression
   122 primary_no_new_array: NEW IDENTIFIER DOT IDENTIFIER LP argument_list . RP
 
-    RP     shift, and go to state 420
-    COMMA  shift, and go to state 301
+    RP     shift, and go to state 425
+    COMMA  shift, and go to state 304
 
 
-state 374
+state 379
 
   133 dimension_list: dimension_list LB RB .
 
     $default  reduce using rule 133 (dimension_list)
 
 
-state 375
+state 380
 
    51 parameter_list: IDENTIFIER AS type_specifier .
 
     $default  reduce using rule 51 (parameter_list)
 
 
-state 376
+state 381
 
    52 parameter_list: parameter_list COMMA IDENTIFIER . AS type_specifier
 
-    AS  shift, and go to state 421
+    AS  shift, and go to state 426
 
 
-state 377
+state 382
 
   250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP . AS type_specifier throws_clause CR
 
-    AS  shift, and go to state 422
+    AS  shift, and go to state 427
 
 
-state 378
+state 383
 
   251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS . type_specifier throws_clause CR
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -5688,44 +5735,44 @@ state 378
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 423
+    type_specifier             go to state 428
 
 
-state 379
+state 384
 
    58 expression: expression . COMMA assignment_expression
   191 declaration_statement: FINAL IDENTIFIER AS type_specifier ASSIGN_T expression . CR
 
     COMMA  shift, and go to state 146
-    CR     shift, and go to state 424
+    CR     shift, and go to state 429
 
 
-state 380
+state 385
 
   255 enumerator_list: enumerator_list COMMA IDENTIFIER .
 
     $default  reduce using rule 255 (enumerator_list)
 
 
-state 381
+state 386
 
   253 enum_definition: ENUM IDENTIFIER LC enumerator_list COMMA RC .
 
     $default  reduce using rule 253 (enum_definition)
 
 
-state 382
+state 387
 
    46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP . AS type_specifier throws_clause myblock
 
-    AS  shift, and go to state 425
+    AS  shift, and go to state 430
 
 
-state 383
+state 388
 
    47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS . type_specifier throws_clause myblock
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -5738,96 +5785,96 @@ state 383
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 426
+    type_specifier             go to state 431
 
 
-state 384
+state 389
 
    58 expression: expression . COMMA assignment_expression
   189 declaration_statement: DIM IDENTIFIER AS type_specifier ASSIGN_T expression . CR
 
     COMMA  shift, and go to state 146
-    CR     shift, and go to state 427
-
-
-state 385
-
-   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause CR
-
-    RP  shift, and go to state 428
-
-
-state 386
-
-   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause CR
-
-    AS  shift, and go to state 429
-
-
-state 387
-
-   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe . RP throws_clause CR
-
-    RP  shift, and go to state 430
-
-
-state 388
-
-   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe RP . throws_clause CR
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 431
-
-
-state 389
-
-   48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe RP . throws_clause myblock
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 432
+    CR     shift, and go to state 432
 
 
 state 390
 
-  234 throws_clause: THROWS . exception_list
+   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe . RP AS type_specifier throws_clause CR
 
-    IDENTIFIER  shift, and go to state 433
-
-    exception_list  go to state 434
+    RP  shift, and go to state 433
 
 
 state 391
+
+   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP . AS type_specifier throws_clause CR
+
+    AS  shift, and go to state 434
+
+
+state 392
+
+   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe . RP throws_clause CR
+
+    RP  shift, and go to state 435
+
+
+state 393
+
+   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe RP . throws_clause CR
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 436
+
+
+state 394
+
+   48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe RP . throws_clause myblock
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 437
+
+
+state 395
+
+  234 throws_clause: THROWS . exception_list
+
+    IDENTIFIER  shift, and go to state 438
+
+    exception_list  go to state 439
+
+
+state 396
 
    49 function_definition: BSUB IDENTIFIER LP apostrophe RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 435
+    myblock  go to state 440
 
 
-state 392
+state 397
 
   193 block: LC @3 statement_list RC .
 
     $default  reduce using rule 193 (block)
 
 
-state 393
+state 398
 
    58 expression: expression . COMMA assignment_expression
   170 do_while_statement: label_opt DO_T block WHILE LP expression . RP CR
 
-    RP     shift, and go to state 436
+    RP     shift, and go to state 441
     COMMA  shift, and go to state 146
 
 
-state 394
+state 399
 
   169 for_statement: label_opt FOR expression_opt SEMICOLON expression_opt SEMICOLON . expression_opt myblock
 
@@ -5865,19 +5912,19 @@ state 394
     primary_no_new_array       go to state 67
     array_literal              go to state 68
     array_creation             go to state 69
-    expression_opt             go to state 437
+    expression_opt             go to state 442
 
 
-state 395
+state 400
 
    58 expression: expression . COMMA assignment_expression
   171 foreach_statement: label_opt FOREACH LP IDENTIFIER COLON expression . RP block
 
-    RP     shift, and go to state 438
+    RP     shift, and go to state 443
     COMMA  shift, and go to state 146
 
 
-state 396
+state 401
 
   198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR $@5 . member_declaration_list END
 
@@ -5886,79 +5933,79 @@ state 396
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    CONSTRUCTOR  shift, and go to state 399
-    FINAL        shift, and go to state 400
-    FUNCTION     shift, and go to state 401
-    DIM          shift, and go to state 402
-    DECLARE      shift, and go to state 403
-    BSUB         shift, and go to state 404
+    CONSTRUCTOR  shift, and go to state 404
+    FINAL        shift, and go to state 405
+    FUNCTION     shift, and go to state 406
+    DIM          shift, and go to state 407
+    DECLARE      shift, and go to state 408
+    BSUB         shift, and go to state 409
 
-    class_or_member_modifier_list  go to state 405
+    class_or_member_modifier_list  go to state 410
     class_or_member_modifier       go to state 86
-    member_declaration_list        go to state 439
-    member_declaration             go to state 407
-    method_member                  go to state 408
-    method_function_definition     go to state 409
-    constructor_definition         go to state 410
+    member_declaration_list        go to state 444
+    member_declaration             go to state 412
+    method_member                  go to state 413
+    method_function_definition     go to state 414
+    constructor_definition         go to state 415
     access_modifier                go to state 88
-    field_member                   go to state 411
+    field_member                   go to state 416
 
 
-state 397
+state 402
 
   202 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR $@7 . END
 
-    END  shift, and go to state 440
+    END  shift, and go to state 445
 
 
-state 398
+state 403
 
   214 extends_list: extends_list COMMA IDENTIFIER .
 
     $default  reduce using rule 214 (extends_list)
 
 
-state 399
+state 404
 
   237 constructor_definition: CONSTRUCTOR . IDENTIFIER LP parameter_list RP throws_clause myblock
   238                       | CONSTRUCTOR . IDENTIFIER LP RP throws_clause myblock
 
-    IDENTIFIER  shift, and go to state 441
+    IDENTIFIER  shift, and go to state 446
 
 
-state 400
+state 405
 
   247 field_member: FINAL . IDENTIFIER AS type_specifier initializer_opt CR
   249             | FINAL . class_or_member_modifier_list IDENTIFIER AS type_specifier initializer_opt CR
 
-    IDENTIFIER  shift, and go to state 442
+    IDENTIFIER  shift, and go to state 447
     PUBLIC_T    shift, and go to state 37
     PRIVATE_T   shift, and go to state 38
     VIRTUAL_T   shift, and go to state 39
     OVERRIDE_T  shift, and go to state 40
     ABSTRACT_T  shift, and go to state 41
 
-    class_or_member_modifier_list  go to state 443
+    class_or_member_modifier_list  go to state 448
     class_or_member_modifier       go to state 86
     access_modifier                go to state 88
 
 
-state 401
+state 406
 
   223 method_function_definition: FUNCTION . IDENTIFIER LP parameter_list RP AS type_specifier throws_clause myblock
   224                           | FUNCTION . IDENTIFIER LP RP AS type_specifier throws_clause myblock
 
-    IDENTIFIER  shift, and go to state 444
+    IDENTIFIER  shift, and go to state 449
 
 
-state 402
+state 407
 
   245 field_member: DIM . IDENTIFIER AS type_specifier initializer_opt CR
 
-    IDENTIFIER  shift, and go to state 445
+    IDENTIFIER  shift, and go to state 450
 
 
-state 403
+state 408
 
   225 method_function_definition: DECLARE . FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier throws_clause CR
   226                           | DECLARE . FUNCTION IDENTIFIER LP RP AS type_specifier throws_clause CR
@@ -5967,20 +6014,20 @@ state 403
   239 constructor_definition: DECLARE . CONSTRUCTOR IDENTIFIER LP parameter_list RP throws_clause CR
   240                       | DECLARE . CONSTRUCTOR IDENTIFIER LP RP throws_clause CR
 
-    CONSTRUCTOR  shift, and go to state 446
-    FUNCTION     shift, and go to state 447
-    BSUB         shift, and go to state 448
+    CONSTRUCTOR  shift, and go to state 451
+    FUNCTION     shift, and go to state 452
+    BSUB         shift, and go to state 453
 
 
-state 404
+state 409
 
   227 method_function_definition: BSUB . IDENTIFIER LP parameter_list RP throws_clause myblock
   228                           | BSUB . IDENTIFIER LP RP throws_clause myblock
 
-    IDENTIFIER  shift, and go to state 449
+    IDENTIFIER  shift, and go to state 454
 
 
-state 405
+state 410
 
   204 class_or_member_modifier_list: class_or_member_modifier_list . class_or_member_modifier
   220 method_member: class_or_member_modifier_list . method_function_definition
@@ -5988,25 +6035,25 @@ state 405
   246 field_member: class_or_member_modifier_list . IDENTIFIER AS type_specifier initializer_opt CR
   248             | class_or_member_modifier_list . FINAL IDENTIFIER AS type_specifier initializer_opt CR
 
-    IDENTIFIER   shift, and go to state 450
+    IDENTIFIER   shift, and go to state 455
     PUBLIC_T     shift, and go to state 37
     PRIVATE_T    shift, and go to state 38
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    CONSTRUCTOR  shift, and go to state 399
-    FINAL        shift, and go to state 451
-    FUNCTION     shift, and go to state 401
-    DECLARE      shift, and go to state 403
-    BSUB         shift, and go to state 404
+    CONSTRUCTOR  shift, and go to state 404
+    FINAL        shift, and go to state 456
+    FUNCTION     shift, and go to state 406
+    DECLARE      shift, and go to state 408
+    BSUB         shift, and go to state 409
 
     class_or_member_modifier    go to state 182
-    method_function_definition  go to state 452
-    constructor_definition      go to state 453
+    method_function_definition  go to state 457
+    constructor_definition      go to state 458
     access_modifier             go to state 88
 
 
-state 406
+state 411
 
   196 class_definition: class_or_interface IDENTIFIER extends CR $@4 member_declaration_list . END
   216 member_declaration_list: member_declaration_list . member_declaration
@@ -6016,104 +6063,104 @@ state 406
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    CONSTRUCTOR  shift, and go to state 399
-    FINAL        shift, and go to state 400
-    FUNCTION     shift, and go to state 401
-    DIM          shift, and go to state 402
-    END          shift, and go to state 454
-    DECLARE      shift, and go to state 403
-    BSUB         shift, and go to state 404
+    CONSTRUCTOR  shift, and go to state 404
+    FINAL        shift, and go to state 405
+    FUNCTION     shift, and go to state 406
+    DIM          shift, and go to state 407
+    END          shift, and go to state 459
+    DECLARE      shift, and go to state 408
+    BSUB         shift, and go to state 409
 
-    class_or_member_modifier_list  go to state 405
+    class_or_member_modifier_list  go to state 410
     class_or_member_modifier       go to state 86
-    member_declaration             go to state 455
-    method_member                  go to state 408
-    method_function_definition     go to state 409
-    constructor_definition         go to state 410
+    member_declaration             go to state 460
+    method_member                  go to state 413
+    method_function_definition     go to state 414
+    constructor_definition         go to state 415
     access_modifier                go to state 88
-    field_member                   go to state 411
+    field_member                   go to state 416
 
 
-state 407
+state 412
 
   215 member_declaration_list: member_declaration .
 
     $default  reduce using rule 215 (member_declaration_list)
 
 
-state 408
+state 413
 
   217 member_declaration: method_member .
 
     $default  reduce using rule 217 (member_declaration)
 
 
-state 409
+state 414
 
   219 method_member: method_function_definition .
 
     $default  reduce using rule 219 (method_member)
 
 
-state 410
+state 415
 
   221 method_member: constructor_definition .
 
     $default  reduce using rule 221 (method_member)
 
 
-state 411
+state 416
 
   218 member_declaration: field_member .
 
     $default  reduce using rule 218 (member_declaration)
 
 
-state 412
+state 417
 
   200 class_definition: class_or_interface IDENTIFIER extends CR $@6 END .
 
     $default  reduce using rule 200 (class_definition)
 
 
-state 413
+state 418
 
    38 lib_function: LIB IDENTIFIER $@1 CR lib_function_declaration_list END .
 
     $default  reduce using rule 38 (lib_function)
 
 
-state 414
+state 419
 
    40 lib_function_declaration_list: lib_function_declaration_list function_declaration .
 
     $default  reduce using rule 40 (lib_function_declaration_list)
 
 
-state 415
+state 420
 
    41 lib_function_declaration_list: lib_function_declaration_list class_definition .
 
     $default  reduce using rule 41 (lib_function_declaration_list)
 
 
-state 416
+state 421
 
   157 elsif: ELSIF expression THEN . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 456
+    myblock  go to state 461
 
 
-state 417
+state 422
 
   154 if_statement: IF expression THEN myblock elsif_list ELSE myblock .
 
     $default  reduce using rule 154 (if_statement)
 
 
-state 418
+state 423
 
   136 expression_list: expression_list COMMA assignment_expression .
   167 case_expression_list: expression_list COMMA assignment_expression .
@@ -6122,25 +6169,25 @@ state 418
     $default  reduce using rule 136 (expression_list)
 
 
-state 419
+state 424
 
   185 catch_clause: CATCH @2 type_specifier IDENTIFIER myblock .
 
     $default  reduce using rule 185 (catch_clause)
 
 
-state 420
+state 425
 
   122 primary_no_new_array: NEW IDENTIFIER DOT IDENTIFIER LP argument_list RP .
 
     $default  reduce using rule 122 (primary_no_new_array)
 
 
-state 421
+state 426
 
    52 parameter_list: parameter_list COMMA IDENTIFIER AS . type_specifier
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -6153,97 +6200,14 @@ state 421
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 457
-
-
-state 422
-
-  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause CR
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 458
-
-
-state 423
-
-  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause CR
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 459
-
-
-state 424
-
-  191 declaration_statement: FINAL IDENTIFIER AS type_specifier ASSIGN_T expression CR .
-
-    $default  reduce using rule 191 (declaration_statement)
-
-
-state 425
-
-   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause myblock
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 460
-
-
-state 426
-
-   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause myblock
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 461
+    type_specifier             go to state 462
 
 
 state 427
 
-  189 declaration_statement: DIM IDENTIFIER AS type_specifier ASSIGN_T expression CR .
+  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause CR
 
-    $default  reduce using rule 189 (declaration_statement)
-
-
-state 428
-
-   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP . AS type_specifier throws_clause CR
-
-    AS  shift, and go to state 462
-
-
-state 429
-
-   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS . type_specifier throws_clause CR
-
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -6259,83 +6223,166 @@ state 429
     type_specifier             go to state 463
 
 
-state 430
+state 428
 
-   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe RP . throws_clause CR
+  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
     throws_clause  go to state 464
 
 
+state 429
+
+  191 declaration_statement: FINAL IDENTIFIER AS type_specifier ASSIGN_T expression CR .
+
+    $default  reduce using rule 191 (declaration_statement)
+
+
+state 430
+
+   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause myblock
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 465
+
+
 state 431
 
-   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe RP throws_clause . CR
+   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause myblock
 
-    CR  shift, and go to state 465
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 466
 
 
 state 432
+
+  189 declaration_statement: DIM IDENTIFIER AS type_specifier ASSIGN_T expression CR .
+
+    $default  reduce using rule 189 (declaration_statement)
+
+
+state 433
+
+   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP . AS type_specifier throws_clause CR
+
+    AS  shift, and go to state 467
+
+
+state 434
+
+   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS . type_specifier throws_clause CR
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 468
+
+
+state 435
+
+   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe RP . throws_clause CR
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 469
+
+
+state 436
+
+   45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe RP throws_clause . CR
+
+    CR  shift, and go to state 470
+
+
+state 437
 
    48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 466
+    myblock  go to state 471
 
 
-state 433
+state 438
 
   235 exception_list: IDENTIFIER .
 
     $default  reduce using rule 235 (exception_list)
 
 
-state 434
+state 439
 
   234 throws_clause: THROWS exception_list .
   236 exception_list: exception_list . COMMA IDENTIFIER
 
-    COMMA  shift, and go to state 467
+    COMMA  shift, and go to state 472
 
     $default  reduce using rule 234 (throws_clause)
 
 
-state 435
+state 440
 
    49 function_definition: BSUB IDENTIFIER LP apostrophe RP throws_clause myblock .
 
     $default  reduce using rule 49 (function_definition)
 
 
-state 436
+state 441
 
   170 do_while_statement: label_opt DO_T block WHILE LP expression RP . CR
 
-    CR  shift, and go to state 468
+    CR  shift, and go to state 473
 
 
-state 437
+state 442
 
   169 for_statement: label_opt FOR expression_opt SEMICOLON expression_opt SEMICOLON expression_opt . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 469
+    myblock  go to state 474
 
 
-state 438
+state 443
 
   171 foreach_statement: label_opt FOREACH LP IDENTIFIER COLON expression RP . block
 
-    LC  shift, and go to state 251
+    LC  shift, and go to state 253
 
-    block  go to state 470
+    block  go to state 475
 
 
-state 439
+state 444
 
   198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR $@5 member_declaration_list . END
   216 member_declaration_list: member_declaration_list . member_declaration
@@ -6345,52 +6392,52 @@ state 439
     VIRTUAL_T    shift, and go to state 39
     OVERRIDE_T   shift, and go to state 40
     ABSTRACT_T   shift, and go to state 41
-    CONSTRUCTOR  shift, and go to state 399
-    FINAL        shift, and go to state 400
-    FUNCTION     shift, and go to state 401
-    DIM          shift, and go to state 402
-    END          shift, and go to state 471
-    DECLARE      shift, and go to state 403
-    BSUB         shift, and go to state 404
+    CONSTRUCTOR  shift, and go to state 404
+    FINAL        shift, and go to state 405
+    FUNCTION     shift, and go to state 406
+    DIM          shift, and go to state 407
+    END          shift, and go to state 476
+    DECLARE      shift, and go to state 408
+    BSUB         shift, and go to state 409
 
-    class_or_member_modifier_list  go to state 405
+    class_or_member_modifier_list  go to state 410
     class_or_member_modifier       go to state 86
-    member_declaration             go to state 455
-    method_member                  go to state 408
-    method_function_definition     go to state 409
-    constructor_definition         go to state 410
+    member_declaration             go to state 460
+    method_member                  go to state 413
+    method_function_definition     go to state 414
+    constructor_definition         go to state 415
     access_modifier                go to state 88
-    field_member                   go to state 411
+    field_member                   go to state 416
 
 
-state 440
+state 445
 
   202 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR $@7 END .
 
     $default  reduce using rule 202 (class_definition)
 
 
-state 441
+state 446
 
   237 constructor_definition: CONSTRUCTOR IDENTIFIER . LP parameter_list RP throws_clause myblock
   238                       | CONSTRUCTOR IDENTIFIER . LP RP throws_clause myblock
 
-    LP  shift, and go to state 472
+    LP  shift, and go to state 477
 
 
-state 442
+state 447
 
   247 field_member: FINAL IDENTIFIER . AS type_specifier initializer_opt CR
 
-    AS  shift, and go to state 473
+    AS  shift, and go to state 478
 
 
-state 443
+state 448
 
   204 class_or_member_modifier_list: class_or_member_modifier_list . class_or_member_modifier
   249 field_member: FINAL class_or_member_modifier_list . IDENTIFIER AS type_specifier initializer_opt CR
 
-    IDENTIFIER  shift, and go to state 474
+    IDENTIFIER  shift, and go to state 479
     PUBLIC_T    shift, and go to state 37
     PRIVATE_T   shift, and go to state 38
     VIRTUAL_T   shift, and go to state 39
@@ -6401,172 +6448,114 @@ state 443
     access_modifier           go to state 88
 
 
-state 444
+state 449
 
   223 method_function_definition: FUNCTION IDENTIFIER . LP parameter_list RP AS type_specifier throws_clause myblock
   224                           | FUNCTION IDENTIFIER . LP RP AS type_specifier throws_clause myblock
-
-    LP  shift, and go to state 475
-
-
-state 445
-
-  245 field_member: DIM IDENTIFIER . AS type_specifier initializer_opt CR
-
-    AS  shift, and go to state 476
-
-
-state 446
-
-  239 constructor_definition: DECLARE CONSTRUCTOR . IDENTIFIER LP parameter_list RP throws_clause CR
-  240                       | DECLARE CONSTRUCTOR . IDENTIFIER LP RP throws_clause CR
-
-    IDENTIFIER  shift, and go to state 477
-
-
-state 447
-
-  225 method_function_definition: DECLARE FUNCTION . IDENTIFIER LP parameter_list RP AS type_specifier throws_clause CR
-  226                           | DECLARE FUNCTION . IDENTIFIER LP RP AS type_specifier throws_clause CR
-
-    IDENTIFIER  shift, and go to state 478
-
-
-state 448
-
-  229 method_function_definition: DECLARE BSUB . IDENTIFIER LP parameter_list RP throws_clause CR
-  230                           | DECLARE BSUB . IDENTIFIER LP RP throws_clause CR
-
-    IDENTIFIER  shift, and go to state 479
-
-
-state 449
-
-  227 method_function_definition: BSUB IDENTIFIER . LP parameter_list RP throws_clause myblock
-  228                           | BSUB IDENTIFIER . LP RP throws_clause myblock
 
     LP  shift, and go to state 480
 
 
 state 450
 
-  246 field_member: class_or_member_modifier_list IDENTIFIER . AS type_specifier initializer_opt CR
+  245 field_member: DIM IDENTIFIER . AS type_specifier initializer_opt CR
 
     AS  shift, and go to state 481
 
 
 state 451
 
-  248 field_member: class_or_member_modifier_list FINAL . IDENTIFIER AS type_specifier initializer_opt CR
+  239 constructor_definition: DECLARE CONSTRUCTOR . IDENTIFIER LP parameter_list RP throws_clause CR
+  240                       | DECLARE CONSTRUCTOR . IDENTIFIER LP RP throws_clause CR
 
     IDENTIFIER  shift, and go to state 482
 
 
 state 452
 
+  225 method_function_definition: DECLARE FUNCTION . IDENTIFIER LP parameter_list RP AS type_specifier throws_clause CR
+  226                           | DECLARE FUNCTION . IDENTIFIER LP RP AS type_specifier throws_clause CR
+
+    IDENTIFIER  shift, and go to state 483
+
+
+state 453
+
+  229 method_function_definition: DECLARE BSUB . IDENTIFIER LP parameter_list RP throws_clause CR
+  230                           | DECLARE BSUB . IDENTIFIER LP RP throws_clause CR
+
+    IDENTIFIER  shift, and go to state 484
+
+
+state 454
+
+  227 method_function_definition: BSUB IDENTIFIER . LP parameter_list RP throws_clause myblock
+  228                           | BSUB IDENTIFIER . LP RP throws_clause myblock
+
+    LP  shift, and go to state 485
+
+
+state 455
+
+  246 field_member: class_or_member_modifier_list IDENTIFIER . AS type_specifier initializer_opt CR
+
+    AS  shift, and go to state 486
+
+
+state 456
+
+  248 field_member: class_or_member_modifier_list FINAL . IDENTIFIER AS type_specifier initializer_opt CR
+
+    IDENTIFIER  shift, and go to state 487
+
+
+state 457
+
   220 method_member: class_or_member_modifier_list method_function_definition .
 
     $default  reduce using rule 220 (method_member)
 
 
-state 453
+state 458
 
   222 method_member: class_or_member_modifier_list constructor_definition .
 
     $default  reduce using rule 222 (method_member)
 
 
-state 454
+state 459
 
   196 class_definition: class_or_interface IDENTIFIER extends CR $@4 member_declaration_list END .
 
     $default  reduce using rule 196 (class_definition)
 
 
-state 455
+state 460
 
   216 member_declaration_list: member_declaration_list member_declaration .
 
     $default  reduce using rule 216 (member_declaration_list)
 
 
-state 456
+state 461
 
   157 elsif: ELSIF expression THEN myblock .
 
     $default  reduce using rule 157 (elsif)
 
 
-state 457
+state 462
 
    52 parameter_list: parameter_list COMMA IDENTIFIER AS type_specifier .
 
     $default  reduce using rule 52 (parameter_list)
 
 
-state 458
+state 463
 
   250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS type_specifier . throws_clause CR
 
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 483
-
-
-state 459
-
-  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS type_specifier throws_clause . CR
-
-    CR  shift, and go to state 484
-
-
-state 460
-
-   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier . throws_clause myblock
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 485
-
-
-state 461
-
-   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier throws_clause . myblock
-
-    CR  shift, and go to state 117
-
-    myblock  go to state 486
-
-
-state 462
-
-   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause CR
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 487
-
-
-state 463
-
-   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause CR
-
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
@@ -6575,169 +6564,134 @@ state 463
 
 state 464
 
-   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe RP throws_clause . CR
+  251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS type_specifier throws_clause . CR
 
     CR  shift, and go to state 489
 
 
 state 465
 
+   46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier . throws_clause myblock
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 490
+
+
+state 466
+
+   47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier throws_clause . myblock
+
+    CR  shift, and go to state 117
+
+    myblock  go to state 491
+
+
+state 467
+
+   42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS . type_specifier throws_clause CR
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 492
+
+
+state 468
+
+   43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier . throws_clause CR
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 493
+
+
+state 469
+
+   44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe RP throws_clause . CR
+
+    CR  shift, and go to state 494
+
+
+state 470
+
    45 function_declaration: DECLARE BSUB IDENTIFIER LP apostrophe RP throws_clause CR .
 
     $default  reduce using rule 45 (function_declaration)
 
 
-state 466
+state 471
 
    48 function_definition: BSUB IDENTIFIER LP parameter_list apostrophe RP throws_clause myblock .
 
     $default  reduce using rule 48 (function_definition)
 
 
-state 467
+state 472
 
   236 exception_list: exception_list COMMA . IDENTIFIER
 
-    IDENTIFIER  shift, and go to state 490
+    IDENTIFIER  shift, and go to state 495
 
 
-state 468
+state 473
 
   170 do_while_statement: label_opt DO_T block WHILE LP expression RP CR .
 
     $default  reduce using rule 170 (do_while_statement)
 
 
-state 469
+state 474
 
   169 for_statement: label_opt FOR expression_opt SEMICOLON expression_opt SEMICOLON expression_opt myblock .
 
     $default  reduce using rule 169 (for_statement)
 
 
-state 470
+state 475
 
   171 foreach_statement: label_opt FOREACH LP IDENTIFIER COLON expression RP block .
 
     $default  reduce using rule 171 (foreach_statement)
 
 
-state 471
+state 476
 
   198 class_definition: class_or_member_modifier_list class_or_interface IDENTIFIER extends CR $@5 member_declaration_list END .
 
     $default  reduce using rule 198 (class_definition)
 
 
-state 472
+state 477
 
   237 constructor_definition: CONSTRUCTOR IDENTIFIER LP . parameter_list RP throws_clause myblock
   238                       | CONSTRUCTOR IDENTIFIER LP . RP throws_clause myblock
 
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 491
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 496
 
-    parameter_list  go to state 492
-
-
-state 473
-
-  247 field_member: FINAL IDENTIFIER AS . type_specifier initializer_opt CR
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 493
-
-
-state 474
-
-  249 field_member: FINAL class_or_member_modifier_list IDENTIFIER . AS type_specifier initializer_opt CR
-
-    AS  shift, and go to state 494
-
-
-state 475
-
-  223 method_function_definition: FUNCTION IDENTIFIER LP . parameter_list RP AS type_specifier throws_clause myblock
-  224                           | FUNCTION IDENTIFIER LP . RP AS type_specifier throws_clause myblock
-
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 495
-
-    parameter_list  go to state 496
-
-
-state 476
-
-  245 field_member: DIM IDENTIFIER AS . type_specifier initializer_opt CR
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 497
-
-
-state 477
-
-  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER . LP parameter_list RP throws_clause CR
-  240                       | DECLARE CONSTRUCTOR IDENTIFIER . LP RP throws_clause CR
-
-    LP  shift, and go to state 498
+    parameter_list  go to state 497
 
 
 state 478
 
-  225 method_function_definition: DECLARE FUNCTION IDENTIFIER . LP parameter_list RP AS type_specifier throws_clause CR
-  226                           | DECLARE FUNCTION IDENTIFIER . LP RP AS type_specifier throws_clause CR
+  247 field_member: FINAL IDENTIFIER AS . type_specifier initializer_opt CR
 
-    LP  shift, and go to state 499
-
-
-state 479
-
-  229 method_function_definition: DECLARE BSUB IDENTIFIER . LP parameter_list RP throws_clause CR
-  230                           | DECLARE BSUB IDENTIFIER . LP RP throws_clause CR
-
-    LP  shift, and go to state 500
-
-
-state 480
-
-  227 method_function_definition: BSUB IDENTIFIER LP . parameter_list RP throws_clause myblock
-  228                           | BSUB IDENTIFIER LP . RP throws_clause myblock
-
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 501
-
-    parameter_list  go to state 502
-
-
-state 481
-
-  246 field_member: class_or_member_modifier_list IDENTIFIER AS . type_specifier initializer_opt CR
-
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -6750,225 +6704,207 @@ state 481
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 503
+    type_specifier             go to state 498
+
+
+state 479
+
+  249 field_member: FINAL class_or_member_modifier_list IDENTIFIER . AS type_specifier initializer_opt CR
+
+    AS  shift, and go to state 499
+
+
+state 480
+
+  223 method_function_definition: FUNCTION IDENTIFIER LP . parameter_list RP AS type_specifier throws_clause myblock
+  224                           | FUNCTION IDENTIFIER LP . RP AS type_specifier throws_clause myblock
+
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 500
+
+    parameter_list  go to state 501
+
+
+state 481
+
+  245 field_member: DIM IDENTIFIER AS . type_specifier initializer_opt CR
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 502
 
 
 state 482
 
-  248 field_member: class_or_member_modifier_list FINAL IDENTIFIER . AS type_specifier initializer_opt CR
+  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER . LP parameter_list RP throws_clause CR
+  240                       | DECLARE CONSTRUCTOR IDENTIFIER . LP RP throws_clause CR
 
-    AS  shift, and go to state 504
+    LP  shift, and go to state 503
 
 
 state 483
 
-  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause . CR
+  225 method_function_definition: DECLARE FUNCTION IDENTIFIER . LP parameter_list RP AS type_specifier throws_clause CR
+  226                           | DECLARE FUNCTION IDENTIFIER . LP RP AS type_specifier throws_clause CR
 
-    CR  shift, and go to state 505
+    LP  shift, and go to state 504
 
 
 state 484
+
+  229 method_function_definition: DECLARE BSUB IDENTIFIER . LP parameter_list RP throws_clause CR
+  230                           | DECLARE BSUB IDENTIFIER . LP RP throws_clause CR
+
+    LP  shift, and go to state 505
+
+
+state 485
+
+  227 method_function_definition: BSUB IDENTIFIER LP . parameter_list RP throws_clause myblock
+  228                           | BSUB IDENTIFIER LP . RP throws_clause myblock
+
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 506
+
+    parameter_list  go to state 507
+
+
+state 486
+
+  246 field_member: class_or_member_modifier_list IDENTIFIER AS . type_specifier initializer_opt CR
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 508
+
+
+state 487
+
+  248 field_member: class_or_member_modifier_list FINAL IDENTIFIER . AS type_specifier initializer_opt CR
+
+    AS  shift, and go to state 509
+
+
+state 488
+
+  250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause . CR
+
+    CR  shift, and go to state 510
+
+
+state 489
 
   251 delegate_definition: DELEGATE IDENTIFIER LP apostrophe RP AS type_specifier throws_clause CR .
 
     $default  reduce using rule 251 (delegate_definition)
 
 
-state 485
+state 490
 
    46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 506
+    myblock  go to state 511
 
 
-state 486
+state 491
 
    47 function_definition: FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier throws_clause myblock .
 
     $default  reduce using rule 47 (function_definition)
 
 
-state 487
+state 492
 
    42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 507
+    throws_clause  go to state 512
 
 
-state 488
+state 493
 
    43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier throws_clause . CR
 
-    CR  shift, and go to state 508
+    CR  shift, and go to state 513
 
 
-state 489
+state 494
 
    44 function_declaration: DECLARE BSUB IDENTIFIER LP parameter_list apostrophe RP throws_clause CR .
 
     $default  reduce using rule 44 (function_declaration)
 
 
-state 490
+state 495
 
   236 exception_list: exception_list COMMA IDENTIFIER .
 
     $default  reduce using rule 236 (exception_list)
 
 
-state 491
+state 496
 
   238 constructor_definition: CONSTRUCTOR IDENTIFIER LP RP . throws_clause myblock
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 509
-
-
-state 492
-
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  237 constructor_definition: CONSTRUCTOR IDENTIFIER LP parameter_list . RP throws_clause myblock
-
-    RP     shift, and go to state 510
-    COMMA  shift, and go to state 511
-
-
-state 493
-
-  247 field_member: FINAL IDENTIFIER AS type_specifier . initializer_opt CR
-
-    ASSIGN_T  shift, and go to state 512
-
-    $default  reduce using rule 243 (initializer_opt)
-
-    initializer_opt  go to state 513
-
-
-state 494
-
-  249 field_member: FINAL class_or_member_modifier_list IDENTIFIER AS . type_specifier initializer_opt CR
-
-    IDENTIFIER        shift, and go to state 245
-    VOID_T            shift, and go to state 122
-    BOOLEAN_T         shift, and go to state 123
-    INT_T             shift, and go to state 124
-    DOUBLE_T          shift, and go to state 125
-    STRING_T          shift, and go to state 126
-    VARIENT_T         shift, and go to state 127
-    NATIVE_POINTER_T  shift, and go to state 128
-    DELEGATE          shift, and go to state 136
-
-    basic_type_specifier       go to state 137
-    identifier_type_specifier  go to state 138
-    array_type_specifier       go to state 139
-    type_specifier             go to state 514
-
-
-state 495
-
-  224 method_function_definition: FUNCTION IDENTIFIER LP RP . AS type_specifier throws_clause myblock
-
-    AS  shift, and go to state 515
-
-
-state 496
-
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list . RP AS type_specifier throws_clause myblock
-
-    RP     shift, and go to state 516
-    COMMA  shift, and go to state 511
+    throws_clause  go to state 514
 
 
 state 497
 
-  245 field_member: DIM IDENTIFIER AS type_specifier . initializer_opt CR
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  237 constructor_definition: CONSTRUCTOR IDENTIFIER LP parameter_list . RP throws_clause myblock
 
-    ASSIGN_T  shift, and go to state 512
-
-    $default  reduce using rule 243 (initializer_opt)
-
-    initializer_opt  go to state 517
+    RP     shift, and go to state 515
+    COMMA  shift, and go to state 516
 
 
 state 498
 
-  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP . parameter_list RP throws_clause CR
-  240                       | DECLARE CONSTRUCTOR IDENTIFIER LP . RP throws_clause CR
+  247 field_member: FINAL IDENTIFIER AS type_specifier . initializer_opt CR
 
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 518
+    ASSIGN_T  shift, and go to state 517
 
-    parameter_list  go to state 519
+    $default  reduce using rule 243 (initializer_opt)
+
+    initializer_opt  go to state 518
 
 
 state 499
 
-  225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP . parameter_list RP AS type_specifier throws_clause CR
-  226                           | DECLARE FUNCTION IDENTIFIER LP . RP AS type_specifier throws_clause CR
+  249 field_member: FINAL class_or_member_modifier_list IDENTIFIER AS . type_specifier initializer_opt CR
 
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 520
-
-    parameter_list  go to state 521
-
-
-state 500
-
-  229 method_function_definition: DECLARE BSUB IDENTIFIER LP . parameter_list RP throws_clause CR
-  230                           | DECLARE BSUB IDENTIFIER LP . RP throws_clause CR
-
-    IDENTIFIER  shift, and go to state 281
-    RP          shift, and go to state 522
-
-    parameter_list  go to state 523
-
-
-state 501
-
-  228 method_function_definition: BSUB IDENTIFIER LP RP . throws_clause myblock
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 524
-
-
-state 502
-
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  227 method_function_definition: BSUB IDENTIFIER LP parameter_list . RP throws_clause myblock
-
-    RP     shift, and go to state 525
-    COMMA  shift, and go to state 511
-
-
-state 503
-
-  246 field_member: class_or_member_modifier_list IDENTIFIER AS type_specifier . initializer_opt CR
-
-    ASSIGN_T  shift, and go to state 512
-
-    $default  reduce using rule 243 (initializer_opt)
-
-    initializer_opt  go to state 526
-
-
-state 504
-
-  248 field_member: class_or_member_modifier_list FINAL IDENTIFIER AS . type_specifier initializer_opt CR
-
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -6981,65 +6917,176 @@ state 504
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 527
+    type_specifier             go to state 519
+
+
+state 500
+
+  224 method_function_definition: FUNCTION IDENTIFIER LP RP . AS type_specifier throws_clause myblock
+
+    AS  shift, and go to state 520
+
+
+state 501
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list . RP AS type_specifier throws_clause myblock
+
+    RP     shift, and go to state 521
+    COMMA  shift, and go to state 516
+
+
+state 502
+
+  245 field_member: DIM IDENTIFIER AS type_specifier . initializer_opt CR
+
+    ASSIGN_T  shift, and go to state 517
+
+    $default  reduce using rule 243 (initializer_opt)
+
+    initializer_opt  go to state 522
+
+
+state 503
+
+  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP . parameter_list RP throws_clause CR
+  240                       | DECLARE CONSTRUCTOR IDENTIFIER LP . RP throws_clause CR
+
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 523
+
+    parameter_list  go to state 524
+
+
+state 504
+
+  225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP . parameter_list RP AS type_specifier throws_clause CR
+  226                           | DECLARE FUNCTION IDENTIFIER LP . RP AS type_specifier throws_clause CR
+
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 525
+
+    parameter_list  go to state 526
 
 
 state 505
+
+  229 method_function_definition: DECLARE BSUB IDENTIFIER LP . parameter_list RP throws_clause CR
+  230                           | DECLARE BSUB IDENTIFIER LP . RP throws_clause CR
+
+    IDENTIFIER  shift, and go to state 284
+    RP          shift, and go to state 527
+
+    parameter_list  go to state 528
+
+
+state 506
+
+  228 method_function_definition: BSUB IDENTIFIER LP RP . throws_clause myblock
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 529
+
+
+state 507
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  227 method_function_definition: BSUB IDENTIFIER LP parameter_list . RP throws_clause myblock
+
+    RP     shift, and go to state 530
+    COMMA  shift, and go to state 516
+
+
+state 508
+
+  246 field_member: class_or_member_modifier_list IDENTIFIER AS type_specifier . initializer_opt CR
+
+    ASSIGN_T  shift, and go to state 517
+
+    $default  reduce using rule 243 (initializer_opt)
+
+    initializer_opt  go to state 531
+
+
+state 509
+
+  248 field_member: class_or_member_modifier_list FINAL IDENTIFIER AS . type_specifier initializer_opt CR
+
+    IDENTIFIER        shift, and go to state 247
+    VOID_T            shift, and go to state 122
+    BOOLEAN_T         shift, and go to state 123
+    INT_T             shift, and go to state 124
+    DOUBLE_T          shift, and go to state 125
+    STRING_T          shift, and go to state 126
+    VARIENT_T         shift, and go to state 127
+    NATIVE_POINTER_T  shift, and go to state 128
+    DELEGATE          shift, and go to state 136
+
+    basic_type_specifier       go to state 137
+    identifier_type_specifier  go to state 138
+    array_type_specifier       go to state 139
+    type_specifier             go to state 532
+
+
+state 510
 
   250 delegate_definition: DELEGATE IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause CR .
 
     $default  reduce using rule 250 (delegate_definition)
 
 
-state 506
+state 511
 
    46 function_definition: FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause myblock .
 
     $default  reduce using rule 46 (function_definition)
 
 
-state 507
+state 512
 
    42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause . CR
 
-    CR  shift, and go to state 528
+    CR  shift, and go to state 533
 
 
-state 508
+state 513
 
    43 function_declaration: DECLARE FUNCTION IDENTIFIER LP apostrophe RP AS type_specifier throws_clause CR .
 
     $default  reduce using rule 43 (function_declaration)
 
 
-state 509
+state 514
 
   238 constructor_definition: CONSTRUCTOR IDENTIFIER LP RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 529
+    myblock  go to state 534
 
 
-state 510
+state 515
 
   237 constructor_definition: CONSTRUCTOR IDENTIFIER LP parameter_list RP . throws_clause myblock
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 530
+    throws_clause  go to state 535
 
 
-state 511
+state 516
 
    52 parameter_list: parameter_list COMMA . IDENTIFIER AS type_specifier
 
-    IDENTIFIER  shift, and go to state 376
+    IDENTIFIER  shift, and go to state 381
 
 
-state 512
+state 517
 
   244 initializer_opt: ASSIGN_T . expression
 
@@ -7061,7 +7108,7 @@ state 512
     THIS_T          shift, and go to state 42
     SUPER_T         shift, and go to state 43
 
-    expression                 go to state 531
+    expression                 go to state 536
     assignment_expression      go to state 57
     logical_or_expression      go to state 58
     logical_and_expression     go to state 59
@@ -7077,29 +7124,29 @@ state 512
     array_creation             go to state 69
 
 
-state 513
+state 518
 
   247 field_member: FINAL IDENTIFIER AS type_specifier initializer_opt . CR
 
-    CR  shift, and go to state 532
+    CR  shift, and go to state 537
 
 
-state 514
+state 519
 
   249 field_member: FINAL class_or_member_modifier_list IDENTIFIER AS type_specifier . initializer_opt CR
 
-    ASSIGN_T  shift, and go to state 512
+    ASSIGN_T  shift, and go to state 517
 
     $default  reduce using rule 243 (initializer_opt)
 
-    initializer_opt  go to state 533
+    initializer_opt  go to state 538
 
 
-state 515
+state 520
 
   224 method_function_definition: FUNCTION IDENTIFIER LP RP AS . type_specifier throws_clause myblock
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -7112,141 +7159,141 @@ state 515
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 534
-
-
-state 516
-
-  223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP . AS type_specifier throws_clause myblock
-
-    AS  shift, and go to state 535
-
-
-state 517
-
-  245 field_member: DIM IDENTIFIER AS type_specifier initializer_opt . CR
-
-    CR  shift, and go to state 536
-
-
-state 518
-
-  240 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP RP . throws_clause CR
-
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 537
-
-
-state 519
-
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP parameter_list . RP throws_clause CR
-
-    RP     shift, and go to state 538
-    COMMA  shift, and go to state 511
-
-
-state 520
-
-  226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP . AS type_specifier throws_clause CR
-
-    AS  shift, and go to state 539
+    type_specifier             go to state 539
 
 
 state 521
 
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list . RP AS type_specifier throws_clause CR
+  223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP . AS type_specifier throws_clause myblock
 
-    RP     shift, and go to state 540
-    COMMA  shift, and go to state 511
+    AS  shift, and go to state 540
 
 
 state 522
 
-  230 method_function_definition: DECLARE BSUB IDENTIFIER LP RP . throws_clause CR
+  245 field_member: DIM IDENTIFIER AS type_specifier initializer_opt . CR
 
-    THROWS  shift, and go to state 390
-
-    $default  reduce using rule 233 (throws_clause)
-
-    throws_clause  go to state 541
+    CR  shift, and go to state 541
 
 
 state 523
 
-   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
-  229 method_function_definition: DECLARE BSUB IDENTIFIER LP parameter_list . RP throws_clause CR
+  240 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP RP . throws_clause CR
 
-    RP     shift, and go to state 542
-    COMMA  shift, and go to state 511
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 542
 
 
 state 524
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP parameter_list . RP throws_clause CR
+
+    RP     shift, and go to state 543
+    COMMA  shift, and go to state 516
+
+
+state 525
+
+  226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP . AS type_specifier throws_clause CR
+
+    AS  shift, and go to state 544
+
+
+state 526
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list . RP AS type_specifier throws_clause CR
+
+    RP     shift, and go to state 545
+    COMMA  shift, and go to state 516
+
+
+state 527
+
+  230 method_function_definition: DECLARE BSUB IDENTIFIER LP RP . throws_clause CR
+
+    THROWS  shift, and go to state 395
+
+    $default  reduce using rule 233 (throws_clause)
+
+    throws_clause  go to state 546
+
+
+state 528
+
+   52 parameter_list: parameter_list . COMMA IDENTIFIER AS type_specifier
+  229 method_function_definition: DECLARE BSUB IDENTIFIER LP parameter_list . RP throws_clause CR
+
+    RP     shift, and go to state 547
+    COMMA  shift, and go to state 516
+
+
+state 529
 
   228 method_function_definition: BSUB IDENTIFIER LP RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 543
+    myblock  go to state 548
 
 
-state 525
+state 530
 
   227 method_function_definition: BSUB IDENTIFIER LP parameter_list RP . throws_clause myblock
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 544
+    throws_clause  go to state 549
 
 
-state 526
+state 531
 
   246 field_member: class_or_member_modifier_list IDENTIFIER AS type_specifier initializer_opt . CR
 
-    CR  shift, and go to state 545
+    CR  shift, and go to state 550
 
 
-state 527
+state 532
 
   248 field_member: class_or_member_modifier_list FINAL IDENTIFIER AS type_specifier . initializer_opt CR
 
-    ASSIGN_T  shift, and go to state 512
+    ASSIGN_T  shift, and go to state 517
 
     $default  reduce using rule 243 (initializer_opt)
 
-    initializer_opt  go to state 546
+    initializer_opt  go to state 551
 
 
-state 528
+state 533
 
    42 function_declaration: DECLARE FUNCTION IDENTIFIER LP parameter_list apostrophe RP AS type_specifier throws_clause CR .
 
     $default  reduce using rule 42 (function_declaration)
 
 
-state 529
+state 534
 
   238 constructor_definition: CONSTRUCTOR IDENTIFIER LP RP throws_clause myblock .
 
     $default  reduce using rule 238 (constructor_definition)
 
 
-state 530
+state 535
 
   237 constructor_definition: CONSTRUCTOR IDENTIFIER LP parameter_list RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 547
+    myblock  go to state 552
 
 
-state 531
+state 536
 
    58 expression: expression . COMMA assignment_expression
   244 initializer_opt: ASSIGN_T expression .
@@ -7256,36 +7303,36 @@ state 531
     $default  reduce using rule 244 (initializer_opt)
 
 
-state 532
+state 537
 
   247 field_member: FINAL IDENTIFIER AS type_specifier initializer_opt CR .
 
     $default  reduce using rule 247 (field_member)
 
 
-state 533
+state 538
 
   249 field_member: FINAL class_or_member_modifier_list IDENTIFIER AS type_specifier initializer_opt . CR
 
-    CR  shift, and go to state 548
+    CR  shift, and go to state 553
 
 
-state 534
+state 539
 
   224 method_function_definition: FUNCTION IDENTIFIER LP RP AS type_specifier . throws_clause myblock
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 549
+    throws_clause  go to state 554
 
 
-state 535
+state 540
 
   223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP AS . type_specifier throws_clause myblock
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -7298,39 +7345,39 @@ state 535
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 550
+    type_specifier             go to state 555
 
 
-state 536
+state 541
 
   245 field_member: DIM IDENTIFIER AS type_specifier initializer_opt CR .
 
     $default  reduce using rule 245 (field_member)
 
 
-state 537
+state 542
 
   240 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP RP throws_clause . CR
 
-    CR  shift, and go to state 551
+    CR  shift, and go to state 556
 
 
-state 538
+state 543
 
   239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP parameter_list RP . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 552
+    throws_clause  go to state 557
 
 
-state 539
+state 544
 
   226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP AS . type_specifier throws_clause CR
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -7343,128 +7390,128 @@ state 539
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 553
+    type_specifier             go to state 558
 
 
-state 540
+state 545
 
   225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list RP . AS type_specifier throws_clause CR
 
-    AS  shift, and go to state 554
+    AS  shift, and go to state 559
 
 
-state 541
+state 546
 
   230 method_function_definition: DECLARE BSUB IDENTIFIER LP RP throws_clause . CR
 
-    CR  shift, and go to state 555
+    CR  shift, and go to state 560
 
 
-state 542
+state 547
 
   229 method_function_definition: DECLARE BSUB IDENTIFIER LP parameter_list RP . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 556
+    throws_clause  go to state 561
 
 
-state 543
+state 548
 
   228 method_function_definition: BSUB IDENTIFIER LP RP throws_clause myblock .
 
     $default  reduce using rule 228 (method_function_definition)
 
 
-state 544
+state 549
 
   227 method_function_definition: BSUB IDENTIFIER LP parameter_list RP throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 557
+    myblock  go to state 562
 
 
-state 545
+state 550
 
   246 field_member: class_or_member_modifier_list IDENTIFIER AS type_specifier initializer_opt CR .
 
     $default  reduce using rule 246 (field_member)
 
 
-state 546
+state 551
 
   248 field_member: class_or_member_modifier_list FINAL IDENTIFIER AS type_specifier initializer_opt . CR
 
-    CR  shift, and go to state 558
+    CR  shift, and go to state 563
 
 
-state 547
+state 552
 
   237 constructor_definition: CONSTRUCTOR IDENTIFIER LP parameter_list RP throws_clause myblock .
 
     $default  reduce using rule 237 (constructor_definition)
 
 
-state 548
+state 553
 
   249 field_member: FINAL class_or_member_modifier_list IDENTIFIER AS type_specifier initializer_opt CR .
 
     $default  reduce using rule 249 (field_member)
 
 
-state 549
+state 554
 
   224 method_function_definition: FUNCTION IDENTIFIER LP RP AS type_specifier throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 559
+    myblock  go to state 564
 
 
-state 550
+state 555
 
   223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier . throws_clause myblock
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 560
+    throws_clause  go to state 565
 
 
-state 551
+state 556
 
   240 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP RP throws_clause CR .
 
     $default  reduce using rule 240 (constructor_definition)
 
 
-state 552
+state 557
 
   239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP parameter_list RP throws_clause . CR
 
-    CR  shift, and go to state 561
+    CR  shift, and go to state 566
 
 
-state 553
+state 558
 
   226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP AS type_specifier . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 562
+    throws_clause  go to state 567
 
 
-state 554
+state 559
 
   225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list RP AS . type_specifier throws_clause CR
 
-    IDENTIFIER        shift, and go to state 245
+    IDENTIFIER        shift, and go to state 247
     VOID_T            shift, and go to state 122
     BOOLEAN_T         shift, and go to state 123
     INT_T             shift, and go to state 124
@@ -7477,107 +7524,107 @@ state 554
     basic_type_specifier       go to state 137
     identifier_type_specifier  go to state 138
     array_type_specifier       go to state 139
-    type_specifier             go to state 563
+    type_specifier             go to state 568
 
 
-state 555
+state 560
 
   230 method_function_definition: DECLARE BSUB IDENTIFIER LP RP throws_clause CR .
 
     $default  reduce using rule 230 (method_function_definition)
 
 
-state 556
+state 561
 
   229 method_function_definition: DECLARE BSUB IDENTIFIER LP parameter_list RP throws_clause . CR
 
-    CR  shift, and go to state 564
+    CR  shift, and go to state 569
 
 
-state 557
+state 562
 
   227 method_function_definition: BSUB IDENTIFIER LP parameter_list RP throws_clause myblock .
 
     $default  reduce using rule 227 (method_function_definition)
 
 
-state 558
+state 563
 
   248 field_member: class_or_member_modifier_list FINAL IDENTIFIER AS type_specifier initializer_opt CR .
 
     $default  reduce using rule 248 (field_member)
 
 
-state 559
+state 564
 
   224 method_function_definition: FUNCTION IDENTIFIER LP RP AS type_specifier throws_clause myblock .
 
     $default  reduce using rule 224 (method_function_definition)
 
 
-state 560
+state 565
 
   223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier throws_clause . myblock
 
     CR  shift, and go to state 117
 
-    myblock  go to state 565
+    myblock  go to state 570
 
 
-state 561
+state 566
 
   239 constructor_definition: DECLARE CONSTRUCTOR IDENTIFIER LP parameter_list RP throws_clause CR .
 
     $default  reduce using rule 239 (constructor_definition)
 
 
-state 562
+state 567
 
   226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP AS type_specifier throws_clause . CR
 
-    CR  shift, and go to state 566
+    CR  shift, and go to state 571
 
 
-state 563
+state 568
 
   225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier . throws_clause CR
 
-    THROWS  shift, and go to state 390
+    THROWS  shift, and go to state 395
 
     $default  reduce using rule 233 (throws_clause)
 
-    throws_clause  go to state 567
+    throws_clause  go to state 572
 
 
-state 564
+state 569
 
   229 method_function_definition: DECLARE BSUB IDENTIFIER LP parameter_list RP throws_clause CR .
 
     $default  reduce using rule 229 (method_function_definition)
 
 
-state 565
+state 570
 
   223 method_function_definition: FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier throws_clause myblock .
 
     $default  reduce using rule 223 (method_function_definition)
 
 
-state 566
+state 571
 
   226 method_function_definition: DECLARE FUNCTION IDENTIFIER LP RP AS type_specifier throws_clause CR .
 
     $default  reduce using rule 226 (method_function_definition)
 
 
-state 567
+state 572
 
   225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier throws_clause . CR
 
-    CR  shift, and go to state 568
+    CR  shift, and go to state 573
 
 
-state 568
+state 573
 
   225 method_function_definition: DECLARE FUNCTION IDENTIFIER LP parameter_list RP AS type_specifier throws_clause CR .
 
