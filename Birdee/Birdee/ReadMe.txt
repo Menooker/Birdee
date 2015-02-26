@@ -1,36 +1,37 @@
-﻿========================================================================
-    控制台应用程序：Birdee 项目概述
-========================================================================
+﻿Array
+	The access time of an array will be largely decreased if the array is a variable rather than a member or a return value. Because the when accessing the array, the compiler have to push the array pointer for GC if the array is not a varible (a varible can be static, parameter, local variable or AutoVar)
+	Object arrays are much slower than int/double arrays for the same reason.
 
-应用程序向导已为您创建了此 Birdee 应用程序。
+	example 1:
+	dim kp as string[]= new string[10]
+	function kkk() as string[]
+	 return kp
+	end
 
-本文件概要介绍组成 Birdee 应用程序的每个文件的内容。
+	dim i as int
+	for i=0;i<10000000;i++
+	unsafe
+		kkk()[3]=null
+	end
+	--------------------------------------
+	example 2:
+	dim kp as string[]= new string[10]
+	dim i as int
+	for i=0;i<10000000;i++
+	unsafe
+		kp[3]=null
+	end
 
+	example 1 takes 1669ms, while example 2 takes only 93ms. 
+	example 1 is amazingly slower than example2.
 
-Birdee.vcxproj
-    这是使用应用程序向导生成的 VC++ 项目的主项目文件，
-    其中包含生成该文件的 Visual C++ 
-    的版本信息，以及有关使用应用程序向导选择的平台、配置和项目功能的信息。
-
-Birdee.vcxproj.filters
-    这是使用“应用程序向导”生成的 VC++ 项目筛选器文件。 
-    它包含有关项目文件与筛选器之间的关联信息。 在 IDE 
-    中，通过这种关联，在特定节点下以分组形式显示具有相似扩展名的文件。
-    例如，“.cpp”文件与“源文件”筛选器关联。
-
-Birdee.cpp
-    这是主应用程序源文件。
-
-/////////////////////////////////////////////////////////////////////////////
-其他标准文件：
-
-StdAfx.h，StdAfx.cpp
-    这些文件用于生成名为 Birdee.pch 的预编译头 (PCH) 文件和
-    名为 StdAfx.obj 的预编译类型文件。
-
-/////////////////////////////////////////////////////////////////////////////
-其他注释：
-
-应用程序向导使用“TODO:”注释来指示应添加或自定义的源代码部分。
-
-/////////////////////////////////////////////////////////////////////////////
+	example 3 changes the string array to an int array. Note that the three programs are doing similar things (setting an element of the array to null/0)
+	example 3:
+	dim kp as int[]= new int[10]
+	dim i as int
+	for i=0;i<10000000;i++
+	unsafe
+		kp[3]=0
+	end
+	The execution time of example 3 is 16ms, which is 100 times faster than example 1 !!!!
+	 

@@ -334,6 +334,7 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
 
 void BcBuildPop()
 {
+	BcGetCurrentCompilerContext()->FunctionUse[FunPop]=1;
 	std::vector<Type*> Args2;
 	Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=Type::getVoidTy(context);
@@ -581,6 +582,7 @@ Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 	std::vector<Type*> Args2(1,ty);
 	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, true);
 	Function* fret=Function::Create(FT8, Function::LinkOnceAnyLinkage,name, module);
+	fret->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
 	SwitchBlock(BB);
 	
@@ -1383,13 +1385,20 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 
 	}
 	else if (expr->kind == INDEX_EXPRESSION) {
-		if(ty==-1)//fix-me : if the array item is obj, we should mark it for GC
+		if(ty==-1)
 		{
+			int myty=get_opcode_type_offset(expr->type);
+			if(myty==2)
+				builder.CreateCall(GetPush(2),v);
 			Value* arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
+			if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION) //if the array is a variable, no need to push
+				builder.CreateCall(GetPush(2),arr);
 			Value* idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
 			Declaration* decl=0;
 			if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
 				decl=expr->u.index_expression.barray->u.identifier.u.declaration;
+			
+			
 			/*std::vector<Value*> arg;
 			buidler.CreateCall(GetPush(2),arr);arg.push_back(idx);arg.push_back(v);
 			builder.CreateCall(ArrPut[get_opcode_type_offset(expr->type)],arg);//*/
@@ -1401,16 +1410,22 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 				if(decl) ////Full_arr_chk
 				{
 					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-						TypeSwitch[get_opcode_type_offset(expr->type)]);
+						TypeSwitch[myty]);
 				}
 				else
-					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);//*/
+					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
 			}
 			else
-				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[get_opcode_type_offset(expr->type)]);
+				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
 			//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 			builder.CreateStore(v,builder.CreateGEP(p,idx));
-
+			if(myty==2)
+				builder.CreateCall(GetPop(),ConstInt(32,1+(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION)));
+			else
+			{
+				if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION)
+					builder.CreateCall(GetPop(),ConstInt(32,1));
+			}
 		}
 		else
 		{
@@ -1624,7 +1639,11 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
         return builder.CreateCall(fArrGetCh,idx);
     } else {
+		int myty=get_opcode_type_offset(expr->type);
+
 		arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
+		if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION) //if the array is a variable, no need to push
+			builder.CreateCall(GetPush(2),arr);
 		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);	
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
@@ -1637,15 +1656,16 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 			if(decl)
 			{
 				p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-					TypeSwitch[get_opcode_type_offset(expr->type)]);
+					TypeSwitch[myty]);
 			
 			}
 			else
-				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);//*/
+				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
 		}
 		else
-			p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[get_opcode_type_offset(expr->type)]);
-		//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
+			p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
+		if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION)
+			builder.CreateCall(GetPop(),ConstInt(32,1));
 		return builder.CreateLoad(builder.CreateInBoundsGEP(p,idx));
         //return builder.CreateCall(ArrGet[get_opcode_type_offset(expr->type)],arg);
     }

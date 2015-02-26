@@ -1007,4 +1007,9 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	{
 		replaceAllUsesWith(f,inline_mod->getFunction("systemi!FldAddrImp"));
 	}
+	f=m->getFunction("systemi!Pop");
+	if(f)
+	{
+		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PopImp"));
+	}
 }

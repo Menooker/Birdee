@@ -23,21 +23,24 @@ end
 		end
 	end
 
-dim kp as int[]=new int[10]
-//dim a as TestLib =new TestLib()
-//=new TestLib()
-dim i as int
+
+
+
+
+
 dim j as int
 dim t as int=GetClock()
 dim k as int
-for j=0;j<3;j++
-safe
-	kp[1]=j
-	for i=0;i<100000000;i++
-		kp[3]=i
-		//println(a.fielda)
+	dim kp as string[]= new string[10]
+	function kkk() as string[]
+	 return kp
 	end
-end
+
+	dim i as int
+	for i=0;i<10000000;i++
+	unsafe
+		kkk()[3]=null
+	end
 println(GetClock()-t)
 
 
