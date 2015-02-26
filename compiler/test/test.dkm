@@ -41,6 +41,8 @@ dim k as int
 	unsafe
 		kkk()[3]=null
 	end
+#i=kp[0]
+kp[0]=#i
 println(GetClock()-t)
 
 

@@ -145,7 +145,7 @@ extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
-Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
+//Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
 extern "C" int get_method_index(MemberExpression *member);
@@ -711,17 +711,18 @@ extern "C" void* BcNewModule(char* name)
 
 	std::vector<Type*> ArgsObjInt;  ArgsObjInt.push_back(Type::getInt32Ty(context));
 	nft = FunctionType::get(Type::getInt32Ty(context),ArgsObjInt, false);
-	fArrGeti = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeti", module);
-	//fFldGeti = Function::Create(nft, Function::ExternalLinkage,"system!FldGeti", module);
 	fArrGetCh = Function::Create(nft, Function::ExternalLinkage,"system!ArrGetCh", module);
+
+/*	fArrGeti = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeti", module);
+	//fFldGeti = Function::Create(nft, Function::ExternalLinkage,"system!FldGeti", module);
 	nft = FunctionType::get(Type::getDoubleTy(context),ArgsObjInt, false);
 	fArrGetd = Function::Create(nft, Function::ExternalLinkage,"system!ArrGetd", module);
 	//fFldGetd = Function::Create(nft, Function::ExternalLinkage,"system!FldGetd", module);
 	nft = FunctionType::get(TyObjectRef,ArgsObjInt, false);
 	fArrGeto = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeto", module);
 	//fFldGeto = Function::Create(nft, Function::ExternalLinkage,"system!FldGeto", module);
-	ArrGet[0]=fArrGeti;	ArrGet[1]=fArrGetd;ArrGet[2]=fArrGeto;
-	//FldGet[0]=fFldGeti;	FldGet[1]=fFldGetd;FldGet[2]=fFldGeto;
+	//ArrGet[0]=fArrGeti;	ArrGet[1]=fArrGetd;ArrGet[2]=fArrGeto;
+	//FldGet[0]=fFldGeti;	FldGet[1]=fFldGetd;FldGet[2]=fFldGeto;*/
 
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
@@ -733,7 +734,7 @@ extern "C" void* BcNewModule(char* name)
 	fArrPuti = Function::Create(nft, Function::ExternalLinkage,"system!ArrPuti", module);
 //	fArrPuti->setCallingConv(llvm::CallingConv::X86_FastCall  );
 
-	//fFldPuti = Function::Create(nft, Function::ExternalLinkage,"system!FldPuti", module);
+/*	//fFldPuti = Function::Create(nft, Function::ExternalLinkage,"system!FldPuti", module);
 	std::vector<Type*> ArgsOID; ArgsOID.push_back(Type::getInt32Ty(context));ArgsOID.push_back(Type::getDoubleTy(context));
 	nft = FunctionType::get(Type::getVoidTy(context),ArgsOID, false);
 	fArrPutd = Function::Create(nft, Function::ExternalLinkage,"system!ArrPutd", module);
@@ -743,7 +744,7 @@ extern "C" void* BcNewModule(char* name)
 	fArrPuto = Function::Create(nft, Function::ExternalLinkage,"system!ArrPuto", module);
 	//fFldPuto = Function::Create(nft, Function::ExternalLinkage,"system!FldPuto", module);
 	ArrPut[0]=fArrPuti;	ArrPut[1]=fArrPutd;ArrPut[2]=fArrPuto;
-	//FldPut[0]=fFldPuti;	FldPut[1]=fFldPutd;FldPut[2]=fFldPuto;
+	//FldPut[0]=fFldPuti;	FldPut[1]=fFldPutd;FldPut[2]=fFldPuto;*/
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fFailure=Function::Create(nft, Function::ExternalLinkage,"system!Failure", module);
@@ -1360,6 +1361,8 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 	}
 }
 
+
+Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *expr);
 void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,Value* v,int ty=-1)
 {
     if (expr->kind == IDENTIFIER_EXPRESSION) {
@@ -1405,7 +1408,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 			//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 			Value* p;
-			if(block->unsafe)
+			if(block && block->unsafe)
 			{
 				if(decl) ////Full_arr_chk
 				{
@@ -1429,7 +1432,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 		}
 		else
 		{
-			Value* arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
+/*			Value* arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
 			Value* idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
 			std::vector<Value*> arg;
 			arg.push_back(idx);
@@ -1437,7 +1440,8 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			Value* to=builder.CreateCall(ArrGet[2],arg);
 			builder.CreateCall(GetPush(ty),v);
 			builder.CreateCall(GetPush(2),to);
-			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));
+			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));*/
+			__asm int 3
 		}
 		
     } else {
@@ -1626,9 +1630,7 @@ Value* BcGenerateArrayCreationExpression(DVM_Executable *exe, Block *block,Expre
     //generate_code(ob, expr->line_number, DVM_NEW_ARRAY, dim_count, index);
 }
 
-Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *expr)//temp : fix-me : fast arr should mark the array
-	//fix-me : array base cache disabled
-	//fix-me : array cache can be used here
+Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *expr)
 {
     Value* arr;
     Value* idx;
@@ -1648,7 +1650,7 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 		Value* p;
-		if(block->unsafe)
+		if(block && block->unsafe)
 		{
 			Declaration* decl=0;///Full_arr_chk
 			if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)

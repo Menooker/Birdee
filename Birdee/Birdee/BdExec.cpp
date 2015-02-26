@@ -878,20 +878,20 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 
 	f=m->getFunction("system!GetSuper");
 	TheExecutionEngine->addGlobalMapping(f,ExGetSuper);
-	f=m->getFunction("system!ArrGeti");
+/*	f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGetd);
 	f=m->getFunction("system!ArrGeto");
-	TheExecutionEngine->addGlobalMapping(f,ExArrGeto);
+	TheExecutionEngine->addGlobalMapping(f,ExArrGeto);*/
 	f=m->getFunction("system!ArrGetCh");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGetCh);
-	f=m->getFunction("system!ArrPuti");
+/*	f=m->getFunction("system!ArrPuti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuti);
 	f=m->getFunction("system!ArrPutd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPutd);
 	f=m->getFunction("system!ArrPuto");
-	TheExecutionEngine->addGlobalMapping(f,ExArrPuto);
+	TheExecutionEngine->addGlobalMapping(f,ExArrPuto);*/
 
 	f=m->getFunction("system!SystemRaise");
 	TheExecutionEngine->addGlobalMapping(f,ExSystemRaise);
