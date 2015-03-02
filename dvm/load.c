@@ -44,7 +44,7 @@ add_functions(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
 			//here to add dyn load codes
 			if(!LdLoadPackage(dvm,ee->executable->function[src_idx].isLib,ee->executable->function[src_idx].package_name))
 			{
-				
+
 					dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
 								LOAD_FILE_NOT_FOUND_ERR,
 								DVM_STRING_MESSAGE_ARGUMENT, "file", ee->executable->function[src_idx].libname ? ee->executable->function[src_idx].libname : "(null)",
@@ -291,7 +291,7 @@ convert_code(DVM_VirtualMachine *dvm, DVM_Executable *exe,
             int parameter_count;
 
             DBG_assert(func != NULL, ("func == NULL!\n"));
-            
+
             if (func->is_method) {
                 parameter_count = func->parameter_count + 1; /* for this */
             } else{
@@ -337,6 +337,7 @@ DVM_search_class(DVM_VirtualMachine *dvm, char *package_name, char *name)
             return i;
         }
     }
+
     dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC, CLASS_NOT_FOUND_ERR,
                 DVM_STRING_MESSAGE_ARGUMENT, "name", name,
                 DVM_MESSAGE_ARGUMENT_END);
@@ -610,7 +611,7 @@ static void
 add_class(DVM_VirtualMachine *dvm, DVM_Executable *exe,
           DVM_Class *src, ExecClass *dest)
 {
-    
+
     add_fields(exe, src, dest);
     add_methods(dvm, exe, src, dest);
 }
@@ -748,7 +749,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
     int i;
     ExecutableEntry *ee_pos;
     ExecutableEntry *new_entry;
-    
+
     new_entry = MEM_malloc(sizeof(ExecutableEntry));
     new_entry->executable = executable;
     new_entry->next = NULL;
@@ -765,7 +766,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 	{
 		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
 		{
-				
+
 				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
 							LOAD_FILE_NOT_FOUND_ERR,
 							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
@@ -845,8 +846,8 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
 			LdPushModule(pos->executable->package_name,ee);
 
 		}
-		
-        
+
+
     }
 }
 

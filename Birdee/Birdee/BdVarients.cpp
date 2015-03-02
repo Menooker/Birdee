@@ -3,8 +3,33 @@
 #include "BdException.h"
 #include <stdlib.h>
 #include <string>
+
+#ifdef BD_ON_GCC
+#include <ext/hash_map>
+using namespace std;
+using namespace __gnu_cxx;
+namespace std
+{
+using namespace __gnu_cxx;
+}
+namespace __gnu_cxx
+{
+    template<> struct hash<const string>
+    {
+        size_t operator()(const string& s) const
+        { return hash<const char*>()( s.c_str() ); } //__stl_hash_string
+    };
+    template<> struct hash<std::string>
+    {
+        size_t operator()(const std::string& s) const
+        { return hash<const char*>()( s.c_str() ); }
+    };
+}
+#else
 #include <hash_map>
-using namespace std; 
+#endif
+
+using namespace std;
 
 extern "C"
 {
@@ -47,7 +72,7 @@ void AvPopContext()
 void AvPutContext()
 {
 	AvMap* newmap=(AvMap*)MEM_malloc(sizeof(AvMap));
-	
+
 	newmap=new(newmap)AvMap(); //check-me
 	curdvm->avstack[curdvm->asp-1].p=newmap;
 
@@ -73,7 +98,7 @@ BdStatus AvDoGeti(ExVarient* va,BINT* ret)
 		return  s? BdSuccess:BdStringNotNumber;
 		break;
 	case AV_OBJECT:
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 }
 
@@ -83,7 +108,7 @@ void AvGeti()
 	ExVarient* va=v->data->u.var.pobj;
 	if(AvDoGeti(va,&curdvm->retvar.int_value))
 	{
-		ExSystemRaise(ExVarBadStringForNumber); 
+		ExSystemRaise(ExVarBadStringForNumber);
 	}
 	curdvm->stack.stack_pointer--;
 }
@@ -106,7 +131,7 @@ BdStatus AvDoGetd(ExVarient* va,double* ret)
 		return  s? BdSuccess:BdStringNotNumber;
 		break;
 	case AV_OBJECT:
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 }
 
@@ -116,7 +141,7 @@ void AvGetd()
 	ExVarient* va=v->data->u.var.pobj;
 	if(AvDoGetd(va,&curdvm->retvar.double_value))
 	{
-		ExSystemRaise(ExVarBadStringForNumber); 
+		ExSystemRaise(ExVarBadStringForNumber);
 	}
 	curdvm->stack.stack_pointer--;
 }
@@ -150,7 +175,7 @@ DVM_ObjectRef AvDoGets(ExVarient* va)
 		return  (va->v.object);
 		break;
 	case AV_OBJECT:
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 }
 
@@ -204,7 +229,7 @@ DVM_ObjectRef AvDoAdd(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -264,7 +289,7 @@ DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -320,7 +345,7 @@ DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -376,7 +401,7 @@ DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -432,7 +457,7 @@ DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -497,7 +522,7 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 	BINT ret=0;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		__asm int 3 //fix-me
+		_BreakPoint() //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -576,14 +601,14 @@ DVM_ObjectRef AvGetOrCreateVar(char* name)
 		return ret;
 	}
 	return dvm_null_object_ref;
-	
+
 }
 
 
 
 DVM_ObjectRef AvGetVar(char* name)
 {
-	if(*name=='#') 
+	if(*name=='#')
 	{
 		name++;
 		AvMap* mp=(AvMap*)AvGetTopContext().p;
@@ -597,7 +622,7 @@ DVM_ObjectRef AvGetVar(char* name)
 		//if no context or var not found
 		ExSystemRaise(ExVarUseBeforeSet);
 	}
-	else if(*name=='$') 
+	else if(*name=='$')
 	{
 		name++;
 		if(MainMap.find(name)!=MainMap.end())
@@ -623,7 +648,7 @@ void AvMarkObjects()
 
 	}
 	for(int i=0;i<curdvm->asp ;i++)
-	{	
+	{
 		AvMap* pp=(AvMap*)curdvm->avstack[i].p;
 		if(pp)
 		{

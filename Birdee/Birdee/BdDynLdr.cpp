@@ -8,10 +8,37 @@ extern "C"{
 
 #include "Loader.h"
 #include <hash_set>
+#ifdef BD_ON_GCC
+#include <ext/hash_map>
+using namespace std;
+using namespace __gnu_cxx;
+namespace std
+{
+using namespace __gnu_cxx;
+}
+namespace __gnu_cxx
+{
+    template<> struct hash<const string>
+    {
+        size_t operator()(const string& s) const
+        { return hash<const char*>()( s.c_str() ); } //__stl_hash_string
+    };
+    template<> struct hash<std::string>
+    {
+        size_t operator()(const std::string& s) const
+        { return hash<const char*>()( s.c_str() ); }
+    };
+}
+#else
 #include <hash_map>
+#endif
+
+
+
 #include <string>
 #include <stdio.h>
 #include <io.h>
+#include <string.h>
 
 std::hash_map<std::string,DVM_ExecutableList> LoadedLibs;
 std::hash_map<std::string,ExecutableEntry*> LoadedMods;
@@ -77,7 +104,7 @@ void my_make_search_path_impl(char *package_name, char *buf)
 	}
     suffix_len = strlen(DIKSAM_IMPLEMENTATION_SUFFIX);
     package_len = strlen(package_name);
-	
+
     DBG_assert(package_len <= FILENAME_MAX - (2 + suffix_len),
                ("package name is too long(%s)", package_name));
 
@@ -190,7 +217,7 @@ DVM_ExecutableItem* LdLoadDynamicLibrary(DVM_VirtualMachine *dvm,char* path,char
 	if(status)
 	{
 		printf("ERROR Loading Code %d\n",status);
-		__asm int 3
+		_BreakPoint()
 		return 0;
 	}
 	LoadedLibs[libname]=list;
@@ -245,7 +272,7 @@ DVM_ExecutableItem* LdLoadPackage(DVM_VirtualMachine *dvm,char* libname,char* pa
 			{
 				return pos;
 			}
-		}		
+		}
 		//Load success but the package not found
 		return 0;
 	}

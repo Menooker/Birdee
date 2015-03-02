@@ -1,4 +1,4 @@
-%option   caseless 
+%option   caseless
 %{
 #undef YY_INPUT
 #define YY_INPUT(buf, result, max_size) (result = my_yyinput(buf, max_size))
@@ -7,6 +7,11 @@
 #include "..\include\DBG.h"
 #include "diksamc.h"
 #include "y.tab.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 static int
 file_input(char *buf, int max_size)
@@ -43,7 +48,7 @@ static int
 string_input(char *buf, int max_size)
 {
     int len;
-	
+
     if (st_source_string[st_current_source_line] == NULL)
         return 0;
 
@@ -112,6 +117,11 @@ increment_line_number_int(int i)
 }
 
 DVM_Boolean st_character_literal_state;
+
+#ifdef __cplusplus
+}
+#endif
+
 %}
 %start C_COMMENT CC_COMMENT STRING_LITERAL_STATE SHIFT_JIS_2ND_CHAR CHK_END_BLOCK
 %%
@@ -212,7 +222,7 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"dim"          return DIM;
 <INITIAL>"declare"      return DECLARE;
 <INITIAL>"lib"			return LIB;
-<INITIAL>"end\n"        {increment_line_number(); BEGIN CHK_END_BLOCK; return END;}// 
+<INITIAL>"end\n"        {increment_line_number(); BEGIN CHK_END_BLOCK; return END;}//
 
 
 <CHK_END_BLOCK><<EOF>>  BEGIN INITIAL;
@@ -258,7 +268,7 @@ DVM_Boolean st_character_literal_state;
 		//printf("PASS @%d %s\n", dkc_get_current_compiler()->current_line_number,yytext);
 		yyless(0);
 		BEGIN INITIAL;
-        
+
 		};
 <INITIAL>[#$][A-Za-z_][A-Za-z_0-9]* {
     yylval.identifier = dkc_create_identifier(yytext);
@@ -383,4 +393,7 @@ DVM_Boolean st_character_literal_state;
     dkc_add_string_literal(yytext[0]);
     BEGIN STRING_LITERAL_STATE;
 }
+
+
+
 %%

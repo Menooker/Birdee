@@ -223,7 +223,7 @@ invoke_diksam_function(DVM_VirtualMachine *dvm,
 
     if (!callee->is_implemented) {
 		//printf("DL:%s\n",callee->name);
-		__asm int 3
+		_BreakPoint()
         //dvm_dynamic_load(dvm, *exe_p, *caller_p, *pc_p, callee);
     }
     *ee_p = callee->u.diksam_f.executable;
@@ -2042,6 +2042,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
     int j;
 	AvDisposeMainMap();
 	RtlDisposeHashmap(dvm->static_str_map);
+	dvm->static_str_map=0;
 	//UaRestoreBufferStatus(&dvm->stack.stack[STACK_ALLOC_SIZE],sizeof(DVM_Value)*2,dvm->stack.oldProtect);
     while (dvm->executable_entry) {
         ee_temp = dvm->executable_entry;

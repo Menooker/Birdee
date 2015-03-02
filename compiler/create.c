@@ -920,6 +920,8 @@ dkc_open_block(int unsafe)
 	{
 		if(compiler->current_block)
 			new_block->unsafe=compiler->current_block->unsafe;
+		else
+			new_block->unsafe=0;
 	}
 
     compiler->current_block = new_block;

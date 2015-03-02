@@ -31,16 +31,21 @@ end
 dim j as int
 dim t as int=GetClock()
 dim k as int
-	dim kp as string[]= new string[10]
 	function kkk() as string[]
-	 return kp
+		BreakPoint()
+		return kp
 	end
-
+	kkk()
+try
+	dim kp as string[]= new string[1]
 	dim i as int
 	for i=0;i<10000000;i++
 	unsafe
-		kkk()[3]=null
+		kp[3]=null
 	end
+catch TestLib e
+
+end
 #i=kp[0]
 kp[0]=#i
 println(GetClock()-t)

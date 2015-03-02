@@ -24,7 +24,7 @@ create_message_argument(MessageArgument *arg, va_list ap)
 {
     int index = 0;
     DVM_MessageArgumentType type;
-    
+
     while ((type = va_arg(ap, DVM_MessageArgumentType))
            != DVM_MESSAGE_ARGUMENT_END) {
         arg[index].type = type;
@@ -86,9 +86,11 @@ format_message(DVM_ErrorDefinition *format, VString *v,
 
     create_message_argument(arg, ap);
 
-    wc_format = dvm_mbstowcs_alloc(NULL, format->format);
+
+    //wc_format = dvm_mbstowcs_alloc(NULL, format->format);
+    wc_format=format->format;
     DBG_assert(wc_format != NULL, ("wc_format is null.\n"));
-    
+
     for (i = 0; wc_format[i] != L'\0'; i++) {
         if (wc_format[i] != L'$') {
             dvm_vstr_append_character(v, wc_format[i]);
@@ -136,18 +138,18 @@ format_message(DVM_ErrorDefinition *format, VString *v,
             assert(0);
         }
     }
-    MEM_free(wc_format);
+    //MEM_free(wc_format);
 }
 
 static void
 self_check()
 {
-    if (strcmp(dvm_error_message_format[0].format, "dummy") != 0) {
+    if (wcscmp(dvm_error_message_format[0].format, L"dummy") != 0) {
         DBG_panic(("runtime error message format error.\n"));
     }
-    if (strcmp(dvm_error_message_format
+    if (wcscmp(dvm_error_message_format
                [RUNTIME_ERROR_COUNT_PLUS_1].format,
-               "dummy") != 0) {
+               L"dummy") != 0) {
         DBG_panic(("runtime error message format error. "
                    "RUNTIME_ERROR_COUNT_PLUS_1..%d\n",
                    RUNTIME_ERROR_COUNT_PLUS_1));
@@ -206,12 +208,10 @@ dvm_error_i(DVM_Executable *exe, BFunction *func, int pc,
             RuntimeError id, ...)
 {
     va_list     ap;
-
     self_check();
     va_start(ap, id);
     error_v(exe, func, pc, id, ap);
     va_end(ap);
-
     exit(1);
 }
 
@@ -219,7 +219,6 @@ void
 dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...)
 {
     va_list     ap;
-
     self_check();
     va_start(ap, id);
     error_v(dvm->current_executable->executable,

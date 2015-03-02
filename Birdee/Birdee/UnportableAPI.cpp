@@ -1,4 +1,5 @@
 #include "UnportableAPI.h"
+#include "BirdeeDef.h"
 #include <stdio.h>
 #ifdef BD_ON_WINDOWS
 #include <Windows.h>
@@ -44,19 +45,25 @@ void  UaStackTrace(UaTraceCallBack cb,void* param)
 #endif
 #endif
 
+#if (defined(BD_ON_GCC) & defined(BD_ON_X86))
+void  UaStackTrace(UaTraceCallBack cb,void* param){};
+#endif
+
+
 #ifdef BD_ON_WINDOWS
 
-#if !(defined(BD_ON_VC) & defined(BD_ON_X86))
+#if (defined(BD_ON_GCC) & defined(BD_ON_X86))
 	typedef void(__stdcall *ptDbgBreakPoint)(void);
-	ptDbgBreakPoint _DbgBreakPoint = (ptDbgBreakPoint)GetProcAddress(GetModuleHandle(L"NTDLL.DLL"), "DbgBreakPoint");
+	ptDbgBreakPoint _DbgBreakPoint = (ptDbgBreakPoint)GetProcAddress(GetModuleHandleW(L"NTDLL.DLL"), "DbgBreakPoint");
 #endif //BD_ON_VC | BD_ON_X86
 	void UaBreakPoint()
 	{
 #if  defined(BD_ON_VC) & defined(BD_ON_X86)
-		__asm int 3 //only X86 version of MSVC compiler support inline asm
+		_BreakPoint() //only X86 version of MSVC compiler support inline asm
 #else
+        _BreakPoint()
 		//DbgBreakPoint may spoil the stack trace....try to avoid it
-		_DbgBreakPoint();//assume _DbgBreakPoint!=null, if it does equals null, it's still a 'break point' ^_^
+		//_DbgBreakPoint();//assume _DbgBreakPoint!=null, if it does equals null, it's still a 'break point' ^_^
 #endif //BD_ON_VC & BD_ON_X86
 	}
 
@@ -69,7 +76,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param)
 			pages++;
 		//printf("ps:%d %d\n",pages,sz);
 
-		void *p = VirtualAlloc(NULL,(pages+1)*PAGE_SIZE,MEM_COMMIT,PAGE_READWRITE); 
+		void *p = VirtualAlloc(NULL,(pages+1)*PAGE_SIZE,MEM_COMMIT,PAGE_READWRITE);
 		if(!p)
 		{
 			printf("Error when alloc!");
@@ -84,7 +91,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param)
 	void UaGuardFree(void* p)
 	{
 
-		VirtualFree(p,0,MEM_RELEASE); 
+		VirtualFree(p,0,MEM_RELEASE);
 		return ;
 
 	}

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <locale.h>
+#include "..\Birdee\Birdee\stdafx.h"
 #include "..\include\DKC.h"
 #include "..\include\DVM.h"
 #include "..\include\MEM.h"
@@ -10,7 +11,7 @@
 
 void BcInitLLVMCompiler();
 int
-main(int argc, char **argv)
+main(int argc, char** argv[])
 {
     DKC_Compiler *compiler;
     FILE *fp;
@@ -39,13 +40,13 @@ main(int argc, char **argv)
     list = DKC_compile(compiler, fp, argv[1]);
     //DVM_set_executable(dvm, list);
 	//DVM_execute(dvm);
-    
+
 	DKC_dispose_compiler(compiler);
 	CpSaveCodeToFile("123",list);
 	DVM_dispose_executable_list(list);
 	//fix-me : free pVoidType by dispose_type_specifier
 	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-	
+
 	status=LdLoadCode("123",plist);
 	if(status)
 		printf("ERROR Loading Code %d\n",status);
@@ -84,7 +85,7 @@ main2(int argc, char **argv)
 
     setlocale(LC_CTYPE, "");
 
-	
+
     compiler = DKC_create_compiler();
     list = DKC_compile(compiler, fp, argv[1]);
     //

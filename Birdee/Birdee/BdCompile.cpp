@@ -25,10 +25,34 @@ extern "C"{
 #include "llvm/Support/MemoryBuffer.h"
 
 #pragma comment(lib,"D:\\Menooker\\libLLVMlite\\libLLVMlite\\Debug\\libLLVMLite.lib")
-
-#include <hash_map>
 #include <string>
 #include <stack>
+#ifdef BD_ON_GCC
+#include <ext/hash_map>
+using namespace std;
+using namespace __gnu_cxx;
+namespace std
+{
+using namespace __gnu_cxx;
+}
+namespace __gnu_cxx
+{
+    template<> struct hash<const string>
+    {
+        size_t operator()(const string& s) const
+        { return hash<const char*>()( s.c_str() ); } //__stl_hash_string
+    };
+    template<> struct hash<std::string>
+    {
+        size_t operator()(const std::string& s) const
+        { return hash<const char*>()( s.c_str() ); }
+    };
+}
+#else
+#include <hash_map>
+#endif
+
+
 
 using namespace llvm;
 
@@ -139,7 +163,7 @@ enum BcInlineFunctions
 std::vector<BcParameter> bparameters;
 Value* psta=0;
 std::vector<BcParameter> bstatic;
-std::hash_map<int ,Value*> barrays; 
+std::hash_map<int ,Value*> barrays;
 
 extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
@@ -190,7 +214,7 @@ bool isArrayAddressSet(int index,int isLocal)
 {
 	int cacheindex=index;
 	if(index>=2000)
-		DBG_panic(("too many parameters")); 
+		DBG_panic(("too many parameters"));
 	if(!isLocal)
 		cacheindex+=2000;
 	return barrays.find(cacheindex)!=barrays.end();
@@ -200,7 +224,7 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 {
 	int cacheindex=index;
 	if(index>=2000)
-		DBG_panic(("too many parameters")); 
+		DBG_panic(("too many parameters"));
 	if(!isLocal)
 		cacheindex+=2000;
 	Value* v;
@@ -209,20 +233,20 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 		IRBuilderBase::InsertPoint ip=builder.saveIP();
 		builder.SetInsertPoint(mainblock->begin());
 		//builder.SetInsertPoint(IP);
-		builder.SetCurrentDebugLocation (*dbgloc);
+		//builder.SetCurrentDebugLocation (*dbgloc);
 		v=builder.CreateAlloca(TyObjectRef->getPointerTo());
 		builder.restoreIP(ip);
 		if(isLocal)
 		{
-			
-			
+
+
 			if(isParam)
 			{
 
 				Value* addr=curfun->arg_begin();
 				addr=builder.CreateGEP(addr,ConstInt(32,index));
 				addr=builder.CreateLoad(addr);
-				
+
 				builder.CreateStore(builder.CreateCall(GetFldAddr(),addr),v);
 			}
 		}
@@ -277,7 +301,7 @@ Function* GetPush(int ty)
 		return fPusho;
 		break;
 	}
-	
+
 	return 0;
 }
 
@@ -316,7 +340,7 @@ void SwitchBlock(BasicBlock* bb)
 int BcBinaryExpressionType(Expression *left, Expression *right,int code)
 {
     int offset;
-	
+
     if ((left->kind == NULL_EXPRESSION && right->kind != NULL_EXPRESSION)
         || (left->kind != NULL_EXPRESSION && right->kind == NULL_EXPRESSION)) {
         offset = 2; /* object type */
@@ -395,7 +419,7 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 
 	builder.SetInsertPoint(ifOverLen);
 	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,2)); //raise ExArrayOverLengthErr
-	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));	
+	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
 
 	builder.SetInsertPoint(ifOk);
 	builder.CreateRet(builder.CreateLoad(p1));
@@ -438,7 +462,7 @@ void BcBuildArrPtrSafe(Type* ty)
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	fArrAddrSafe=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddrSafe", module);
-	
+
 	return ;
 }
 
@@ -479,7 +503,7 @@ void BcBuildFldPtr(Type* ty)
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	fFldAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!FldAddr", module);
-	
+
 	return ;
 }
 
@@ -491,7 +515,7 @@ void BcBuildArrPtr(Type* ty)
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	fArrAddr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ArrAddr", module);
-	
+
 	return ;
 }
 void BcBuildArrBdChk()
@@ -585,7 +609,7 @@ Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 	fret->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
 	SwitchBlock(BB);
-	
+
 	Value* vbsp=builder.CreateLoad(bsp);
 	Value* vbbp=builder.CreateLoad(bbp);
 	Value* varr=builder.CreateLoad(arr_is_pointer);
@@ -629,7 +653,7 @@ extern "C" void BcBuildInlines(void* mod)
 			case FunArrAddr:
 				BcBuildArrPtrImp(TyObjectRef->getPointerTo());
 				break;
-			case FunPushi: 
+			case FunPushi:
 				BcBuildPushImp("systemi!PushiImp",0,Type::getInt32Ty(context));
 				break;
 			case FunPushd:
@@ -748,7 +772,7 @@ extern "C" void* BcNewModule(char* name)
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fFailure=Function::Create(nft, Function::ExternalLinkage,"system!Failure", module);
-	
+
 
 	std::vector<Type*> ArgSSI;	ArgSSI.push_back(Type::getInt32Ty(context));
 	FT4 = FunctionType::get(TyObjectRef,ArgSSI, false);
@@ -773,7 +797,7 @@ extern "C" void* BcNewModule(char* name)
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");
 	pthis=new GlobalVariable(*module,TyObjectRef,false	,GlobalValue::ExternalLinkage,0,"pthis");
 
-	
+
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	fInvoke = Function::Create(FTInvoke, Function::ExternalLinkage,"system!Invoke", module);
 	//fInvoke->setDoesNotAccessMemory(1);
@@ -810,7 +834,7 @@ extern "C" void BcInitLLVMCompiler()
 
 	TypStack=TyObjectRef->getPointerTo();
     ///////////
-	//Create the function type 
+	//Create the function type
 	std::vector<Type*> ArgTys;
 	ArgTys.push_back(TyObjectRef->getPointerTo());// it is actually DVM_Value
 	//ArgTys.push_back(Type::getInt32Ty(context));
@@ -830,7 +854,7 @@ Value* BcGenerateStringExpression(DVM_Executable *cf, Expression *expr)
     cp_idx = add_constant_pool(cf, &cp);
 	std::vector<Value*> args(1,ConstantInt::get(context,APInt(32,cp_idx)));
 	return builder.CreateCall(fLoadStringFromPool,args);
-    //generate_code(ob, expr->line_number, DVM_PUSH_STRING, cp_idx); 
+    //generate_code(ob, expr->line_number, DVM_PUSH_STRING, cp_idx);
 }
 
 Value* BcBinaryDouble(int kind,Value* lv,Value* rv)
@@ -850,9 +874,9 @@ Value* BcBinaryDouble(int kind,Value* lv,Value* rv)
 		return builder.CreateFDiv(lv,rv);
         break;
     case MOD_EXPRESSION:
-		return builder.CreateFRem(lv,rv); 
+		return builder.CreateFRem(lv,rv);
     case EQ_EXPRESSION:
-		return builder.CreateFCmpOEQ(lv,rv); 
+		return builder.CreateFCmpOEQ(lv,rv);
         break;
     case NE_EXPRESSION:
 		return builder.CreateFCmpONE(lv,rv);
@@ -894,7 +918,7 @@ Value* BcBinaryInt(int kind,Value* lv,Value* rv)
 		return builder.CreateSDiv(lv,rv);
         break;
     case MOD_EXPRESSION:
-		return builder.CreateSRem(lv,rv); 
+		return builder.CreateSRem(lv,rv);
     case EQ_EXPRESSION:
         return builder.CreateICmpEQ(lv,rv);
         break;
@@ -941,7 +965,7 @@ Value* BcBinaryString(int kind,Value* lv,Value* rv)
 {
 	//std::vector<Value*> arg;
 	//arg.push_back(lv);arg.push_back(rv);
-	
+
 
 	Value* t;
 	switch(kind)
@@ -988,7 +1012,7 @@ Value* BcGenerateBinaryExpressionEx(DVM_Executable *exe, Block *block,Expression
 
 	switch(ty)
 	{
-	case 3://string 
+	case 3://string
 		return BcBinaryString(kind,lv,rv);
 	case 0://int
 		return BcBinaryInt(kind,lv,rv);
@@ -1032,7 +1056,7 @@ Value* BcGenerateBinaryExpressionEx(DVM_Executable *exe, Block *block,Expression
 			break;
 
 		default:
-			DBG_panic(("bad default. kind..%d", kind)); 
+			DBG_panic(("bad default. kind..%d", kind));
 		}
 	}
 	return 0;
@@ -1047,7 +1071,7 @@ Value* BcGenerateBinaryExpression(DVM_Executable *exe, Block *block,
 Value* BcGetVarValue(Declaration *decl, int line_number)
 {
 	Value* t1;
-	
+
     if (decl->is_local) {
 		BcParameter& p=bparameters[decl->variable_index];
 		if(!p.v)
@@ -1055,17 +1079,17 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			switch(get_opcode_type_offset(decl->type))
 			{
 			case 2://var is string or obj
-				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index))); 
+				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
 				p.v=builder.CreateLoad(t1); //pointer variable should not use 'registers'?
-				return p.v; 
+				return p.v;
 			case 0:
 				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
 				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getInt32PtrTy(context)));
 				return p.v;
 			case 1:
-				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index))); 
+				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
 				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getDoublePtrTy(context)));
-				return p.v; 
+				return p.v;
 			}
 		}
 		else
@@ -1107,7 +1131,7 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
                       + get_opcode_type_offset(expr->u.identifier.u.constant
                                                .constant_definition->type),
                       expr->u.identifier.u.constant.constant_index);*/
-		__asm int 3           //fix-me : not implemented
+		_BreakPoint()           //fix-me : not implemented
         break;
     default:
         DBG_panic(("bad default. kind..%d", expr->u.identifier.kind));
@@ -1123,11 +1147,11 @@ int BcGeneratePushArgument(DVM_Executable *exe, Block *block,ArgumentList *arg_l
 		arg_cnt++;
 		stk.push(arg_pos->expression);
     }
-	while(!stk.empty()) 
+	while(!stk.empty())
 	{
 		Value* v=BcGenerateExpression(exe,block,stk.top());
 		v=BcBitToInt(v);
-		builder.CreateCall(GetPush(get_opcode_type_offset(stk.top()->type)),v); 
+		builder.CreateCall(GetPush(get_opcode_type_offset(stk.top()->type)),v);
 		stk.pop();
 	}
 	return arg_cnt;
@@ -1151,7 +1175,7 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register
 	builder.CreateCall(fCall,ConstInt(32,method_index));
 	builder.CreateStore(oldthis,pthis);
-	DBG_assert((popcnt>=0),("Pop count < 0")); 
+	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt && !isBuiltInMethod)
 	{
 		builder.CreateStore(bsp,builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt))); //bsp += ....
@@ -1191,11 +1215,11 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	}
     popcnt=BcGeneratePushArgument(exe, block, fce->argument)-param_cnt;
     Value* fid=BcGenerateExpression(exe, block, fce->function);
-	
+
 	std::vector<Value*> md(1,ConstInt(32,expr->line_number));
 	if(popcnt)
 		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register
-	
+
 	//fid->getType()->dump();
 	if(isDele)
 	{
@@ -1204,7 +1228,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	}
 	else
 		builder.CreateCall(fInvoke,fid);//->setMetadata("Dbg",MDNode::get(context,md));//generate_code(ob, expr->line_number, DVM_INVOKE);
-	DBG_assert((popcnt>=0),("Pop count < 0")); 
+	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt)
 	{
 		Value* newsp=builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt));
@@ -1216,7 +1240,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset(rtype)]));
 	else
 		return 0;
-    
+
 }
 
 
@@ -1243,7 +1267,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				bparameters[decl->variable_index].v=v;
 				bparameters[decl->variable_index].violated=1;
 				//}
-				builder.CreateStore(v,builder.CreateBitCast(t1,TypeSwitch[ty])); 
+				builder.CreateStore(v,builder.CreateBitCast(t1,TypeSwitch[ty]));
 				if(dkc_is_array(decl->type))//Full_arr_chk
 				{
 					if(isArrayAddressSet(decl->variable_index,1))
@@ -1331,12 +1355,12 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		}
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		builder.CreateCall(FldPut[mty],arg);*/
-		
+
 		int mty=get_opcode_type_offset(member->u.field.type); //fix-me : code size optmization here
 		if(mty==2)
 		{
 			builder.CreateCall(GetPush(2),v);
-		}	
+		}
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
 		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
@@ -1357,7 +1381,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		Value* to= builder.CreateLoad(fld);
 		builder.CreateCall(GetPush(ty),v);
 		builder.CreateCall(GetPush(2),to);
-		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));		
+		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));
 	}
 }
 
@@ -1369,7 +1393,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 
 		BcGenerateSaveToIdentifier(expr->u.identifier.u.declaration,v, expr->line_number,ty);
 
-    } 
+    }
 	else if(expr->kind ==AUTOVAR_EXPRESSION)
 	{
 		Value* to=BcGenerateAutoVar(expr,fGetOrCreateVar);
@@ -1400,8 +1424,8 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			Declaration* decl=0;
 			if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
 				decl=expr->u.index_expression.barray->u.identifier.u.declaration;
-			
-			
+
+
 			/*std::vector<Value*> arg;
 			buidler.CreateCall(GetPush(2),arr);arg.push_back(idx);arg.push_back(v);
 			builder.CreateCall(ArrPut[get_opcode_type_offset(expr->type)],arg);//*/
@@ -1441,11 +1465,11 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			builder.CreateCall(GetPush(ty),v);
 			builder.CreateCall(GetPush(2),to);
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));*/
-			__asm int 3
+			_BreakPoint()
 		}
-		
+
     } else {
-		
+
         DBG_assert(expr->kind == MEMBER_EXPRESSION,
                    ("expr->kind..%d", expr->kind));
 		BcGenerateSaveToMember(exe, block, expr,v,ty);
@@ -1484,7 +1508,7 @@ Value* BcGenerateAssignExpression(DVM_Executable *exe, Block *block,
 	else
 	{
 		Expression* op=expr->u.assign_expression.operand;
-		if(op->kind==CAST_EXPRESSION && (op->u.cast.type==INT_TO_VAR_CAST || op->u.cast.type==STRING_TO_VAR_CAST 
+		if(op->kind==CAST_EXPRESSION && (op->u.cast.type==INT_TO_VAR_CAST || op->u.cast.type==STRING_TO_VAR_CAST
 			|| op->u.cast.type==DOUBLE_TO_VAR_CAST) )
 		{
 			retv=BcGenerateExpression(exe,block,op->u.cast.operand);
@@ -1496,7 +1520,7 @@ Value* BcGenerateAssignExpression(DVM_Executable *exe, Block *block,
 			retv=BcGenerateExpression(exe,block,expr->u.assign_expression.operand);
 		}
 	}
-    
+
     BcGenerateSaveToLvalue(exe, block,expr->u.assign_expression.left,retv,ty);
 	return retv;
 }
@@ -1537,7 +1561,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
             return builder.CreateCall(fNewDelegate,ConstInt(32,expr->u.cast.operand->u.identifier.u.function.function_index));
         } else {
              //Method's delegate is generated in generate_member_expression().
-            _asm int 3
+            _BreakPoint()
             DBG_assert(expr->u.cast.operand->kind == MEMBER_EXPRESSION,
                        ("kind..%d", expr->u.cast.operand->kind));
             //generate_expression(exe, block, expr->u.cast.operand, ob);
@@ -1568,7 +1592,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[expr->u.cast.type-VAR_TO_INT_CAST]));
 		break;
     case ENUM_TO_STRING_CAST:
-		__asm int 3 //fix-me : not implemented
+		_BreakPoint() //fix-me : not implemented
         break;
 
     default:
@@ -1646,7 +1670,7 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		arr=BcGenerateExpression(exe, block, expr->u.index_expression.barray);
 		if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION) //if the array is a variable, no need to push
 			builder.CreateCall(GetPush(2),arr);
-		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);	
+		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
 		Value* p;
@@ -1659,7 +1683,7 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 			{
 				p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
 					TypeSwitch[myty]);
-			
+
 			}
 			else
 				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
@@ -1679,7 +1703,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 {
     MemberDeclaration *member;
     int method_index;
-    
+
     member = expr->u.member_expression.declaration;
 
     if (dkc_is_array(expr->u.member_expression.expression->type)
@@ -1691,7 +1715,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
         Value* obj=BcGenerateExpression(exe, block,expr->u.member_expression.expression);
 		builder.CreateCall(fPusho,obj);
         return ConstInt(32,method_index);*/
-		__asm int 3 //delegate for member//fix-me 
+		_BreakPoint() //delegate for member//fix-me
     } else {
         DBG_assert(member->kind == FIELD_MEMBER,
                    ("member->u.kind..%d", member->kind));
@@ -1699,7 +1723,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);*/
-		
+
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
 		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
@@ -1800,12 +1824,12 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 
 		builder.SetInsertPoint(logic_true);
 		builder.CreateBr(logic_conti);
-		
+
 		builder.SetInsertPoint(if_f);
 		rv=BcGenerateExpression(exe,current_block,expr->u.binary_expression.right);
 		BasicBlock* bif_f;bif_f=builder.GetInsertBlock();
 		builder.CreateCondBr(rv,logic_true,logic_conti);
-		
+
 		builder.SetInsertPoint(logic_conti);
 
 		logic_conti=0;
@@ -1831,12 +1855,12 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 
 		builder.SetInsertPoint(logic_false2);
 		builder.CreateBr(logic_conti2);
-		
+
 		builder.SetInsertPoint(if_f2);
 		rv=BcGenerateExpression(exe,current_block,expr->u.binary_expression.right);
 		BasicBlock* bif_f2;bif_f2=builder.GetInsertBlock();
 		builder.CreateCondBr(rv,logic_conti2,logic_false2);
-		
+
 		builder.SetInsertPoint(logic_conti2);
 
 		logic_conti=0;
@@ -1845,8 +1869,8 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		v2->addIncoming(ConstantInt::get(Type::getInt1Ty(context),APInt(1,0)),logic_false2);
 		v2->addIncoming(ConstantInt::get(Type::getInt1Ty(context),APInt(1,1)),bif_f2);
 		return v2;
-		
-		
+
+
 		break;
 	case BIT_OR_EXPRESSION:
 
@@ -1860,8 +1884,8 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 			return builder.CreateNeg(lv);
 		else if (i==1)
 			return builder.CreateFNeg(lv);
-		else 
-		{	__asm int 3
+		else
+		{	_BreakPoint()
 			return 0;
 		}
         break;
@@ -1954,7 +1978,7 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 }
 
 
-void BcGenerateExpressionStatement(DVM_Executable *cf, Block *block,Expression *expr) 
+void BcGenerateExpressionStatement(DVM_Executable *cf, Block *block,Expression *expr)
 {
 
     if (expr->kind == ASSIGN_EXPRESSION) {
@@ -1990,8 +2014,8 @@ void BcGenerateIfStatement(DVM_Executable *exe, Block *block,Statement *statemen
 	SwitchBlock(bt);
     BcGenerateBlock(exe, if_s->then_block,if_s->then_block->statement_list,bt);
 	SafeBr(bt,cont);
-	
-	
+
+
 	int i=0;char buf[10];
 
     for (elsif = if_s->elsif_list; elsif; elsif = elsif->next) {
@@ -2087,7 +2111,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	BasicBlock *bcont = BasicBlock::Create(context,"conti",curfun);//fix-me : may be improved
 	BasicBlock *bcatch;
 
-	
+
 	Value* oldsp=builder.CreateLoad(bsp);
 
 	Value* pIsNor=builder.CreateAlloca(Type::getInt1Ty(context) );
@@ -2095,7 +2119,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	Value* pitem=builder.CreateCall(fPushException);
 	Value* vindex=builder.CreateCall(fSetjmp,pitem);
 	llvm::SwitchInst* sw= builder.CreateSwitch(vindex,bfail,catch_count+1);
-	sw->addCase((ConstantInt*)zero,btry); 
+	sw->addCase((ConstantInt*)zero,btry);
 	sw->setDefaultDest(bfin);
 	//builder.CreateBr(btry);
 
@@ -2104,7 +2128,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
          catch_pos = catch_pos->next, catch_index++) {
         //dvm_catch[catch_index].class_index = catch_pos->type->u.class_ref.class_index;
 		bcatch=BasicBlock::Create(context,StringRef("catch"),curfun,bnor);
-		sw->addCase((ConstantInt*)ConstInt(32,catch_pos->type->u.class_ref.class_index+1),bcatch); 
+		sw->addCase((ConstantInt*)ConstInt(32,catch_pos->type->u.class_ref.class_index+1),bcatch);
 		SwitchBlock(bcatch);
 		Value* excep=builder.CreateLoad(beo);
         BcGenerateSaveToIdentifier(catch_pos->variable_declaration,excep,catch_pos->line_number,-1);
@@ -2115,7 +2139,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
     }
 
 
-		
+
 	SwitchBlock(btry);
 	isInTry=1;
     BcGenerateBlock(exe, try_s->try_block,
@@ -2159,7 +2183,7 @@ void BcGenerateThrowStatement(DVM_Executable *exe, Block *block,Statement *state
         //generate_identifier(statement->u.throw_s.variable_declaration, ob,
         //                    statement->line_number);
         //generate_code(ob, statement->line_number, DVM_RETHROW);
-		__asm int 3
+		_BreakPoint()
     }
 }
 
@@ -2461,11 +2485,11 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	curfun=retf;
 	BasicBlock *BB = BasicBlock::Create(context, "",retf);
 	SwitchBlock(BB);
-	
+
 	IP=BB->begin();
-	dbgloc=&builder.getCurrentDebugLocation();
+	//dbgloc=&builder.getCurrentDebugLocation();
 	mainblock=BB;
-	
+
 	if(clsname)
 	{
 		Function* f=module->getFunction(std::string(clsname)+"!init");

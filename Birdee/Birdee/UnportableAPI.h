@@ -2,7 +2,7 @@
 #define _H_UNPORTABLE_API
 
 #include "Conf.h"
-
+#include <stdio.h>
 
 
 #ifdef __cplusplus

@@ -479,8 +479,9 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
             MEM_free(obj->u.string.string);
         }
 		else
-		{
-			RtlHashmapPut(curdvm->static_str_map,(BdIntPtr)obj->u.string.string,dvm_null_object_ref);
+		{	
+			if(curdvm->static_str_map)
+				RtlHashmapPut(curdvm->static_str_map,(BdIntPtr)obj->u.string.string,dvm_null_object_ref);
 		}
         break;
 	case AUTOVAR_OBJECT:
@@ -508,7 +509,7 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
             MEM_free(obj->u.barray.u.object);
             break;
 		case VARIENT_ARRAY:
-			__asm int 3//fix-me
+			_BreakPoint()//fix-me
 			break;
         case FUNCTION_INDEX_ARRAY:
             dvm->heap.current_heap_size

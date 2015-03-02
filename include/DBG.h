@@ -1,11 +1,14 @@
 #ifndef PUBLIC_DBG_H_INCLUDED
 #define PUBLIC_DBG_H_INCLUDED
-#include <stdio.h>      
+#include <stdio.h>
 #include <stdarg.h>
 
 
 
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 typedef struct DBG_Controller_tag *DBG_Controller;
 
@@ -49,10 +52,6 @@ typedef enum {
 } DBG_Boolean;
 
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 extern struct DBG_Controller_tag * dbg_default_controller;
 extern void DBG_set(DBG_Controller controller, char *file, int line);
 extern void DBG_set_expression(char *expression);

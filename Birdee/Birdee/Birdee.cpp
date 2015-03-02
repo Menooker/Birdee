@@ -4,8 +4,9 @@
 #include "stdafx.h"
 
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tjmain(int argc, _TCHAR* argv[])
 {
+    //main();
 	return 0;
 }
 

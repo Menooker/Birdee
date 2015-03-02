@@ -25,7 +25,8 @@ using namespace llvm;
 #include <time.h>
 #include <list>
 #include "Loader.h"
-
+#include <stdlib.h>
+#include <setjmp.h>
 extern "C"{
 #include "..\..\include\DBG.h"
 //#include "..\..\include\DVM.h"
@@ -106,7 +107,7 @@ BINT ExCompareString()
 	return ret;
 }
 
-BINT ExCompareObject() //fix-me : there is an another cmp after this call. May improve efficiency
+BINT ExCompareObject() //fix-me : there is another cmp after this call. May improve efficiency
 {
 	int sp=curdvm->stack.stack_pointer-1;
 	BINT ret=(curdvm->stack.stack[sp-1].object.data!=curdvm->stack.stack[sp].object.data);
@@ -115,7 +116,7 @@ BINT ExCompareObject() //fix-me : there is an another cmp after this call. May i
 
 DVM_ObjectRef ExBoolToStr(BINT v)
 {
-	return dvm_literal_to_dvm_string_i(curdvm, v ? TRUE_STRING: FALSE_STRING);
+	return dvm_literal_to_dvm_string_i(curdvm,(DVM_Char*) (v ? TRUE_STRING: FALSE_STRING));
 }
 
 DVM_ObjectRef ExIntToStr(BINT v)
@@ -199,12 +200,13 @@ BINT ExFindFunctionByName(char* mod,char* fun)
 
 char* ExConvertAndAllocWchar(wchar_t* WStr)
 {
-		
+
 		size_t len = wcslen(WStr) + 1;
 		size_t converted = 0;
 		char *CStr;
 		CStr=(char*)malloc(len*sizeof(char));
-		wcstombs_s(&converted, CStr, len, WStr, _TRUNCATE);
+		//wcstombs_s(&converted, CStr, len, WStr, _TRUNCATE);
+        wcstombs ( CStr, WStr, len );
 		return CStr;
 }
 
@@ -221,9 +223,11 @@ void  ExDoInvoke(BINT transindex)
 	DVM_Value* base;
 	BFunction* bf=curdvm->function[transindex];
 	//DVM_Function* df=&bf->u.diksam_f.executable->executable->function[bf->u.diksam_f.index];
-	
+
 	if (!bf->is_implemented) {
-		__asm int 3
+
+		_BreakPoint()
+
     }
 	//dvm_expand_stack(curdvm,bf->local_cnt);
 
@@ -232,7 +236,7 @@ void  ExDoInvoke(BINT transindex)
     if(bf->u.diksam_f.executable)
 		curdvm->current_executable = bf->u.diksam_f.executable;
 /*    if (bf->is_method) {
-        base--; // for this 
+        base--; // for this
     }*/
 
 	curdvm->stack.stack_pointer += bf->local_cnt ;
@@ -304,7 +308,7 @@ int GetExType(DVM_TypeSpecifier *type)
 
 
 /*
-// returns the Basic type of the Array and writes the deepth of the array to pdeepth 
+// returns the Basic type of the Array and writes the deepth of the array to pdeepth
 int ExGetArrayTypeFromValue(DVM_Value* v,int* pdeepth)
 {
 	*pdeepth=0;
@@ -347,7 +351,7 @@ int ExCheckArgument(int index,DVM_Value* v)
 			continue;
 		}
 		return 0;
-		
+
 	}
 	return 1;
 	//GetExType(bf->params->type)
@@ -356,7 +360,7 @@ int ExCheckArgument(int index,DVM_Value* v)
 void  ExGetFunction(DVM_Value* v)
 {
 	if( !is_null_pointer(&(v)->object) && (v)->object.data->type==STRING_OBJECT)
-	{	
+	{
 		int bpc,popnum=0;
 		char* mod;
 		if(is_null_pointer(&(v+1)->object))
@@ -391,7 +395,7 @@ void  ExRand(DVM_Value* v)
 void  ExInvokeByName(DVM_Value* v)
 {
 	if( !is_null_pointer(&(v)->object) && (v)->object.data->type==STRING_OBJECT)
-	{	
+	{
 		int bpc,popnum=0;
 		char* mod=0;
 		if(is_null_pointer(&(v+1)->object))
@@ -436,7 +440,7 @@ void  ExInvokeByName(DVM_Value* v)
 
 
 void ExInvoke(BINT index)
-{	
+{
 
 	int transindex=curdvm->current_executable->function_table[index];
 	ExDoInvoke(transindex);
@@ -471,7 +475,7 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 	extern "C" void** ppppp;
 extern "C" void ExGoMain()
 {
-	
+
 	ppppp=(void**) &curdvm->stack.stack[0].object.data ;
 	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
@@ -507,14 +511,14 @@ void  ExArrPuti(BINT index,int value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                __asm int 3 //fix-me
+                _BreakPoint() //fix-me
             }
 #endif
 #endif
 }
 
 void ExArrPutd(BINT index,double value)
-{			
+{
 			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
 			curdvm->stack.stack_pointer--;
             DVM_ErrorStatus status;
@@ -523,7 +527,7 @@ void ExArrPutd(BINT index,double value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                __asm int 3 //fix-me
+                _BreakPoint() //fix-me
             }
 }
 
@@ -538,7 +542,7 @@ void ExArrPuto(BINT index)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                __asm int 3 //fix-me
+                _BreakPoint() //fix-me
             }
 }
 
@@ -551,13 +555,13 @@ BINT ExArrGetCh(BINT index)
             DVM_Char ch;
             status = DVM_string_get_character(curdvm, str, index,
                                               &ch, &exception);
-			
+
             if (status == DVM_SUCCESS) {
                 return ch;
             } else {
-                 __asm int 3 //fix-me
+                 _BreakPoint() //fix-me
             }
-			
+
             return 0;
 }
 
@@ -573,7 +577,7 @@ DVM_ObjectRef ExArrGeto(BINT index)
             if (status == DVM_SUCCESS) {
                 return object;
             } else {
-                 __asm int 3 //fix-me
+                 _BreakPoint() //fix-me
             }
 
 			return object;
@@ -592,7 +596,7 @@ double ExArrGetd(BINT index)
             if (status == DVM_SUCCESS) {
                 return double_value;
             } else {
-               __asm int 3 //fix-me
+               _BreakPoint() //fix-me
             }
 
 			return 0;
@@ -621,7 +625,7 @@ BINT ExArrGeti(BINT index)
             if (status == DVM_SUCCESS) {
                 return int_value;
             } else {
-               __asm int 3 //fix-me
+               _BreakPoint() //fix-me
             }
 			return 0;
 #endif
@@ -661,7 +665,7 @@ DVM_ObjectRef ExFldGeto(BINT index)
             } else {
 				return obj.data->u.class_object.field[index].object ;
             }
-            
+
 }
 void ExFldPuti(BINT index,int value)
 {
@@ -728,7 +732,7 @@ DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
 void ExFailure()
 {
 	printf("UncaughtException %d\n",curdvm->exception_index);
-	__asm int 3
+	_BreakPoint()
 }
 
 
@@ -820,7 +824,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-		EngineBuilder& eb= EngineBuilder(m);
+		EngineBuilder eb(m);
+		eb.setUseMCJIT(true);
 		TargetMachine* tm= eb.selectTarget();
 		tm->Options.NoFramePointerElim=1;
 		tm->setOptLevel(llvm::CodeGenOpt::Default );
@@ -839,7 +844,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	vglobal=m->getGlobalVariable("bei");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->exception_index ));
 	vglobal=m->getGlobalVariable("beo");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->current_exception));	
+	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->current_exception));
 	vglobal=m->getGlobalVariable("bsp");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack_pointer));
 	vglobal=m->getGlobalVariable("bbp");
@@ -849,35 +854,35 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	vglobal=m->getGlobalVariable("retvar");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->retvar));
 	vglobal=m->getGlobalVariable("pstatic");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable)); 
+	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
 	vglobal=m->getGlobalVariable("pthis");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));	
+	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));
 
 	Function *f;
 	f=m->getFunction("string!LoadStringFromPool");
-	TheExecutionEngine->addGlobalMapping(f,ExLoadStringFromPool);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExLoadStringFromPool);
 
 	f=m->getFunction("string!ChainString");
-	TheExecutionEngine->addGlobalMapping(f,ExChainString);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExChainString);
 
 	f=m->getFunction("string!CompareString");
-	TheExecutionEngine->addGlobalMapping(f,ExCompareString);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExCompareString);
 
 	f=m->getFunction("object!CompareObject");
-	TheExecutionEngine->addGlobalMapping(f,ExCompareObject);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExCompareObject);
 	f=m->getFunction("system!IntToStr");
-	TheExecutionEngine->addGlobalMapping(f,ExIntToStr);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExIntToStr);
 	f=m->getFunction("system!BoolToStr");
-	TheExecutionEngine->addGlobalMapping(f,ExBoolToStr);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExBoolToStr);
 	f=m->getFunction("system!DoubleToStr");
-	TheExecutionEngine->addGlobalMapping(f,ExDoubleToStr);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExDoubleToStr);
 	f=m->getFunction("system!NewDelegate");
-	TheExecutionEngine->addGlobalMapping(f,ExNewDelegate);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExNewDelegate);
 	f=m->getFunction("system!InvokeDelegate");
-	TheExecutionEngine->addGlobalMapping(f,ExInvokeDelegate);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExInvokeDelegate);
 
 	f=m->getFunction("system!GetSuper");
-	TheExecutionEngine->addGlobalMapping(f,ExGetSuper);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExGetSuper);
 /*	f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
@@ -885,7 +890,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!ArrGeto");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeto);*/
 	f=m->getFunction("system!ArrGetCh");
-	TheExecutionEngine->addGlobalMapping(f,ExArrGetCh);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrGetCh);
 /*	f=m->getFunction("system!ArrPuti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuti);
 	f=m->getFunction("system!ArrPutd");
@@ -894,7 +899,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuto);*/
 
 	f=m->getFunction("system!SystemRaise");
-	TheExecutionEngine->addGlobalMapping(f,ExSystemRaise);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExSystemRaise);
 	/*f=m->getFunction("system!FldGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExFldGeti);
 	f=m->getFunction("system!FldGetd");
@@ -907,34 +912,38 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExFldPutd);
 	f=m->getFunction("system!FldPuto");
 	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);*/
-	
+
 
 	f=m->getFunction("system!ArrayLiteral");
-	TheExecutionEngine->addGlobalMapping(f,ExArrayLiteral);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrayLiteral);
 	f=m->getFunction("system!NewArray");
-	TheExecutionEngine->addGlobalMapping(f,ExNewArray);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExNewArray);
 	f=m->getFunction("object!New");
-	TheExecutionEngine->addGlobalMapping(f,ExNew);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExNew);
 	f=m->getFunction("system!Invoke");
-	TheExecutionEngine->addGlobalMapping(f,ExInvoke);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExInvoke);
 	f=m->getFunction("system!Call");
-	TheExecutionEngine->addGlobalMapping(f,ExCall);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExCall);
 	f=m->getFunction("system!Failure");
-	TheExecutionEngine->addGlobalMapping(f,ExFailure);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExFailure);
 	f=m->getFunction("system!PushException");
-	TheExecutionEngine->addGlobalMapping(f,ExPushJumpBuffer);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExPushJumpBuffer);
 	f=m->getFunction("system!Raise");
-	TheExecutionEngine->addGlobalMapping(f,ExRaiseException);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExRaiseException);
 	f=m->getFunction("system!Setjmp");
-	TheExecutionEngine->addGlobalMapping(f,setjmp);
+#ifdef BD_ON_GCC
+	TheExecutionEngine->addGlobalMapping(f,(void*)_setjmp);
+#else
+	TheExecutionEngine->addGlobalMapping(f,(void*)setjmp);
+#endif
 	f=m->getFunction("system!LeaveTry");
-	TheExecutionEngine->addGlobalMapping(f,ExLeaveTry);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExLeaveTry);
 	f=m->getFunction("system!DoInvoke");
-	TheExecutionEngine->addGlobalMapping(f,ExDoInvoke);
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExDoInvoke);
 	f=m->getFunction("autovar!get");
-	TheExecutionEngine->addGlobalMapping(f,AvGetVar);
+	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetVar);
 	f=m->getFunction("autovar!getorcreate");
-	TheExecutionEngine->addGlobalMapping(f,AvGetOrCreateVar);
+	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
 
 	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 

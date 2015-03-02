@@ -36,7 +36,7 @@ typedef enum {
 } DVM_MessageArgumentType;
 
 typedef struct {
-    char *format;
+    wchar_t *format;
 } DVM_ErrorDefinition;
 
 typedef struct {

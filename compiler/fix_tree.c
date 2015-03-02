@@ -3,6 +3,7 @@
 #include "..\include\MEM.h"
 #include "..\include\DBG.h"
 #include "diksamc.h"
+#include "..\Birdee\Birdee\BirdeeDef.h"
 
 static int
 reserve_function_index(DKC_Compiler *compiler, FunctionDefinition *src)
@@ -612,7 +613,7 @@ create_var_to_cast(Expression *src,TypeSpecifier* ty)
 
     if (dkc_is_boolean(ty)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		__asm int 3 // fix-me 
+		_BreakPoint() // fix-me 
     } else if (dkc_is_int(ty)) {
         cast = alloc_cast_expression(VAR_TO_INT_CAST, src);
 
@@ -633,7 +634,7 @@ create_to_var_cast(Expression *src)
 
     if (dkc_is_boolean(src->type)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		__asm int 3 // fix-me 
+		_BreakPoint() // fix-me 
     } else if (dkc_is_int(src->type)) {
         cast = alloc_cast_expression(INT_TO_VAR_CAST, src);
 

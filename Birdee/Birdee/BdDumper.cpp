@@ -15,7 +15,7 @@ extern int isPackageInBuiltIn(char* packagename);
 
 class buffer_ostream : public raw_ostream {
   CPBuffer* pbuf;
-  virtual void buffer_ostream::write_impl(const char *Ptr, size_t Size) {
+  virtual void write_impl(const char *Ptr, size_t Size) {
 	CpDumpBuffer((void*)Ptr, Size,pbuf);
   }
   virtual uint64_t current_pos()const { return pbuf->len; }  LLVM_OVERRIDE;
@@ -79,9 +79,9 @@ void* brealloc(void* p, size_t size)
 	void* ret=realloc(p,  size);
 	if(!ret)
 	{
-		
+
 			printf("Error! Error realloc\n");
-			__asm int 3
+			_BreakPoint()
 	}
 	return ret;
 }
@@ -91,7 +91,7 @@ void* bmalloc( size_t size)
 	if(!ret)
 	{
 			printf("Error! Error realloc\n");
-			__asm int 3
+			_BreakPoint()
 	}
 	return ret;
 }
@@ -125,7 +125,7 @@ BdStatus CpDumpString(char* p,CPBuffer* pbuf)
 		ret=CpDumpBuffer(p,len,pbuf);
 		return ret;
 	}
-	
+
 }
 
 BdStatus CpDumpStringW(wchar_t* p,CPBuffer* pbuf)
@@ -145,7 +145,7 @@ BdStatus CpDumpStringW(wchar_t* p,CPBuffer* pbuf)
 		ret=CpDumpBuffer(p,len,pbuf);
 		return ret;
 	}
-	
+
 }
 
 BdStatus CpDumpTypeSpecifier(DVM_TypeSpecifier* type,CPBuffer* pbuf)
@@ -187,7 +187,7 @@ BdStatus CpDumpCodeBlock(DVM_CodeBlock* blk,CPBuffer* pbuf)
 		CpDumpVar(blk->blktry->try_start_pc,pbuf);
 		CpDumpVar(blk->blktry->catch_count,pbuf);
 		CpDumpBuffer(blk->blktry->catch_clause,sizeof(DVM_CatchClause)*blk->blktry->catch_count,pbuf);
-		
+
 	}*/
 	return BdSuccess;
 }
@@ -231,7 +231,7 @@ int CpFindTypeIndex(DVM_Executable* exe,DVM_TypeSpecifier* type)
 	if(i>exe->type_specifier_count || i<0)
 	{
 		printf("Invalid DVM_TypeSpecifier");
-		__asm int 3
+		_BreakPoint()
 		exit(1);
 	}
 	return i;
@@ -359,7 +359,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 		{
 			CpDumpStringW(exe->constant_pool[i].u.c_string,&buf);
 		}
-	}	
+	}
 
 	CpDumpBuffer(&exe->type_specifier_count,sizeof(exe->type_specifier_count),&buf);
 	for(i=0;i<exe->type_specifier_count;i++)
@@ -400,7 +400,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 
 	CpDumpCodeBlock(&exe->top_level,&buf);
 	CpDumpCodeBlock(&exe->constant_initializer,&buf);
-	
+
 	//write llvm IR
 	Module* md=(Module*)exe->module.mod;
 
@@ -419,7 +419,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 	if(ret!=1)
 	{
 		printf("%d",ret);
-		__asm int 3
+		_BreakPoint()
 	}
 	free(buf.p);
 	return i;

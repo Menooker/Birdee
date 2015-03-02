@@ -2,7 +2,7 @@
 #include "..\include\MEM.h"
 #include "..\include\DBG.h"
 #include "diksamc.h"
-
+#include "..\Birdee\Birdee\BirdeeDef.h"
 
 #define UTF_8_SOURCE
 
@@ -195,7 +195,7 @@ search_compiler(CompilerList *list, PackageName *package_name)
         return NULL;
     }
 }
-static DKC_Compiler * 
+static DKC_Compiler *
 search_compiler_by_path(CompilerList *list, char *path)//modified
 {
     CompilerList *pos;
@@ -272,7 +272,7 @@ make_search_path_impl(char *package_name, char *buf)
 	}
     suffix_len = strlen(DIKSAM_IMPLEMENTATION_SUFFIX);
     package_len = strlen(package_name);
-	
+
     DBG_assert(package_len <= FILENAME_MAX - (2 + suffix_len),
                ("package name is too long(%s)", package_name));
 
@@ -312,7 +312,7 @@ get_require_input(RequireList *req, char *found_path,
     make_search_path(req->line_number, req->package_name, search_file);
 
     status = dvm_search_file(search_path, search_file, found_path, &fp);
-    
+
     if (status != SEARCH_FILE_SUCCESS) {
         if (status == SEARCH_FILE_NOT_FOUND) {
             dkc_compile_error(req->line_number,
@@ -397,8 +397,8 @@ do_compile(DKC_Compiler *compiler, DVM_ExecutableList *list,
             continue;
         }
         req_comp = DKC_create_compiler();
-        
-        // BUGBUG req_comp references parent compiler's MEM_storage 
+
+        // BUGBUG req_comp references parent compiler's MEM_storage
         req_comp->package_name = req_pos->package_name;
         req_comp->source_suffix = DKH_SOURCE;
 
@@ -467,33 +467,38 @@ int isPackageInBuiltIn(char* packagename)//modified
 }
 
 
+static PackageName *
+_string_to_package_name(DKC_Compiler *compiler, char *str);
 
+SearchFileStatus
+get_dynamic_load_input(char *package_name, char *found_path,
+                       char *search_file, SourceInput *source_input);
 SearchFileStatus
 dkc_dynamic_compile2(DKC_Compiler *compiler, char *package_name,
                     DVM_ExecutableList *list,
                     char *search_file) //modified
 {
-	extern  PackageName *string_to_package_name(DKC_Compiler *compiler, char *str);
+	//extern  PackageName *string_to_package_name(char *package_name, char *found_path);
     SearchFileStatus status;
     extern FILE *yyin;
     DVM_Executable *exe;
     SourceInput source_input;
     char found_path[FILENAME_MAX];
-        
+
     status = get_dynamic_load_input(package_name, found_path,
                                     search_file, &source_input);
     if (status != SEARCH_FILE_SUCCESS) {
         return status;
     }
 
-	
+
 	if(search_compiler_by_path(st_compiler_list,found_path))
 	{
 		DKC_dispose_compiler(compiler);
 		return SEARCH_FILE_SUCCESS;//fix-me
 	}
 	add_compiler_to_list(st_compiler_list,compiler);
-    compiler->package_name = string_to_package_name(compiler, package_name);
+    compiler->package_name = _string_to_package_name(compiler, package_name);
     set_path_to_compiler(compiler, found_path);
 
     compiler->input_mode = source_input.input_mode;
@@ -503,7 +508,7 @@ dkc_dynamic_compile2(DKC_Compiler *compiler, char *package_name,
         dkc_set_source_string(source_input.u.string.lines);
     }
     exe = do_compile(compiler, list, found_path, DVM_FALSE);
-	
+
     //dispose_compiler_list();
     //dkc_reset_string_literal_buffer();
 
@@ -530,7 +535,7 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 
     list = MEM_malloc(sizeof(DVM_ExecutableList));
     list->list = NULL;
-    
+
     exe = do_compile(compiler, list, NULL, DVM_FALSE);
     exe->path = MEM_strdup(path);
     list->top_level = exe;
@@ -601,7 +606,7 @@ create_one_package_name(DKC_Compiler *compiler,
 }
 
 static PackageName *
-string_to_package_name(DKC_Compiler *compiler, char *str)
+_string_to_package_name(DKC_Compiler *compiler, char *str)
 {
     int start_idx;
     int i;
@@ -674,8 +679,8 @@ dkc_dynamic_compile(DKC_Compiler *compiler, char *package_name,
     DVM_Executable *exe;
     SourceInput source_input;
     char found_path[FILENAME_MAX];
-        
-	__asm int 3
+
+	_BreakPoint()
     status = get_dynamic_load_input(package_name, found_path,
                                     search_file, &source_input);
     if (status != SEARCH_FILE_SUCCESS) {
@@ -687,7 +692,7 @@ dkc_dynamic_compile(DKC_Compiler *compiler, char *package_name,
     for (tail = list->list; tail->next; tail = tail->next)
         ;
 
-    compiler->package_name = string_to_package_name(compiler, package_name);
+    compiler->package_name = _string_to_package_name(compiler, package_name);
     set_path_to_compiler(compiler, found_path);
 
     compiler->input_mode = source_input.input_mode;

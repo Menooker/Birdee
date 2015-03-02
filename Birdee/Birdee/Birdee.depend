@@ -1,0 +1,1485 @@
+# depslib dependency file v1.0
+1414912694 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\builtin\builtin.c
+	<stdio.h>
+	"../diksamc.h"
+
+1424784660 d:\menooker\birdee\build0\diksam_book_0_1\compiler\diksamc.h
+	<stdio.h>
+	<setjmp.h>
+	<wchar.h>
+	"..\include\MEM.h"
+	"..\include\DKC.h"
+	"..\include\DVM_code.h"
+	"..\include\share.h"
+
+1407071208 d:\menooker\birdee\build0\diksam_book_0_1\include\mem.h
+	<stdio.h>
+	<stdlib.h>
+
+1406175332 d:\menooker\birdee\build0\diksam_book_0_1\include\dkc.h
+	<stdio.h>
+	"..\include\DVM_code.h"
+
+1424667625 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_code.h
+	<stdio.h>
+	<wchar.h>
+	"..\include\DVM.h"
+
+1424179295 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm.h
+
+1411005208 d:\menooker\birdee\build0\diksam_book_0_1\include\share.h
+	<stdio.h>
+	"..\include\DVM_code.h"
+	"..\include\DKC.h"
+
+1412430559 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\builtin\builtin_conv.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"..\..\include\DVM.h"
+	"..\..\include\DBG.h"
+
+1425130000 d:\menooker\birdee\build0\diksam_book_0_1\include\dbg.h
+	<stdio.h>
+	<stdarg.h>
+
+1424932457 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\create.c
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+	"..\include\DVM_dev.h"
+
+1425215049 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_dev.h
+	"..\include\DVM.h"
+	"..\include\DVM_code.h"
+
+1411008756 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\error_compiler.c
+	<stdio.h>
+	<stdarg.h>
+	<string.h>
+	<assert.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+
+1423882022 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\error_message_compiler.c
+	"diksamc.h"
+
+1425131129 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\fix_tree.c
+	<math.h>
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+	"..\Birdee\Birdee\BirdeeDef.h"
+
+1425179851 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\birdeedef.h
+	"Conf.h"
+
+1425131267 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\conf.h
+
+1424669743 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\generate.cpp
+	"../Birdee/Birdee/BdCompile.h"
+	<stdio.h>
+	<string.h>
+	<stdarg.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+
+1424673151 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.h
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/IRBuilder.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/Analysis/Passes.h"
+	"llvm/Analysis/Verifier.h"
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	"llvm/ExecutionEngine/JIT.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/Module.h"
+	"llvm/PassManager.h"
+	"llvm/Support/TargetSelect.h"
+	"llvm/Support/raw_ostream.h"
+	"llvm/Transforms/Scalar.h"
+	"llvm/Bitcode/ReaderWriter.h"
+	"llvm/Support/MemoryBuffer.h"
+	"..\..\include\MEM.h"
+	"..\..\compiler\diksamc.h"
+
+1367420408 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\derivedtypes.h
+	"llvm/IR/Type.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+
+1381896606 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\type.h
+	"llvm/ADT/APFloat.h"
+	"llvm/Support/Casting.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm-c/Core.h"
+
+1374961760 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\apfloat.h
+	"llvm/ADT/APInt.h"
+
+1384619142 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\apint.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	<cassert>
+	<climits>
+	<cstring>
+	<string>
+
+1386701172 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\arrayref.h
+	"llvm/ADT/None.h"
+	"llvm/ADT/SmallVector.h"
+	<vector>
+
+1361426902 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\none.h
+
+1379093604 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\smallvector.h
+	"llvm/Support/AlignOf.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<cstddef>
+	<cstdlib>
+	<cstring>
+	<iterator>
+	<memory>
+
+1357727956 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\alignof.h
+	"llvm/Support/Compiler.h"
+	<cstddef>
+
+1384146882 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\compiler.h
+	"llvm/Config/llvm-config.h"
+	<sanitizer/msan_interface.h>
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\config\llvm-config.h
+
+1384302044 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\mathextras.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/SwapByteOrder.h"
+	"llvm/Support/type_traits.h"
+	<cstring>
+	<intrin.h>
+	<limits>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\swapbyteorder.h
+	"llvm/Support/DataTypes.h"
+	<cstddef>
+	<limits>
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\support\datatypes.h
+	<cmath>
+	<math.h>
+	<sys/types.h>
+	<inttypes.h>
+	<stdint.h>
+	"llvm/Support/AIXDataTypesFix.h"
+	<stdint.h>
+	<stdlib.h>
+	<stddef.h>
+	<sys/types.h>
+	<cmath>
+	<math.h>
+
+1291059890 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\aixdatatypesfix.h
+
+1364402592 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\type_traits.h
+	"llvm/Support/DataTypes.h"
+	<cstddef>
+	<utility>
+
+1374115360 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\casting.h
+	"llvm/Support/type_traits.h"
+	<cassert>
+
+1367442066 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\cbindingwrapping.h
+	"llvm/Support/Casting.h"
+
+1364408874 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\errorhandling.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/Compiler.h"
+	<string>
+
+1383157946 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\stringref.h
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<cstring>
+	<limits>
+	<string>
+	<utility>
+
+1384479300 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm-c\core.h
+	"llvm/Support/DataTypes.h"
+
+1384479300 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\irbuilder.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/ADT/Twine.h"
+	"llvm/IR/BasicBlock.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/Instructions.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/IR/Operator.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/ConstantFolder.h"
+	"llvm/Support/ValueHandle.h"
+
+1366318158 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\twine.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	<cassert>
+	<string>
+
+1367441940 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\basicblock.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/SymbolTableListTraits.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+
+1379093604 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\ilist.h
+	"llvm/Support/Compiler.h"
+	<algorithm>
+	<cassert>
+	<cstddef>
+	<iterator>
+
+1361304130 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\instruction.h
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/User.h"
+	"llvm/Support/DebugLoc.h"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\ilist_node.h
+
+1364402592 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\user.h
+	"llvm/IR/Value.h"
+	"llvm/Support/ErrorHandling.h"
+
+1377170712 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\value.h
+	"llvm/IR/Use.h"
+	"llvm/Support/Casting.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+
+1369055578 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\use.h
+	"llvm/ADT/PointerIntPair.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+	<cstddef>
+	<iterator>
+
+1379978818 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\pointerintpair.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	<cassert>
+
+1291054570 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\pointerliketypetraits.h
+	"llvm/Support/DataTypes.h"
+
+1410963881 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\debugloc.h
+	"llvm/Support/DataTypes.h"
+
+1384479300 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\instruction.def
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\symboltablelisttraits.h
+	"llvm/ADT/ilist.h"
+
+1379371396 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\datalayout.h
+	"llvm/ADT/DenseMap.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Type.h"
+	"llvm/Pass.h"
+	"llvm/Support/DataTypes.h"
+
+1383145854 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\densemap.h
+	"llvm/ADT/DenseMapInfo.h"
+	"llvm/Support/AlignOf.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<climits>
+	<cstddef>
+	<cstring>
+	<iterator>
+	<new>
+	<utility>
+
+1345850968 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\densemapinfo.h
+	"llvm/Support/PointerLikeTypeTraits.h"
+	"llvm/Support/type_traits.h"
+
+1354571818 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\pass.h
+	"llvm/Support/Compiler.h"
+	<string>
+	"llvm/PassSupport.h"
+	"llvm/PassAnalysisSupport.h"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\passsupport.h
+	"Pass.h"
+	"llvm/InitializePasses.h"
+	"llvm/PassRegistry.h"
+	"llvm/Support/Atomic.h"
+	"llvm/Support/Valgrind.h"
+	<vector>
+
+1384646346 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\initializepasses.h
+
+1367441940 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\passregistry.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm-c/Core.h"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\atomic.h
+	"llvm/Support/DataTypes.h"
+
+1377039122 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\valgrind.h
+	"llvm/Config/llvm-config.h"
+	"llvm/Support/Compiler.h"
+	<stddef.h>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\passanalysissupport.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/Pass.h"
+	<vector>
+
+1384479300 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\instructions.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/CallingConv.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/InstrTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	<iterator>
+
+1379978818 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\attributes.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/FoldingSet.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	<bitset>
+	<cassert>
+	<map>
+	<string>
+
+1370866170 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\foldingset.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/DataTypes.h"
+
+1383953296 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\callingconv.h
+
+1375221734 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\instrtypes.h
+	"llvm/ADT/Twine.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/OperandTraits.h"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\operandtraits.h
+	"llvm/IR/User.h"
+
+1369435986 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\llvmcontext.h
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+
+1378948074 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\operator.h
+	"llvm/IR/Constants.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/Type.h"
+	"llvm/Support/GetElementPtrTypeIterator.h"
+
+1386462216 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\constants.h
+	"llvm/ADT/APFloat.h"
+	"llvm/ADT/APInt.h"
+	"llvm/ADT/ArrayRef.h"
+	"llvm/IR/Constant.h"
+	"llvm/IR/OperandTraits.h"
+	"llvm/IR/DerivedTypes.h"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\constant.h
+	"llvm/IR/User.h"
+
+1370866170 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\getelementptrtypeiterator.h
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/User.h"
+
+1357126570 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\constantfolder.h
+	"llvm/IR/Constants.h"
+	"llvm/IR/InstrTypes.h"
+
+1384822676 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\valuehandle.h
+	"llvm/ADT/DenseMapInfo.h"
+	"llvm/ADT/PointerIntPair.h"
+	"llvm/IR/Value.h"
+
+1384296440 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\analysis\passes.h
+
+1270748464 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\analysis\verifier.h
+	<string>
+
+1382573954 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\executionengine\executionengine.h
+	"llvm-c/ExecutionEngine.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/ADT/ValueMap.h"
+	"llvm/MC/MCCodeGenInfo.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm/Support/Mutex.h"
+	"llvm/Support/ValueHandle.h"
+	"llvm/Target/TargetMachine.h"
+	"llvm/Target/TargetOptions.h"
+	<map>
+	<string>
+	<vector>
+
+1382550990 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm-c\executionengine.h
+	"llvm-c/Core.h"
+	"llvm-c/Target.h"
+	"llvm-c/TargetMachine.h"
+
+1384181222 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm-c\target.h
+	"llvm-c/Core.h"
+	"llvm/Config/llvm-config.h"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\config\targets.def
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\config\asmprinters.def
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\config\asmparsers.def
+
+1425126233 d:\menooker\libllvmlite\build_codeblocks0\include\llvm\config\disassemblers.def
+
+1384483872 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm-c\targetmachine.h
+	"llvm-c/Core.h"
+	"llvm-c/Target.h"
+
+1354554132 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\valuemap.h
+	"llvm/ADT/DenseMap.h"
+	"llvm/Support/Mutex.h"
+	"llvm/Support/ValueHandle.h"
+	"llvm/Support/type_traits.h"
+	<iterator>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\mutex.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/Threading.h"
+	<cassert>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\threading.h
+
+1385356910 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\mc\mccodegeninfo.h
+	"llvm/Support/CodeGen.h"
+
+1367449080 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\codegen.h
+	"llvm-c/TargetMachine.h"
+	"llvm/Support/ErrorHandling.h"
+
+1385356910 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\target\targetmachine.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Pass.h"
+	"llvm/Support/CodeGen.h"
+	"llvm/Target/TargetOptions.h"
+	<cassert>
+	<string>
+
+1375393326 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\target\targetoptions.h
+	<string>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\executionengine\jit.h
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	<cstdlib>
+
+1382563544 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\module.h
+	"llvm/ADT/OwningPtr.h"
+	"llvm/IR/Function.h"
+	"llvm/IR/GlobalAlias.h"
+	"llvm/IR/GlobalVariable.h"
+	"llvm/IR/Metadata.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+
+1368603420 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\owningptr.h
+	"llvm/Support/Compiler.h"
+	<cassert>
+	<cstddef>
+
+1379293696 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\function.h
+	"llvm/IR/Argument.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/BasicBlock.h"
+	"llvm/IR/CallingConv.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/Support/Compiler.h"
+
+1373070598 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\argument.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/Value.h"
+
+1383325754 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\globalvalue.h
+	"llvm/IR/Constant.h"
+	"llvm/IR/DerivedTypes.h"
+
+1381334852 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\globalalias.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/IR/OperandTraits.h"
+
+1383054252 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\globalvariable.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/IR/OperandTraits.h"
+
+1386623016 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\metadata.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/FoldingSet.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/Value.h"
+
+1384000014 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\passmanager.h
+	"llvm/IR/LegacyPassManager.h"
+
+1384000014 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\ir\legacypassmanager.h
+	"llvm/Pass.h"
+	"llvm/Support/CBindingWrapping.h"
+
+1332799016 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\targetselect.h
+	"llvm/Config/llvm-config.h"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+
+1374003858 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\raw_ostream.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/FileSystem.h"
+
+1384550522 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\filesystem.h
+	"llvm/ADT/IntrusiveRefCntPtr.h"
+	"llvm/ADT/OwningPtr.h"
+	"llvm/ADT/SmallString.h"
+	"llvm/ADT/Twine.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm/Support/TimeValue.h"
+	"llvm/Support/system_error.h"
+	<ctime>
+	<iterator>
+	<stack>
+	<string>
+	<vector>
+	<sys/stat.h>
+
+1364402592 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\intrusiverefcntptr.h
+	"llvm/Support/Casting.h"
+	"llvm/Support/Compiler.h"
+	<memory>
+
+1361907228 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\adt\smallstring.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+
+1373942632 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\timevalue.h
+	"llvm/Support/DataTypes.h"
+	<string>
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\system_error.h
+	"llvm/Support/Compiler.h"
+	"llvm/Config/llvm-config.h"
+	"llvm/Support/type_traits.h"
+	<cerrno>
+	<string>
+
+1384646346 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\transforms\scalar.h
+	"llvm/ADT/StringRef.h"
+
+1357778720 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\bitcode\readerwriter.h
+	<string>
+
+1382728012 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\memorybuffer.h
+	"llvm/ADT/Twine.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+	"llvm-c/Core.h"
+
+1425132094 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\interface.c
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+	"..\Birdee\Birdee\BirdeeDef.h"
+
+1424784660 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\lex.yy.c
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<io.h>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"..\include\DBG.h"
+	"diksamc.h"
+	"y.tab.h"
+	<stdlib.h>
+
+1424784660 d:\menooker\birdee\build0\diksam_book_0_1\compiler\y.tab.h
+
+1406175134 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\string.c
+	<stdio.h>
+	<string.h>
+	"..\include\MEM.h"
+	"diksamc.h"
+
+1408952230 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\util_compiler.c
+	<stdio.h>
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"diksamc.h"
+
+1406175026 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\wchar_compiler.c
+	<stdio.h>
+	<string.h>
+	<wchar.h>
+	"..\include\DBG.h"
+	"..\include\share.h"
+	"diksamc.h"
+
+1424784660 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\y.tab.c
+	<stdio.h>
+	"diksamc.h"
+	<stddef.h>
+	<libintl.h>
+	<alloca.h>
+	<malloc.h>
+	<stdlib.h>
+	<stdlib.h>
+	<stdio.h>
+
+1406175302 source:d:\menooker\birdee\build0\diksam_book_0_1\debug\debug.c
+	<stdio.h>
+	<limits.h>
+	<stdlib.h>
+	"..\include\MEM.h"
+	"debug.h"
+
+1406175116 d:\menooker\birdee\build0\diksam_book_0_1\debug\debug.h
+	<stdio.h>
+	"..\include\DBG.h"
+
+1425216683 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\error_dvm.c
+	<stdio.h>
+	<stdarg.h>
+	<string.h>
+	<assert.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\include\DVM_dev.h"
+	"dvm_pri.h"
+
+1424676690 d:\menooker\birdee\build0\diksam_book_0_1\dvm\dvm_pri.h
+	"..\include\DVM_code.h"
+	"..\include\DVM_dev.h"
+	"..\include\share.h"
+	"..\Birdee\Birdee\BdException.h"
+	"..\Birdee\Birdee\BirdeeDef.h"
+	"..\Birdee\Birdee\BdHashMap.h"
+	<stdarg.h>
+
+1424784660 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexception.h
+	<setjmp.h>
+	"BirdeeDef.h"
+	"../../include/DVM.h"
+
+1424093244 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdhashmap.h
+	"../../dvm/dvm_pri.h"
+
+1425215706 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\error_message_dvm.c
+	"dvm_pri.h"
+
+1425217249 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\execute.c
+	<math.h>
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\Birdee\Birdee\BdExec.h"
+	"..\Birdee\Birdee\UnportableAPI.h"
+	"dvm_pri.h"
+
+1414851781 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.h
+	"..\..\include\DVM.h"
+	"..\..\include\MEM.h"
+	"..\..\dvm\dvm_pri.h"
+
+1425135164 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.h
+	"Conf.h"
+	<stdio.h>
+
+1425217273 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\heap.c
+	<stdio.h>
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"dvm_pri.h"
+	"..\Birdee\Birdee\BdHashMap.h"
+
+1425216669 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\load.c
+	<stdio.h>
+	<string.h>
+	"..\include\DKC.h"
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\Birdee\Birdee\BdExec.h"
+	"..\Birdee\Birdee\UnportableAPI.h"
+	"../Birdee/Birdee/BdDynLdr.h"
+	"dvm_pri.h"
+
+1423821139 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bddynldr.h
+	"../../dvm/dvm_pri.h"
+
+1422353994 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\native.c
+	<string.h>
+	<math.h>
+	<stdlib.h>
+	<time.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\include\DVM_dev.h"
+	"dvm_pri.h"
+	"..\Birdee\Birdee\BdVarients.h"
+	"..\Birdee\Birdee\BdExec.h"
+
+1424055854 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdvarients.h
+	"BirdeeDef.h"
+	"..\..\include\DVM.h"
+
+1412665786 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\nativeif.c
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\include\DVM_dev.h"
+	"dvm_pri.h"
+
+1410255142 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\util_dvm.c
+	<stdio.h>
+	<string.h>
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"dvm_pri.h"
+
+1406175118 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\wchar_dvm.c
+	<stdio.h>
+	<string.h>
+	<wchar.h>
+	"..\include\DBG.h"
+	"..\include\MEM.h"
+	"dvm_pri.h"
+
+1425216036 source:d:\menooker\birdee\build0\diksam_book_0_1\main\main.c
+	<stdio.h>
+	<locale.h>
+	"..\Birdee\Birdee\stdafx.h"
+	"..\include\DKC.h"
+	"..\include\DVM.h"
+	"..\include\MEM.h"
+	"..\Birdee\Birdee\Dumper.h"
+	"..\Birdee\Birdee\Loader.h"
+
+1425132521 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\stdafx.h
+	<stdio.h>
+	<tchar.h>
+
+1411464094 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\dumper.h
+	"BirdeeDef.h"
+	"../../include/DKC.h"
+
+1407316724 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\loader.h
+	"BirdeeDef.h"
+	"../../include/DKC.h"
+
+1406174794 source:d:\menooker\birdee\build0\diksam_book_0_1\main\test\mathtest.c
+	<math.h>
+
+1424178930 source:d:\menooker\birdee\build0\diksam_book_0_1\memory\memory.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	"memory.h"
+
+1406175310 d:\menooker\birdee\build0\diksam_book_0_1\memory\memory.h
+	"..\include\MEM.h"
+
+1229643504 source:d:\menooker\birdee\build0\diksam_book_0_1\memory\storage.c
+	<stdio.h>
+	<stdlib.h>
+	<assert.h>
+	"memory.h"
+
+1407469278 source:d:\menooker\birdee\build0\diksam_book_0_1\share\disassemble.c
+	<stdio.h>
+	<string.h>
+	"..\include\DBG.h"
+	"..\include\share.h"
+
+1423882430 source:d:\menooker\birdee\build0\diksam_book_0_1\share\dispose.c
+	"..\include\MEM.h"
+	"..\include\DBG.h"
+	"..\include\DVM_code.h"
+
+1406175050 source:d:\menooker\birdee\build0\diksam_book_0_1\share\opcode.c
+	"..\include\share.h"
+
+1408946572 source:d:\menooker\birdee\build0\diksam_book_0_1\share\util.c
+	<stdlib.h>
+	<string.h>
+	"..\include\DBG.h"
+	"..\include\MEM.h"
+	"..\include\share.h"
+
+1409031912 source:d:\menooker\birdee\build0\diksam_book_0_1\share\wchar_share.c
+	<stdio.h>
+	<string.h>
+	<wchar.h>
+	<limits.h>
+	"..\include\DBG.h"
+	"..\include\MEM.h"
+	"..\include\DVM.h"
+
+1413022190 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdarraycache.cpp
+	"BdArrayCache.h"
+	"..\..\include\DBG.h"
+	"..\..\DVM\DVM_pri.h"
+	"BdExec.h"
+
+1413022066 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdarraycache.h
+	"BirdeeDef.h"
+	"../../include/DVM.h"
+
+1425201854 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.cpp
+	"BirdeeDef.h"
+	"BdCompile.h"
+	"..\..\include\DBG.h"
+	"llvm/Analysis/Passes.h"
+	"llvm/Analysis/Verifier.h"
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	"llvm/ExecutionEngine/JIT.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/IRBuilder.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/IR/Module.h"
+	"llvm/PassManager.h"
+	"llvm/Support/TargetSelect.h"
+	"llvm/Support/raw_ostream.h"
+	"llvm/Transforms/Scalar.h"
+	"llvm/Bitcode/ReaderWriter.h"
+	"llvm/Support/MemoryBuffer.h"
+	<string>
+	<stack>
+	<ext/hash_map>
+	<hash_map>
+
+1425135004 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bddumper.cpp
+	"Dumper.h"
+	"../../include/DVM.h"
+	"../../include/MEM.h"
+	<string.h>
+	"llvm/Bitcode/ReaderWriter.h"
+	"llvm/Support/MemoryBuffer.h"
+	"llvm/Support/raw_ostream.h"
+	"llvm/IR/Module.h"
+	"llvm/Analysis/Verifier.h"
+
+1425135103 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bddynldr.cpp
+	"BdDynLdr.h"
+	"..\..\include\DBG.h"
+	"..\..\DVM\DVM_pri.h"
+	"../../include/MEM.h"
+	"Loader.h"
+	<hash_set>
+	<ext/hash_map>
+	<hash_map>
+	<string>
+	<stdio.h>
+	<io.h>
+	<string.h>
+
+1425130971 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexception.cpp
+	"BirdeeDef.h"
+	"BdException.h"
+	"BdVarients.h"
+	"UnportableAPI.h"
+	<stdio.h>
+	<string.h>
+	"..\..\dvm\dvm_pri.h"
+
+1425200810 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.cpp
+	"BirdeeDef.h"
+	"BdExec.h"
+	"BdException.h"
+	"BdArrayCache.h"
+	"llvm/Analysis/Passes.h"
+	"llvm/Analysis/Verifier.h"
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	"llvm/ExecutionEngine/JIT.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/IRBuilder.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/IR/Module.h"
+	"llvm/PassManager.h"
+	"llvm/Support/TargetSelect.h"
+	"llvm/Support/raw_ostream.h"
+	"llvm/Transforms/Scalar.h"
+	"llvm/Bitcode/ReaderWriter.h"
+	"llvm/Support/MemoryBuffer.h"
+	"llvm/Transforms/Instrumentation.h"
+	"stdarg.h"
+	<setjmp.h>
+	"BdVarients.h"
+	<time.h>
+	<list>
+	"Loader.h"
+	<stdlib.h>
+	<setjmp.h>
+	"..\..\include\DBG.h"
+	"..\..\DVM\DVM_pri.h"
+
+1380728544 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\transforms\instrumentation.h
+	"llvm/ADT/StringRef.h"
+
+1425132851 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdhashmap.cpp
+	"BdHashMap.h"
+	"Conf.h"
+	<ext/hash_map>
+	<hash_map>
+	<string>
+	"../../include/MEM.h"
+
+1425130971 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdloader.cpp
+	"Loader.h"
+	"llvm/Bitcode/ReaderWriter.h"
+	"llvm/Support/MemoryBuffer.h"
+	"llvm/Support/raw_ostream.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/IR/Module.h"
+	"../../include/DVM.h"
+	"../../include/MEM.h"
+	<string.h>
+	<string>
+
+1425179947 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdvarients.cpp
+	"BdVarients.h"
+	"BdException.h"
+	<stdlib.h>
+	<string>
+	<ext/hash_map>
+	<hash_map>
+	"../../dvm/dvm_pri.h"
+	"../../include/MEM.h"
+
+1425180433 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\birdee.cpp
+	"stdafx.h"
+
+1425180263 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.cpp
+	"UnportableAPI.h"
+	"BirdeeDef.h"
+	<stdio.h>
+	<Windows.h>
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\windows.h
+	<sdkddkver.h>
+	<winresrc.h>
+	<excpt.h>
+	<stdarg.h>
+	<windef.h>
+	<winbase.h>
+	<wingdi.h>
+	<winuser.h>
+	<winnls.h>
+	<wincon.h>
+	<winver.h>
+	<winreg.h>
+	<winnetwk.h>
+	<cderr.h>
+	<dde.h>
+	<ddeml.h>
+	<dlgs.h>
+	<lzexpand.h>
+	<mmsystem.h>
+	<nb30.h>
+	<rpc.h>
+	<shellapi.h>
+	<winperf.h>
+	<winsock.h>
+	<wincrypt.h>
+	<winefs.h>
+	<winscard.h>
+	<winspool.h>
+	<ole.h>
+	<ole2.h>
+	<commdlg.h>
+	<stralign.h>
+	<winwlm.h>
+	<ole2.h>
+	<winsvc.h>
+	<mcx.h>
+	<imm.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\sdkddkver.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winresrc.h
+	<winuser.rh>
+	<commctrl.rh>
+	<dde.rh>
+	<winnt.rh>
+	<dlgs.h>
+	<winver.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winuser.rh
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\commctrl.rh
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dde.rh
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winnt.rh
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dlgs.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winver.h
+	<SpecStrings.h>
+	<verrsrc.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\specstrings.h
+	"sal_supp.h"
+	"specstrings_supp.h"
+	<sal.h>
+	<specstrings_strict.h>
+	<driverspecs.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\sal_supp.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\specstrings_supp.h
+	"sal_supp.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\specstrings_strict.h
+	<specstrings_undef.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\specstrings_undef.h
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\driverspecs.h
+	<specstrings.h>
+	"sdv_driverspecs.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\sdv_driverspecs.h
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\verrsrc.h
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\windef.h
+	<winnt.h>
+	<specstrings.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winnt.h
+	<ctype.h>
+	<specstrings.h>
+	<kernelspecs.h>
+	<basetsd.h>
+	<guiddef.h>
+	<excpt.h>
+	<sdkddkver.h>
+	"pshpack4.h"
+	"poppack.h"
+	"pshpack4.h"
+	"poppack.h"
+	<pshpack4.h>
+	<poppack.h>
+	"pshpack4.h"
+	"pshpack2.h"
+	"pshpack1.h"
+	"poppack.h"
+	"pshpack2.h"
+	<pshpack2.h>
+	<poppack.h>
+	"poppack.h"
+	"pshpack8.h"
+	"poppack.h"
+	"poppack.h"
+	<string.h>
+	<string.h>
+	<ktmtypes.h>
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\kernelspecs.h
+	"DriverSpecs.h"
+
+1260914888 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\basetsd.h
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\guiddef.h
+	<string.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\pshpack4.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\poppack.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\pshpack2.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\pshpack1.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\pshpack8.h
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ktmtypes.h
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winbase.h
+	<macwin32.h>
+	<winerror.h>
+	"winbase.inl"
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winerror.h
+	<specstrings.h>
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winbase.inl
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\wingdi.h
+	<macwin32.h>
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack2.h>
+	<poppack.h>
+	<pshpack2.h>
+	<poppack.h>
+	<pshpack4.h>
+	<poppack.h>
+	<pshpack4.h>
+	<poppack.h>
+	"pshpack4.h"
+	"poppack.h"
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winuser.h
+	<macwin32.h>
+	<stdarg.h>
+	<pshpack2.h>
+	<poppack.h>
+	<tvout.h>
+	"winuser.inl"
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\tvout.h
+	<guiddef.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winuser.inl
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winnls.h
+	<macwin32.h>
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\wincon.h
+	<wingdi.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winreg.h
+	<macwin32.h>
+	<reason.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\reason.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winnetwk.h
+	<wnnc.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\wnnc.h
+
+1260914888 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\cderr.h
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dde.h
+	<windef.h>
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ddeml.h
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\lzexpand.h
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\mmsystem.h
+	<pshpack1.h>
+	<macwin32.h>
+	<poppack.h>
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\nb30.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpc.h
+	<windows.h>
+	<pshpack2.h>
+	<basetsd.h>
+	<pshpack8.h>
+	<setjmp.h>
+	<rpcdce.h>
+	<rpcnsi.h>
+	<rpcerr.h>
+	<rpcmac.h>
+	<poppack.h>
+	<rpcdce.h>
+	<rpcnsi.h>
+	<rpcnterr.h>
+	<excpt.h>
+	<winerror.h>
+	<rpcasync.h>
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcdce.h
+	<specstrings.h>
+	<guiddef.h>
+	<rpcdcep.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcdcep.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcnsi.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcnterr.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcasync.h
+	<pshpack8.h>
+	<ntddk.h>
+	<windef.h>
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\shellapi.h
+	<SpecStrings.h>
+	<pshpack1.h>
+	<poppack.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winperf.h
+	<pshpack8.h>
+	<poppack.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winsock.h
+	<windows.h>
+	<inaddr.h>
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\inaddr.h
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\wincrypt.h
+	<specstrings.h>
+	<bcrypt.h>
+	<ncrypt.h>
+
+1260914888 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\bcrypt.h
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ncrypt.h
+	<bcrypt.h>
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winefs.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winscard.h
+	<wtypes.h>
+	<winioctl.h>
+	"winsmcrd.h"
+	"SCardErr.h"
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\wtypes.h
+	"rpc.h"
+	"rpcndr.h"
+	"basetsd.h"
+	"guiddef.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcndr.h
+	<pshpack8.h>
+	<basetsd.h>
+	<rpcnsip.h>
+	<rpcsal.h>
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcnsip.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\rpcsal.h
+	<specstrings.h>
+
+1382935996 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winioctl.h
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack1.h>
+	<poppack.h>
+	<pshpack1.h>
+	<poppack.h>
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winsmcrd.h
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\scarderr.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winspool.h
+	<prsht.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\prsht.h
+	<pshpack8.h>
+	<pshpack4.h>
+	"prsht.inl"
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\prsht.inl
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ole.h
+	<pshpack1.h>
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ole2.h
+	<pshpack8.h>
+	<winerror.h>
+	<objbase.h>
+	<oleauto.h>
+	<oleidl.h>
+	<poppack.h>
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\objbase.h
+	<rpc.h>
+	<rpcndr.h>
+	<pshpack8.h>
+	<stdlib.h>
+	<wtypes.h>
+	<unknwn.h>
+	<objidl.h>
+	<guiddef.h>
+	<cguid.h>
+	<urlmon.h>
+	<propidl.h>
+	<poppack.h>
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\unknwn.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"wtypes.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\objidl.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"unknwn.h"
+
+1260914888 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\cguid.h
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\urlmon.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"objidl.h"
+	"oleidl.h"
+	"servprov.h"
+	"msxml.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\oleidl.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"objidl.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\servprov.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"objidl.h"
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\msxml.h
+	"rpc.h"
+	"rpcndr.h"
+	"unknwn.h"
+	"objidl.h"
+	"oaidl.h"
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\oaidl.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"objidl.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\propidl.h
+	"rpc.h"
+	"rpcndr.h"
+	"windows.h"
+	"ole2.h"
+	"objidl.h"
+	"oaidl.h"
+
+1260914896 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\oleauto.h
+	<pshpack8.h>
+	<oaidl.h>
+	<poppack.h>
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\commdlg.h
+	<prsht.h>
+	<pshpack1.h>
+	"commdlg.inl"
+	<poppack.h>
+
+1260914890 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\commdlg.inl
+
+1260914898 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\stralign.h
+
+1260914900 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\winsvc.h
+
+1260914894 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\mcx.h
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\imm.h
+	<ime_cmodes.h>
+
+1260914892 c:\program files (x86)\microsoft sdks\windows\v7.0a\include\ime_cmodes.h
+

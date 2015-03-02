@@ -161,7 +161,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 	if(curdvm->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
-		__asm int 3;
+		_BreakPoint();
 	}
 	ExecutableEntry * exe=(ExecutableEntry *)ExTopJumpBuffer()->exe ;
     class_index = DVM_search_class(curdvm  , "Exceptions",
@@ -184,7 +184,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 	if(message_index==FIELD_NOT_FOUND)
 	{
 		printf("exception field not found in : %s",class_name);
-		__asm int 3;
+		_BreakPoint();
 	}
     obj.data->u.class_object.field[message_index].object
         = dvm_create_dvm_string_i(dvm, message.string);
@@ -214,7 +214,7 @@ void ExUncaughtException()
 		printf("%s\n",curdvm->current_exception.v_table->exec_class->name );
 	}
 
-	__asm int 3
+	_BreakPoint()
 	//exit(1);
 }
 
@@ -227,7 +227,7 @@ void ExRaiseException(BINT eindex)
 	if(pit->asp>curdvm->asp)
 	{
 		//bad asp
-		__asm int 3
+		_BreakPoint()
 	}
 	while(pit->asp<curdvm->asp)
 	{
@@ -264,7 +264,7 @@ void ExSystemRaise(ExExceptions e)
 			break;
 		}
 	}
-	__asm int 3
+	_BreakPoint()
 }
 
 }

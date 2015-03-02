@@ -227,7 +227,7 @@ BdStatus LdFunction(DVM_Function* func,CPBuffer* pbuf)
 	LdLoadVar(i,pbuf);
 	if(i!=FUN_MAGIC)
 	{
-		__asm int 3
+		_BreakPoint()
 		throw BdBadMagicNum;
 	}
 	return BdSuccess;
@@ -436,7 +436,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 	if(magic_chk!=MAGIC_END)
 	{
 		dvm_dispose_executable(exe);
-		__asm int 3
+		_BreakPoint()
 		return BdBadMagicNum;
 	}
 	printf("sz:%d\n",sz);
