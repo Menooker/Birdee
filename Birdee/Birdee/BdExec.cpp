@@ -800,7 +800,7 @@ void ExInvokeDelegate()
 }
 
 
-void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngine)
+void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngine,Module* M)
 {
 
 
@@ -820,6 +820,12 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	//OurFPM.add(createBoundsCheckingPass());
 	OurFPM.add(createPromoteMemoryToRegisterPass());
 	OurFPM.doInitialization();
+	Module::iterator it;
+	Module::iterator end = M->end();
+	for (it = M->begin(); it != end; ++it) {
+		// Run the FPM on this function
+		OurFPM.run(*it);
+	}
 	TheExecutionEngine->finalizeObject();
 }
 //*/
@@ -988,15 +994,19 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;
-	InitOptimizer(*pm,TheExecutionEngine);
-	delete pm;
+	InitOptimizer(*pm,TheExecutionEngine,m);
+	delete pm; 
 	
 
 
 	return TheExecutionEngine;
 }
 
-
+extern "C" void ExFreeMCJIT(void* p)
+{
+	MCJITHelper* h=(MCJITHelper*)p;
+	delete h;
+}
 
 
 void replaceAllUsesWith(Value* ths,Value *New) {

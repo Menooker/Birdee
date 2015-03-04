@@ -247,8 +247,12 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
                                             
   	
   if(mUseMC)
+  {
 		eb.setMCJITMemoryManager(new HelpingMemoryManager(this));
+  }
+  
   ExecutionEngine *NewEngine =eb.create();
+  
   if (!NewEngine) {
     fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
     exit(1);
