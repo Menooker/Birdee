@@ -356,9 +356,9 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
     return offset;
 }
 
-void BcSwitchContext(Module* M)
+void BcSwitchContext(Module* M,Type* t)
 {
-	TyObjectRef=M->getTypeByName("Stack.1");//fix-me
+	TyObjectRef=(llvm::StructType*)t;
 	module=M;
 	bpc=M->getGlobalVariable("bpc");
 	bei=M->getGlobalVariable("bei");
@@ -654,6 +654,7 @@ extern "C" void BcDumpModule()
 
 extern "C" void BcBuildInlines(void* mod)
 {
+	return;//we do nothing
 	module=(Module*) mod;
 	bsp=module->getGlobalVariable("bsp");
 	bbp=module->getGlobalVariable("bbp");

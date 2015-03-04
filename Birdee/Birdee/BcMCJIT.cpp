@@ -1,5 +1,6 @@
 #include "BcMCJIT.h"
 
+
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -96,12 +97,16 @@ private:
 //===----------------------------------------------------------------------===//
 
 
-
+uint64_t HelpingMemoryManager::getSymbolAddress(const std::string &Name)
+{
+	return (uint64_t)getPointerToNamedFunction(Name,true);
+}
 void *HelpingMemoryManager::getPointerToNamedFunction(const std::string &Name,
                                         bool AbortOnFailure)
 {
+
   // Try the standard symbol resolution first, but ask it not to abort.
-  void *pfn = RTDyldMemoryManager::getPointerToNamedFunction(Name, false);
+  void *pfn = (void*)RTDyldMemoryManager::getSymbolAddress(Name);
   if (pfn)
     return pfn;
 
@@ -128,7 +133,7 @@ MCJITHelper::~MCJITHelper()
       delete *it;
     }
   }
-  delete EE;
+  //delete EE;
 }
 
 
@@ -221,36 +226,52 @@ Module *MCJITHelper::getModuleForNewFunction() {
   return M;
 }
 */
+
+void MCJITHelper::addGlobalMapping(const std::string& Name,void* p)
+{
+	if(mUseMC)
+	{
+		GlobalMap[Name]=p;
+	}
+}
+
 ExecutionEngine *MCJITHelper::compileModule(Module *M) {
-  assert(EngineMap.find(M) == EngineMap.end());
 
-  if (M == CurrentModule)
-    closeCurrentModule();
 
-  EE->addModule(M);
+	
+  std::string ErrStr;
+  EngineBuilder eb(M);
+											eb .setUseMCJIT(this->mUseMC)
+                                            .setErrorStr(&ErrStr);
+                                            
+                                            
+  	
+  if(mUseMC)
+		eb.setMCJITMemoryManager(new HelpingMemoryManager(this));
+  ExecutionEngine *NewEngine =eb.create();
+  if (!NewEngine) {
+    fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
+    exit(1);
+  }
 
- // if (UseObjectCache)
- //   EE->setObjectCache(&OurObjectCache);
-  // Get the ModuleID so we can identify IR input files
-  const std::string ModuleID = M->getModuleIdentifier();
 
-  // If we've flagged this as an IR file, it doesn't need function passes run.
-  //if (0 != ModuleID.compare(0, 3, "IR:")) {
+
 
   // Store this engine
-  EngineMap[M] = EE;
+  EngineMap[M] = NewEngine;
   Modules.push_back(M);
-  return EE;
+
+  return NewEngine;
 }
 
 
 
 void *MCJITHelper::getPointerToFunction(Function* F)
-{
+/*{
 	
 	return (char*)EE->getPointerToFunction(F);
-}
-/*{
+}*/
+{
   // Look for this function in an existing module
   ModuleVector::iterator begin = Modules.begin();
   ModuleVector::iterator end = Modules.end();
@@ -273,7 +294,7 @@ void *MCJITHelper::getPointerToFunction(Function* F)
     }
   }
   return NULL;
-}*/
+}
 
 void MCJITHelper::closeCurrentModule() {
     // If we have an open module (and we should), pack it up
@@ -284,18 +305,26 @@ void MCJITHelper::closeCurrentModule() {
 
 void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
 {
+	if(GlobalMap.find(Name)!=GlobalMap.end())
+	{
+		return GlobalMap[Name];
+	}
   // Look for the functions in our modules, compiling only as necessary
   ModuleVector::iterator begin = Modules.begin();
   ModuleVector::iterator end = Modules.end();
   ModuleVector::iterator it;
   for (it = begin; it != end; ++it) {
     Function *F = (*it)->getFunction(Name);
-    if (F && !F->empty()) {
-      std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(*it);
+	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(*it);
+	void* P;
+    if (F && !F->empty() ) {
+      
       if (eeIt != EngineMap.end()) {
-        void *P = eeIt->second->getPointerToFunction(F);
+		
+        P = eeIt->second->getPointerToFunction(F);
         if (P)
           return P;
+
       } else {
         ExecutionEngine *EE = compileModule(*it);
         void *P = EE->getPointerToFunction(F);
@@ -303,6 +332,15 @@ void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
           return P;
       }
     }
+	GlobalValue* v=eeIt->first->getGlobalVariable(Name);
+
+	if(v)
+	{
+		P=(void*)eeIt->second->getPointerToGlobal(v);
+		if(P)
+			return P;
+	}
+	
   }
   return NULL;
 }

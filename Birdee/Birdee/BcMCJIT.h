@@ -68,6 +68,8 @@ public:
   /// message to stderr and aborts.
   virtual void *getPointerToNamedFunction(const std::string &Name,
                                           bool AbortOnFailure = true);
+
+  virtual uint64_t getSymbolAddress(const std::string &Name);
 private:
   MCJITHelper *MasterHelper;
 };
@@ -75,20 +77,8 @@ private:
 class MCJITHelper //: public BaseHelper
 {
 public:
-  MCJITHelper(Module* M) :  CurrentModule(NULL) {
-	std::string ErrStr;
-	EngineBuilder eb(M);
-	eb.setUseMCJIT(true);
-	eb.setMCJITMemoryManager(new HelpingMemoryManager(this));
-    eb.setErrorStr(&ErrStr);
-	TargetMachine* tm= eb.selectTarget();
-	tm->Options.NoFramePointerElim=1;
-	tm->setOptLevel(llvm::CodeGenOpt::Default );
-	EE =eb.create();
-	if (!EE) {
-		fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
-		exit(1);
-	}
+  MCJITHelper(Module* M,bool useMCJIT) : mUseMC(useMCJIT), CurrentModule(NULL) {
+
   }
   ~MCJITHelper();
 
@@ -99,18 +89,18 @@ public:
   void closeCurrentModule();
   virtual void runFPM(Function &F) {} // Not needed, see compileModule
   void dump();
-
+  void addGlobalMapping(const std::string& Name,void*);
 
   ExecutionEngine *compileModule(Module *M);
 
 private:
   typedef std::vector<Module*> ModuleVector;
-
+  bool mUseMC;
  // MCJITObjectCache OurObjectCache;
   ExecutionEngine* EE;
   //LLVMContext  &Context;
   ModuleVector  Modules;
-
+  std::map<std::string, void *> GlobalMap;
   std::map<Module *, ExecutionEngine *> EngineMap;
 
   Module       *CurrentModule;

@@ -42,5 +42,5 @@ llvm::Function* BcBuildArrPtrImp(llvm::Type *);
 llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
 llvm::Function* BcBuildPushImp(char* name,int isptr,llvm::Type* ty);
 llvm::Function* BcBuildPopImp();
-void BcSwitchContext(llvm::Module* M);
+void BcSwitchContext(llvm::Module* M,llvm::Type* t);
 #endif

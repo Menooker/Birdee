@@ -1,49 +1,12 @@
-/*
-	public class TestLib
-		public fieldb as double
-		public fielda as int
-		public fieldc as string
 
-		public  sub method()
-			println(this.fielda+1)
-		end
-	end
-
-
-
-
-
-
-dim j as int
-dim t as int=GetClock()
-dim k as int
-BreakPoint()
 dim kp as string[]= new string[1]
 	function kkk() as string[]
 		BreakPoint()
 		return kp
 	end
 	kkk()
-/*try
-	
-	dim i as int
-	for i=0;i<10000000;i++
-	unsafe
-		kp[3]=null
-	end
-catch TestLib e
 
-end
-#i=kp[0]
-kp[0]=#i
-println(GetClock()-t)*/
 
-//dim a as int[]=new 
-
-//BreakPoint()
-dim a as int
-a=a+1
-BreakPoint()
 
 
 
