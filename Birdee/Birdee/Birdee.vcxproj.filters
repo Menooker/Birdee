@@ -147,6 +147,9 @@
     <ClInclude Include="BdDynLdr.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BcMCJIT.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
@@ -279,6 +282,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BdDynLdr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BcMCJIT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

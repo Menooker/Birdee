@@ -1,18 +1,4 @@
-//require ab
-/*require Exceptions
-
-
-$a=1
-#s=33
-sb()
-try
-	a()
-
-catch NullPointerException e
-	println(e.message)
-	e.print_stack_trace()
-end
-*/
+/*
 	public class TestLib
 		public fieldb as double
 		public fielda as int
@@ -31,13 +17,15 @@ end
 dim j as int
 dim t as int=GetClock()
 dim k as int
+BreakPoint()
+dim kp as string[]= new string[1]
 	function kkk() as string[]
 		BreakPoint()
 		return kp
 	end
 	kkk()
-try
-	dim kp as string[]= new string[1]
+/*try
+	
 	dim i as int
 	for i=0;i<10000000;i++
 	unsafe
@@ -48,9 +36,14 @@ catch TestLib e
 end
 #i=kp[0]
 kp[0]=#i
-println(GetClock()-t)
+println(GetClock()-t)*/
 
+//dim a as int[]=new 
 
+//BreakPoint()
+dim a as int
+a=a+1
+BreakPoint()
 
 
 

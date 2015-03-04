@@ -37,4 +37,10 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 extern "C" void BcDumpModule();
 extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *cd, DVM_Class *dvm_class);
 
+llvm::Function* BcBuildFldPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
+llvm::Function* BcBuildPushImp(char* name,int isptr,llvm::Type* ty);
+llvm::Function* BcBuildPopImp();
+void BcSwitchContext(llvm::Module* M);
 #endif

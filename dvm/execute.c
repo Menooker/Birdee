@@ -1966,7 +1966,6 @@ DVM_execute(DVM_VirtualMachine *dvm)
     dvm->pc = 0;
 	ExSetCurrentDVM(dvm);
 	ExGoMain();
-
  /*   dvm_expand_stack(dvm,
                      dvm->top_level->executable->top_level.need_stack_size);*/
     /*dvm_execute_i(dvm, NULL, dvm->top_level->executable->top_level.code,

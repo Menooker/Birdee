@@ -12,6 +12,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/PassManager.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
@@ -27,6 +28,16 @@ using namespace llvm;
 #include "Loader.h"
 #include <stdlib.h>
 #include <setjmp.h>
+#include "BcMCJIT.h"
+
+llvm::Function* BcBuildFldPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
+llvm::Function* BcBuildPushImp(char* name,int isptr,Type* ty);
+llvm::Function* BcBuildPopImp();
+void BcSwitchContext(Module* M);
+
+
 extern "C"{
 #include "..\..\include\DBG.h"
 //#include "..\..\include\DVM.h"
@@ -63,7 +74,7 @@ extern "C" void ExLoadFunction(void* args,...)
 	Function* f=m->getFunction(curdvm->function[p1]->u.diksam_f.executable->executable->function[curdvm->function[p1]->u.diksam_f.index].name);
 	FunctionPassManager* pm=(FunctionPassManager*)exe->module.pass;
 	pm->run(*f);
-	ExecutionEngine* engine=(ExecutionEngine*)(curdvm->exe_engine);
+	MCJITHelper* engine=(MCJITHelper*)(curdvm->exe_engine);
 	BdVMFunction FPtr =(BdVMFunction) engine->getPointerToFunction(f);
 	curdvm->function[p1]->pfun=FPtr;
 	FPtr(args);
@@ -458,11 +469,15 @@ void ExCall(BINT index)
             }
 }
 
+
+
 extern "C" void ExInitExeEngine()
 {
 
-
 	InitializeNativeTarget();
+	InitializeNativeTargetAsmPrinter();
+	InitializeNativeTargetAsmParser();
+
 }
 
 extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
@@ -481,7 +496,7 @@ extern "C" void ExGoMain()
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curdvm->current_executable =curdvm->top_level;
 	AvPushNullContext();
-	ExecutionEngine* eng =(ExecutionEngine*)curdvm->exe_engine;
+	MCJITHelper* eng =(MCJITHelper*)curdvm->exe_engine;
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curdvm->stack.stack);
@@ -814,30 +829,22 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//	return 0;
 	Module* m=(Module*)mod->mod;
 
+	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 
 	std::string ErrStr;
-	ExecutionEngine* TheExecutionEngine;
+	//ExecutionEngine* TheExecutionEngine;
+	MCJITHelper* MCJIT;
 	if(dvm->exe_engine)
 	{
-		TheExecutionEngine=(ExecutionEngine*) dvm->exe_engine;
-		TheExecutionEngine->addModule(m);
+		MCJIT=(MCJITHelper*) dvm->exe_engine;
+		
 	}
 	else
 	{
-		EngineBuilder eb(m);
-		eb.setUseMCJIT(true);
-		TargetMachine* tm= eb.selectTarget();
-		tm->Options.NoFramePointerElim=1;
-		tm->setOptLevel(llvm::CodeGenOpt::Default );
-		//printf("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n%d",tm->getOptLevel());
-		TheExecutionEngine=	 eb.setErrorStr(&ErrStr).create(tm);
-		if (!TheExecutionEngine) {
-			printf("Could not create ExecutionEngine: %s\n", ErrStr.c_str());
-			exit(1);
-		}
-		dvm->exe_engine=TheExecutionEngine;
+		MCJIT= new MCJITHelper(m);
+		dvm->exe_engine=MCJIT;
 	}
-
+	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
 
 	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
@@ -883,7 +890,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 
 	f=m->getFunction("system!GetSuper");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExGetSuper);
-/*	f=m->getFunction("system!ArrGeti");
+	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGetd);
@@ -891,7 +898,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeto);*/
 	f=m->getFunction("system!ArrGetCh");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrGetCh);
-/*	f=m->getFunction("system!ArrPuti");
+	/*f=m->getFunction("system!ArrPuti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuti);
 	f=m->getFunction("system!ArrPutd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPutd);
@@ -945,11 +952,16 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("autovar!getorcreate");
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
 
-	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
-
+	
+	
+	
+	
 	FunctionPassManager* pm=new FunctionPassManager(m);
-	mod->pass=pm;
+	//mod->pass=pm;
 	InitOptimizer(*pm,TheExecutionEngine);
+	delete pm;
+	
+	m->dump();
 
 	return TheExecutionEngine;
 }
@@ -984,41 +996,42 @@ void replaceAllUsesWith(Value* ths,Value *New) {
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
 
-
+	BcSwitchContext(m);
+	Type* TyO=m->getTypeByName("Stack.1");
 	Function* f;
 	f=m->getFunction("systemi!ArrAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrImp"));
+		replaceAllUsesWith(f,BcBuildArrPtrImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!Pushi");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushiImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushiImp",0,Type::getInt32Ty(llvm::getGlobalContext())));
 	}
 	f=m->getFunction("systemi!Pusho");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushoImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushoImp",1,TyO));
 	}
 	f=m->getFunction("systemi!Pushd");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushdImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushdImp",0,Type::getDoubleTy(llvm::getGlobalContext())));
 	}
 	f=m->getFunction("systemi!ArrAddrSafe");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrSafeImp"));
+		replaceAllUsesWith(f,BcBuildArrPtrSafeImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!FldAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!FldAddrImp"));
+		replaceAllUsesWith(f,BcBuildFldPtrImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!Pop");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PopImp"));
+		replaceAllUsesWith(f,BcBuildPopImp());
 	}
 }

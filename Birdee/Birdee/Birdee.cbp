@@ -157,6 +157,7 @@
 		<Unit filename="8Queens.txt" />
 		<Unit filename="ArrayCacheTest.txt" />
 		<Unit filename="ArrayCacheTest_Reg.txt" />
+		<Unit filename="BcMCJIT.cpp" />
 		<Unit filename="BdArrayCache.cpp" />
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
