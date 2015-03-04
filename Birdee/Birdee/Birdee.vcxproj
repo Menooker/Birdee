@@ -109,6 +109,7 @@
     <ClInclude Include="..\..\include\MEM.h" />
     <ClInclude Include="..\..\include\share.h" />
     <ClInclude Include="..\..\memory\memory.h" />
+    <ClInclude Include="BcMCJIT.h" />
     <ClInclude Include="BdArrayCache.h" />
     <ClInclude Include="BdCompile.h" />
     <ClInclude Include="BdDynLdr.h" />
@@ -158,6 +159,7 @@
     <ClCompile Include="..\..\share\opcode.c" />
     <ClCompile Include="..\..\share\util.c" />
     <ClCompile Include="..\..\share\wchar_share.c" />
+    <ClCompile Include="BcMCJIT.cpp" />
     <ClCompile Include="BdArrayCache.cpp" />
     <ClCompile Include="BdCompile.cpp" />
     <ClCompile Include="BdDynLdr.cpp" />

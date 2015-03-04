@@ -356,6 +356,21 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
     return offset;
 }
 
+void BcSwitchContext(Module* M,Type* t)
+{
+	TyObjectRef=(llvm::StructType*)t;
+	module=M;
+	bpc=M->getGlobalVariable("bpc");
+	bei=M->getGlobalVariable("bei");
+	beo=M->getGlobalVariable("beo");
+	bsp=M->getGlobalVariable("bsp");
+	bbp=M->getGlobalVariable("bbp");
+	arr_is_pointer=M->getGlobalVariable("arr_is_pointer");
+	bretvar=M->getGlobalVariable("bretvar");
+	pstatic=M->getGlobalVariable("pstatic");
+	pthis=M->getGlobalVariable("pthis");
+}
+
 void BcBuildPop()
 {
 	BcGetCurrentCompilerContext()->FunctionUse[FunPop]=1;
@@ -366,7 +381,7 @@ void BcBuildPop()
 	fPop=Function::Create(FT8, Function::ExternalLinkage ,"systemi!Pop", module);
 	return ;
 }
-void BcBuildPopImp()
+Function* BcBuildPopImp()
 {
 	BcGetCurrentCompilerContext()->FunctionUse[FunPop]=1;
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
@@ -383,7 +398,7 @@ void BcBuildPopImp()
 	builder.CreateStore(p1,bsp,true);
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);
-	return ;
+	return fPop;
 }
 
 
@@ -419,14 +434,14 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 
 	builder.SetInsertPoint(ifOverLen);
 	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,2)); //raise ExArrayOverLengthErr
-	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
+	builder.CreateRet(p);//ConstantPointerNull::get((PointerType*)ty));
 
 	builder.SetInsertPoint(ifOk);
 	builder.CreateRet(builder.CreateLoad(p1));
 
 	builder.SetInsertPoint(ifNull);
 	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,1)); //raise ExNullPointerErr
-	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
+	builder.CreateRet(p);//;ConstantPointerNull::get((PointerType*)ty));
 	builder.restoreIP(IP);
 	return fArrAddr;
 }
@@ -471,7 +486,6 @@ Function* BcBuildFldPtrImp(Type* ty)
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
-	Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!FldAddrImp", module);
@@ -491,7 +505,7 @@ Function* BcBuildFldPtrImp(Type* ty)
 
 	builder.SetInsertPoint(ifNull);
 	builder.CreateCall(module->getFunction("system!SystemRaise"),ConstInt(32,1)); //raise ExNullPointerErr
-	builder.CreateRet(ConstantPointerNull::get((PointerType*)ty));
+	builder.CreateRet(p);//ConstantPointerNull::get((PointerType*)ty));
 	builder.restoreIP(IP);
 	return fArrAddr;
 }
@@ -595,7 +609,7 @@ Function* GetArrAddr()
 Function* BcBuildPush(char* name,int isptr,Type* ty)
 {
 	std::vector<Type*> Args2(1,ty);
-	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, true);
+	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	Function* fret=Function::Create(FT8, Function::ExternalLinkage,name, module);
 
 	return fret;
@@ -604,7 +618,7 @@ Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2(1,ty);
-	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, true);
+	FunctionType* FT8 = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	Function* fret=Function::Create(FT8, Function::LinkOnceAnyLinkage,name, module);
 	fret->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
@@ -640,6 +654,7 @@ extern "C" void BcDumpModule()
 
 extern "C" void BcBuildInlines(void* mod)
 {
+	return;//we do nothing
 	module=(Module*) mod;
 	bsp=module->getGlobalVariable("bsp");
 	bbp=module->getGlobalVariable("bbp");

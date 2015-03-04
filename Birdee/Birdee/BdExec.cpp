@@ -12,6 +12,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/PassManager.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
@@ -27,6 +28,17 @@ using namespace llvm;
 #include "Loader.h"
 #include <stdlib.h>
 #include <setjmp.h>
+#include "BcMCJIT.h"
+#include "llvm/Support/DynamicLibrary.h"
+
+llvm::Function* BcBuildFldPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrImp(llvm::Type *);
+llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
+llvm::Function* BcBuildPushImp(char* name,int isptr,Type* ty);
+llvm::Function* BcBuildPopImp();
+void BcSwitchContext(Module* M,Type* t);
+
+
 extern "C"{
 #include "..\..\include\DBG.h"
 //#include "..\..\include\DVM.h"
@@ -61,9 +73,9 @@ extern "C" void ExLoadFunction(void* args,...)
 	ExecutableEntry* ee=curdvm->function[p1]->u.diksam_f.executable;
 	Module* m=(Module*)exe->module.mod;
 	Function* f=m->getFunction(curdvm->function[p1]->u.diksam_f.executable->executable->function[curdvm->function[p1]->u.diksam_f.index].name);
-	FunctionPassManager* pm=(FunctionPassManager*)exe->module.pass;
-	pm->run(*f);
-	ExecutionEngine* engine=(ExecutionEngine*)(curdvm->exe_engine);
+	//FunctionPassManager* pm=(FunctionPassManager*)exe->module.pass;
+	//pm->run(*f);
+	MCJITHelper* engine=(MCJITHelper*)(curdvm->exe_engine);
 	BdVMFunction FPtr =(BdVMFunction) engine->getPointerToFunction(f);
 	curdvm->function[p1]->pfun=FPtr;
 	FPtr(args);
@@ -458,11 +470,15 @@ void ExCall(BINT index)
             }
 }
 
+
+
 extern "C" void ExInitExeEngine()
 {
 
-
 	InitializeNativeTarget();
+	InitializeNativeTargetAsmPrinter();
+	InitializeNativeTargetAsmParser();
+
 }
 
 extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
@@ -481,7 +497,7 @@ extern "C" void ExGoMain()
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curdvm->current_executable =curdvm->top_level;
 	AvPushNullContext();
-	ExecutionEngine* eng =(ExecutionEngine*)curdvm->exe_engine;
+	MCJITHelper* eng =(MCJITHelper*)curdvm->exe_engine;
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curdvm->stack.stack);
@@ -784,7 +800,7 @@ void ExInvokeDelegate()
 }
 
 
-void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngine)
+void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngine,Module* M)
 {
 
 
@@ -804,6 +820,13 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	//OurFPM.add(createBoundsCheckingPass());
 	OurFPM.add(createPromoteMemoryToRegisterPass());
 	OurFPM.doInitialization();
+	Module::iterator it;
+	Module::iterator end = M->end();
+	for (it = M->begin(); it != end; ++it) {
+		// Run the FPM on this function
+		OurFPM.run(*it);
+	}
+	TheExecutionEngine->finalizeObject();
 }
 //*/
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
@@ -814,31 +837,23 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//	return 0;
 	Module* m=(Module*)mod->mod;
 
+	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 
 	std::string ErrStr;
-	ExecutionEngine* TheExecutionEngine;
+	//ExecutionEngine* TheExecutionEngine;
+	MCJITHelper* MCJIT;
 	if(dvm->exe_engine)
 	{
-		TheExecutionEngine=(ExecutionEngine*) dvm->exe_engine;
-		TheExecutionEngine->addModule(m);
+		MCJIT=(MCJITHelper*) dvm->exe_engine;
+		
 	}
 	else
 	{
-		EngineBuilder eb(m);
-		eb.setUseMCJIT(true);
-		TargetMachine* tm= eb.selectTarget();
-		tm->Options.NoFramePointerElim=1;
-		tm->setOptLevel(llvm::CodeGenOpt::Default );
-		//printf("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n%d",tm->getOptLevel());
-		TheExecutionEngine=	 eb.setErrorStr(&ErrStr).create(tm);
-		if (!TheExecutionEngine) {
-			printf("Could not create ExecutionEngine: %s\n", ErrStr.c_str());
-			exit(1);
-		}
-		dvm->exe_engine=TheExecutionEngine;
+		MCJIT= new MCJITHelper(m,true);
+		dvm->exe_engine=MCJIT;
 	}
-
-
+	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
+	
 	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
 	vglobal=m->getGlobalVariable("bei");
@@ -851,6 +866,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack));
 	vglobal=m->getGlobalVariable("arr_is_pointer");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.pointer_flags));
+
 	vglobal=m->getGlobalVariable("retvar");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->retvar));
 	vglobal=m->getGlobalVariable("pstatic");
@@ -858,32 +874,43 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	vglobal=m->getGlobalVariable("pthis");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));
 
-	Function *f;
+	//sys::DynamicLibrary::AddSymbol("arr_is_pointer",&(dvm->stack.pointer_flags));
+
+	Function *f; //fix-me : For MCJIT ,TheExecutionEngine->addGlobalMapping is not needed
 	f=m->getFunction("string!LoadStringFromPool");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExLoadStringFromPool);
+	MCJIT->addGlobalMapping("string!LoadStringFromPool",(void*)ExLoadStringFromPool);
 
 	f=m->getFunction("string!ChainString");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExChainString);
+	MCJIT->addGlobalMapping("string!ChainString",(void*)ExChainString);
 
 	f=m->getFunction("string!CompareString");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExCompareString);
+	MCJIT->addGlobalMapping("string!CompareString",(void*)ExCompareString);
 
 	f=m->getFunction("object!CompareObject");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExCompareObject);
+	MCJIT->addGlobalMapping("object!CompareObject",(void*)ExCompareObject);
 	f=m->getFunction("system!IntToStr");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExIntToStr);
+	MCJIT->addGlobalMapping("system!IntToStr",(void*)ExIntToStr);
 	f=m->getFunction("system!BoolToStr");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExBoolToStr);
+	MCJIT->addGlobalMapping("system!BoolToStr",(void*)ExBoolToStr);
 	f=m->getFunction("system!DoubleToStr");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExDoubleToStr);
+	MCJIT->addGlobalMapping("system!DoubleToStr",(void*)ExDoubleToStr);
 	f=m->getFunction("system!NewDelegate");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExNewDelegate);
+	MCJIT->addGlobalMapping("system!NewDelegate",(void*)ExNewDelegate);
 	f=m->getFunction("system!InvokeDelegate");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExInvokeDelegate);
-
+	MCJIT->addGlobalMapping("system!InvokeDelegate",(void*)ExInvokeDelegate);
 	f=m->getFunction("system!GetSuper");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExGetSuper);
-/*	f=m->getFunction("system!ArrGeti");
+	MCJIT->addGlobalMapping("system!GetSuper",(void*)ExGetSuper);
+	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGetd);
@@ -891,7 +918,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeto);*/
 	f=m->getFunction("system!ArrGetCh");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrGetCh);
-/*	f=m->getFunction("system!ArrPuti");
+	MCJIT->addGlobalMapping("system!ArrGetCh",(void*)ExArrGetCh);
+	/*f=m->getFunction("system!ArrPuti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPuti);
 	f=m->getFunction("system!ArrPutd");
 	TheExecutionEngine->addGlobalMapping(f,ExArrPutd);
@@ -900,6 +928,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 
 	f=m->getFunction("system!SystemRaise");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExSystemRaise);
+	MCJIT->addGlobalMapping("system!SystemRaise",(void*)ExSystemRaise);
 	/*f=m->getFunction("system!FldGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExFldGeti);
 	f=m->getFunction("system!FldGetd");
@@ -916,45 +945,68 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 
 	f=m->getFunction("system!ArrayLiteral");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrayLiteral);
+	MCJIT->addGlobalMapping("system!ArrayLiteral",(void*)ExArrayLiteral);
 	f=m->getFunction("system!NewArray");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExNewArray);
+	MCJIT->addGlobalMapping("system!NewArray",(void*)ExNewArray);
 	f=m->getFunction("object!New");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExNew);
+	MCJIT->addGlobalMapping("object!New",(void*)ExNew);
 	f=m->getFunction("system!Invoke");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExInvoke);
+	MCJIT->addGlobalMapping("system!Invoke",(void*)ExInvoke);
 	f=m->getFunction("system!Call");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExCall);
+	MCJIT->addGlobalMapping("system!Call",(void*)ExCall);
 	f=m->getFunction("system!Failure");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExFailure);
+	MCJIT->addGlobalMapping("system!Failure",(void*)ExFailure);
 	f=m->getFunction("system!PushException");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExPushJumpBuffer);
+	MCJIT->addGlobalMapping("system!PushException",(void*)ExPushJumpBuffer);
 	f=m->getFunction("system!Raise");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExRaiseException);
+	MCJIT->addGlobalMapping("system!Raise",(void*)ExRaiseException);
 	f=m->getFunction("system!Setjmp");
 #ifdef BD_ON_GCC
 	TheExecutionEngine->addGlobalMapping(f,(void*)_setjmp);
+	MCJIT->addGlobalMapping("system!Setjmp",(void*)_setjmp);
 #else
 	TheExecutionEngine->addGlobalMapping(f,(void*)setjmp);
+	MCJIT->addGlobalMapping("system!Setjmp",(void*)setjmp);
 #endif
 	f=m->getFunction("system!LeaveTry");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExLeaveTry);
+	MCJIT->addGlobalMapping("system!LeaveTry",(void*)ExLeaveTry);
 	f=m->getFunction("system!DoInvoke");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExDoInvoke);
+	MCJIT->addGlobalMapping("system!DoInvoke",(void*)ExDoInvoke);
 	f=m->getFunction("autovar!get");
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetVar);
+	MCJIT->addGlobalMapping("autovar!get",(void*)AvGetVar);
 	f=m->getFunction("autovar!getorcreate");
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
+	MCJIT->addGlobalMapping("autovar!getorcreate",(void*)AvGetOrCreateVar);
 
-	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
-
+	
+	
+	m->dump();	
+	
 	FunctionPassManager* pm=new FunctionPassManager(m);
-	mod->pass=pm;
-	InitOptimizer(*pm,TheExecutionEngine);
+	//mod->pass=pm;
+	InitOptimizer(*pm,TheExecutionEngine,m);
+	delete pm; 
+	
+
 
 	return TheExecutionEngine;
 }
 
-
+extern "C" void ExFreeMCJIT(void* p)
+{
+	MCJITHelper* h=(MCJITHelper*)p;
+	delete h;
+}
 
 
 void replaceAllUsesWith(Value* ths,Value *New) {
@@ -984,41 +1036,44 @@ void replaceAllUsesWith(Value* ths,Value *New) {
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
 
-
+	
+	Type* TyO=m->getGlobalVariable("bbp")->getType()->getPointerElementType()->getPointerElementType();
+	TyO->dump();
+	BcSwitchContext(m,TyO);
 	Function* f;
 	f=m->getFunction("systemi!ArrAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrImp"));
+		replaceAllUsesWith(f,BcBuildArrPtrImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!Pushi");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushiImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushiImp",0,Type::getInt32Ty(llvm::getGlobalContext())));
 	}
 	f=m->getFunction("systemi!Pusho");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushoImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushoImp",1,TyO));
 	}
 	f=m->getFunction("systemi!Pushd");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PushdImp"));
+		replaceAllUsesWith(f,BcBuildPushImp("systemi!PushdImp",0,Type::getDoubleTy(llvm::getGlobalContext())));
 	}
 	f=m->getFunction("systemi!ArrAddrSafe");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!ArrAddrSafeImp"));
+		replaceAllUsesWith(f,BcBuildArrPtrSafeImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!FldAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!FldAddrImp"));
+		replaceAllUsesWith(f,BcBuildFldPtrImp(TyO->getPointerTo()));
 	}
 	f=m->getFunction("systemi!Pop");
 	if(f)
 	{
-		replaceAllUsesWith(f,inline_mod->getFunction("systemi!PopImp"));
+		replaceAllUsesWith(f,BcBuildPopImp());
 	}
 }

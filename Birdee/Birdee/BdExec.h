@@ -34,6 +34,7 @@ void  ExGetFunction(DVM_Value* v);
 void  ExRand(DVM_Value* v);
 void ExGetClock(DVM_Value* v);
 DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);
+void ExFreeMCJIT(void* p);
 #ifdef __cplusplus
 }
 #endif
