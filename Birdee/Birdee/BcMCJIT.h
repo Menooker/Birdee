@@ -55,7 +55,7 @@ class HelpingMemoryManager : public SectionMemoryManager
   void operator=(const HelpingMemoryManager&) LLVM_DELETED_FUNCTION;
 
 public:
-  HelpingMemoryManager(MCJITHelper *Helper) : MasterHelper(Helper) {}
+  HelpingMemoryManager(MCJITHelper *Helper,Module* M) : MasterHelper(Helper),Mod(M) {}
   virtual ~HelpingMemoryManager() {}
 
   /// This method returns the address of the specified function.
@@ -71,6 +71,7 @@ public:
 
   virtual uint64_t getSymbolAddress(const std::string &Name);
 private:
+	Module* Mod;
   MCJITHelper *MasterHelper;
 };
 
@@ -86,6 +87,8 @@ public:
   //Module *getModuleForNewFunction();
   void *getPointerToFunction(Function* F);
   void *getPointerToNamedFunction(const std::string &Name);
+  void *getPointerToGlobalVariable(const std::string &Name,Module *const m);
+  void *getPointerToNamedFunctionForModule(const std::string &Name,Module *const m);
   void closeCurrentModule();
   virtual void runFPM(Function &F) {} // Not needed, see compileModule
   void dump();

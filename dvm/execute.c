@@ -2051,8 +2051,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
         MEM_free(ee_temp->class_table);
         MEM_free(ee_temp->enum_table);
         MEM_free(ee_temp->constant_table);
-		if(ee_temp->static_v.variable_count)
-			MEM_free(ee_temp->static_v.variable);
+		MEM_free(ee_temp->static_v.variable);
         MEM_free(ee_temp);
     }
     dvm_garbage_collect(dvm);

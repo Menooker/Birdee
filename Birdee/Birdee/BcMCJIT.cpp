@@ -109,8 +109,11 @@ void *HelpingMemoryManager::getPointerToNamedFunction(const std::string &Name,
   void *pfn = (void*)RTDyldMemoryManager::getSymbolAddress(Name);
   if (pfn)
     return pfn;
+  pfn=MasterHelper->getPointerToGlobalVariable(Name,Mod);
+  if(pfn)
+	  return pfn;
 
-  pfn = MasterHelper->getPointerToNamedFunction(Name);
+  pfn = MasterHelper->getPointerToNamedFunctionForModule(Name,Mod); 
   if (!pfn && AbortOnFailure)
     report_fatal_error("Program used external function '" + Name +
                         "' which could not be resolved!");
@@ -248,7 +251,7 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   	
   if(mUseMC)
   {
-		eb.setMCJITMemoryManager(new HelpingMemoryManager(this));
+		eb.setMCJITMemoryManager(new HelpingMemoryManager(this,M));
   }
   
   ExecutionEngine *NewEngine =eb.create();
@@ -271,11 +274,19 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
 
 
 void *MCJITHelper::getPointerToFunction(Function* F)
-/*{
-	
-	return (char*)EE->getPointerToFunction(F);
-}*/
 {
+	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(F->getParent());
+	if (eeIt != EngineMap.end()) {
+		void *P = eeIt->second->getPointerToFunction(F);
+		if (P)
+			return P;
+	}
+	
+	return NULL;
+}
+/*
+{
+	
   // Look for this function in an existing module
   ModuleVector::iterator begin = Modules.begin();
   ModuleVector::iterator end = Modules.end();
@@ -298,13 +309,56 @@ void *MCJITHelper::getPointerToFunction(Function* F)
     }
   }
   return NULL;
-}
+}*/
 
 void MCJITHelper::closeCurrentModule() {
     // If we have an open module (and we should), pack it up
   if (CurrentModule) {
     CurrentModule = NULL;
   }
+}
+
+void *MCJITHelper::getPointerToGlobalVariable(const std::string &Name,Module *const m)
+{
+	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(m);
+	if(eeIt==EngineMap.end())
+	{
+		return NULL;
+	}
+	const GlobalVariable* v=m->getGlobalVariable(Name);
+	void* P;
+	if(v)
+	{
+		P=(void*)eeIt->second->getPointerToGlobal(v);
+		if(P)
+			return P;
+	}
+	return NULL;
+}
+
+
+void *MCJITHelper::getPointerToNamedFunctionForModule(const std::string &Name,Module *const m)
+{
+	if(GlobalMap.find(Name)!=GlobalMap.end())
+	{
+		return GlobalMap[Name];
+	}
+
+    Function *F = m->getFunction(Name);
+	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(m);
+	void* P;
+    if (F && !F->empty() ) {
+      
+      if (eeIt != EngineMap.end()) {
+		
+        P = eeIt->second->getPointerToFunction(F);
+        if (P)
+          return P;
+
+      }
+	}
+
+	return NULL;
 }
 
 void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
@@ -336,14 +390,6 @@ void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
           return P;
       }
     }
-	GlobalValue* v=eeIt->first->getGlobalVariable(Name);
-
-	if(v)
-	{
-		P=(void*)eeIt->second->getPointerToGlobal(v);
-		if(P)
-			return P;
-	}
 	
   }
   return NULL;
