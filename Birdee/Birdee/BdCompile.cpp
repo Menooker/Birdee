@@ -1282,7 +1282,8 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				bparameters[decl->variable_index].v=v;
 				bparameters[decl->variable_index].violated=1;
 				//}
-				builder.CreateStore(v,builder.CreateBitCast(t1,TypeSwitch[ty]));
+
+				builder.CreateStore(BcBitToInt(v),builder.CreateBitCast(t1,TypeSwitch[ty]));
 				if(dkc_is_array(decl->type))//Full_arr_chk
 				{
 					if(isArrayAddressSet(decl->variable_index,1))
@@ -1855,7 +1856,7 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		return v;
 		break;
     case BIT_AND_EXPRESSION:
-		return builder.CreateAnd(lv,rv);
+		return builder.CreateAnd(BcBitToInt(lv),BcBitToInt(rv));
 	case LOGICAL_OR_EXPRESSION:
 		lv=BcGenerateExpression(exe,current_block,expr->u.binary_expression.left);
 		BasicBlock* logic_false2;
@@ -1889,9 +1890,9 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		break;
 	case BIT_OR_EXPRESSION:
 
-		return builder.CreateOr(lv,rv);
+		return builder.CreateOr(BcBitToInt(lv),BcBitToInt(rv));
     case BIT_XOR_EXPRESSION:
-		return builder.CreateXor(lv,rv);
+		return builder.CreateXor(BcBitToInt(lv),BcBitToInt(rv));
     case MINUS_EXPRESSION:
         lv=BcGenerateExpression(exe, current_block, expr->u.minus_expression);
 		i=get_opcode_type_offset2(expr->type);

@@ -990,7 +990,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 
 	
 	
-	m->dump();	
+	//m->dump();	
 	
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;
@@ -1038,7 +1038,7 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 
 	
 	Type* TyO=m->getGlobalVariable("bbp")->getType()->getPointerElementType()->getPointerElementType();
-	TyO->dump();
+	//TyO->dump();
 	BcSwitchContext(m,TyO);
 	Function* f;
 	f=m->getFunction("systemi!ArrAddr");
