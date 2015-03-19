@@ -118,7 +118,7 @@ Function *fLeaveTry;
 Function *fNewDelegate;
 Function *fInvokeDelegate;
 Function *fSystemRaise;
-
+Function *fReraise;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -787,7 +787,7 @@ extern "C" void* BcNewModule(char* name)
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fFailure=Function::Create(nft, Function::ExternalLinkage,"system!Failure", module);
-
+	fReraise=Function::Create(nft, Function::ExternalLinkage,"system!Reraise", module);
 
 	std::vector<Type*> ArgSSI;	ArgSSI.push_back(Type::getInt32Ty(context));
 	FT4 = FunctionType::get(TyObjectRef,ArgSSI, false);
@@ -2178,7 +2178,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	builder.CreateCondBr(builder.CreateLoad(pIsNor),bcont,bfail);
 
 	SwitchBlock(bfail);
-	builder.CreateCall(fFailure);
+	builder.CreateCall(fReraise);
 	builder.CreateRetVoid();
 	//builder.CreateUnreachable();
 

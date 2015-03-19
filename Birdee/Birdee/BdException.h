@@ -42,7 +42,7 @@ void ExLeaveTry();
 void ExNullPointerException();
 void ExStackTrace(DVM_ObjectRef e);
 void ExSystemRaise(enum ExExceptions e);
-
+void ExReraiseException();
 
 #ifdef __cplusplus
 }

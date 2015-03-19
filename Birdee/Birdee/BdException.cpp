@@ -139,10 +139,10 @@ EXE_search_class(DVM_Executable *dvm, char *package_name, char *name)
             return i;
         }
     }
-    dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC, CLASS_NOT_FOUND_ERR,
+    /*dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC, CLASS_NOT_FOUND_ERR,
                 DVM_STRING_MESSAGE_ARGUMENT, "name", name,
-                DVM_MESSAGE_ARGUMENT_END);
-    return 0; /* make compiler happy */
+                DVM_MESSAGE_ARGUMENT_END);*/
+    return -2; /* make compiler happy */
 }
 
 
@@ -209,13 +209,34 @@ extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx);
 void ExUncaughtException()
 {
 	printf("UncaughtException %d\n",curdvm->exception_index);
-	if(curdvm->current_exception.data  && ExDoInstanceOf(&curdvm->current_exception,DVM_search_class(curdvm,DVM_DIKSAM_DEFAULT_PACKAGE,"Exception")))
+	if(curdvm->current_exception.data  && ExDoInstanceOf(&curdvm->current_exception,DVM_search_class(curdvm,"Exceptions","Exception")))
 	{
 		printf("%s\n",curdvm->current_exception.v_table->exec_class->name );
 	}
 
 	_BreakPoint()
 	//exit(1);
+}
+
+void ExReraiseException()
+{
+
+	PExExceptionItem pit=ExTopJumpBuffer();
+	curdvm->current_executable=(ExecutableEntry*)pit->exe ;
+	curdvm->ths=pit->ths;
+	if(pit->asp>curdvm->asp)
+	{
+		//bad asp
+		_BreakPoint()
+	}
+	while(pit->asp<curdvm->asp)
+	{
+		AvPopContext();
+	}
+	//curdvm->current_exception =pit->cur_exception;
+	ExJumpBuf mybuf=pit->jmpbuf;
+	ExPopJumpBuffer();
+	longjmp(mybuf.buf ,curdvm->exception_index);
 }
 
 void ExRaiseException(BINT eindex)

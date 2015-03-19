@@ -961,6 +961,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!Failure");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExFailure);
 	MCJIT->addGlobalMapping("system!Failure",(void*)ExFailure);
+	f=m->getFunction("system!Reraise");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExReraiseException);
+	MCJIT->addGlobalMapping("system!Reraise",(void*)ExReraiseException);
 	f=m->getFunction("system!PushException");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExPushJumpBuffer);
 	MCJIT->addGlobalMapping("system!PushException",(void*)ExPushJumpBuffer);
