@@ -150,6 +150,9 @@
     <ClInclude Include="BcMCJIT.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="hash_compatible.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">

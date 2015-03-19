@@ -1,14 +1,6 @@
 #include "BdHashMap.h"
 #include "Conf.h"
-#ifdef BD_ON_GCC
-#include <ext/hash_map>
-namespace std
-{
-using namespace __gnu_cxx;
-}
-#else
-#include <hash_map>
-#endif
+#include "hash_compatible.h"
 #include <string>
 using namespace std;
 
