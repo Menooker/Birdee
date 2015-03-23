@@ -284,9 +284,6 @@
     <ClCompile Include="BdDynLdr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\libLLVMlite\llvm-3.4.2.src\lib\Transforms\Instrumentation\BoundsChecking.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="BcMCJIT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

@@ -127,7 +127,6 @@
     <ClInclude Include="UnportableAPI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\libLLVMlite\llvm-3.4.2.src\lib\Transforms\Instrumentation\BoundsChecking.cpp" />
     <ClCompile Include="..\..\compiler\builtin\builtin.c" />
     <ClCompile Include="..\..\compiler\builtin\builtin_conv.c" />
     <ClCompile Include="..\..\compiler\create.c" />
