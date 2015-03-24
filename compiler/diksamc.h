@@ -15,15 +15,7 @@ extern "C"
 {
 
 #endif
-typedef struct 
-{
-	char* libname;
-	int isLib;
-	void* inline_module;
-	int FunctionUse[20];
-}CompilerContext;
-extern CompilerContext default_context;
-#define BcGetCurrentCompilerContext() (&default_context)
+
 #define DEFAULT_CONSTRUCTOR_NAME ("initialize")
 
 #define smaller(a, b) ((a) < (b) ? (a) : (b))
@@ -163,6 +155,7 @@ typedef enum {
     EOF_IN_STRING_LITERAL_ERR,
     TOO_LONG_CHARACTER_LITERAL_ERR,
 	MULTIPLE_LIB_ERR,
+	TEMPLATE_PARAM_NUM_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -295,6 +288,13 @@ typedef struct ArgumentList_tag {
 
 typedef struct TypeSpecifier_tag TypeSpecifier;
 
+typedef struct TemplateTypes_tag{
+	TypeSpecifier* name;
+	struct TemplateTypes_tag* next;
+}TemplateTypes;
+
+
+
 typedef struct ParameterList_tag {
     char                *name;
     TypeSpecifier       *type;
@@ -341,12 +341,21 @@ typedef struct TypeDerive_tag {
 typedef struct DelegateDefinition_tag DelegateDefinition;
 typedef struct EnumDefinition_tag EnumDefinition;
 
+typedef struct ExtendsList_tag {
+    char *identifier;
+    ClassDefinition *class_definition;
+    struct ExtendsList_tag *next;
+} ExtendsList;
+
 struct TypeSpecifier_tag {
     DVM_BasicType       basic_type;
     char        *identifier;
     union {
+		int template_id;
+		TemplateTypes* tylist;
         struct {
             ClassDefinition *class_definition;
+			TemplateTypes* tylist;
             int class_index;
         } class_ref;
         struct {
@@ -754,11 +763,7 @@ typedef struct {
     ClassOrMemberModifierKind   is_override;
 } ClassOrMemberModifierList;
 
-typedef struct ExtendsList_tag {
-    char *identifier;
-    ClassDefinition *class_definition;
-    struct ExtendsList_tag *next;
-} ExtendsList;
+
 
 typedef enum {
     METHOD_MEMBER,
@@ -800,6 +805,7 @@ struct ClassDefinition_tag {
     PackageName *package_name;
     char *name;
     ExtendsList *extends;
+	ExtendsList *templates;
     ClassDefinition *super_class;
     ExtendsList *interface_list;
     MemberDeclaration *member;
@@ -919,6 +925,20 @@ typedef struct {
     char **source_string;
 } BuiltinScript;
 
+
+typedef struct 
+{
+	char* libname;
+	int isLib;
+	void* inline_module;
+	int FunctionUse[20];
+	ClassDefinition* curcls;
+}CompilerContext;
+extern CompilerContext default_context;
+#define BcGetCurrentCompilerContext() (&default_context)
+
+
+
 /* diksam.l */
 void dkc_set_source_string(char **source);
 
@@ -956,6 +976,7 @@ StatementList *dkc_chain_statement_list(StatementList *list,
                                         Statement *statement);
 TypeSpecifier *dkc_create_type_specifier(DVM_BasicType basic_type);
 TypeSpecifier *dkc_create_identifier_type_specifier(char *identifier);
+TypeSpecifier *dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist);
 TypeSpecifier *dkc_create_array_type_specifier(TypeSpecifier *base);
 Expression *dkc_alloc_expression(ExpressionKind type);
 Expression *dkc_create_comma_expression(Expression *left, Expression *right);
@@ -1022,7 +1043,8 @@ Statement *dkc_create_do_while_statement(char *label, Block *block,
 Block *dkc_alloc_block(void);
 Block * dkc_open_block(int unsafe);
 Block *dkc_close_block(Block *block, StatementList *statement_list);
-
+TemplateTypes * dkc_create_template_list(TypeSpecifier* name);
+TemplateTypes * dkc_chain_template_list(TemplateTypes * p,TypeSpecifier* name);
 
 Statement *dkc_create_expression_statement(Expression *expression);
 Statement *dkc_create_return_statement(Expression *expression);
@@ -1046,7 +1068,7 @@ Statement *dkc_create_declaration_statement(DVM_Boolean is_final,
 void
 dkc_start_class_definition(ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
-                           char *identifier,
+                           char *identifier,ExtendsList* templates,
                            ExtendsList *extends);
 void dkc_class_define(MemberDeclaration *member_list);
 ExtendsList *dkc_create_extends_list(char *identifier);

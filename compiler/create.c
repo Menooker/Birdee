@@ -328,6 +328,26 @@ dkc_chain_argument_list(ArgumentList *list, Expression *expr)
     return list;
 }
 
+
+TemplateTypes * dkc_create_template_list(TypeSpecifier* name)
+{
+    TemplateTypes *list;
+
+    list = dkc_malloc(sizeof(TemplateTypes));
+    list->name=name;
+    list->next = NULL;
+	return list;
+}
+
+TemplateTypes * dkc_chain_template_list(TemplateTypes * list,TypeSpecifier* name)
+{
+    TemplateTypes *pos;
+    for (pos = list; pos->next; pos = pos->next)
+        ;
+    pos->next = dkc_create_template_list(name);
+	return list;
+}
+
 ExpressionList *
 dkc_create_expression_list(Expression *expression)
 {
@@ -401,6 +421,19 @@ dkc_create_identifier_type_specifier(char *identifier)
 
     type = dkc_alloc_type_specifier(DVM_UNSPECIFIED_IDENTIFIER_TYPE);
     type->identifier = identifier;
+    type->line_number = dkc_get_current_compiler()->current_line_number;
+
+    return type;
+}
+
+TypeSpecifier *
+dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist)
+{
+    TypeSpecifier *type;
+
+    type = dkc_alloc_type_specifier(DVM_UNSPECIFIED_IDENTIFIER_TYPE);
+    type->identifier = identifier;
+	type->u.tylist=tylist;
     type->line_number = dkc_get_current_compiler()->current_line_number;
 
     return type;
@@ -1109,14 +1142,14 @@ conv_access_modifier(ClassOrMemberModifierKind src)
 void
 dkc_start_class_definition(ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
-                           char *identifier,
+                           char *identifier,ExtendsList* templates,
                            ExtendsList *extends)
 {
     ClassDefinition *cd;
     DKC_Compiler *compiler = dkc_get_current_compiler();
 
     cd = dkc_malloc(sizeof(ClassDefinition));
-
+	cd->templates=templates;
     cd->is_abstract = (class_or_interface == DVM_INTERFACE_DEFINITION);
     cd->access_modifier = DVM_FILE_ACCESS;
     if (modifier) {

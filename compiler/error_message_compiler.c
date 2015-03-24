@@ -118,5 +118,6 @@ ErrorDefinition dkc_error_message_format[] = {
     {"在字符串字面量中终止了文件。"},
     {"字符字面量中包含了2个以上的字符。"},
 	{"使用了一个以上的lib块"},
+	{"泛型对象类型参数个数与声明不符$(class_name)。"},
     {"dummy"}
 };

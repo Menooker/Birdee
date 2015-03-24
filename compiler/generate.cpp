@@ -528,6 +528,7 @@ get_opcode_type_offset(TypeSpecifier *type)
     case DVM_CLASS_TYPE: /* FALLTHRU */
 	case DVM_VARIENT_TYPE:
     case DVM_DELEGATE_TYPE: /* FALLTHRU */
+	case DVM_TEMPLATE_TYPE:
         return 2;
         break;
 

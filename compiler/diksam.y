@@ -30,6 +30,7 @@
     ExceptionList       *exception_list;
     Enumerator          *enumerator;
 	int					apost;
+	TemplateTypes		*template;
 }
 %token <expression>     INT_LITERAL
 %token <expression>     DOUBLE_LITERAL
@@ -77,7 +78,7 @@
 %type   <catch_clause> catch_clause catch_list
 %type   <assignment_operator> assignment_operator
 %type   <identifier> identifier_opt label_opt
-%type   <type_specifier> type_specifier identifier_type_specifier
+%type   <type_specifier> type_specifier identifier_type_specifier template_type_specifier
         array_type_specifier
 %type   <basic_type_specifier> basic_type_specifier
 %type   <array_dimension> dimension_expression dimension_expression_list
@@ -85,13 +86,15 @@
 %type   <class_or_member_modifier> class_or_member_modifier
         class_or_member_modifier_list access_modifier
 %type   <class_or_interface> class_or_interface
-%type   <extends_list> extends_list extends
+%type   <extends_list> extends_list extends template_list
 %type   <member_declaration> member_declaration member_declaration_list
         method_member field_member
 %type   <function_definition> method_function_definition
         constructor_definition
 %type   <exception_list> exception_list throws_clause
 %type   <enumerator> enumerator_list
+%type   <template> type_list
+
 %%
 translation_unit
         : initial_declaration 
@@ -227,6 +230,12 @@ array_type_specifier
             $$ = dkc_create_array_type_specifier($1);
         }
         ;
+template_type_specifier
+		: IDENTIFIER LT type_list GT
+		{//fix-me : shift/reduce
+			$$= dkc_create_template_type_specifier($1,$3);
+		}
+		;
 type_specifier
         : basic_type_specifier
         {
@@ -234,7 +243,19 @@ type_specifier
         }
         | array_type_specifier
         | identifier_type_specifier
+		| template_type_specifier
         ;
+type_list
+		:
+		type_specifier
+		{
+			$$=dkc_create_template_list($1);
+		}
+		| type_list COMMA type_specifier
+        {
+            $$ = dkc_chain_template_list($1, $3);
+        }
+		;
 lib_function
 		:
 		LIB IDENTIFIER
@@ -866,36 +887,45 @@ block
             $<block>$ = dkc_close_block(empty_block, NULL);
         }
         ;
+
+template_list
+		: LT extends_list GT 
+		{
+			$$=$2;
+		}
+		|
+		{$$=NULL;}
+		;
 class_definition
-        : class_or_interface IDENTIFIER
+        : class_or_interface IDENTIFIER template_list
           extends CR
         {
-            dkc_start_class_definition(NULL, $1, $2, $3);
+            dkc_start_class_definition(NULL, $1, $2,$3, $4);
         }
           member_declaration_list END
         {
-            dkc_class_define($6);
-        }
-        | class_or_member_modifier_list class_or_interface IDENTIFIER
-          extends CR
-        {
-            dkc_start_class_definition(&$1, $2, $3, $4);
-        } member_declaration_list END
-        {
             dkc_class_define($7);
         }
-        | class_or_interface IDENTIFIER extends CR
+        | class_or_member_modifier_list class_or_interface IDENTIFIER template_list
+          extends CR
         {
-            dkc_start_class_definition(NULL, $1, $2, $3);
+            dkc_start_class_definition(&$1, $2, $3,$4, $5);
+        } member_declaration_list END
+        {
+            dkc_class_define($8);
+        }
+        | class_or_interface IDENTIFIER template_list extends CR
+        {
+            dkc_start_class_definition(NULL, $1, $2,$3, $4);
         }
           END
         {
             dkc_class_define(NULL);
         }
-        | class_or_member_modifier_list class_or_interface IDENTIFIER
+        | class_or_member_modifier_list class_or_interface IDENTIFIER template_list
           extends CR
         {
-            dkc_start_class_definition(&$1, $2, $3, $4);
+            dkc_start_class_definition(&$1, $2, $3,$4, $5);
         }
           END
         {

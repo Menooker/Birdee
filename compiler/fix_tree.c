@@ -1,3 +1,4 @@
+
 #include <math.h>
 #include <string.h>
 #include "..\include\MEM.h"
@@ -290,6 +291,8 @@ fix_type_specifier(TypeSpecifier *type)
     DelegateDefinition *dd;
     EnumDefinition *ed;
     TypeDerive *derive_pos;
+	ExtendsList* template_pos; int id;
+	TemplateTypes* tys;TemplateTypes* ty_pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
 
     for (derive_pos = type->derive; derive_pos;
@@ -303,6 +306,7 @@ fix_type_specifier(TypeSpecifier *type)
     if (type->basic_type == DVM_UNSPECIFIED_IDENTIFIER_TYPE) {
         cd = dkc_search_class(type->identifier);
         if (cd) {
+			template_pos=cd->templates;
             if (!dkc_compare_package_name(cd->package_name,
                                           compiler->package_name)
                 && cd->access_modifier != DVM_PUBLIC_ACCESS) {
@@ -312,9 +316,30 @@ fix_type_specifier(TypeSpecifier *type)
                                   cd->name,
                                   MESSAGE_ARGUMENT_END);
             }
+			tys=type->u.tylist;
+			for(ty_pos=tys;ty_pos;ty_pos=ty_pos->next)
+			{
+				if(!template_pos)
+				{
+					dkc_compile_error(type->line_number,
+									  TEMPLATE_PARAM_NUM_ERR,
+									  STRING_MESSAGE_ARGUMENT, "class_name",
+									  cd->name,
+									  MESSAGE_ARGUMENT_END);
+				}
+				template_pos=template_pos->next;
+				fix_type_specifier(ty_pos->name);
+			}
+			if(template_pos)
+					dkc_compile_error(type->line_number,
+									  TEMPLATE_PARAM_NUM_ERR,
+									  STRING_MESSAGE_ARGUMENT, "class_name",
+									  cd->name,
+									  MESSAGE_ARGUMENT_END);
             type->basic_type = DVM_CLASS_TYPE;
             type->u.class_ref.class_definition = cd;
             type->u.class_ref.class_index = add_class(cd);
+			type->u.class_ref.tylist=tys;
             return;
         }
         dd = dkc_search_delegate(type->identifier);
@@ -331,6 +356,22 @@ fix_type_specifier(TypeSpecifier *type)
                 = reserve_enum_index(compiler, ed, DVM_FALSE);
             return;
         }
+		
+		
+		if(BcGetCurrentCompilerContext()->curcls  ) //search in templates
+		{
+			id=0;
+			for(template_pos=BcGetCurrentCompilerContext()->curcls->templates;template_pos!=NULL;template_pos=template_pos->next)
+			{
+				if(!strcmp(template_pos->identifier,type->identifier))
+				{
+					type->basic_type = DVM_TEMPLATE_TYPE;
+					type->u.template_id=id;
+					return;
+				}
+				id++;
+			}
+		}
         dkc_compile_error(type->line_number,
                           TYPE_NAME_NOT_FOUND_ERR,
                           STRING_MESSAGE_ARGUMENT, "name", type->identifier,
@@ -699,7 +740,15 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
                 return cast_expr;
             }
             return src;
-        } else {
+        }
+		else if(src->type->u.class_ref.tylist==NULL && dest->u.class_ref.tylist) // allow uninstantiated template objects to 
+																					// initialize instantiated template objects
+																					// but we don't allow the opposite way
+		{
+			*src->type=*dest;
+			return src;
+		}
+		else {
             cast_mismatch_error(src->line_number, src->type, dest);
         }
     }
@@ -1390,10 +1439,21 @@ fix_logical_not_expression(Block *current_block, Expression *expr,
     return expr;
 }
 
+
+TypeSpecifier* BcGetTemplateType(TemplateTypes* temptys,int index)
+{
+	int i;
+	for(i=0;i<index;i++)
+	{
+		temptys=temptys->next;
+	}
+	return temptys->name;
+}
+
 static void
 check_argument(Block *current_block, int line_number,
                ParameterList *param_list, ArgumentList *arg,
-               ExceptionList **el_p, TypeSpecifier *array_base,int isApost)
+               ExceptionList **el_p, TypeSpecifier *array_base,int isApost,TemplateTypes* temptys)
 {
     ParameterList *param;
     TypeSpecifier *temp_type;
@@ -1409,7 +1469,11 @@ check_argument(Block *current_block, int line_number,
         if (param->type->basic_type == DVM_BASE_TYPE) {
             DBG_assert(array_base != NULL, ("array_base == NULL\n"));
             temp_type = array_base;
-        } else {
+        }
+		else if(param->type->basic_type ==DVM_TEMPLATE_TYPE){
+			temp_type=BcGetTemplateType(temptys,param->type->u.template_id);
+		}
+		else {
             temp_type = param->type;
         }
 		if( !(arg->expression->type->basic_type==DVM_DELEGATE_TYPE && temp_type->basic_type==DVM_DELEGATE_TYPE)) //special case for delegates
@@ -1546,6 +1610,8 @@ fix_function_call_expression(Block *current_block, Expression *expr,
     TypeSpecifier *func_type;
     ParameterList *func_param;
     ExceptionList *func_throws;
+	TemplateTypes* temptys=0;
+	Expression *obj;
 	int isApost;
 
     func_expr
@@ -1579,9 +1645,10 @@ fix_function_call_expression(Block *current_block, Expression *expr,
                                   ->u.field.name,
                                   MESSAGE_ARGUMENT_END);
             } 
+			obj = func_expr->u.member_expression.expression;
             if (func_expr->u.member_expression.declaration
                 ->u.method.is_constructor) {
-                Expression *obj = func_expr->u.member_expression.expression;
+                
                 if (obj->kind != SUPER_EXPRESSION
                     && obj->kind != THIS_EXPRESSION) {
                     dkc_compile_error(expr->line_number,
@@ -1592,8 +1659,11 @@ fix_function_call_expression(Block *current_block, Expression *expr,
                                       MESSAGE_ARGUMENT_END);
                 }
             }
+			
+			//obj->type->u.class_ref.tylist
             fd = func_expr->u.member_expression.declaration
                 ->u.method.function_definition;
+			temptys=obj->type->u.class_ref.tylist;
         }
     }
     if (dkc_is_delegate(func_expr->type)) {
@@ -1621,7 +1691,7 @@ fix_function_call_expression(Block *current_block, Expression *expr,
     add_exception(el_p, func_throws);
     check_argument(current_block, expr->line_number,
                    func_param, expr->u.function_call_expression.argument, el_p,
-                   array_base_p,isApost);
+                   array_base_p,isApost,temptys);
     expr->type = dkc_alloc_type_specifier(func_type->basic_type);
     *expr->type = *func_type;
     expr->type->derive = func_type->derive;
@@ -1629,6 +1699,10 @@ fix_function_call_expression(Block *current_block, Expression *expr,
         expr->type->identifier = func_type->identifier;
         fix_type_specifier(expr->type);
     }
+	else if (func_type->basic_type == DVM_TEMPLATE_TYPE) 
+	{
+		*expr->type= *BcGetTemplateType(temptys,func_type->u.template_id );
+	}
 
     return expr;
 }
@@ -1732,8 +1806,12 @@ fix_class_member_expression(Expression *expr,
                               FIELD_OF_SUPER_REFERENCED_ERR,
                               MESSAGE_ARGUMENT_END);
         }
-        expr->type = member->u.field.type;
+		if(obj->kind !=THIS_EXPRESSION && member->u.field.type->basic_type==DVM_TEMPLATE_TYPE)
+			expr->type = BcGetTemplateType(obj->type->u.class_ref.tylist ,member->u.field.type->u.template_id);
+		else
+			expr->type = member->u.field.type;
     }
+
 
     return expr;
 }
@@ -1852,6 +1930,7 @@ fix_member_expression(Block *current_block, Expression *expr,
     obj = expr->u.member_expression.expression
         = fix_expression(current_block, expr->u.member_expression.expression,
                          expr, el_p);
+	
     if (dkc_is_class_object(obj->type)) {
         return fix_class_member_expression(expr, obj,
                                            expr->u.member_expression
@@ -2187,7 +2266,7 @@ fix_new_expression(Block *current_block, Expression *expr,
 
     check_argument(current_block, expr->line_number,
                    member->u.method.function_definition->parameter,
-                   expr->u.new_e.argument, el_p, NULL,0);
+                   expr->u.new_e.argument, el_p, NULL,0,0); //fix-me : add template support for new
 
     expr->u.new_e.method_declaration = member;
     type = dkc_alloc_type_specifier(DVM_CLASS_TYPE);
@@ -2525,6 +2604,7 @@ fix_return_statement(Block *current_block, Statement *statement,
                 return_value = dkc_alloc_expression(DOUBLE_EXPRESSION);
                 return_value->u.double_value = 0.0;
                 break;
+			case DVM_TEMPLATE_TYPE:
 			case DVM_VARIENT_TYPE:
             case DVM_STRING_TYPE: /* FALLTHRU */
             case DVM_NATIVE_POINTER_TYPE: /* FALLTHRU */
@@ -2898,8 +2978,10 @@ fix_function(FunctionDefinition *fd)
     ExceptionList *el = NULL;
     ExceptionList *error_exception;
 	ParameterList *param;
+	ClassDefinition* old = BcGetCurrentCompilerContext()->curcls;
 	int paramcnt=0;
 
+	BcGetCurrentCompilerContext()->curcls=fd->class_definition;
     add_parameter_as_declaration(fd);
     fix_type_specifier(fd->type);
     fix_throws(fd->throws);
@@ -2920,6 +3002,7 @@ fix_function(FunctionDefinition *fd)
                           error_exception->ref->identifier,
                           MESSAGE_ARGUMENT_END);
     }
+	BcGetCurrentCompilerContext()->curcls=old;
 }
 
 static void
@@ -3153,16 +3236,16 @@ fix_class_list(DKC_Compiler *compiler)
          class_pos; class_pos = class_pos->next) {
         if (class_pos->class_or_interface != DVM_CLASS_DEFINITION)
             continue;
-        compiler->current_class_definition = class_pos;
+        compiler->current_class_definition = class_pos;BcGetCurrentCompilerContext()->curcls=class_pos;
         add_default_constructor(class_pos);
-        compiler->current_class_definition = NULL;
+        compiler->current_class_definition = NULL;BcGetCurrentCompilerContext()->curcls=NULL;
     }
 
     for (class_pos = compiler->class_definition_list;
          class_pos; class_pos = class_pos->next) {
 
         compiler->current_class_definition = class_pos;
-
+		BcGetCurrentCompilerContext()->curcls=class_pos;
         get_super_field_method_count(class_pos, &field_index, &method_index);
         abstract_method_name = NULL;
         for (member_pos = class_pos->member; member_pos;
@@ -3246,7 +3329,9 @@ fix_class_list(DKC_Compiler *compiler)
                               MESSAGE_ARGUMENT_END);
         }
         compiler->current_class_definition = NULL;
+		BcGetCurrentCompilerContext()->curcls=NULL;
     }
+	
 }
 
 void
@@ -3303,6 +3388,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
     DeclarationList *dl;
     int var_count = 0;
     ExceptionList *el = NULL;
+	BcGetCurrentCompilerContext()->curcls=NULL;
 
     fix_class_list(compiler);
     fix_enum_list(compiler);
@@ -3328,3 +3414,4 @@ dkc_fix_tree(DKC_Compiler *compiler)
         var_count++;
     }
 }
+
