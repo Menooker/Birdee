@@ -63,6 +63,7 @@ dvm_initialize_value(DVM_VirtualMachine* dvm,DVM_TypeSpecifier *type, DVM_Value 
         case DVM_DOUBLE_TYPE:
             value->double_value = 0.0;
             break;
+		case DVM_TEMPLATE_TYPE:
         case DVM_STRING_TYPE: /* FALLTHRU */
         case DVM_NATIVE_POINTER_TYPE: /* FALLTHRU */
         case DVM_CLASS_TYPE: /* FALLTHRU */

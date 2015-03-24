@@ -227,9 +227,6 @@
     <ClCompile Include="..\..\compiler\error_message_compiler.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\compiler\fix_tree.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\compiler\interface.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -285,6 +282,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BcMCJIT.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\compiler\fix_tree.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

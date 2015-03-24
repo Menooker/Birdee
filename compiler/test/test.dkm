@@ -1,16 +1,56 @@
-require Exceptions
+//require Exceptions
 
-try
-	f()
-catch NullPointerException ex
-	ex.print_stack_trace()
+class StackEmptyException
 end
 
-sub f()
-	dim a as int[]
-	try
-		a[0]=1
-	catch DivisionByZeroException e
-		println("LLL")
+class ListNode<T1>
+
+	public prv as ListNode<T1>
+	public data as T1
+
+end
+	
+public class Stack<T1>
+
+	dim tail as ListNode<T1>
+	dim head as ListNode<T1>
+	public constructor initialize()
+		
+	end
+	public  sub push(t as T1)
+		dim top as ListNode<T1> = this.tail
+		this.tail=new ListNode()
+		this.tail.data=t
+		this.tail.prv=top
+	end
+	public  function pop() as T1 throws StackEmptyException
+		dim top as ListNode<T1> = this.tail
+		if(top==null) then
+			dim e as StackEmptyException 
+			throw e
+		end
+		this.tail=this.tail.prv
+		return top.data
 	end
 end
+
+public class AAA
+	public a as int
+end
+
+
+try
+
+	dim a as Stack<int> =new Stack()
+	dim ta as AAA =new AAA()
+	a.push(1)
+	a.push(2)
+	a.push(3)
+	println(a.pop())
+	println(a.pop())
+	println(a.pop())
+	println(a.pop())
+catch StackEmptyException ex
+	println("Stack Empty")
+end
+	

@@ -601,6 +601,11 @@ char *yytext;
 #include "diksamc.h"
 #include "y.tab.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 static int
 file_input(char *buf, int max_size)
 {
@@ -636,7 +641,7 @@ static int
 string_input(char *buf, int max_size)
 {
     int len;
-	
+
     if (st_source_string[st_current_source_line] == NULL)
         return 0;
 
@@ -705,13 +710,18 @@ increment_line_number_int(int i)
 }
 
 DVM_Boolean st_character_literal_state;
+
+#ifdef __cplusplus
+}
+#endif
+
 #define C_COMMENT 1
 #define CC_COMMENT 2
 #define STRING_LITERAL_STATE 3
 #define SHIFT_JIS_2ND_CHAR 4
 #define CHK_END_BLOCK 5
 
-#line 715 "lex.yy.c"
+#line 725 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -862,9 +872,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 117 "diksam.l"
+#line 127 "diksam.l"
 
-#line 868 "lex.yy.c"
+#line 878 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -949,506 +959,506 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 118 "diksam.l"
+#line 128 "diksam.l"
 return IF;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 119 "diksam.l"
+#line 129 "diksam.l"
 return ELSE;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 120 "diksam.l"
+#line 130 "diksam.l"
 return ELSIF;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 121 "diksam.l"
+#line 131 "diksam.l"
 {isInSwitch=1; return SWITCH;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 122 "diksam.l"
+#line 132 "diksam.l"
 {isInSwitch=1; return SWITCH;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 123 "diksam.l"
+#line 133 "diksam.l"
 return CASE;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 124 "diksam.l"
+#line 134 "diksam.l"
 return DEFAULT_T;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 125 "diksam.l"
+#line 135 "diksam.l"
 return WHILE;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 126 "diksam.l"
+#line 136 "diksam.l"
 return DO_T;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 127 "diksam.l"
+#line 137 "diksam.l"
 return FOR;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 128 "diksam.l"
+#line 138 "diksam.l"
 return FOREACH;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 129 "diksam.l"
+#line 139 "diksam.l"
 return RETURN_T;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 130 "diksam.l"
+#line 140 "diksam.l"
 return BREAK;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 131 "diksam.l"
+#line 141 "diksam.l"
 return CONTINUE;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 132 "diksam.l"
+#line 142 "diksam.l"
 return NULL_T;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 133 "diksam.l"
+#line 143 "diksam.l"
 return TRUE_T;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 134 "diksam.l"
+#line 144 "diksam.l"
 return FALSE_T;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 135 "diksam.l"
+#line 145 "diksam.l"
 return TRY;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 136 "diksam.l"
+#line 146 "diksam.l"
 return CATCH;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 137 "diksam.l"
+#line 147 "diksam.l"
 return FINALLY;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 138 "diksam.l"
+#line 148 "diksam.l"
 return THROW;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 139 "diksam.l"
+#line 149 "diksam.l"
 return THROWS;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 140 "diksam.l"
+#line 150 "diksam.l"
 return BOOLEAN_T;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 141 "diksam.l"
+#line 151 "diksam.l"
 return VOID_T;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 142 "diksam.l"
+#line 152 "diksam.l"
 return INT_T;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 143 "diksam.l"
+#line 153 "diksam.l"
 return DOUBLE_T;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 144 "diksam.l"
+#line 154 "diksam.l"
 return STRING_T;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 145 "diksam.l"
+#line 155 "diksam.l"
 return VARIENT_T;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 146 "diksam.l"
+#line 156 "diksam.l"
 return NATIVE_POINTER_T;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 147 "diksam.l"
+#line 157 "diksam.l"
 return NEW;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 148 "diksam.l"
+#line 158 "diksam.l"
 return REQUIRE;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 149 "diksam.l"
+#line 159 "diksam.l"
 return RENAME;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 150 "diksam.l"
+#line 160 "diksam.l"
 return CLASS_T;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 151 "diksam.l"
+#line 161 "diksam.l"
 return INTERFACE_T;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 152 "diksam.l"
+#line 162 "diksam.l"
 return PUBLIC_T;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 153 "diksam.l"
+#line 163 "diksam.l"
 return PRIVATE_T;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 154 "diksam.l"
+#line 164 "diksam.l"
 return VIRTUAL_T;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 155 "diksam.l"
+#line 165 "diksam.l"
 return OVERRIDE_T;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 156 "diksam.l"
+#line 166 "diksam.l"
 return ABSTRACT_T;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 157 "diksam.l"
+#line 167 "diksam.l"
 return THIS_T;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 158 "diksam.l"
+#line 168 "diksam.l"
 return SUPER_T;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 159 "diksam.l"
+#line 169 "diksam.l"
 return CONSTRUCTOR;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 160 "diksam.l"
+#line 170 "diksam.l"
 return INSTANCEOF;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 161 "diksam.l"
+#line 171 "diksam.l"
 return DELEGATE;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 162 "diksam.l"
+#line 172 "diksam.l"
 return ENUM;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 163 "diksam.l"
+#line 173 "diksam.l"
 return FINAL;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 164 "diksam.l"
+#line 174 "diksam.l"
 return CONST;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 165 "diksam.l"
+#line 175 "diksam.l"
 return LP;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 166 "diksam.l"
+#line 176 "diksam.l"
 return RP;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 167 "diksam.l"
+#line 177 "diksam.l"
 return APOSTROPHE;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 168 "diksam.l"
+#line 178 "diksam.l"
 return UNSAFE;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 169 "diksam.l"
+#line 179 "diksam.l"
 return SAFE;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 171 "diksam.l"
+#line 181 "diksam.l"
 {increment_line_number();  return LC;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 172 "diksam.l"
+#line 182 "diksam.l"
 {increment_line_number();  return RC;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 173 "diksam.l"
+#line 183 "diksam.l"
 {increment_line_number_int(yyleng);  BEGIN CHK_END_BLOCK;  return CR;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 174 "diksam.l"
+#line 184 "diksam.l"
 return LB;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 175 "diksam.l"
+#line 185 "diksam.l"
 return RB;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 176 "diksam.l"
+#line 186 "diksam.l"
 return SEMICOLON;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 177 "diksam.l"
+#line 187 "diksam.l"
 return COLON;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 178 "diksam.l"
+#line 188 "diksam.l"
 return COMMA;
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 179 "diksam.l"
+#line 189 "diksam.l"
 return LOGICAL_AND;
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 180 "diksam.l"
+#line 190 "diksam.l"
 return LOGICAL_OR;
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 181 "diksam.l"
+#line 191 "diksam.l"
 return ASSIGN_T;
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 182 "diksam.l"
+#line 192 "diksam.l"
 return EQ;
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 183 "diksam.l"
+#line 193 "diksam.l"
 return NE;
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 184 "diksam.l"
+#line 194 "diksam.l"
 return GT;
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 185 "diksam.l"
+#line 195 "diksam.l"
 return GE;
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 186 "diksam.l"
+#line 196 "diksam.l"
 return LT;
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 187 "diksam.l"
+#line 197 "diksam.l"
 return LE;
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 188 "diksam.l"
+#line 198 "diksam.l"
 return ADD;
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 189 "diksam.l"
+#line 199 "diksam.l"
 return SUB;
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 190 "diksam.l"
+#line 200 "diksam.l"
 return MUL;
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 191 "diksam.l"
+#line 201 "diksam.l"
 return DIV;
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 192 "diksam.l"
+#line 202 "diksam.l"
 return MOD;
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 193 "diksam.l"
+#line 203 "diksam.l"
 return BIT_AND;
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 194 "diksam.l"
+#line 204 "diksam.l"
 return BIT_OR;
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 195 "diksam.l"
+#line 205 "diksam.l"
 return BIT_XOR;
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 196 "diksam.l"
+#line 206 "diksam.l"
 return BIT_NOT;
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 197 "diksam.l"
+#line 207 "diksam.l"
 return ADD_ASSIGN_T;
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 198 "diksam.l"
+#line 208 "diksam.l"
 return SUB_ASSIGN_T;
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 199 "diksam.l"
+#line 209 "diksam.l"
 return MUL_ASSIGN_T;
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 200 "diksam.l"
+#line 210 "diksam.l"
 return DIV_ASSIGN_T;
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 201 "diksam.l"
+#line 211 "diksam.l"
 return MOD_ASSIGN_T;
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 202 "diksam.l"
+#line 212 "diksam.l"
 return INCREMENT;
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 203 "diksam.l"
+#line 213 "diksam.l"
 return DECREMENT;
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 204 "diksam.l"
+#line 214 "diksam.l"
 return EXCLAMATION;
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 205 "diksam.l"
+#line 215 "diksam.l"
 return DOT;
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 206 "diksam.l"
+#line 216 "diksam.l"
 return DOWN_CAST_BEGIN;
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 207 "diksam.l"
+#line 217 "diksam.l"
 return DOWN_CAST_END;
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 208 "diksam.l"
+#line 218 "diksam.l"
 return AS;
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 209 "diksam.l"
+#line 219 "diksam.l"
 return THEN;
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 210 "diksam.l"
+#line 220 "diksam.l"
 return FUNCTION;
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 211 "diksam.l"
+#line 221 "diksam.l"
 return BSUB;
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 212 "diksam.l"
+#line 222 "diksam.l"
 return DIM;
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 213 "diksam.l"
+#line 223 "diksam.l"
 return DECLARE;
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 214 "diksam.l"
+#line 224 "diksam.l"
 return LIB;
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 215 "diksam.l"
-{increment_line_number(); BEGIN CHK_END_BLOCK; return END;}// 
+#line 225 "diksam.l"
+{increment_line_number(); BEGIN CHK_END_BLOCK; return END;}//
 	YY_BREAK
 case YY_STATE_EOF(CHK_END_BLOCK):
-#line 218 "diksam.l"
+#line 228 "diksam.l"
 BEGIN INITIAL;
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 219 "diksam.l"
+#line 229 "diksam.l"
 {increment_line_number_int(yyleng);}
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 220 "diksam.l"
+#line 230 "diksam.l"
 ;
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 221 "diksam.l"
+#line 231 "diksam.l"
 {
 		yyless(0);
 		BEGIN INITIAL;
@@ -1457,7 +1467,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 226 "diksam.l"
+#line 236 "diksam.l"
 {
 		yyless(0);
 		BEGIN INITIAL;
@@ -1466,7 +1476,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 231 "diksam.l"
+#line 241 "diksam.l"
 {
 		yyless(0);
 		BEGIN INITIAL;
@@ -1480,7 +1490,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 241 "diksam.l"
+#line 251 "diksam.l"
 {
 		yyless(0);
 		BEGIN INITIAL;
@@ -1489,7 +1499,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 246 "diksam.l"
+#line 256 "diksam.l"
 {
 		//printf("ELSE BLOCK END %d\n",dkc_get_current_compiler()->current_line_number);
 		yyless(0);
@@ -1499,7 +1509,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 252 "diksam.l"
+#line 262 "diksam.l"
 {
 		yyless(0);
 		BEGIN INITIAL;
@@ -1508,17 +1518,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 257 "diksam.l"
+#line 267 "diksam.l"
 {
 		//printf("PASS @%d %s\n", dkc_get_current_compiler()->current_line_number,yytext);
 		yyless(0);
 		BEGIN INITIAL;
-        
+
 		};
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 263 "diksam.l"
+#line 273 "diksam.l"
 {
     yylval.identifier = dkc_create_identifier(yytext);
     return AUTOVAR;
@@ -1526,7 +1536,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 267 "diksam.l"
+#line 277 "diksam.l"
 {
     yylval.identifier = dkc_create_identifier(yytext);
     return IDENTIFIER;
@@ -1534,7 +1544,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 271 "diksam.l"
+#line 281 "diksam.l"
 {
     Expression  *expression = dkc_alloc_expression(INT_EXPRESSION);
     sscanf(yytext, "%d", &expression->u.int_value);
@@ -1544,7 +1554,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 277 "diksam.l"
+#line 287 "diksam.l"
 {
     Expression  *expression = dkc_alloc_expression(INT_EXPRESSION);
     sscanf(yytext, "%x", &expression->u.int_value);
@@ -1554,7 +1564,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 283 "diksam.l"
+#line 293 "diksam.l"
 {
     Expression  *expression = dkc_alloc_expression(INT_EXPRESSION);
     expression->u.int_value = 0;
@@ -1564,7 +1574,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 289 "diksam.l"
+#line 299 "diksam.l"
 {
     Expression  *expression = dkc_alloc_expression(DOUBLE_EXPRESSION);
     sscanf(yytext, "%lf", &expression->u.double_value);
@@ -1574,7 +1584,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 295 "diksam.l"
+#line 305 "diksam.l"
 {
     dkc_open_string_literal();
     st_character_literal_state = DVM_FALSE;
@@ -1583,7 +1593,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 300 "diksam.l"
+#line 310 "diksam.l"
 {
     dkc_open_string_literal();
     st_character_literal_state = DVM_TRUE;
@@ -1592,27 +1602,27 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 305 "diksam.l"
+#line 315 "diksam.l"
 ;
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 306 "diksam.l"
+#line 316 "diksam.l"
 {increment_line_number_int(yyleng);BEGIN CHK_END_BLOCK;}
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 307 "diksam.l"
+#line 317 "diksam.l"
 BEGIN C_COMMENT;
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 308 "diksam.l"
+#line 318 "diksam.l"
 BEGIN CC_COMMENT;
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 309 "diksam.l"
+#line 319 "diksam.l"
 {
     dkc_compile_error(dkc_get_current_compiler()->current_line_number,
                       CHARACTER_INVALID_ERR,
@@ -1622,18 +1632,18 @@ YY_RULE_SETUP
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 315 "diksam.l"
+#line 325 "diksam.l"
 {increment_line_number();}
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 316 "diksam.l"
+#line 326 "diksam.l"
 {
     BEGIN INITIAL;
 }
 	YY_BREAK
 case YY_STATE_EOF(C_COMMENT):
-#line 319 "diksam.l"
+#line 329 "diksam.l"
 {
     dkc_compile_error(dkc_get_current_compiler()->current_line_number,
                       EOF_IN_C_COMMENT_ERR,
@@ -1642,12 +1652,12 @@ case YY_STATE_EOF(C_COMMENT):
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 324 "diksam.l"
+#line 334 "diksam.l"
 ;
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 325 "diksam.l"
+#line 335 "diksam.l"
 {
     increment_line_number();
 	BEGIN CHK_END_BLOCK;
@@ -1655,17 +1665,17 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case YY_STATE_EOF(CC_COMMENT):
-#line 330 "diksam.l"
+#line 340 "diksam.l"
 BEGIN INITIAL;
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 331 "diksam.l"
+#line 341 "diksam.l"
 ;
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 332 "diksam.l"
+#line 342 "diksam.l"
 {
     if (st_character_literal_state) {
         dkc_add_string_literal('\"');
@@ -1680,7 +1690,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 343 "diksam.l"
+#line 353 "diksam.l"
 {
     if (st_character_literal_state) {
         Expression *expression = dkc_alloc_expression(INT_EXPRESSION);
@@ -1695,7 +1705,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 354 "diksam.l"
+#line 364 "diksam.l"
 {
     dkc_add_string_literal('\n');
     increment_line_number();
@@ -1703,34 +1713,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 358 "diksam.l"
+#line 368 "diksam.l"
 dkc_add_string_literal('"');
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 359 "diksam.l"
+#line 369 "diksam.l"
 dkc_add_string_literal('\n');
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 360 "diksam.l"
+#line 370 "diksam.l"
 dkc_add_string_literal('\t');
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 361 "diksam.l"
+#line 371 "diksam.l"
 dkc_add_string_literal('\\');
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 362 "diksam.l"
+#line 372 "diksam.l"
 {
   dkc_add_string_literal(yytext[0]);
   dkc_add_string_literal(yytext[1]);
 }
 	YY_BREAK
 case YY_STATE_EOF(STRING_LITERAL_STATE):
-#line 366 "diksam.l"
+#line 376 "diksam.l"
 {
     dkc_compile_error(dkc_get_current_compiler()->current_line_number,
                       EOF_IN_STRING_LITERAL_ERR,
@@ -1739,7 +1749,7 @@ case YY_STATE_EOF(STRING_LITERAL_STATE):
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 371 "diksam.l"
+#line 381 "diksam.l"
 {
     Encoding enc = dkc_get_current_compiler()->source_encoding;
     dkc_add_string_literal(yytext[0]);
@@ -1754,7 +1764,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 382 "diksam.l"
+#line 392 "diksam.l"
 {
     dkc_add_string_literal(yytext[0]);
     BEGIN STRING_LITERAL_STATE;
@@ -1762,10 +1772,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 386 "diksam.l"
+#line 399 "diksam.l"
 ECHO;
 	YY_BREAK
-#line 1769 "lex.yy.c"
+#line 1779 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(SHIFT_JIS_2ND_CHAR):
 	yyterminate();
@@ -2652,5 +2662,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 386 "diksam.l"
+#line 399 "diksam.l"
 

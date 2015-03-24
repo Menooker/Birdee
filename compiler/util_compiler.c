@@ -51,6 +51,7 @@ dkc_alloc_type_specifier(DVM_BasicType type)
     ts->basic_type = type;
     ts->line_number = 0;
     ts->derive = NULL;
+	memset(&ts->u,0,sizeof(ts->u));
     if (type == DVM_CLASS_TYPE) {
         ts->identifier = NULL;
         ts->u.class_ref.class_definition = NULL;
@@ -106,6 +107,8 @@ dkc_compare_type(TypeSpecifier *type1, TypeSpecifier *type2)
 {
     TypeDerive *d1;
     TypeDerive *d2;
+	TemplateTypes* tt1;
+	TemplateTypes* tt2;
 
     if (type1->basic_type != type2->basic_type) {
         return DVM_FALSE;
@@ -117,6 +120,18 @@ dkc_compare_type(TypeSpecifier *type1, TypeSpecifier *type2)
             != type2->u.class_ref.class_definition) {
             return DVM_FALSE;
         }
+		tt1=type1->u.class_ref.tylist;
+		tt2=type2->u.class_ref.tylist;
+		if( (tt1 && !tt2) || (!tt1 && tt2))
+			return DVM_FALSE;
+		while(tt1)
+		{
+			if(!dkc_compare_type(tt1->name,tt2->name))
+				return DVM_FALSE;
+			tt1=tt1->next;tt2=tt2->next;
+			if( (tt1 && !tt2) || (!tt1 && tt2))
+				return DVM_FALSE;
+		}
     }
 
     if (type1->basic_type == DVM_DELEGATE_TYPE) {
@@ -129,6 +144,12 @@ dkc_compare_type(TypeSpecifier *type1, TypeSpecifier *type2)
     if (type1->basic_type == DVM_ENUM_TYPE) {
         if (type1->u.enum_ref.enum_definition
             != type2->u.enum_ref.enum_definition) {
+            return DVM_FALSE;
+        }
+    }
+
+	if (type1->basic_type == DVM_TEMPLATE_TYPE) {
+        if (type1->u.template_id != type2->u.template_id) {
             return DVM_FALSE;
         }
     }
@@ -650,6 +671,7 @@ dkc_get_basic_type_name(DVM_BasicType type)
     case DVM_NULL_TYPE:
         return "null";
         break;
+
     case DVM_DELEGATE_TYPE: /* FALLTHRU */
     case DVM_ENUM_TYPE: /* FALLTHRU */
     case DVM_BASE_TYPE: /* FALLTHRU */
@@ -696,18 +718,42 @@ dkc_get_type_name(TypeSpecifier *type)
 {
     VString     vstr;
     TypeDerive  *derive_pos;
-
+	TemplateTypes* tys;
+	char tmp[100];
+	char* tempty;
     dkc_vstr_clear(&vstr);
 
     if (type->basic_type == DVM_CLASS_TYPE
         || type->basic_type == DVM_DELEGATE_TYPE
         || type->basic_type == DVM_ENUM_TYPE) {
         dkc_vstr_append_string(&vstr, type->identifier);
-    } else {
+    }
+	else if(type->basic_type=DVM_TEMPLATE_TYPE)
+	{
+		sprintf(tmp,"template(%d)",type->u.template_id);
+		dkc_vstr_append_string(&vstr,tmp);
+	} 
+	else {
         dkc_vstr_append_string(&vstr,
                                dkc_get_basic_type_name(type->basic_type));
     }
-
+	if(type->basic_type==DVM_CLASS_TYPE && type->u.class_ref.tylist )
+	{
+        dkc_vstr_append_string(&vstr,"<");
+		tys=type->u.class_ref.tylist;
+		tempty=dkc_get_type_name(tys->name);
+		dkc_vstr_append_string(&vstr,tempty);
+		MEM_free(tempty);
+		tys= tys->next;
+		for(;tys;tys=tys->next)
+		{	
+			tempty=dkc_get_type_name(tys->name);
+			dkc_vstr_append_string(&vstr,",");
+			dkc_vstr_append_string(&vstr,tempty);
+			MEM_free(tempty);
+		}
+		dkc_vstr_append_string(&vstr,">");
+	}
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
         switch (derive_pos->tag) {

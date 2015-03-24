@@ -1173,7 +1173,7 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 		builder.CreateStore(bsp,builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt))); //bsp += ....
 	}
 	if(fce->function->type->basic_type!=DVM_VOID_TYPE) //
-		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset3(fce->function->type->basic_type)]));//check-me : get_opcode_type_offset???
+		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset3(expr->type->basic_type )]));//check-me : get_opcode_type_offset???
 	else
 		return 0;
     //generate_code(ob, expr->line_number, DVM_PUSH_METHOD, method_index);
@@ -1349,7 +1349,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		builder.CreateCall(FldPut[mty],arg);*/
 
-		int mty=get_opcode_type_offset(member->u.field.type); //fix-me : code size optmization here
+		int mty=get_opcode_type_offset(expr->type); //fix-me : code size optmization here
 		if(mty==2)
 		{
 			builder.CreateCall(GetPush(2),v);
