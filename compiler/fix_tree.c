@@ -1808,6 +1808,20 @@ fix_class_member_expression(Expression *expr,
         }
 		if(obj->kind !=THIS_EXPRESSION && member->u.field.type->basic_type==DVM_TEMPLATE_TYPE)
 			expr->type = BcGetTemplateType(obj->type->u.class_ref.tylist ,member->u.field.type->u.template_id);
+		else if (obj->kind !=THIS_EXPRESSION && member->u.field.type->basic_type==DVM_CLASS_TYPE && member->u.field.type->u.class_ref.tylist) //instantlize the template objects in the class
+		{
+			TemplateTypes* ty;
+			expr->type = (TypeSpecifier*) dkc_malloc(sizeof(TypeSpecifier));
+			*expr->type=*member->u.field.type;
+			for(ty=expr->type->u.class_ref.tylist ;ty;ty=ty->next)
+			{
+				if(ty->name->basic_type==DVM_TEMPLATE_TYPE)
+				{
+					ty->name=BcGetTemplateType(obj->type->u.class_ref.tylist ,ty->name->u.template_id);
+				}
+			}
+			//expr->type->u.class_ref.tylist->
+		}
 		else
 			expr->type = member->u.field.type;
     }
@@ -3068,12 +3082,38 @@ fix_extends(ClassDefinition *cd)
                                   STRING_MESSAGE_ARGUMENT, "name", super->name,
                                   MESSAGE_ARGUMENT_END);
             }
-            if (!super->is_abstract) {
+			if(super->templates)
+			{
+				ExtendsList* lst;
+				ExtendsList* slst=super->templates;
+				for(lst=cd->templates ;lst;lst=lst->next)
+				{
+					if(!slst)
+					{
+						dkc_compile_error(cd->line_number,
+										  TEMPLATE_PARENT_PARAM_NUM_ERR,
+										  STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
+										  STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
+										  MESSAGE_ARGUMENT_END);
+					}
+					slst=slst->next;
+
+				}
+				if(slst)
+				{
+					dkc_compile_error(cd->line_number,
+										TEMPLATE_PARENT_PARAM_NUM_ERR,
+										STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
+										STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
+										MESSAGE_ARGUMENT_END);
+				}
+			}
+            /*if (!super->is_abstract) {
                 dkc_compile_error(cd->line_number,
                                   INHERIT_CONCRETE_CLASS_ERR,
                                   STRING_MESSAGE_ARGUMENT, "name", super->name,
                                   MESSAGE_ARGUMENT_END);
-            }
+            }*/ //check-me : we allow non-abstract class extended
             cd->super_class = super;
         } else {
             DBG_assert(super->class_or_interface == DVM_INTERFACE_DEFINITION,

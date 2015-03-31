@@ -1215,7 +1215,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	//fid->getType()->dump();
 	if(isDele)
 	{
-		builder.CreateCall(fid);
+		builder.CreateCall(GetPush(2),fid);
 		builder.CreateCall(fInvokeDelegate);
 	}
 	else

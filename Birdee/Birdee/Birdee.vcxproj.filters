@@ -64,6 +64,9 @@
     <None Include="Exceptions.dkh">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="template_test.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
