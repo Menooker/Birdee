@@ -31,6 +31,7 @@
     Enumerator          *enumerator;
 	int					apost;
 	TemplateTypes		*template;
+	TemplateDeclare     *template_def;
 }
 %token <expression>     INT_LITERAL
 %token <expression>     DOUBLE_LITERAL
@@ -86,7 +87,7 @@
 %type   <class_or_member_modifier> class_or_member_modifier
         class_or_member_modifier_list access_modifier
 %type   <class_or_interface> class_or_interface
-%type   <extends_list> extends_list extends template_list
+%type   <extends_list> extends_list extends 
 %type   <member_declaration> member_declaration member_declaration_list
         method_member field_member
 %type   <function_definition> method_function_definition
@@ -94,6 +95,7 @@
 %type   <exception_list> exception_list throws_clause
 %type   <enumerator> enumerator_list
 %type   <template> type_list
+%type   <template_def> template_def_list template_list
 
 %%
 translation_unit
@@ -887,9 +889,26 @@ block
             $<block>$ = dkc_close_block(empty_block, NULL);
         }
         ;
-
+template_def_list
+        : IDENTIFIER
+        {
+            $$ = dkc_create_template_declare_list($1,NULL);
+        }
+        | template_def_list COMMA IDENTIFIER
+        {
+            $$ = dkc_chain_template_declare_list($1, $3,NULL);
+        }
+		|IDENTIFIER COLON identifier_type_specifier
+        {
+            $$ = dkc_create_template_declare_list($1,$3);
+        }
+        | template_def_list COMMA IDENTIFIER COLON identifier_type_specifier
+        {
+            $$ = dkc_chain_template_declare_list($1, $3 ,$5);
+        }
+        ;
 template_list
-		: LT extends_list GT 
+		: LT template_def_list GT 
 		{
 			$$=$2;
 		}

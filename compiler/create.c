@@ -1142,7 +1142,7 @@ conv_access_modifier(ClassOrMemberModifierKind src)
 void
 dkc_start_class_definition(ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
-                           char *identifier,ExtendsList* templates,
+                           char *identifier,TemplateDeclare* templates,
                            ExtendsList *extends)
 {
     ClassDefinition *cd;
@@ -1219,6 +1219,33 @@ dkc_chain_extends_list(ExtendsList *list, char *add)
 
     return list;
 }
+
+
+TemplateDeclare *
+dkc_create_template_declare_list(char *identifier,TypeSpecifier* ty)
+{
+    TemplateDeclare *list;
+
+    list = dkc_malloc(sizeof(TemplateDeclare));
+    list->identifier = identifier;
+    list->super  = ty;
+    list->next = NULL;
+
+    return list;
+}
+
+TemplateDeclare *
+dkc_chain_template_declare_list(TemplateDeclare *list, char *add,TypeSpecifier* ty)
+{
+    TemplateDeclare *pos;
+
+    for (pos = list; pos->next; pos = pos->next)
+        ;
+    pos->next = dkc_create_template_declare_list(add,ty);
+
+    return list;
+}
+
 
 ClassOrMemberModifierList
 dkc_create_class_or_member_modifier(ClassOrMemberModifierKind modifier)

@@ -284,11 +284,12 @@ typedef union YYSTYPE
     Enumerator          *enumerator;
 	int					apost;
 	TemplateTypes		*template;
+	TemplateDeclare     *template_def;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 292 "y.tab.h"
+#line 293 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

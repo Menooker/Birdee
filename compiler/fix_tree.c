@@ -291,7 +291,7 @@ fix_type_specifier(TypeSpecifier *type)
     DelegateDefinition *dd;
     EnumDefinition *ed;
     TypeDerive *derive_pos;
-	ExtendsList* template_pos; int id;
+	TemplateDeclare* template_pos; int id;
 	TemplateTypes* tys;TemplateTypes* ty_pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
 
@@ -327,8 +327,29 @@ fix_type_specifier(TypeSpecifier *type)
 									  cd->name,
 									  MESSAGE_ARGUMENT_END);
 				}
-				template_pos=template_pos->next;
 				fix_type_specifier(ty_pos->name);
+				if(template_pos->super)
+				{
+					DVM_Boolean dummy1;int dummy2;
+					fix_type_specifier(template_pos->super);
+					if(ty_pos->name->basic_type!=DVM_CLASS_TYPE 
+						|| ( ty_pos->name->u.class_ref.class_definition!=template_pos->super->u.class_ref.class_definition 
+							&& !is_super_class(ty_pos->name->u.class_ref.class_definition,template_pos->super->u.class_ref.class_definition,&dummy1,&dummy2) ))
+					{
+						char* nm=dkc_get_type_name(ty_pos->name);
+						dkc_compile_error(type->line_number,
+										  TEMPLATE_PARAM_PARENT_CLASS_ERR,
+										  STRING_MESSAGE_ARGUMENT, "type_name",
+										  cd->name,
+										  STRING_MESSAGE_ARGUMENT, "sub_type",
+										  nm,
+										  STRING_MESSAGE_ARGUMENT, "super_class_name",
+										  template_pos->super->u.class_ref.class_definition->name,
+										  MESSAGE_ARGUMENT_END);
+						MEM_free(nm);//fix-me : move the line to above(memory leak)
+					}
+				}
+				template_pos=template_pos->next;
 			}
 			if(template_pos)
 					dkc_compile_error(type->line_number,
@@ -1439,6 +1460,15 @@ fix_logical_not_expression(Block *current_block, Expression *expr,
     return expr;
 }
 
+TypeSpecifier* BcGetTemplateSuperType(TemplateDeclare* temptys,int index)
+{
+	int i;
+	for(i=0;i<index;i++)
+	{
+		temptys=temptys->next;
+	}
+	return temptys->super;
+}
 
 TypeSpecifier* BcGetTemplateType(TemplateTypes* temptys,int index)
 {
@@ -1944,7 +1974,17 @@ fix_member_expression(Block *current_block, Expression *expr,
     obj = expr->u.member_expression.expression
         = fix_expression(current_block, expr->u.member_expression.expression,
                          expr, el_p);
-	
+	if(obj->type->basic_type==DVM_TEMPLATE_TYPE)
+	{
+		ClassDefinition* cls=BcGetCurrentCompilerContext()->curcls;
+		if(cls)
+		{
+			TypeSpecifier* ty=BcGetTemplateSuperType(cls->templates,obj->type->u.template_id );
+			if(ty)
+				obj->type=ty;
+		}
+	}
+
     if (dkc_is_class_object(obj->type)) {
         return fix_class_member_expression(expr, obj,
                                            expr->u.member_expression
@@ -3048,6 +3088,69 @@ add_super_interfaces(ClassDefinition *cd)
     }
 }
 
+
+static void fix_template_def(ClassDefinition *cd)
+{
+		ClassDefinition *super=cd->super_class;
+        if (super && super->class_or_interface == DVM_CLASS_DEFINITION) {
+			if(super->templates)
+			{
+				TemplateDeclare* lst;
+				TemplateDeclare* slst=super->templates;
+				for(lst=cd->templates ;lst;lst=lst->next)
+				{
+					DVM_Boolean dummy1;int dummy2;char* sname=0,*name="NULL";
+					if(!slst)
+					{
+						dkc_compile_error(cd->line_number,
+										  TEMPLATE_PARENT_PARAM_NUM_ERR,
+										  STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
+										  STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
+										  MESSAGE_ARGUMENT_END);
+					}
+					if(lst->super)
+					{
+						fix_type_specifier(lst->super);
+						name=lst->super->u.class_ref.class_definition->name;
+					}
+					if(slst->super)
+					{
+						fix_type_specifier(slst->super);
+						sname=slst->super->u.class_ref.class_definition->name;
+
+						if(!lst->super ||
+							lst->super->u.class_ref.class_definition != slst->super->u.class_ref.class_definition
+								&& !is_super_class(lst->super->u.class_ref.class_definition,slst->super->u.class_ref.class_definition,&dummy1,&dummy2))
+						{
+							dkc_compile_error(cd->line_number,
+											  TEMPLATE_SUBCLASS_PARAM_CLASS_ERR,
+											  STRING_MESSAGE_ARGUMENT, "type_name",
+											  cd->name,
+											  STRING_MESSAGE_ARGUMENT, "super_name",
+											  super->name,
+											  STRING_MESSAGE_ARGUMENT, "sub_type",
+											  name,
+											  STRING_MESSAGE_ARGUMENT, "super_class_name",
+											  sname,
+											  MESSAGE_ARGUMENT_END);
+						}
+
+					}
+					slst=slst->next;
+
+				}
+				if(slst)
+				{
+					dkc_compile_error(cd->line_number,
+										TEMPLATE_PARENT_PARAM_NUM_ERR,
+										STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
+										STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
+										MESSAGE_ARGUMENT_END);
+				}
+			}
+		}
+}
+
 static void
 fix_extends(ClassDefinition *cd)
 {
@@ -3082,32 +3185,7 @@ fix_extends(ClassDefinition *cd)
                                   STRING_MESSAGE_ARGUMENT, "name", super->name,
                                   MESSAGE_ARGUMENT_END);
             }
-			if(super->templates)
-			{
-				ExtendsList* lst;
-				ExtendsList* slst=super->templates;
-				for(lst=cd->templates ;lst;lst=lst->next)
-				{
-					if(!slst)
-					{
-						dkc_compile_error(cd->line_number,
-										  TEMPLATE_PARENT_PARAM_NUM_ERR,
-										  STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
-										  STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
-										  MESSAGE_ARGUMENT_END);
-					}
-					slst=slst->next;
-
-				}
-				if(slst)
-				{
-					dkc_compile_error(cd->line_number,
-										TEMPLATE_PARENT_PARAM_NUM_ERR,
-										STRING_MESSAGE_ARGUMENT, "class_name", cd->name,
-										STRING_MESSAGE_ARGUMENT, "super_class_name", super->name,
-										MESSAGE_ARGUMENT_END);
-				}
-			}
+			
             /*if (!super->is_abstract) {
                 dkc_compile_error(cd->line_number,
                                   INHERIT_CONCRETE_CLASS_ERR,
@@ -3271,6 +3349,10 @@ fix_class_list(DKC_Compiler *compiler)
     for (class_pos = compiler->class_definition_list;
          class_pos; class_pos = class_pos->next) {
         add_super_interfaces(class_pos);
+    }
+    for (class_pos = compiler->class_definition_list;
+         class_pos; class_pos = class_pos->next) {
+        fix_template_def(class_pos);
     }
     for (class_pos = compiler->class_definition_list;
          class_pos; class_pos = class_pos->next) {

@@ -1,15 +1,28 @@
-public class BBB<Ty1,Ty2>:AAA
-
+public class BBB<Ty1:CCC,Ty2>:AAA
+	public C as Ty1
+	public sub sb()
+		this.C.a=1
+		this.C.b()
+	end
+	public override constructor initialize()
+	end
 end
 
 
-public class AAA<Ty1,Ty2>
+public class AAA<Ty1:CCC,Ty2>
 	public  n1 as ListNode<Ty1>
 	public  n2 as ListNode<Ty2>
 
 end
 
 class CCC
+	public a as int
+	public sub b()
+		println("BBBBB"+this.a)
+	end
+end
+
+class DDD:CCC
 end
 
 class ListNode<T0>
@@ -20,7 +33,14 @@ class ListNode<T0>
 end
 
 
-dim t as BBB<string,int>
-t.n1.data=123
+dim t as BBB<DDD,int> =new BBB()
+dim d as DDD=new DDD()
+t.C=d
+t.sb()
+//t.n1.data=123
 t.n2.data=1
-t.n23=1
+//子泛型类的类参数要比父泛型类参数小或等于
+//子泛型类的类参数〉=父泛型类，前几个类参数与父泛型类的参数对应
+//泛型类的类参数应该是参数指定的类的子类或相等
+//todo:禁止多继承
+
