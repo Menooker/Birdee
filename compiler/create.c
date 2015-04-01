@@ -1372,6 +1372,7 @@ dkc_create_method_member(ClassOrMemberModifierList *modifier,
     ret->u.method.is_abstract = DVM_FALSE;
     ret->u.method.is_virtual = DVM_FALSE;
     ret->u.method.is_override = DVM_FALSE;
+	ret->u.method.method_index=-1;
     if (modifier) {
         if (modifier->is_abstract == ABSTRACT_MODIFIER) {
             ret->u.method.is_abstract = DVM_TRUE;

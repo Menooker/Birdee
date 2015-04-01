@@ -58,6 +58,7 @@ ErrorDefinition dkc_error_message_format[] = {
     {"尝试为方法$(member_name)赋值。"},
     {"不能覆盖非virtual方法$(name)。"},
     {"覆盖方法时必须使用override关键字($(name))。"},
+    {"override没有对应的父类方法($(name))。"},
     {"在abstract类中，存在非abstract方法$(method_name)。"},
     {"在没有超类的类中使用了super。"},
     {"方法调用以外不能使用super。"},

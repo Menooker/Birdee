@@ -3092,6 +3092,16 @@ add_super_interfaces(ClassDefinition *cd)
 static void fix_template_def(ClassDefinition *cd)
 {
 		ClassDefinition *super=cd->super_class;
+		TemplateDeclare* lst;
+		char* sname=0,*name="NULL";
+		for(lst=cd->templates ;lst;lst=lst->next)
+		{
+					if(lst->super)
+					{
+						fix_type_specifier(lst->super);
+						name=lst->super->u.class_ref.class_definition->name;
+					} 
+		}
         if (super && super->class_or_interface == DVM_CLASS_DEFINITION) {
 			if(super->templates)
 			{
@@ -3099,7 +3109,7 @@ static void fix_template_def(ClassDefinition *cd)
 				TemplateDeclare* slst=super->templates;
 				for(lst=cd->templates ;lst;lst=lst->next)
 				{
-					DVM_Boolean dummy1;int dummy2;char* sname=0,*name="NULL";
+					DVM_Boolean dummy1;int dummy2;
 					if(!slst)
 					{
 						dkc_compile_error(cd->line_number,
@@ -3331,6 +3341,129 @@ check_method_override(MemberDeclaration *super_method,
     }
 }
 
+static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// this is a bug fix for origin DKC codes
+{
+    MemberDeclaration *member_pos;
+    MemberDeclaration *super_member;
+    int field_index;
+    int method_index;
+    char *abstract_method_name;
+	ClassDefinition* oldcls=BcGetCurrentCompilerContext()->curcls;
+    for (member_pos = class_pos->member; member_pos; 
+            member_pos = member_pos->next) {         //fix-me : improve here!! find an efficient way to check if the class's methodid is OK
+        if (member_pos->kind == METHOD_MEMBER && member_pos->u.method.method_index!=-1) {
+			return;
+		}
+	}
+	if(class_pos->super_class)
+	{
+		for (super_member = class_pos->super_class->member; super_member;super_member = super_member->next) {         
+			if(super_member->kind==METHOD_MEMBER && super_member->u.method.method_index==-1) //if super method is not fixed
+			{
+				fix_member_id(compiler,class_pos->super_class);
+				break;
+			}
+		}
+	}
+
+    compiler->current_class_definition = class_pos;
+	BcGetCurrentCompilerContext()->curcls=class_pos;
+
+
+    get_super_field_method_count(class_pos, &field_index, &method_index);
+    abstract_method_name = NULL;
+    for (member_pos = class_pos->member; member_pos;
+            member_pos = member_pos->next) {
+        if (member_pos->kind == METHOD_MEMBER) {
+            fix_function(member_pos->u.method.function_definition);
+
+            super_member
+                = search_member_in_super(class_pos,
+                                            member_pos->u.method
+                                            .function_definition->name);
+            if (super_member) {
+                if (super_member->kind != METHOD_MEMBER) {
+                    dkc_compile_error(member_pos->line_number,
+                                        FIELD_OVERRIDED_ERR,
+                                        STRING_MESSAGE_ARGUMENT, "name",
+                                        super_member->u.field.name,
+                                        MESSAGE_ARGUMENT_END);
+                }
+                if (!super_member->u.method.is_virtual) {
+                    dkc_compile_error(member_pos->line_number,
+                                        NON_VIRTUAL_METHOD_OVERRIDED_ERR,
+                                        STRING_MESSAGE_ARGUMENT, "name",
+                                        member_pos->u.method
+                                        .function_definition->name,
+                                        MESSAGE_ARGUMENT_END);
+                }
+                if (!member_pos->u.method.is_override) {
+                    dkc_compile_error(member_pos->line_number,
+                                        NEED_OVERRIDE_ERR,
+                                        STRING_MESSAGE_ARGUMENT, "name",
+                                        member_pos->u.method
+                                        .function_definition->name,
+                                        MESSAGE_ARGUMENT_END);
+                }
+                check_method_override(super_member, member_pos);
+                member_pos->u.method.method_index
+                    = super_member->u.method.method_index;
+            } else {
+				if(member_pos->u.method.is_override) //if super not found and it overrides
+				{
+                    dkc_compile_error(member_pos->line_number,
+                                        OVERRIDE_SUPER_NOT_FOUND_ERR,
+                                        STRING_MESSAGE_ARGUMENT, "name",
+                                        member_pos->u.method
+                                        .function_definition->name,
+                                        MESSAGE_ARGUMENT_END);
+				}
+                member_pos->u.method.method_index = method_index;
+                method_index++;
+            }
+            if (member_pos->u.method.is_abstract) {
+                abstract_method_name = member_pos->u.method
+                    .function_definition->name;
+            }
+        } else {
+            ExceptionList *el = NULL;
+            DBG_assert(member_pos->kind == FIELD_MEMBER,
+                        ("member_pos->kind..%d", member_pos->kind));
+            fix_type_specifier(member_pos->u.field.type);
+            if (member_pos->u.field.initializer) {
+                member_pos->u.field.initializer
+                    = fix_expression(NULL, member_pos->u.field.initializer,
+                                        NULL, &el);
+                member_pos->u.field.initializer
+                    = create_assign_cast(member_pos->u.field.initializer,
+                                            member_pos->u.field.type);
+            }
+            super_member
+                = search_member_in_super(class_pos,
+                                            member_pos->u.field.name);
+            if (super_member) {
+                dkc_compile_error(member_pos->line_number,
+                                    FIELD_NAME_DUPLICATE_ERR,
+                                    STRING_MESSAGE_ARGUMENT, "name",
+                                    member_pos->u.field.name,
+                                    MESSAGE_ARGUMENT_END);
+            } else {
+                member_pos->u.field.field_index = field_index;
+                field_index++;
+            }
+        }
+    }
+    if (abstract_method_name && !class_pos->is_abstract) {
+        dkc_compile_error(class_pos->line_number,
+                            ABSTRACT_METHOD_IN_CONCRETE_CLASS_ERR,
+                            STRING_MESSAGE_ARGUMENT,
+                            "method_name", abstract_method_name,
+                            MESSAGE_ARGUMENT_END);
+    }
+    compiler->current_class_definition = oldcls;
+	BcGetCurrentCompilerContext()->curcls=oldcls;
+}
+
 static void
 fix_class_list(DKC_Compiler *compiler)
 {
@@ -3365,93 +3498,7 @@ fix_class_list(DKC_Compiler *compiler)
 
     for (class_pos = compiler->class_definition_list;
          class_pos; class_pos = class_pos->next) {
-
-        compiler->current_class_definition = class_pos;
-		BcGetCurrentCompilerContext()->curcls=class_pos;
-        get_super_field_method_count(class_pos, &field_index, &method_index);
-        abstract_method_name = NULL;
-        for (member_pos = class_pos->member; member_pos;
-             member_pos = member_pos->next) {
-            if (member_pos->kind == METHOD_MEMBER) {
-                fix_function(member_pos->u.method.function_definition);
-
-                super_member
-                    = search_member_in_super(class_pos,
-                                             member_pos->u.method
-                                             .function_definition->name);
-                if (super_member) {
-                    if (super_member->kind != METHOD_MEMBER) {
-                        dkc_compile_error(member_pos->line_number,
-                                          FIELD_OVERRIDED_ERR,
-                                          STRING_MESSAGE_ARGUMENT, "name",
-                                          super_member->u.field.name,
-                                          MESSAGE_ARGUMENT_END);
-                    }
-                    if (!super_member->u.method.is_virtual) {
-                        dkc_compile_error(member_pos->line_number,
-                                          NON_VIRTUAL_METHOD_OVERRIDED_ERR,
-                                          STRING_MESSAGE_ARGUMENT, "name",
-                                          member_pos->u.method
-                                          .function_definition->name,
-                                          MESSAGE_ARGUMENT_END);
-                    }
-                    if (!member_pos->u.method.is_override) {
-                        dkc_compile_error(member_pos->line_number,
-                                          NEED_OVERRIDE_ERR,
-                                          STRING_MESSAGE_ARGUMENT, "name",
-                                          member_pos->u.method
-                                          .function_definition->name,
-                                          MESSAGE_ARGUMENT_END);
-                    }
-                    check_method_override(super_member, member_pos);
-
-                    member_pos->u.method.method_index
-                        = super_member->u.method.method_index;
-                } else {
-                    member_pos->u.method.method_index = method_index;
-                    method_index++;
-                }
-                if (member_pos->u.method.is_abstract) {
-                    abstract_method_name = member_pos->u.method
-                        .function_definition->name;
-                }
-            } else {
-                ExceptionList *el = NULL;
-                DBG_assert(member_pos->kind == FIELD_MEMBER,
-                           ("member_pos->kind..%d", member_pos->kind));
-                fix_type_specifier(member_pos->u.field.type);
-                if (member_pos->u.field.initializer) {
-                    member_pos->u.field.initializer
-                        = fix_expression(NULL, member_pos->u.field.initializer,
-                                         NULL, &el);
-                    member_pos->u.field.initializer
-                        = create_assign_cast(member_pos->u.field.initializer,
-                                             member_pos->u.field.type);
-                }
-                super_member
-                    = search_member_in_super(class_pos,
-                                             member_pos->u.field.name);
-                if (super_member) {
-                    dkc_compile_error(member_pos->line_number,
-                                      FIELD_NAME_DUPLICATE_ERR,
-                                      STRING_MESSAGE_ARGUMENT, "name",
-                                      member_pos->u.field.name,
-                                      MESSAGE_ARGUMENT_END);
-                } else {
-                    member_pos->u.field.field_index = field_index;
-                    field_index++;
-                }
-            }
-        }
-        if (abstract_method_name && !class_pos->is_abstract) {
-            dkc_compile_error(class_pos->line_number,
-                              ABSTRACT_METHOD_IN_CONCRETE_CLASS_ERR,
-                              STRING_MESSAGE_ARGUMENT,
-                              "method_name", abstract_method_name,
-                              MESSAGE_ARGUMENT_END);
-        }
-        compiler->current_class_definition = NULL;
-		BcGetCurrentCompilerContext()->curcls=NULL;
+		fix_member_id(compiler,class_pos);
     }
 	
 }
