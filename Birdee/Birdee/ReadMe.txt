@@ -35,3 +35,8 @@
 	end
 	The execution time of example 3 is 16ms, which is 100 times faster than example 1 !!!!
 	 
+
+Templates
+	子泛型类的类参数要比父泛型类参数小或等于
+	子泛型类的类参数个数〉=父泛型类，前几个类参数与父泛型类的参数对应
+	泛型类的类参数应该是参数指定的类的子类或相等
