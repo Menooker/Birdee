@@ -98,6 +98,7 @@ typedef enum {
     ASSIGN_TO_METHOD_ERR,
     NON_VIRTUAL_METHOD_OVERRIDED_ERR,
     NEED_OVERRIDE_ERR,
+    OVERRIDE_SUPER_NOT_FOUND_ERR,
     ABSTRACT_METHOD_IN_CONCRETE_CLASS_ERR,
     HASNT_SUPER_CLASS_ERR,
     SUPER_NOT_IN_MEMBER_EXPRESSION_ERR,
@@ -156,6 +157,9 @@ typedef enum {
     TOO_LONG_CHARACTER_LITERAL_ERR,
 	MULTIPLE_LIB_ERR,
 	TEMPLATE_PARAM_NUM_ERR,
+	TEMPLATE_PARENT_PARAM_NUM_ERR,
+	TEMPLATE_PARAM_PARENT_CLASS_ERR,
+	TEMPLATE_SUBCLASS_PARAM_CLASS_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -293,6 +297,11 @@ typedef struct TemplateTypes_tag{
 	struct TemplateTypes_tag* next;
 }TemplateTypes;
 
+typedef struct TemplateDeclare_tag{
+	char* identifier;
+	TypeSpecifier* super;
+	struct TemplateDeclare_tag* next;
+}TemplateDeclare;
 
 
 typedef struct ParameterList_tag {
@@ -805,7 +814,7 @@ struct ClassDefinition_tag {
     PackageName *package_name;
     char *name;
     ExtendsList *extends;
-	ExtendsList *templates;
+	TemplateDeclare *templates;
     ClassDefinition *super_class;
     ExtendsList *interface_list;
     MemberDeclaration *member;
@@ -1068,7 +1077,7 @@ Statement *dkc_create_declaration_statement(DVM_Boolean is_final,
 void
 dkc_start_class_definition(ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
-                           char *identifier,ExtendsList* templates,
+                           char *identifier,TemplateDeclare* templates,
                            ExtendsList *extends);
 void dkc_class_define(MemberDeclaration *member_list);
 ExtendsList *dkc_create_extends_list(char *identifier);
@@ -1106,6 +1115,12 @@ Enumerator *dkc_create_enumerator(char *identifier);
 Enumerator *dkc_chain_enumerator(Enumerator *enumerator, char *identifier);
 void dkc_create_const_definition(TypeSpecifier *type, char *identifier,
                                  Expression *initializer);
+TemplateDeclare *
+dkc_create_template_declare_list(char *identifier,TypeSpecifier* ty);
+TemplateDeclare *
+dkc_chain_template_declare_list(TemplateDeclare *list, char *add,TypeSpecifier* ty);
+
+
 
 /* string.c */
 char *dkc_create_identifier(char *str);

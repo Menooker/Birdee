@@ -1,56 +1,53 @@
-//require Exceptions
 
-class StackEmptyException
-end
-
-class ListNode<T1>
-
-	public prv as ListNode<T1>
-	public data as T1
-
-end
-	
-public class Stack<T1>
-
-	dim tail as ListNode<T1>
-	dim head as ListNode<T1>
-	public constructor initialize()
-		
+public class BBB<Ty1:CCC,Ty2>:AAA
+	public C as Ty1
+	public sub sb()
+		this.C.a=1
+		this.C.b()
 	end
-	public  sub push(t as T1)
-		dim top as ListNode<T1> = this.tail
-		this.tail=new ListNode()
-		this.tail.data=t
-		this.tail.prv=top
-	end
-	public  function pop() as T1 throws StackEmptyException
-		dim top as ListNode<T1> = this.tail
-		if(top==null) then
-			dim e as StackEmptyException 
-			throw e
-		end
-		this.tail=this.tail.prv
-		return top.data
+	public override constructor initialize()
+		super.initialize()
 	end
 end
 
-public class AAA
+public class AAA<Ty1:CCC,Ty2>
+	public  n1 as ListNode<Ty1>
+	public  n2 as ListNode<Ty2>
+	public virtual constructor initialize()
+		this.n1=new ListNode()
+		this.n2=new ListNode()
+	end
+end
+
+
+
+class CCC
 	public a as int
+	public sub b()
+		println("BBBBB"+this.a)
+	end
+end
+
+class DDD:CCC
+end
+
+class ListNode<T0>
+
+	public prv as ListNode<T0>
+	public data as T0
+
 end
 
 
-try
+dim t as BBB<DDD,int> =new BBB()
+dim d as DDD=new DDD()
+t.C=d
+t.sb()
+t.n1.data=d
+t.n2.data=1
+t.n1.data.b()
+//子泛型类的类参数要比父泛型类参数小或等于
+//子泛型类的类参数个数〉=父泛型类，前几个类参数与父泛型类的参数对应
+//泛型类的类参数应该是参数指定的类的子类或相等
+//todo:禁止多继承
 
-	dim a as Stack<int> =new Stack()
-	dim ta as AAA =new AAA()
-	a.push(1)
-	a.push(2)
-	a.push(3)
-	println(a.pop())
-	println(a.pop())
-	println(a.pop())
-	println(a.pop())
-catch StackEmptyException ex
-	println("Stack Empty")
-end
-	

@@ -58,6 +58,7 @@ ErrorDefinition dkc_error_message_format[] = {
     {"尝试为方法$(member_name)赋值。"},
     {"不能覆盖非virtual方法$(name)。"},
     {"覆盖方法时必须使用override关键字($(name))。"},
+    {"override没有对应的父类方法($(name))。"},
     {"在abstract类中，存在非abstract方法$(method_name)。"},
     {"在没有超类的类中使用了super。"},
     {"方法调用以外不能使用super。"},
@@ -119,5 +120,8 @@ ErrorDefinition dkc_error_message_format[] = {
     {"字符字面量中包含了2个以上的字符。"},
 	{"使用了一个以上的lib块"},
 	{"泛型对象类型参数个数与声明不符$(class_name)。"},
+	{"$(class_name)泛型对象类型参数个数与父类$(super_class_name)不符。"},
+	{"$(type_name)泛型对象类型参数$(sub_type)不是$(super_class_name)的子类。"},
+	{"$(type_name)泛型类型(父类$(super_name))的参数$(sub_type)不是$(super_class_name)的子类。"},
     {"dummy"}
 };

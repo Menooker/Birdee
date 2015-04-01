@@ -728,7 +728,7 @@ dkc_get_type_name(TypeSpecifier *type)
         || type->basic_type == DVM_ENUM_TYPE) {
         dkc_vstr_append_string(&vstr, type->identifier);
     }
-	else if(type->basic_type=DVM_TEMPLATE_TYPE)
+	else if(type->basic_type==DVM_TEMPLATE_TYPE)
 	{
 		sprintf(tmp,"template(%d)",type->u.template_id);
 		dkc_vstr_append_string(&vstr,tmp);
