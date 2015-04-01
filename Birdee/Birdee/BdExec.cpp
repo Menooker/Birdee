@@ -96,6 +96,16 @@ DVM_ObjectRef ExGetSuper()
 			return ret;
 }
 
+DVM_Char inputbuffer[255];
+void ExGets()
+{
+	wscanf(L"%255ws",inputbuffer);
+	DVM_Char* buf=(DVM_Char*)MEM_malloc(sizeof(DVM_Char)*(wcslen(inputbuffer)+1));
+	wcscpy(buf,inputbuffer);
+	curdvm->retvar.object= dvm_create_dvm_string_i(curdvm,buf);
+}
+
+
 DVM_ObjectRef ExLoadStringFromPool(BINT index)
 {
 	DVM_Executable* exe=curdvm->current_executable->executable;

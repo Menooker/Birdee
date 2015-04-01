@@ -805,6 +805,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "GetFunction", ExGetFunction, 3,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "BreakPoint", UaBreakPoint, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
+    DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,nv_array_size_proc, 0, DVM_FALSE);
 
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
