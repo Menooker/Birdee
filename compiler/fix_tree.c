@@ -416,6 +416,13 @@ create_function_derive_type(FunctionDefinition *fd)
 }
 
 static Expression *
+fix_this_expression(Expression *expr);
+
+static Expression *
+fix_member_expression(Block *current_block, Expression *expr,
+                      ExceptionList **el_p);
+
+static Expression *
 fix_identifier_expression(Block *current_block, Expression *expr)
 {
     Declaration *decl;
@@ -430,6 +437,23 @@ fix_identifier_expression(Block *current_block, Expression *expr)
         expr->u.identifier.u.declaration = decl;
         return expr;
     }
+	if(compiler->current_class_definition)
+	{
+		MemberDeclaration* md=dkc_search_member(compiler->current_class_definition,expr->u.identifier.name);
+		char* nm=expr->u.identifier.name;
+		if(md && md->kind==FIELD_MEMBER)
+		{
+			expr->type=md->u.field.type;
+			expr->kind=MEMBER_EXPRESSION;
+			expr->u.member_expression.declaration=md;
+			expr->u.member_expression.member_name=nm;
+			expr->u.member_expression.expression=(Expression*)dkc_malloc(sizeof(Expression));
+			expr->u.member_expression.expression->kind=THIS_EXPRESSION;
+			expr->u.member_expression.expression->line_number=expr->line_number;
+			expr=fix_member_expression(current_block,expr,NULL);
+			return expr;
+		}
+	}
     cd = dkc_search_constant(expr->u.identifier.name);
     if (cd) {
         expr->type = cd->type;

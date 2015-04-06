@@ -1,5 +1,5 @@
-require Exceptions
-/*class StackEmptyException
+//require Exceptions
+class StackEmptyException
 end
 
 class ListNode<T0>
@@ -10,17 +10,26 @@ class ListNode<T0>
 end
 
 
-abstract public class Container <T>
-	public  virtual  sub push(t as T)
-
-	end
-	public  virtual  function pop() as T throws StackEmptyException
-
-	end
+public abstract class Container <T>
+	public abstract  virtual declare sub push(t as T)
+	public abstract  virtual declare function pop() as T throws StackEmptyException
 end
 
 public abstract class  Hashable
 	public abstract  virtual declare  function hash() as int
+end
+
+class HashNode<K,V>
+	public key as K
+	public value as V
+end
+
+public class HashMap<K,V:Hashable>
+	dim stks as Stack<HashNode<K,V>> 
+
+	public virtual constructor  initialize()
+		stks=new Stack()
+	end
 end
 
 public class Stack<T1> :  Container
@@ -29,9 +38,9 @@ public class Stack<T1> :  Container
 	dim head as ListNode<T1>
 	public override sub push(t as T1)
 		dim top as ListNode<T1> = this.tail
-		this.tail=new ListNode()
-		this.tail.data=t
-		this.tail.prv=top
+		tail=new ListNode()
+		tail.data=t
+		tail.prv=top
 	end
 
 	public override function pop() as T1 throws StackEmptyException
@@ -40,7 +49,7 @@ public class Stack<T1> :  Container
 			dim e as StackEmptyException 
 			throw e
 		end
-		this.tail=top.prv
+		tail=top.prv
 		return top.data
 	end
 end
@@ -58,15 +67,6 @@ try
 	println(a.pop())
 catch StackEmptyException ex
 	println("Stack Empty")
-end
-
-*/
-try
-	dim a as string=gets()
-	println(a.length())
-	println(a.substr(-1,2))
-catch StringIndexOutOfBoundsException ee
-	ee.print_stack_trace()
 end
 
 /*

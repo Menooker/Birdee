@@ -40,3 +40,10 @@ Templates
 	子泛型类的类参数要比父泛型类参数小或等于
 	子泛型类的类参数个数〉=父泛型类，前几个类参数与父泛型类的参数对应
 	泛型类的类参数应该是参数指定的类的子类或相等
+
+try
+	抛出子类不能被父类catch (fix-me)?
+
+identifier
+	parameters, static , this 
+	see fix_identifier_expression()

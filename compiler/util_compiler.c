@@ -279,7 +279,7 @@ dkc_search_declaration(char *identifier, Block *block)
             return d_pos->declaration;
         }
     }
-
+	
     return NULL;
 }
 
