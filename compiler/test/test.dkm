@@ -1,2 +1,98 @@
-dim k as string=gets()
-println(k)
+require Exceptions
+/*class StackEmptyException
+end
+
+class ListNode<T0>
+
+	public prv as ListNode<T0>
+	public data as T0
+
+end
+
+
+abstract public class Container <T>
+	public  virtual  sub push(t as T)
+
+	end
+	public  virtual  function pop() as T throws StackEmptyException
+
+	end
+end
+
+public abstract class  Hashable
+	public abstract  virtual declare  function hash() as int
+end
+
+public class Stack<T1> :  Container
+
+	dim tail as ListNode<T1>
+	dim head as ListNode<T1>
+	public override sub push(t as T1)
+		dim top as ListNode<T1> = this.tail
+		this.tail=new ListNode()
+		this.tail.data=t
+		this.tail.prv=top
+	end
+
+	public override function pop() as T1 throws StackEmptyException
+		dim top as ListNode<T1> = this.tail
+		if(top==null) then
+			dim e as StackEmptyException 
+			throw e
+		end
+		this.tail=top.prv
+		return top.data
+	end
+end
+
+
+
+try
+	dim a as Stack<int> =new Stack()
+	dim cnt as Container<int> =a
+	cnt.push(1)
+	cnt.push(2)
+	cnt.push(3)
+	println(a.pop())
+	println(a.pop())
+	println(a.pop())
+catch StackEmptyException ex
+	println("Stack Empty")
+end
+
+*/
+try
+	dim a as string=gets()
+	println(a.length())
+	println(a.substr(-1,2))
+catch StringIndexOutOfBoundsException ee
+	ee.print_stack_trace()
+end
+
+/*
+delegate m( a as int) as void
+
+sub fun1(a as int)
+
+end
+
+function hash(k as string) as int
+	dim i as int
+	dim key as int =0
+	for i=0;i<7;i++
+		key = key * (k[i]*2+k[i+1])+ (k[i]+k[i+1]*2)
+	end
+	return key
+end
+
+println("Input the password :")
+dim str as string=gets()
+dim key1 as int=hash(str)
+dim fun as m={fun1}
+select (key1%1)
+case 0
+	println("KKKK")
+case 1
+	println("KKKK2")
+end*/
+

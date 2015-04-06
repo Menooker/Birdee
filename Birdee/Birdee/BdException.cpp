@@ -146,6 +146,8 @@ EXE_search_class(DVM_Executable *dvm, char *package_name, char *name)
 }
 
 
+
+
 DVM_ObjectRef
 ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
                      RuntimeError id, ...)
@@ -287,5 +289,59 @@ void ExSystemRaise(ExExceptions e)
 	}
 	_BreakPoint()
 }
+
+extern DVM_ErrorDefinition dvm_native_error_message_format[];
+void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *class_name, int id, ...)
+{
+
+    int class_index;
+    DVM_ObjectRef obj;
+    VString     message;
+    va_list     ap;
+    int message_index;
+    int stack_trace_index;
+
+    va_start(ap, id); 
+	if(curdvm->esp <=0)
+	{
+		printf("Uncaught exception : %s",class_name);
+		_BreakPoint();
+	}
+	ExecutableEntry * exe=(ExecutableEntry *)ExTopJumpBuffer()->exe ;
+    class_index = DVM_search_class(curdvm  , "Exceptions",
+                                   class_name);
+
+	//for(int i=0;i<=exe->class_table;
+	int clsindex;
+	clsindex=	EXE_search_class(exe->executable , "Exceptions",class_name);
+	
+    obj = dvm_create_class_object_i(dvm, class_index);
+	curdvm->current_exception=obj;
+
+
+    dvm_format_message(dvm_native_error_message_format, (int)id, &message, ap);
+    va_end(ap);
+
+    message_index
+        = DVM_get_field_index(dvm, obj, "message");
+	if(message_index==FIELD_NOT_FOUND)
+	{
+		printf("exception field not found in : %s",class_name);
+		_BreakPoint();
+	}
+    obj.data->u.class_object.field[message_index].object
+        = dvm_create_dvm_string_i(dvm, message.string);
+
+    stack_trace_index
+        = DVM_get_field_index(dvm, obj, "stack_trace");
+    obj.data->u.class_object.field[stack_trace_index].object
+        = dvm_create_array_object_i(dvm, 0);
+	ExStackTrace(obj);
+
+    ExRaiseException(clsindex+1);
+}
+
+
+
 
 }

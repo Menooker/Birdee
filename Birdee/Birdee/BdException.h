@@ -43,7 +43,7 @@ void ExNullPointerException();
 void ExStackTrace(DVM_ObjectRef e);
 void ExSystemRaise(enum ExExceptions e);
 void ExReraiseException();
-
+void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *class_name, int id, ...);
 #ifdef __cplusplus
 }
 #endif

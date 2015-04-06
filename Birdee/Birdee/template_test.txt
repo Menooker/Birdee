@@ -9,22 +9,20 @@ class ListNode<T0>
 	public data as T0
 
 end
-abstract class ListNode2<T0>
 
-	public prv as ListNode<T0>
-	public data as T0
-
-end
-
-class ND<T>:ListNode2
-	public dddk as int
-end
 
 abstract public class Container <T>
 	public  virtual  sub push(t as T)
 	end
 	public  virtual  function pop() as T throws StackEmptyException
 	end
+end
+
+abstract public class Hashable
+	public  virtual  sub push(t as T)
+	end
+	public  virtual  function pop() as T throws StackEmptyException
+	end	
 end
 
 public class Stack<T1> :  Container
@@ -50,10 +48,7 @@ public class Stack<T1> :  Container
 end
 
 
-dim dd as ListNode<int> =new ListNode()
-dim dd2 as ListNode<string> =new ListNode()
-dd.prv=dd
-/*
+
 try
 	dim a as Stack<int> =new Stack()
 	dim cnt as Container<int> =a
@@ -64,13 +59,12 @@ try
 	println(a.pop())
 	println(a.pop())
 	println(a.pop())
-	println(a.pop())
 catch StackEmptyException ex
 	println("Stack Empty")
-end*/
+end
 
 ////////////////////////////////////////////////
-
+/*
 public class BBB<Ty1:CCC,Ty2>:AAA
 	public C as Ty1
 	public sub sb()
@@ -118,6 +112,7 @@ t.sb()
 t.n1.data=d
 t.n2.data=1
 t.n1.data.b()
+*/
 //子泛型类的类参数要比父泛型类参数小或等于
 //子泛型类的类参数个数〉=父泛型类，前几个类参数与父泛型类的参数对应
 //泛型类的类参数应该是参数指定的类的子类或相等

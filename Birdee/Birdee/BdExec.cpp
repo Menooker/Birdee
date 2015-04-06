@@ -96,10 +96,69 @@ DVM_ObjectRef ExGetSuper()
 			return ret;
 }
 
+void ExArraySize(DVM_Value *args)
+{
+    DVM_Object *barray;
+    barray = curdvm->ths.data ;
+    DBG_assert(barray->type == ARRAY_OBJECT, ("barray->type..%d", barray->type));
+
+    curdvm->retvar.int_value = barray->u.barray.size;
+
+}
+void ExStringLength(DVM_Value *args)
+{
+    DVM_Object *barray;
+    barray = curdvm->ths.data ;
+    DBG_assert(barray->type == STRING_OBJECT, ("barray->type..%d", barray->type));
+    curdvm->retvar.int_value = barray->u.string.length;
+
+}
+
+
+void ExStringSubstr(DVM_Value *args)
+{
+	DVM_Value ret={0};
+    DVM_Object *str;
+    int pos;
+    int len;
+    int org_len;
+	
+    pos = args[1].int_value;
+    len = args[0].int_value;
+    str = curdvm->ths.data;
+    DBG_assert(str->type == STRING_OBJECT,
+               ("str->type..%d", str->type));
+
+    org_len = DVM_string_length(curdvm, str);
+    
+    if (pos < 0 || pos >= org_len) {
+        ExRaiseNativeException(curdvm,
+                          DVM_DIKSAM_DEFAULT_PACKAGE,
+                          STRING_INDEX_EXCEPTION_NAME,
+                          STRING_POS_OUT_OF_BOUNDS_ERR,
+                          DVM_INT_MESSAGE_ARGUMENT, "len", org_len,
+                          DVM_INT_MESSAGE_ARGUMENT, "pos", pos,
+                          DVM_MESSAGE_ARGUMENT_END);
+        curdvm->retvar.object=dvm_null_object_ref;
+		return;
+    }
+    if (len < 0 || pos + len > org_len) {
+        ExRaiseNativeException(curdvm, 
+                          DVM_DIKSAM_DEFAULT_PACKAGE,
+                          STRING_INDEX_EXCEPTION_NAME,
+                          STRING_SUBSTR_LEN_ERR,
+                          DVM_INT_MESSAGE_ARGUMENT, "len", len,
+                          DVM_MESSAGE_ARGUMENT_END);
+		curdvm->retvar.object=dvm_null_object_ref;
+        return;
+    }
+    curdvm->retvar = DVM_string_substr(curdvm, str, pos, len);
+}
+
 DVM_Char inputbuffer[255];
 void ExGets()
 {
-	wscanf(L"%255ws",inputbuffer);
+	fgetws(inputbuffer,sizeof(inputbuffer)/sizeof(DVM_Char),stdin);
 	DVM_Char* buf=(DVM_Char*)MEM_malloc(sizeof(DVM_Char)*(wcslen(inputbuffer)+1));
 	wcscpy(buf,inputbuffer);
 	curdvm->retvar.object= dvm_create_dvm_string_i(curdvm,buf);

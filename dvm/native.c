@@ -23,29 +23,7 @@ static DVM_NativeLibInfo st_lib_info = {
     dvm_native_error_message_format,
 };
 
-typedef enum {
-    INSERT_INDEX_OUT_OF_BOUNDS_ERR,
-    REMOVE_INDEX_OUT_OF_BOUNDS_ERR,
-    STRING_POS_OUT_OF_BOUNDS_ERR,
-    STRING_SUBSTR_LEN_ERR,
-    FOPEN_1ST_ARG_NULL_ERR,
-    FOPEN_2ND_ARG_NULL_ERR,
-    FGETS_ARG_NULL_ERR,
-    FGETS_FP_BAD_TYPE_ERR,
-    FGETS_FP_INVALID_ERR,
-    FGETS_BAD_MULTIBYTE_CHARACTER_ERR,
-    FPUTS_2ND_ARG_NULL_ERR,
-    FPUTS_FP_BAD_TYPE_ERR,
-    FPUTS_FP_INVALID_ERR,
-    FCLOSE_ARG_NULL_ERR,
-    FCLOSE_FP_BAD_TYPE_ERR,
-    FCLOSE_FP_INVALID_ERR,
-    PARSE_INT_ARG_NULL_ERR,
-    PARSE_INT_FORMAT_ERR,
-    PARSE_DOUBLE_ARG_NULL_ERR,
-    PARSE_DOUBLE_FORMAT_ERR,
-    NATIVE_RUNTIME_ERROR_COUNT_PLUS_1
-} NativeRuntimeError;
+
 
 static void
 file_finalizer(DVM_VirtualMachine *dvm, DVM_Object *obj)
@@ -77,17 +55,7 @@ void nv_print_proc(DVM_Value *args,int idx )
 
     return ;
 }
-void nv_array_size_proc(DVM_Value *args)
-{
-    DVM_Object *barray;
 
-
-    barray = curdvm->ths.data ;
-    DBG_assert(barray->type == ARRAY_OBJECT, ("barray->type..%d", barray->type));
-
-    curdvm->retvar.int_value = DVM_array_size(curdvm, barray);
-
-}
 static DVM_Value
 nv_fopen_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
               int arg_count, DVM_Value *args)
@@ -601,7 +569,7 @@ nv_tanh_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 static DVM_Value
 nv_array_resize_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                     int arg_count, DVM_Value *args)
+                     int arg_count, DVM_Value *args)//abandoned
 {
 	DVM_Value ret={0}; /* dummy */
     DVM_Object *barray;
@@ -620,7 +588,7 @@ nv_array_resize_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 static DVM_Value
 nv_array_insert_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                     int arg_count, DVM_Value *args)
+                     int arg_count, DVM_Value *args) //abandoned
 {
 	DVM_Value ret={0};
     DVM_Object *barray;
@@ -651,7 +619,7 @@ nv_array_insert_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 DVM_Value
 nv_array_remove_proc(DVM_VirtualMachine *dvm,  DVM_Context *context,
-                     int arg_count, DVM_Value *args)
+                     int arg_count, DVM_Value *args)//abandoned
 {
 	DVM_Value ret={0}; /* dummy */
     DVM_Object *barray;
@@ -682,7 +650,7 @@ nv_array_remove_proc(DVM_VirtualMachine *dvm,  DVM_Context *context,
 
 static DVM_Value
 nv_array_add_proc(DVM_VirtualMachine *dvm,  DVM_Context *context,
-                  int arg_count, DVM_Value *args)
+                  int arg_count, DVM_Value *args)//abandoned
 {
 	DVM_Value ret={0};
     DVM_Object *barray;
@@ -702,7 +670,7 @@ nv_array_add_proc(DVM_VirtualMachine *dvm,  DVM_Context *context,
 
 static DVM_Value
 nv_string_length_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                      int arg_count, DVM_Value *args)
+                      int arg_count, DVM_Value *args)//abandoned
 {
     DVM_Value ret;
     DVM_Object *str;
@@ -720,7 +688,7 @@ nv_string_length_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 static DVM_Value
 nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                      int arg_count, DVM_Value *args)
+                      int arg_count, DVM_Value *args)//abandoned
 {
 	DVM_Value ret={0};
     DVM_Object *str;
@@ -796,8 +764,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!DivVar", AvDiv, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!ModVar", AvMod, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!CmpVar", AvCmp, 2,DVM_FALSE);
-
-
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE, DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE, DVM_FALSE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);
@@ -806,8 +775,8 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "BreakPoint", UaBreakPoint, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,nv_array_size_proc, 0, DVM_FALSE);
 
+    //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
                             DVM_FALSE, DVM_TRUE);
     DVM_add_native_function(dvm, "diksam.lang", "__fgets", nv_fgets_proc, 1,
