@@ -81,6 +81,7 @@ Function *fNew;
 Function *fGetSuper;
 Function *fGetVar;
 Function *fGetOrCreateVar;
+Function *fDownCast;
 
 Function *fArrBdChk;
 Function *fPop;
@@ -692,7 +693,7 @@ extern "C" void* BcNewModule(char* name)
 	std::vector<Type*> Args2(1,Type::getInt32Ty(context));
 	FunctionType* FT2 = FunctionType::get(TyObjectRef,Args2, false);
 	fLoadStringFromPool = Function::Create(FT2, Function::ExternalLinkage,"string!LoadStringFromPool", module);
-
+	fDownCast=Function::Create(FT2, Function::ExternalLinkage,"system!DownCast", module);
 	fNewDelegate = Function::Create(FT2, Function::ExternalLinkage,"system!NewDelegate", module);
 
 	std::vector<Type*> Args3(2,TyObjectRef);//temp : to del
@@ -1943,7 +1944,12 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
     case SUPER_EXPRESSION:
         return BcGenerateSuper(exe, current_block, expr);
         break;
-
+    case DOWN_CAST_EXPRESSION:
+		Value* va;
+		va = BcGenerateExpression(exe, current_block, expr->u.down_cast.operand);
+		builder.CreateCall(GetPush(2),va);
+        return builder.CreateCall(fDownCast,ConstInt(32,expr->u.down_cast.type->u.class_ref.class_index));
+        break;
 
 
  /*    case INSTANCEOF_EXPRESSION:

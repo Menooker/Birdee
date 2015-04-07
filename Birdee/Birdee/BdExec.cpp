@@ -84,6 +84,20 @@ extern "C" void ExLoadFunction(void* args,...)
 }
 
 
+DVM_ObjectRef ExDownCast(BINT index)
+{
+			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
+			DVM_ObjectRef ret=obj;
+			curdvm->stack.stack_pointer--;
+	        if (is_null_pointer(&obj)) {
+                ExNullPointerException();
+            } else {
+                ret.v_table
+                    = obj.v_table->exec_class->interface_v_table[index];
+            }
+			return ret;
+}
+
 DVM_ObjectRef ExGetSuper()
 {
 			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
@@ -979,6 +993,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!GetSuper");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExGetSuper);
 	MCJIT->addGlobalMapping("system!GetSuper",(void*)ExGetSuper);
+	f=m->getFunction("system!DownCast");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExDownCast);
+	MCJIT->addGlobalMapping("system!DownCast",(void*)ExDownCast);
 	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");

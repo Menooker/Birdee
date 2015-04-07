@@ -113,14 +113,16 @@ class HInt : Hashable
 		return d
 	end
 	public virtual override function equals(k as Hashable) as boolean
-		return true
+		dim in as HInt=k::HInt:>
+		return in.d==d
 	end
 end
 
 dim ii as HInt =new HInt(12)
 dim map as HashMap<HInt,string> =new HashMap()
 map.put(ii,"KK")
-println(map.get(ii))
+map.put(new HInt(163),"LL")
+println(map.get(new HInt(163)))
 
 /*
 delegate m( a as int) as void
