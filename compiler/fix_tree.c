@@ -295,6 +295,7 @@ fix_type_specifier(TypeSpecifier *type)
 	TemplateTypes* tys;TemplateTypes* ty_pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
 
+
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
         if (derive_pos->tag == FUNCTION_DERIVE) {
@@ -1824,6 +1825,9 @@ fix_class_member_expression(Expression *expr,
     MemberDeclaration *member;
     ClassDefinition *target_interface;
     int interface_index;
+	int needfix=0; //flag for the need of fixing the types defined below the line
+	ClassDefinition* class_pos;
+	ClassDefinition* oldcls;
 
     fix_type_specifier(obj->type);
     member = dkc_search_member(obj->type->u.class_ref.class_definition,
@@ -1839,7 +1843,27 @@ fix_class_member_expression(Expression *expr,
     check_member_accessibility(obj->line_number,
                                obj->type->u.class_ref.class_definition,
                                member, member_name);
-
+	if( (member->kind == FIELD_MEMBER && member->u.field.type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
+		|| (member->kind == METHOD_MEMBER && member->u.method.function_definition->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE))
+	{
+		TypeSpecifier* ty;
+		class_pos=expr->u.member_expression.expression->type->u.class_ref.class_definition;
+		oldcls=BcGetCurrentCompilerContext()->curcls;
+		
+		if(member->kind == FIELD_MEMBER)
+		{
+			ty=member->u.field.type;
+		}
+		else
+		{
+			DBG_assert(member->kind == METHOD_MEMBER,("member->kind value unknown"));
+			ty=member->u.method.function_definition->type;
+			needfix=1;
+		}
+		BcGetCurrentCompilerContext()->curcls=class_pos;
+		fix_type_specifier(ty); 
+		BcGetCurrentCompilerContext()->curcls=oldcls;
+	}
     expr->u.member_expression.declaration = member;
     if (member->kind == METHOD_MEMBER) {
         expr->type
@@ -1854,6 +1878,19 @@ fix_class_member_expression(Expression *expr,
             expr->u.member_expression.expression
                 = create_up_cast(obj, target_interface, interface_index);
         }
+		if(needfix)
+		{
+			ParameterList* lst;
+			BcGetCurrentCompilerContext()->curcls=class_pos;
+			for(lst=expr->type->derive->u.function_d.parameter_list;lst;lst=lst->next )
+			{
+				if(lst->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
+				{
+					fix_type_specifier(lst->type);
+				}
+			}
+			BcGetCurrentCompilerContext()->curcls=oldcls;
+		}
     } else if (member->kind == FIELD_MEMBER) {
         if (obj->kind == SUPER_EXPRESSION) {
             dkc_compile_error(expr->line_number,
@@ -2363,7 +2400,14 @@ fix_array_creation_expression(Block *current_block, Expression *expr,
     TypeDerive *derive = NULL;
     TypeDerive *tmp_derive;
 
-    fix_type_specifier(expr->u.array_creation.type);
+    if(expr->u.array_creation.type->basic_type != DVM_TEMPLATE_TYPE) //special case for template objects
+	{
+		fix_type_specifier(expr->u.array_creation.type);
+	}
+	else
+	{
+
+	}
 
     for (dim_pos = expr->u.array_creation.dimension; dim_pos;
          dim_pos = dim_pos->next) {
@@ -2500,8 +2544,9 @@ fix_expression(Block *current_block, Expression *expr, Expression *parent,
     default:
         DBG_assert(0, ("bad case. kind..%d\n", expr->kind));
     }
-    fix_type_specifier(expr->type);
 
+	fix_type_specifier(expr->type);
+	
     return expr;
 }
 
@@ -3375,7 +3420,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
 	ClassDefinition* oldcls=BcGetCurrentCompilerContext()->curcls;
     for (member_pos = class_pos->member; member_pos; 
             member_pos = member_pos->next) {         //fix-me : improve here!! find an efficient way to check if the class's methodid is OK
-        if (member_pos->kind == METHOD_MEMBER && member_pos->u.method.method_index!=-1) {
+        if (member_pos->kind == METHOD_MEMBER && member_pos->u.method.method_index!=-1) { //if the class is fixed, return
 			return;
 		}
 	}

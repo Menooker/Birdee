@@ -17,25 +17,58 @@ end
 
 public abstract class  Hashable
 	public abstract  virtual declare  function hash() as int
+	public abstract  virtual declare  function equals(k as Hashable) as boolean
 end
 
 class HashNode<K,V>
 	public key as K
 	public value as V
+	public  constructor  initialize(k as K,v as V)
+		key=k
+		value=v
+	end
+
 end
 
-public class HashMap<K,V:Hashable>
-	dim stks as Stack<HashNode<K,V>> 
-
+public class HashMap<K:Hashable,V>
+	dim stks as Stack<HashNode<K,V>>[]
+	
 	public virtual constructor  initialize()
-		stks=new Stack()
+		stks=new Stack<HashNode<K,V>>[10]
+	end
+
+	function find(key as K) as HashNode<K,V>
+		dim stk as Stack<HashNode<K,V>> =stks[key.hash()%10]
+		dim t as HashNode<K,V> 
+		t=stk.top(t)
+		dim nd as ListNode<HashNode<K,V>>
+		for nd=stk.tail;nd!=null;nd=nd.prv
+			if nd.data.key.equals(key) then
+				return nd.data
+			end
+		end
+		return null
+	end
+
+	public virtual sub put(key as K,value as V) 
+		dim n as HashNode<K,V>
+		n=this.find(key)
+		if n!=null then
+			n.value=value
+		else
+			stks[key.hash()%10].push(key,value)
+		end
 	end
 end
 
 public class Stack<T1> :  Container
 
-	dim tail as ListNode<T1>
-	dim head as ListNode<T1>
+	public tail as ListNode<T1>
+
+	public function top(a as T1) as T1
+		return tail.data
+	end
+
 	public override sub push(t as T1)
 		dim top as ListNode<T1> = this.tail
 		tail=new ListNode()

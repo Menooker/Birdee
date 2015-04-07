@@ -231,6 +231,10 @@ array_type_specifier
         {
             $$ = dkc_create_array_type_specifier($1);
         }
+		| template_type_specifier LB RB
+		{
+			$$ = dkc_create_array_type_specifier($1);
+		}
         ;
 template_type_specifier
 		: IDENTIFIER LT type_list GT
@@ -614,6 +618,14 @@ array_creation
         }
         | NEW identifier_type_specifier dimension_expression_list
             dimension_list
+        {
+            $$ = dkc_create_class_array_creation($2, $3, $4);
+        }
+		| NEW template_type_specifier dimension_expression_list
+        {
+            $$ = dkc_create_class_array_creation($2, $3, NULL);
+        }
+		| NEW template_type_specifier dimension_expression_list dimension_list
         {
             $$ = dkc_create_class_array_creation($2, $3, $4);
         }

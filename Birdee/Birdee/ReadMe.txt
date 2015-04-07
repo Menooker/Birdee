@@ -44,6 +44,11 @@ Templates
 try
 	抛出子类不能被父类catch (fix-me)?
 
-identifier
-	parameters, static , this 
-	see fix_identifier_expression()
+basic
+	identifier search order
+		parameters, static , this 
+		see fix_identifier_expression()
+
+	"new" template problems
+		stks=new Stack<HashNode<K,V>>[10]
+		stk=new Stack()
