@@ -148,7 +148,25 @@ reserve_constant_index(DKC_Compiler *compiler, ConstantDefinition *src,
 
     return dest_idx;
 }
+TypeSpecifier* BcGetTemplateSuperType(TemplateDeclare* temptys,int index)
+{
+	int i;
+	for(i=0;i<index;i++)
+	{
+		temptys=temptys->next;
+	}
+	return temptys->super;
+}
 
+TypeSpecifier* BcGetTemplateType(TemplateTypes* temptys,int index)
+{
+	int i;
+	for(i=0;i<index;i++)
+	{
+		temptys=temptys->next;
+	}
+	return temptys->name;
+}
 static ClassDefinition *
 search_class_and_add(int line_number, char *name, int *class_index_p);
 
@@ -857,8 +875,14 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
 	{
 		return src;
 	}
-    cast_mismatch_error(src->line_number, src->type, dest);
-
+	if(src->type->basic_type==DVM_TEMPLATE_TYPE && BcGetCurrentCompilerContext()->curcls )
+	{
+		TypeSpecifier* superty=BcGetTemplateSuperType(BcGetCurrentCompilerContext()->curcls->templates ,src->type->u.template_id);
+		if(superty)
+			*src->type=*superty;
+		return create_assign_cast(src,dest);
+	}
+	cast_mismatch_error(src->line_number, src->type, dest);
     return NULL; /* make compiler happy. */
 }
 
@@ -1485,34 +1509,18 @@ fix_logical_not_expression(Block *current_block, Expression *expr,
     return expr;
 }
 
-TypeSpecifier* BcGetTemplateSuperType(TemplateDeclare* temptys,int index)
-{
-	int i;
-	for(i=0;i<index;i++)
-	{
-		temptys=temptys->next;
-	}
-	return temptys->super;
-}
 
-TypeSpecifier* BcGetTemplateType(TemplateTypes* temptys,int index)
-{
-	int i;
-	for(i=0;i<index;i++)
-	{
-		temptys=temptys->next;
-	}
-	return temptys->name;
-}
 
 static void
 check_argument(Block *current_block, int line_number,
                ParameterList *param_list, ArgumentList *arg,
-               ExceptionList **el_p, TypeSpecifier *array_base,int isApost,TemplateTypes* temptys)
+               ExceptionList **el_p, TypeSpecifier *array_base,int isApost,TemplateTypes* temptys,TemplateDeclare* tempdec)
 {
     ParameterList *param;
     TypeSpecifier *temp_type;
 	int paramcnt=0;
+
+	DBG_assert( (temptys==NULL || tempdec==NULL) ,("temptys and tempdec can not be both non-null"));
     for (param = param_list;
          param && arg;
          param = param->next, arg = arg->next) {
@@ -1526,7 +1534,16 @@ check_argument(Block *current_block, int line_number,
             temp_type = array_base;
         }
 		else if(param->type->basic_type ==DVM_TEMPLATE_TYPE){
-			temp_type=BcGetTemplateType(temptys,param->type->u.template_id);
+			temp_type=NULL;
+			if(temptys) //if it is used outside of template
+				temp_type=BcGetTemplateType(temptys,param->type->u.template_id);
+			else
+			{
+				if(tempdec)
+					temp_type=BcGetTemplateSuperType(tempdec,param->type->u.template_id);
+				if(!temp_type)
+					temp_type = param->type;
+			}
 		}
 		else {
             temp_type = param->type;
@@ -1746,7 +1763,7 @@ fix_function_call_expression(Block *current_block, Expression *expr,
     add_exception(el_p, func_throws);
     check_argument(current_block, expr->line_number,
                    func_param, expr->u.function_call_expression.argument, el_p,
-                   array_base_p,isApost,temptys);
+                   array_base_p,isApost,temptys,NULL);
     expr->type = dkc_alloc_type_specifier(func_type->basic_type);
     *expr->type = *func_type;
     expr->type->derive = func_type->derive;
@@ -1825,9 +1842,11 @@ fix_class_member_expression(Expression *expr,
     MemberDeclaration *member;
     ClassDefinition *target_interface;
     int interface_index;
-	int needfix=0; //flag for the need of fixing the types defined below the line
 	ClassDefinition* class_pos;
 	ClassDefinition* oldcls;
+	ParameterList* lst;
+	class_pos=expr->u.member_expression.expression->type->u.class_ref.class_definition;
+	oldcls=BcGetCurrentCompilerContext()->curcls;
 
     fix_type_specifier(obj->type);
     member = dkc_search_member(obj->type->u.class_ref.class_definition,
@@ -1843,13 +1862,11 @@ fix_class_member_expression(Expression *expr,
     check_member_accessibility(obj->line_number,
                                obj->type->u.class_ref.class_definition,
                                member, member_name);
+
 	if( (member->kind == FIELD_MEMBER && member->u.field.type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
 		|| (member->kind == METHOD_MEMBER && member->u.method.function_definition->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE))
 	{
-		TypeSpecifier* ty;
-		class_pos=expr->u.member_expression.expression->type->u.class_ref.class_definition;
-		oldcls=BcGetCurrentCompilerContext()->curcls;
-		
+		TypeSpecifier* ty;	
 		if(member->kind == FIELD_MEMBER)
 		{
 			ty=member->u.field.type;
@@ -1858,7 +1875,6 @@ fix_class_member_expression(Expression *expr,
 		{
 			DBG_assert(member->kind == METHOD_MEMBER,("member->kind value unknown"));
 			ty=member->u.method.function_definition->type;
-			needfix=1;
 		}
 		BcGetCurrentCompilerContext()->curcls=class_pos;
 		fix_type_specifier(ty); 
@@ -1878,19 +1894,18 @@ fix_class_member_expression(Expression *expr,
             expr->u.member_expression.expression
                 = create_up_cast(obj, target_interface, interface_index);
         }
-		if(needfix)
+
+		
+		BcGetCurrentCompilerContext()->curcls=class_pos;
+		for(lst=expr->type->derive->u.function_d.parameter_list;lst;lst=lst->next )
 		{
-			ParameterList* lst;
-			BcGetCurrentCompilerContext()->curcls=class_pos;
-			for(lst=expr->type->derive->u.function_d.parameter_list;lst;lst=lst->next )
+			if(lst->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
 			{
-				if(lst->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
-				{
-					fix_type_specifier(lst->type);
-				}
+				fix_type_specifier(lst->type);
 			}
-			BcGetCurrentCompilerContext()->curcls=oldcls;
 		}
+		BcGetCurrentCompilerContext()->curcls=oldcls;
+		
     } else if (member->kind == FIELD_MEMBER) {
         if (obj->kind == SUPER_EXPRESSION) {
             dkc_compile_error(expr->line_number,
@@ -1901,15 +1916,28 @@ fix_class_member_expression(Expression *expr,
 			expr->type = BcGetTemplateType(obj->type->u.class_ref.tylist ,member->u.field.type->u.template_id);
 		else if (obj->kind !=THIS_EXPRESSION && member->u.field.type->basic_type==DVM_CLASS_TYPE && member->u.field.type->u.class_ref.tylist) //instantlize the template objects in the class
 		{
-			TemplateTypes* ty;
+			TemplateTypes* ty,*tyfrom,*tylast=0;
 			expr->type = (TypeSpecifier*) dkc_malloc(sizeof(TypeSpecifier));
 			*expr->type=*member->u.field.type;
-			for(ty=expr->type->u.class_ref.tylist ;ty;ty=ty->next)
+			expr->type->u.class_ref.tylist=NULL;
+			
+			for( tyfrom=member->u.field.type->u.class_ref.tylist;tyfrom;tyfrom=tyfrom->next) //copy the template list, and instantiate it
 			{
-				if(ty->name->basic_type==DVM_TEMPLATE_TYPE)
+				ty=(TemplateTypes*) dkc_malloc(sizeof(TemplateTypes));
+				ty->next=NULL;
+				if(expr->type->u.class_ref.tylist==NULL)
+					expr->type->u.class_ref.tylist=ty;
+				if(tyfrom->name->basic_type==DVM_TEMPLATE_TYPE)
 				{
-					ty->name=BcGetTemplateType(obj->type->u.class_ref.tylist ,ty->name->u.template_id);
+					ty->name=BcGetTemplateType(obj->type->u.class_ref.tylist ,tyfrom->name->u.template_id);
 				}
+				else
+				{
+					ty->name=tyfrom->name ;
+				}
+				if(tylast)
+					tylast->next=ty;
+				tylast=ty;
 			}
 			//expr->type->u.class_ref.tylist->
 		}
@@ -2381,7 +2409,7 @@ fix_new_expression(Block *current_block, Expression *expr,
 
     check_argument(current_block, expr->line_number,
                    member->u.method.function_definition->parameter,
-                   expr->u.new_e.argument, el_p, NULL,0,0); //fix-me : add template support for new
+                   expr->u.new_e.argument, el_p, NULL,0,0,BcGetCurrentCompilerContext()->curcls ? BcGetCurrentCompilerContext()->curcls->templates:NULL);
 
     expr->u.new_e.method_declaration = member;
     type = dkc_alloc_type_specifier(DVM_CLASS_TYPE);

@@ -1,6 +1,8 @@
 //require Exceptions
 class StackEmptyException
 end
+class KeyNotFoundException
+end
 
 class ListNode<T0>
 
@@ -20,10 +22,10 @@ public abstract class  Hashable
 	public abstract  virtual declare  function equals(k as Hashable) as boolean
 end
 
-class HashNode<K,V>
-	public key as K
-	public value as V
-	public  constructor  initialize(k as K,v as V)
+class HashNode<K1,V1>
+	public key as K1
+	public value as V1
+	public  constructor  initialize(k as K1,v as V1)
 		key=k
 		value=v
 	end
@@ -35,12 +37,14 @@ public class HashMap<K:Hashable,V>
 	
 	public virtual constructor  initialize()
 		stks=new Stack<HashNode<K,V>>[10]
+		dim i as int
+		for i=0;i<10;i++
+			stks[i]=new Stack()
+		end
 	end
 
 	function find(key as K) as HashNode<K,V>
 		dim stk as Stack<HashNode<K,V>> =stks[key.hash()%10]
-		dim t as HashNode<K,V> 
-		t=stk.top(t)
 		dim nd as ListNode<HashNode<K,V>>
 		for nd=stk.tail;nd!=null;nd=nd.prv
 			if nd.data.key.equals(key) then
@@ -50,13 +54,24 @@ public class HashMap<K:Hashable,V>
 		return null
 	end
 
+	public virtual function get(key as K) as V  throws KeyNotFoundException
+		dim n as HashNode<K,V>
+		n=this.find(key)
+		if n==null then
+			dim e as KeyNotFoundException
+			throw e
+		else
+			return n.value
+		end
+	end
+
 	public virtual sub put(key as K,value as V) 
 		dim n as HashNode<K,V>
 		n=this.find(key)
 		if n!=null then
 			n.value=value
 		else
-			stks[key.hash()%10].push(key,value)
+			stks[key.hash()%10].push(new HashNode(key,value))
 		end
 	end
 end
@@ -65,7 +80,7 @@ public class Stack<T1> :  Container
 
 	public tail as ListNode<T1>
 
-	public function top(a as T1) as T1
+	public function top() as T1
 		return tail.data
 	end
 
@@ -89,18 +104,23 @@ end
 
 
 
-try
-	dim a as Stack<int> =new Stack()
-	dim cnt as Container<int> =a
-	cnt.push(1)
-	cnt.push(2)
-	cnt.push(3)
-	println(a.pop())
-	println(a.pop())
-	println(a.pop())
-catch StackEmptyException ex
-	println("Stack Empty")
+class HInt : Hashable
+	public d as int
+	public virtual override constructor  initialize(i as int)
+		d=i
+	end
+	public virtual override function hash() as int
+		return d
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		return true
+	end
 end
+
+dim ii as HInt =new HInt(12)
+dim map as HashMap<HInt,string> =new HashMap()
+map.put(ii,"KK")
+println(map.get(ii))
 
 /*
 delegate m( a as int) as void
