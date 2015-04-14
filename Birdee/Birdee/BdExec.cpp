@@ -572,11 +572,9 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 
 	extern "C" int hit;
 	extern "C" int miss;
-	extern "C" void** ppppp;
 extern "C" void ExGoMain()
 {
 
-	ppppp=(void**) &curdvm->stack.stack[0].object.data ;
 	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curdvm->current_executable =curdvm->top_level;
@@ -1098,6 +1096,10 @@ extern "C" void ExFreeMCJIT(void* p)
 	delete h;
 }
 
+extern "C" void ExInitEngine()
+{
+	UaInitTls();
+}
 
 void replaceAllUsesWith(Value* ths,Value *New) {
 

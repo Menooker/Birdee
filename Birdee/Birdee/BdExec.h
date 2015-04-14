@@ -63,6 +63,7 @@ void ExStringLength(DVM_Value *args);
 DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);
 void ExFreeMCJIT(void* p);
 void ExStringSubstr(DVM_Value *args);
+void ExInitEngine();
 #ifdef __cplusplus
 }
 #endif

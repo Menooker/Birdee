@@ -7,7 +7,7 @@
 #ifdef BD_ON_WINDOWS
 #include <Windows.h>
 #define THREAD_ID HANDLE
-#define curdvm ((DVM_VirtualMachine*)TlsGetValue(TLS_MINIMUM_AVAILABLE+1))
+#define curdvm ((DVM_VirtualMachine*)TlsGetValue(dwTlsIndex))
 #endif
 
 #ifdef __cplusplus
@@ -15,6 +15,7 @@ extern "C"
 {
 #endif
 	#include "../../dvm/dvm_pri.h"
+	extern DWORD dwTlsIndex; 
 	typedef void (*UaTraceCallBack)(void* param,void* ebp,void* retaddr,void* calladdr);
 	long UaSetBufferUnreadable(void* buf,size_t sz);
 	void UaRestoreBufferStatus(void* buf,size_t sz,long st);
@@ -23,6 +24,7 @@ extern "C"
 	void  UaStackTrace(UaTraceCallBack cb,void* param);
 	THREAD_ID UaCreateThread(DVM_VirtualMachine* vm);
 	void UaSetCurVM(DVM_VirtualMachine* vm);
+	void UaInitTls();
 #ifdef __cplusplus
 }
 #endif

@@ -8,7 +8,7 @@
 
 #include "..\Birdee\Birdee\Dumper.h"
 #include "..\Birdee\Birdee\Loader.h"
-
+void ExInitEngine();
 void BcInitLLVMCompiler();
 int
 main(int argc, char* argv[])
@@ -47,6 +47,7 @@ main(int argc, char* argv[])
 	//fix-me : free pVoidType by dispose_type_specifier
 	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
+	ExInitEngine();
 	status=LdLoadCode("123",plist);
 	if(status)
 		printf("ERROR Loading Code %d\n",status);

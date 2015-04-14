@@ -51,18 +51,29 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 
 #ifdef BD_ON_WINDOWS
-	
+	DWORD dwTlsIndex; 
+
+	void UaInitTls()
+	{
+		dwTlsIndex = TlsAlloc();
+		if(dwTlsIndex==TLS_OUT_OF_INDEXES)
+		{
+			fprintf(stderr,"TLS out of indexes");
+			exit(0);
+		}
+	}
+
 	DWORD __stdcall UaThreadStub(PVOID p)
 	{
 		DVM_VirtualMachine_tag* param=(DVM_VirtualMachine_tag*)p;
-		TlsSetValue(TLS_MINIMUM_AVAILABLE+1,param);
+		TlsSetValue(dwTlsIndex,param);
 		param->init_fun(param->stack.stack);
 		return 0;
 	}
 
 	void UaSetCurVM(DVM_VirtualMachine_tag* vm)
 	{
-		TlsSetValue(TLS_MINIMUM_AVAILABLE+1,vm);
+		TlsSetValue(dwTlsIndex,vm);
 	}
 
 	THREAD_ID UaCreateThread(DVM_VirtualMachine_tag* vm)
