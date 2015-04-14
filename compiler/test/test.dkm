@@ -1,5 +1,8 @@
 //require Exceptions
-class StackEmptyException
+dim k as var[]={
+1,2,"3",4,5}
+
+/*class StackEmptyException
 end
 class KeyNotFoundException
 end
@@ -103,6 +106,24 @@ public class Stack<T1> :  Container
 end
 
 
+class HString : Hashable
+	public str as string
+	public virtual override constructor  initialize(i as string)
+		str=i
+	end
+	public virtual override function hash() as int
+		dim i as int
+		dim key as int =0
+		for i=0;i<str.length();i++
+			key = key * (str[i]*2+str[i+1])+ (str[i]+str[i+1]*2)
+		end
+		return key
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		dim in as HString=k::HString:>
+		return in.str==str
+	end
+end
 
 class HInt : Hashable
 	public d as int
@@ -123,6 +144,12 @@ dim map as HashMap<HInt,string> =new HashMap()
 map.put(ii,"KK")
 map.put(new HInt(163),"LL")
 println(map.get(new HInt(163)))
+
+dim map2 as HashMap<HString,int> =new HashMap()
+map.put(new HString("11"),10)
+map.put(new HString("12"),90)
+println(map.get(new HString("11")))
+println(map.get(new HString("12")))
 
 /*
 delegate m( a as int) as void

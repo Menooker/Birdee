@@ -791,7 +791,7 @@ do_throw(DVM_VirtualMachine *dvm,
 
 DVM_ObjectRef
 dvm_create_exception(DVM_VirtualMachine *dvm, char *class_name,
-                     RuntimeError id, ...)
+                     RuntimeError id, ...) 
 {
 	DVM_ObjectRef obj;
 	return obj;

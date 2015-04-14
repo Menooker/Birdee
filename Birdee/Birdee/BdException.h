@@ -44,6 +44,7 @@ void ExStackTrace(DVM_ObjectRef e);
 void ExSystemRaise(enum ExExceptions e);
 void ExReraiseException();
 void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *class_name, int id, ...);
+//DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,BINT id, ...);
 #ifdef __cplusplus
 }
 #endif

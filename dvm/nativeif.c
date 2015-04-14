@@ -3,7 +3,8 @@
 #include "..\include\DBG.h"
 #include "..\include\DVM_dev.h"
 #include "dvm_pri.h"
-
+#include "..\Birdee\Birdee\BdException.h"
+extern DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);
  DVM_ErrorStatus
 check_array(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
             DVM_Executable *exe, BFunction *func, int pc,
@@ -11,7 +12,7 @@ check_array(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 {
     if (barray.data == NULL) {
         *exception_p
-            = dvm_create_exception(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,
+            = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,NULL,
                                    NULL_POINTER_ERR,
                                    DVM_MESSAGE_ARGUMENT_END);
         return DVM_ERROR;
@@ -314,14 +315,14 @@ check_string_index(DVM_VirtualMachine *dvm, DVM_ObjectRef str, int index,
 {
     if (is_object_null(str)) {
         *exception_p
-            = dvm_create_exception(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,
+            = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,NULL,
                                    NULL_POINTER_ERR,
                                    DVM_MESSAGE_ARGUMENT_END);
         return DVM_ERROR;
     }
     if (index < 0 || index >= str.data->u.string.length) {
         *exception_p
-            = dvm_create_exception(dvm, STRING_INDEX_EXCEPTION_NAME,
+            = ExCreateExceptionEx(dvm, STRING_INDEX_EXCEPTION_NAME,NULL,
                                    INDEX_OUT_OF_BOUNDS_ERR,
                                    DVM_INT_MESSAGE_ARGUMENT, "index", index,
                                    DVM_INT_MESSAGE_ARGUMENT, "size",
