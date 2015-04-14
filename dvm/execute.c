@@ -499,7 +499,7 @@ check_instanceof_i(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj,
     }
 
     for (i = 0; i < obj->v_table->exec_class->interface_count; i++) {
-        if (obj->v_table->exec_class->interface[i]->class_index
+        if (obj->v_table->exec_class->binterface[i]->class_index
             == target_idx) {
             *is_interface = DVM_TRUE;
             *interface_idx = i;
@@ -2079,7 +2079,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
             dispose_v_table(dvm->bclass[i]->interface_v_table[j]);
         }
         MEM_free(dvm->bclass[i]->interface_v_table);
-        MEM_free(dvm->bclass[i]->interface);
+        MEM_free(dvm->bclass[i]->binterface);
         MEM_free(dvm->bclass[i]->field_type);
         MEM_free(dvm->bclass[i]);
     }

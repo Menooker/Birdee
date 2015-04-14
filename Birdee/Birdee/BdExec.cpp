@@ -53,11 +53,11 @@ extern "C"{
    || ((type)->derive_count > 0 \
        && (type)->derive[0].tag == DVM_ARRAY_DERIVE))
 
-extern "C" DVM_VirtualMachine *curdvm;
+//extern "C" DVM_VirtualMachine *curdvm;
 extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_ObjectRef);
 #define is_null_pointer(obj) (((obj)->data == NULL))
 
-
+#include "UnportableAPI.h"
 
 
 extern "C" void ExLoadFunction(void* args,...)
@@ -566,7 +566,8 @@ extern "C" void ExInitExeEngine()
 
 extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 {
-	curdvm=dvm;
+	UaSetCurVM(dvm);
+	//curdvm=dvm;
 }
 
 	extern "C" int hit;
@@ -1086,7 +1087,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	InitOptimizer(*pm,TheExecutionEngine,m);
 	delete pm; 
 	
-
+	
 
 	return TheExecutionEngine;
 }

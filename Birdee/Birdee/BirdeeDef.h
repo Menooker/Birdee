@@ -1,7 +1,7 @@
 #include "Conf.h"
 #ifndef _H_BIRDEE_DEF
 #define _H_BIRDEE_DEF
-
+typedef void (*BdVMFunction)(void *args, ...);
 #ifdef BD_ON_X86
 	#ifdef BD_ON_VC
 		typedef int BINT ;

@@ -11,7 +11,7 @@
 
 void BcInitLLVMCompiler();
 int
-main(int argc, char** argv[])
+main(int argc, char* argv[])
 {
     DKC_Compiler *compiler;
     FILE *fp;

@@ -233,7 +233,7 @@ typedef struct ExecClass_tag {
     struct ExecClass_tag *super_class;
     DVM_VTable          *class_table;
     int                 interface_count;
-    struct ExecClass_tag **interface;
+    struct ExecClass_tag **binterface;
     DVM_VTable          **interface_v_table;
     int                 field_count;
     DVM_TypeSpecifier   **field_type;
@@ -311,6 +311,7 @@ struct DVM_VirtualMachine_tag {
 
 	mRtlHashMap*			static_str_map;
 
+	BdVMFunction init_fun;
 };
 
 typedef struct RefInNativeFunc_tag {

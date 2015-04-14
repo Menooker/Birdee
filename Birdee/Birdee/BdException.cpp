@@ -12,7 +12,7 @@ extern "C"
 }
 
 //typedef struct DVM_VirtualMachine_tag sDVM_VirtualMachine;
-extern "C" DVM_VirtualMachine_tag *curdvm;
+//extern "C" DVM_VirtualMachine_tag *curdvm;
 
 #define BD_FLOOR(a,b) (a/b+ (a%b ? 1:0))
 //#define JUMPBUF_CNT (BD_FLOOR(sizeof(ExJumpBuf),sizeof(DVM_Value)))

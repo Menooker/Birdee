@@ -581,7 +581,7 @@ add_methods(DVM_VirtualMachine *dvm, DVM_Executable *exe,
     int         method_count;
     DVM_VTable  *v_table;
     int         i;
-    DVM_Class   *interface;
+    DVM_Class   *binterface;
     int         method_idx;
 
     v_table = alloc_v_table(dest);
@@ -593,14 +593,14 @@ add_methods(DVM_VirtualMachine *dvm, DVM_Executable *exe,
 
     for (i = 0; i < src->interface_count; i++) {
         dest->interface_v_table[i] = alloc_v_table(dest);
-        interface = search_class_from_executable(exe,
+        binterface = search_class_from_executable(exe,
                                                  src->interface_[i].name);
         dest->interface_v_table[i]->table
-            = MEM_malloc(sizeof(VTableItem) * interface->method_count);
-        dest->interface_v_table[i]->table_size = interface->method_count;
-        for (method_idx = 0; method_idx < interface->method_count;
+            = MEM_malloc(sizeof(VTableItem) * binterface->method_count);
+        dest->interface_v_table[i]->table_size = binterface->method_count;
+        for (method_idx = 0; method_idx < binterface->method_count;
              method_idx++) {
-            set_v_table(dvm, src, &interface->method[method_idx],
+            set_v_table(dvm, src, &binterface->method[method_idx],
                         &dest->interface_v_table[i]->table[method_idx],
                         DVM_TRUE);
         }
@@ -640,14 +640,14 @@ set_super_class(DVM_VirtualMachine *dvm, DVM_Executable *exe,
                                    dvm_class->super_class->name);
             dvm->bclass[class_idx]->super_class = dvm->bclass[super_class_index];
         }
-        dvm->bclass[class_idx]->interface
+        dvm->bclass[class_idx]->binterface
             = MEM_malloc(sizeof(ExecClass*) * dvm_class->interface_count);
         for (if_idx = 0; if_idx < dvm_class->interface_count; if_idx++) {
             interface_index
                 = DVM_search_class(dvm,
                                    dvm_class->interface_[if_idx].package_name,
                                    dvm_class->interface_[if_idx].name);
-            dvm->bclass[class_idx]->interface[if_idx]
+            dvm->bclass[class_idx]->binterface[if_idx]
                 = dvm->bclass[interface_index];
         }
     }

@@ -4,7 +4,8 @@
 #include "..\include\DBG.h"
 #include "dvm_pri.h"
 #include "..\Birdee\Birdee\BdHashMap.h"
-extern DVM_VirtualMachine* curdvm;
+#include "..\Birdee\Birdee\UnportableAPI.h"
+//extern DVM_VirtualMachine* curdvm;
 
 void
 DVM_check_gc(DVM_VirtualMachine *dvm)

@@ -780,15 +780,15 @@ extern "C" void* BcNewModule(char* name)
 	fBoolToStr = Function::Create(FT4, Function::ExternalLinkage,"system!BoolToStr", module);
 
 	//FunStoreStaicSwitch[0]=fStoreStaticInt;FunStoreStaicSwitch[1]=fStoreStaticDouble;FunStoreStaicSwitch[2]=fStoreStaticString;
-	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");
-	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");
-	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");
-	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bsp");
-	bbp=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"bbp");
-	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");
-	arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");
-	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");
-	pthis=new GlobalVariable(*module,TyObjectRef,false	,GlobalValue::ExternalLinkage,0,"pthis");
+	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");//bpc->setThreadLocal(true);
+	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");//bei->setThreadLocal(true);
+	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");//bpc->setThreadLocal(true);
+	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bsp");//bsp->setThreadLocal(true);
+	bbp=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"bbp");//bbp->setThreadLocal(true);
+	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");//bretvar->setThreadLocal(true);
+	arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");//arr_is_pointer->setThreadLocal(true);
+	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");//pstatic->setThreadLocal(true);
+	pthis=new GlobalVariable(*module,TyObjectRef,false	,GlobalValue::ExternalLinkage,0,"pthis");//pthis->setThreadLocal(true);
 
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);

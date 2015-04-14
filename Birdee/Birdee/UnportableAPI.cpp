@@ -51,6 +51,26 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 
 #ifdef BD_ON_WINDOWS
+	
+	DWORD __stdcall UaThreadStub(PVOID p)
+	{
+		DVM_VirtualMachine_tag* param=(DVM_VirtualMachine_tag*)p;
+		TlsSetValue(TLS_MINIMUM_AVAILABLE+1,param);
+		param->init_fun(param->stack.stack);
+		return 0;
+	}
+
+	void UaSetCurVM(DVM_VirtualMachine_tag* vm)
+	{
+		TlsSetValue(TLS_MINIMUM_AVAILABLE+1,vm);
+	}
+
+	THREAD_ID UaCreateThread(DVM_VirtualMachine_tag* vm)
+	{
+		HANDLE h=CreateThread(0,0,UaThreadStub,vm,0,0);
+		return h;
+	}
+
 
 #if (defined(BD_ON_GCC) & defined(BD_ON_X86))
 	typedef void(__stdcall *ptDbgBreakPoint)(void);

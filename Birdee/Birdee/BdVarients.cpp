@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string>
 #include "hash_compatible.h"
-
+#include "UnportableAPI.h"
 
 using namespace std;
 
@@ -12,7 +12,7 @@ extern "C"
 {
 #include "../../dvm/dvm_pri.h"
 #include "../../include/MEM.h"
-DVM_VirtualMachine_tag* curdvm;
+//DVM_VirtualMachine_tag* curdvm;
 
 
 typedef hash_map<string,DVM_ObjectRef> AvMap;

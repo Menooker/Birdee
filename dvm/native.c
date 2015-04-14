@@ -9,7 +9,7 @@
 #include "..\Birdee\Birdee\BdVarients.h"
 #include "..\Birdee\Birdee\BdExec.h"
 
-extern DVM_VirtualMachine *curdvm;
+//extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
 
 static DVM_NativePointerInfo st_file_type_info = {
@@ -764,9 +764,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!DivVar", AvDiv, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!ModVar", AvMod, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!CmpVar", AvCmp, 2,DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE, DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE, DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);
