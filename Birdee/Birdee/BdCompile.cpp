@@ -2548,7 +2548,7 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
 				Value* obj=builder.CreateLoad(pthis);
 				Value* fld=builder.CreateCall(GetFldAddr(),obj);
 				fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member_pos->u.field.field_index)),TypeSwitch[mty]);
-				builder.CreateStore(v,fld);
+				builder.CreateStore(vv,fld);
             }
         }
     }
