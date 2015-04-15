@@ -783,7 +783,7 @@ extern "C" void* BcNewModule(char* name)
 	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");//bpc->setThreadLocal(true);
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");//bei->setThreadLocal(true);
 	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");//bpc->setThreadLocal(true);
-	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bsp");//bsp->setThreadLocal(true);
+	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::CommonLinkage,0,"bsp",0,GlobalVariable::GeneralDynamicTLSModel);bsp->setInitializer((Constant*)zero);//bsp->setThreadLocal(true);
 	bbp=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"bbp");//bbp->setThreadLocal(true);
 	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");//bretvar->setThreadLocal(true);
 	arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");//arr_is_pointer->setThreadLocal(true);
@@ -1159,13 +1159,19 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
     member = &fce->function->u.member_expression;
     method_index = get_method_index_Ex(member,&popcnt); //param_cnt => popcnt
 	if(popcnt==-1) // if it is a BuiltIn Method
+	{
 		isBuiltInMethod=1;
-    popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
+		popcnt=0;
+	}
+	else
+	{
+		popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
+	}
     Value* obj= BcGenerateExpression(exe, block,fce->function->u.member_expression.expression);
 	Value* oldthis=builder.CreateLoad(pthis);
 	builder.CreateStore(obj,pthis);
 	if(popcnt)
-		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register
+		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register //fix-me : no need for bpc?
 	builder.CreateCall(fCall,ConstInt(32,method_index));
 	builder.CreateStore(oldthis,pthis);
 	DBG_assert((popcnt>=0),("Pop count < 0"));
@@ -1210,6 +1216,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
     Value* fid=BcGenerateExpression(exe, block, fce->function);
 
 	std::vector<Value*> md(1,ConstInt(32,expr->line_number));
+
 	if(popcnt)
 		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register
 

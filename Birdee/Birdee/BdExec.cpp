@@ -931,7 +931,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-		MCJIT= new MCJITHelper(m,true);
+		MCJIT= new MCJITHelper(m,false);
 		dvm->exe_engine=MCJIT;
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
@@ -1085,7 +1085,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	InitOptimizer(*pm,TheExecutionEngine,m);
 	delete pm; 
 	
-	
+	TheExecutionEngine->in(m,false);
 
 	return TheExecutionEngine;
 }

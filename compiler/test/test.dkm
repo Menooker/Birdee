@@ -1,5 +1,7 @@
 //require Exceptions
-class StackEmptyException
+println("DDD")
+
+/*class StackEmptyException
 end
 class KeyNotFoundException
 end
@@ -147,7 +149,11 @@ map.put(new HString("11"),10)
 map.put(new HString("12"),90)
 println(map.get(new HString("11")))
 println(map.get(new HString("12")))
-
+sub suba(a as int)
+	println(a)
+end
+Invoke(null,"suba",123)
+BreakPoint()
 /*
 delegate m( a as int) as void
 
@@ -163,6 +169,7 @@ function hash(k as string) as int
 	end
 	return key
 end
+
 
 println("Input the password :")
 dim str as string=gets()
