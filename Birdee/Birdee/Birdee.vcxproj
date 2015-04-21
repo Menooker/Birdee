@@ -90,6 +90,7 @@
     <None Include="Bubbles.txt" />
     <None Include="Exceptions.dkh" />
     <None Include="Exceptions2.dkh" />
+    <None Include="list.txt" />
     <None Include="ReadMe.txt" />
     <None Include="req2.dkh" />
     <None Include="template_test.txt" />

@@ -783,7 +783,7 @@ extern "C" void* BcNewModule(char* name)
 	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");//bpc->setThreadLocal(true);
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");//bei->setThreadLocal(true);
 	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");//bpc->setThreadLocal(true);
-	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::CommonLinkage,0,"bsp",0,GlobalVariable::GeneralDynamicTLSModel);bsp->setInitializer((Constant*)zero);//bsp->setThreadLocal(true);
+	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage ,0,"bsp");//bsp->setInitializer((Constant*)zero);//bsp->setThreadLocal(true);
 	bbp=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"bbp");//bbp->setThreadLocal(true);
 	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");//bretvar->setThreadLocal(true);
 	arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");//arr_is_pointer->setThreadLocal(true);

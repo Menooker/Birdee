@@ -1,0 +1,182 @@
+
+/*class StackEmptyException
+end
+class KeyNotFoundException
+end
+
+class ListNode<T0>
+
+	public prv as ListNode<T0>
+	public data as T0
+
+end
+
+
+public abstract class Container <T>
+	public abstract  virtual declare sub push(t as T)
+	public abstract  virtual declare function pop() as T throws StackEmptyException
+end
+
+public abstract class  Hashable
+	public abstract  virtual declare  function hash() as int
+	public abstract  virtual declare  function equals(k as Hashable) as boolean
+end
+
+class HashNode<K1,V1>
+	public key as K1
+	public value as V1
+	public  constructor  initialize(k as K1,v as V1)
+		key=k
+		value=v
+	end
+
+end
+
+public class HashMap<K:Hashable,V>
+	dim stks as Stack<HashNode<K,V>>[]
+	
+	public virtual constructor  initialize()
+		stks=new Stack<HashNode<K,V>>[10]
+		dim i as int
+		for i=0;i<10;i++
+			stks[i]=new Stack()
+		end
+	end
+
+	function find(key as K) as HashNode<K,V>
+		dim stk as Stack<HashNode<K,V>> =stks[key.hash()%10]
+		dim nd as ListNode<HashNode<K,V>>
+		for nd=stk.tail;nd!=null;nd=nd.prv
+			if nd.data.key.equals(key) then
+				return nd.data
+			end
+		end
+		return null
+	end
+
+	public virtual function get(key as K) as V  throws KeyNotFoundException
+		dim n as HashNode<K,V>
+		n=this.find(key)
+		if n==null then
+			dim e as KeyNotFoundException
+			throw e
+		else
+			return n.value
+		end
+	end
+
+	public virtual sub put(key as K,value as V) 
+		dim n as HashNode<K,V>
+		n=this.find(key)
+		if n!=null then
+			n.value=value
+		else
+			stks[key.hash()%10].push(new HashNode(key,value))
+		end
+	end
+end
+
+public class Stack<T1> :  Container
+
+	public tail as ListNode<T1>
+
+	public function top() as T1
+		return tail.data
+	end
+
+	public override sub push(t as T1)
+		dim top as ListNode<T1> = this.tail
+		tail=new ListNode()
+		tail.data=t
+		tail.prv=top
+	end
+
+	public override function pop() as T1 throws StackEmptyException
+		dim top as ListNode<T1> = this.tail
+		if(top==null) then
+			dim e as StackEmptyException 
+			throw e
+		end
+		tail=top.prv
+		return top.data
+	end
+end
+
+
+class HString : Hashable
+	public str as string
+	public virtual override constructor  initialize(i as string)
+		str=i
+	end
+	public virtual override function hash() as int
+		dim i as int
+		dim key as int =0
+		for i=0;i<str.length()-1;i++
+			key = key * (str[i]*2+str[i+1])+ (str[i]+str[i+1]*2)
+		end
+		return key
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		dim in as HString=k::HString:>
+		return in.str==str
+	end
+end
+
+class HInt : Hashable
+	public d as int
+	public virtual override constructor  initialize(i as int)
+		d=i
+	end
+	public virtual override function hash() as int
+		return d
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		dim in as HInt=k::HInt:>
+		return in.d==d
+	end
+end
+
+dim ii as HInt =new HInt(12)
+dim map as HashMap<HInt,string> =new HashMap()
+map.put(ii,"KK")
+map.put(new HInt(163),"LL")
+println(map.get(new HInt(163)))
+
+dim map2 as HashMap<HString,int> =new HashMap()
+map.put(new HString("11"),10)
+map.put(new HString("12"),90)
+println(map.get(new HString("11")))
+println(map.get(new HString("12")))
+sub suba(a as int)
+	println(a)
+end
+Invoke(null,"suba",123)
+BreakPoint()
+/*
+delegate m( a as int) as void
+
+sub fun1(a as int)
+
+end
+
+function hash(k as string) as int
+	dim i as int
+	dim key as int =0
+	for i=0;i<7;i++
+		key = key * (k[i]*2+k[i+1])+ (k[i]+k[i+1]*2)
+	end
+	return key
+end
+
+
+println("Input the password :")
+dim str as string=gets()
+dim key1 as int=hash(str)
+dim fun as m={fun1}
+select (key1%1)
+case 0
+	println("KKKK")
+case 1
+	println("KKKK2")
+end*/
+

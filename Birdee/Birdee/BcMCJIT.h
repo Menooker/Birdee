@@ -2,7 +2,6 @@
 #define _H_BIRDEE_BCMCJIT
 #include "BirdeeDef.h"
 
-
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/MCJIT.h"

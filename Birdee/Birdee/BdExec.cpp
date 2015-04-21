@@ -1084,8 +1084,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//mod->pass=pm;
 	InitOptimizer(*pm,TheExecutionEngine,m);
 	delete pm; 
-	
-	TheExecutionEngine->in(m,false);
+
 
 	return TheExecutionEngine;
 }
