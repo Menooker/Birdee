@@ -905,13 +905,14 @@ DVM_create_virtual_machine(void)
 	dvm->static_str_map=RtlCreateHashmap();
     dvm->stack.alloc_size = STACK_ALLOC_SIZE+2;
     dvm->stack.stack = UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
+	dvm->stack.stack_pointer=dvm->stack.stack;
 	dvm->esp=0;
 	dvm->estack=UaGuardAlloc(sizeof(ExExceptionItem)*1024);
 	dvm->asp=0;
 	dvm->avstack=UaGuardAlloc(sizeof(AutoVarContext)*1024);
     dvm->stack.pointer_flags
         = MEM_malloc(sizeof(DVM_Boolean) * STACK_ALLOC_SIZE);
-    dvm->stack.stack_pointer = 0;
+	dvm->stack.flg_sp=dvm->stack.pointer_flags;
     dvm->heap.current_heap_size = 0;
     dvm->heap.header = NULL;
     dvm->heap.current_threshold = HEAP_THRESHOLD_SIZE;

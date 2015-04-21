@@ -434,7 +434,7 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
 {
     DVM_Object *obj;
     ExecutableEntry *ee_pos;
-    int i;
+    DVM_Value* j;int i;
     DVM_Context *context_pos;
 
     for (obj = dvm->heap.header; obj; obj = obj->next) {
@@ -450,9 +450,9 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
         }
     }
 
-    for (i = 0; i < dvm->stack.stack_pointer; i++) {
+    for (i = 0,j= dvm->stack.stack; j < dvm->stack.stack_pointer; j++, i++) {
         if (dvm->stack.pointer_flags[i]) {
-            gc_mark(&dvm->stack.stack[i].object);
+            gc_mark(&j->object);
         }
     }
     gc_mark(&dvm->current_exception);

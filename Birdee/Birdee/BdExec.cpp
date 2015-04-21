@@ -86,9 +86,9 @@ extern "C" void ExLoadFunction(void* args,...)
 
 DVM_ObjectRef ExDownCast(BINT index)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
 			DVM_ObjectRef ret=obj;
-			curdvm->stack.stack_pointer--;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
 	        if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -100,8 +100,8 @@ DVM_ObjectRef ExDownCast(BINT index)
 
 DVM_ObjectRef ExGetSuper()
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
 	        ExecClass *this_class;
             DVM_ObjectRef ret;
             this_class = obj.v_table->exec_class;
@@ -188,24 +188,24 @@ DVM_ObjectRef ExLoadStringFromPool(BINT index)
 }
 DVM_ObjectRef ExChainString()
 {
-	int sp=curdvm->stack.stack_pointer-1;
-	DVM_ObjectRef ret= chain_string(curdvm,curdvm->stack.stack[sp-1].object,curdvm->stack.stack[sp].object);
-	curdvm->stack.stack_pointer-=2;
+	DVM_Value* sp=curdvm->stack.stack_pointer-1;
+	DVM_ObjectRef ret= chain_string(curdvm,(sp-1)->object,sp->object);
+	curdvm->stack.stack_pointer-=2 ;curdvm->stack.flg_sp-=2;
 	return ret;
 }
 
 BINT ExCompareString()
 {
-	int sp=curdvm->stack.stack_pointer-1;
-	BINT ret= dvm_wcscmp(curdvm->stack.stack[sp-1].object.data->u.string.string,curdvm->stack.stack[sp].object.data->u.string.string);
-	curdvm->stack.stack_pointer-=2;
+	DVM_Value* sp=curdvm->stack.stack_pointer-1;
+	BINT ret= dvm_wcscmp((sp-1)->object.data->u.string.string,sp->object.data->u.string.string);
+	curdvm->stack.stack_pointer-=2 ;curdvm->stack.flg_sp-=2;
 	return ret;
 }
 
 BINT ExCompareObject() //fix-me : there is another cmp after this call. May improve efficiency
 {
-	int sp=curdvm->stack.stack_pointer-1;
-	BINT ret=(curdvm->stack.stack[sp-1].object.data!=curdvm->stack.stack[sp].object.data);
+	DVM_Value* sp=curdvm->stack.stack_pointer-1;
+	BINT ret=((sp-1)->object.data!=sp->object.data);
 	return ret; //check-me
 }
 
@@ -314,7 +314,8 @@ void ExGetClock(DVM_Value* v)
 
 void  ExDoInvoke(BINT transindex)
 {
-	int oldsp=curdvm->stack.stack_pointer;
+	DVM_Value* oldsp=curdvm->stack.stack_pointer;
+	DVM_Boolean* old_arrsp=curdvm->stack.flg_sp;
 	DVM_Value* base;
 	BFunction* bf=curdvm->function[transindex];
 	//DVM_Function* df=&bf->u.diksam_f.executable->executable->function[bf->u.diksam_f.index];
@@ -326,7 +327,7 @@ void  ExDoInvoke(BINT transindex)
     }
 	//dvm_expand_stack(curdvm,bf->local_cnt);
 
-	base=&curdvm->stack.stack[curdvm->stack.stack_pointer - bf->param_cnt];
+	base=oldsp - bf->param_cnt;
 	ExecutableEntry * ee=curdvm->current_executable;
     if(bf->u.diksam_f.executable)
 		curdvm->current_executable = bf->u.diksam_f.executable;
@@ -334,12 +335,12 @@ void  ExDoInvoke(BINT transindex)
         base--; // for this
     }*/
 
-	curdvm->stack.stack_pointer += bf->local_cnt ;
-    BcInitLocalVar(curdvm, bf,oldsp);
+	curdvm->stack.stack_pointer += bf->local_cnt ;	curdvm->stack.flg_sp+=bf->local_cnt ;
+    BcInitLocalVar(curdvm, bf,((char*)oldsp-(char*)curdvm->stack.stack)/sizeof(DVM_Value));
 	AvPushNullContext();
 	bf->pfun(base,transindex);
 	AvPopContext();
-	curdvm->stack.stack_pointer=oldsp - bf->param_cnt;
+	curdvm->stack.stack_pointer=oldsp - bf->param_cnt; curdvm->stack.flg_sp=old_arrsp - bf->param_cnt;
 	curdvm->current_executable=ee;
 }
 
@@ -515,17 +516,20 @@ void  ExInvokeByName(DVM_Value* v)
 			popnum=bpc-curdvm->function[index]->param_cnt;
 			curdvm->bpc=popnum;
 		}
-		int oldsp=curdvm->stack.stack_pointer;
+		DVM_Value* oldsp=curdvm->stack.stack_pointer;
+		DVM_Boolean* flgsp=curdvm->stack.flg_sp;
 		int base=((unsigned)v-(unsigned)curdvm->stack.stack)/sizeof(DVM_Value);
-		curdvm->stack.stack_pointer+= bpc;
+		curdvm->stack.stack_pointer+= bpc; curdvm->stack.flg_sp+=bpc;
 		for(int i=0;i<bpc;i++)
 		{
-			curdvm->stack.stack[oldsp+i]=v[i-bpc];
-			curdvm->stack.pointer_flags[oldsp+i]=curdvm->stack.pointer_flags[base+i-bpc];
+			*(oldsp+i)=v[i-bpc];
+			*(flgsp+i)=curdvm->stack.pointer_flags[base+i-bpc];
 		}
 		ExDoInvoke(index);
 		if(popnum)
-			curdvm->stack.stack_pointer-=popnum;
+		{
+			curdvm->stack.stack_pointer-=popnum;curdvm->stack.flg_sp-=popnum;
+		}
 	}
 	else
 	{
@@ -592,8 +596,8 @@ extern "C" void ExGoMain()
 #define BD_No_Arr_Bound_Chk
 void  ExArrPuti(BINT index,int value)
 {
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
 	//barray.data->u.barray.u.int_array[index]=value;
 #ifdef BD_Arr_Cache
             BINT* int_value;
@@ -617,8 +621,8 @@ void  ExArrPuti(BINT index,int value)
 
 void ExArrPutd(BINT index,double value)
 {
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             DVM_ErrorStatus status;
             DVM_ObjectRef exception;
             status = DVM_array_set_double(curdvm, barray, index, value, &exception);
@@ -631,9 +635,9 @@ void ExArrPutd(BINT index,double value)
 
 void ExArrPuto(BINT index)
 {
-			DVM_ObjectRef value=curdvm->stack.stack[curdvm->stack.stack_pointer-2].object;
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer-=2;
+			DVM_ObjectRef value=(curdvm->stack.stack_pointer-2)->object;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-=2 ;curdvm->stack.flg_sp-=2;
             DVM_ErrorStatus status;
             DVM_ObjectRef exception;
             status = DVM_array_set_object(curdvm, barray, index, value, &exception);
@@ -646,8 +650,8 @@ void ExArrPuto(BINT index)
 
 BINT ExArrGetCh(BINT index)
 {
-			DVM_ObjectRef str=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef str=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             DVM_ErrorStatus status;
             DVM_ObjectRef exception;
             DVM_Char ch;
@@ -665,8 +669,8 @@ BINT ExArrGetCh(BINT index)
 
 DVM_ObjectRef ExArrGeto(BINT index)
 {
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             DVM_ObjectRef object;
             DVM_ErrorStatus status;
             DVM_ObjectRef exception;
@@ -683,8 +687,8 @@ DVM_ObjectRef ExArrGeto(BINT index)
 
 double ExArrGetd(BINT index)
 {
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             double double_value;
             DVM_ErrorStatus status;
             DVM_ObjectRef exception;
@@ -703,8 +707,8 @@ double ExArrGetd(BINT index)
 
 BINT ExArrGeti(BINT index)
 {
-			DVM_ObjectRef barray=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef barray=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
 	//return barray.data->u.barray.u.int_array[index];
 #ifdef BD_Arr_Cache
             BINT* int_value;
@@ -732,8 +736,8 @@ BINT ExArrGeti(BINT index)
 
 BINT ExFldGeti(BINT index)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -744,8 +748,8 @@ BINT ExFldGeti(BINT index)
 
 double ExFldGetd(BINT index)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -756,8 +760,8 @@ double ExFldGetd(BINT index)
 
 DVM_ObjectRef ExFldGeto(BINT index)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -767,8 +771,8 @@ DVM_ObjectRef ExFldGeto(BINT index)
 }
 void ExFldPuti(BINT index,int value)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -777,8 +781,8 @@ void ExFldPuti(BINT index,int value)
 }
 void ExFldPutd(BINT index,double value)
 {
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -787,9 +791,9 @@ void ExFldPutd(BINT index,double value)
 }
 void ExFldPuto(BINT index)
 {
-			DVM_ObjectRef value=curdvm->stack.stack[curdvm->stack.stack_pointer-2].object;
-			DVM_ObjectRef obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-			curdvm->stack.stack_pointer--;
+			DVM_ObjectRef value=(curdvm->stack.stack_pointer-2)->object;
+			DVM_ObjectRef obj=(curdvm->stack.stack_pointer-1)->object;
+			curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -804,7 +808,7 @@ DVM_ObjectRef ExNewArray(BINT ty,BINT dim)
 				= &curdvm->current_executable->executable->type_specifier[ty];
             DVM_ObjectRef barray;
             barray = create_array(curdvm, dim, type);
-            curdvm->stack.stack_pointer -= dim;
+            curdvm->stack.stack_pointer -= dim; curdvm->stack.flg_sp -=dim;
             return barray;
 }
 
@@ -812,7 +816,7 @@ DVM_ObjectRef ExArrayLiteral(BINT ty,BINT size)
 {
             DVM_ObjectRef barray;
             barray = create_array_literal_int(curdvm, size);
-            curdvm->stack.stack_pointer -= size;
+            curdvm->stack.stack_pointer -= size; curdvm->stack.flg_sp -=size;
             return barray;
 }
 
@@ -863,8 +867,8 @@ extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx)
 
 void ExInvokeDelegate()
 {
-	DVM_ObjectRef del_obj=curdvm->stack.stack[curdvm->stack.stack_pointer-1].object;
-	curdvm->stack.stack_pointer--;
+	DVM_ObjectRef del_obj=(curdvm->stack.stack_pointer-1)->object;
+	curdvm->stack.stack_pointer-- ;curdvm->stack.flg_sp--;
     int func_idx;
 	if(is_null_pointer(&del_obj))
 		ExNullPointerException();
@@ -948,6 +952,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack));
 	vglobal=m->getGlobalVariable("arr_is_pointer");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.pointer_flags));
+	vglobal=m->getGlobalVariable("arr_sp");
+	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.flg_sp));
+
 
 	vglobal=m->getGlobalVariable("retvar");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->retvar));
@@ -1128,7 +1135,7 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
 
 	
-	Type* TyO=m->getGlobalVariable("bbp")->getType()->getPointerElementType()->getPointerElementType();
+	Type* TyO=m->getGlobalVariable("bsp")->getType()->getPointerElementType()->getPointerElementType();
 	//TyO->dump();
 	BcSwitchContext(m,TyO);
 	Function* f;

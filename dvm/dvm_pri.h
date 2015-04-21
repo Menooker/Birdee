@@ -120,8 +120,9 @@ typedef union {
 
 typedef struct {
     BINT         alloc_size;
-    BINT         stack_pointer;
+    DVM_Value   *stack_pointer;
     DVM_Value   *stack;
+	DVM_Boolean *flg_sp;
     DVM_Boolean *pointer_flags;
 } Stack;
 

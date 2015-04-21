@@ -102,7 +102,7 @@ GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
 GlobalVariable* beo;//exception obj //fix-me : release it!
 GlobalVariable* bsp;//stack top index //fix-me : release it!
-GlobalVariable* bbp;//stack base pointer //fix-me : release it!
+GlobalVariable* arr_sp;//stack base pointer //fix-me : release it!
 GlobalVariable* arr_is_pointer;//stack_value pointer indecator array //fix-me : release it!
 GlobalVariable* bretvar;//return value//fix-me : release it!
 GlobalVariable* pstatic;//static values//fix-me : release it!
@@ -342,7 +342,7 @@ void BcSwitchContext(Module* M,Type* t)
 	bei=M->getGlobalVariable("bei");
 	beo=M->getGlobalVariable("beo");
 	bsp=M->getGlobalVariable("bsp");
-	bbp=M->getGlobalVariable("bbp");
+	arr_sp=M->getGlobalVariable("arr_sp");
 	arr_is_pointer=M->getGlobalVariable("arr_is_pointer");
 	bretvar=M->getGlobalVariable("bretvar");
 	pstatic=M->getGlobalVariable("pstatic");
@@ -603,15 +603,16 @@ Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 	SwitchBlock(BB);
 
 	Value* vbsp=builder.CreateLoad(bsp);
-	Value* vbbp=builder.CreateLoad(bbp);
-	Value* varr=builder.CreateLoad(arr_is_pointer);
-	builder.CreateStore(ConstInt(32,isptr),builder.CreateGEP(varr,vbsp));
-	Value* v=builder.CreateGEP(vbbp,vbsp);
-	Value* re=builder.CreateBitCast(v,ty->getPointerTo());
+	Value* varr=builder.CreateLoad(arr_sp);
+	//Value* varr=builder.CreateLoad(arr_is_pointer);
+	builder.CreateStore(ConstInt(32,isptr),varr);
+	Value* re=builder.CreateBitCast(vbsp,ty->getPointerTo());
 	builder.CreateStore(fret->arg_begin(),re);
-	builder.CreateStore(builder.CreateAdd(ConstantInt::get(context,APInt(32,1)),vbsp),bsp);
+	builder.CreateStore(builder.CreateGEP(vbsp,ConstantInt::get(context,APInt(32,1))),bsp);
+	builder.CreateStore(builder.CreateGEP(varr,ConstantInt::get(context,APInt(32,1))),arr_sp);
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);
+	fret->dump();
 	return fret;
 }
 
@@ -635,7 +636,7 @@ extern "C" void BcBuildInlines(void* mod)
 	return;//we do nothing
 	module=(Module*) mod;
 	bsp=module->getGlobalVariable("bsp");
-	bbp=module->getGlobalVariable("bbp");
+	arr_sp=module->getGlobalVariable("arr_sp");
 	arr_is_pointer=module->getGlobalVariable("arr_is_pointer");
 	for(int i=0;i<FunMax;i++)
 	{
@@ -783,8 +784,8 @@ extern "C" void* BcNewModule(char* name)
 	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");//bpc->setThreadLocal(true);
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");//bei->setThreadLocal(true);
 	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");//bpc->setThreadLocal(true);
-	bsp=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage ,0,"bsp");//bsp->setInitializer((Constant*)zero);//bsp->setThreadLocal(true);
-	bbp=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"bbp");//bbp->setThreadLocal(true);
+	bsp=new GlobalVariable(*module,TypStack,false,GlobalValue::ExternalLinkage ,0,"bsp");//bsp->setInitializer((Constant*)zero);//bsp->setThreadLocal(true);
+	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_sp");//bbp->setThreadLocal(true);
 	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");//bretvar->setThreadLocal(true);
 	arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");//arr_is_pointer->setThreadLocal(true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");//pstatic->setThreadLocal(true);

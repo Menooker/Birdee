@@ -1,4 +1,5 @@
 //1950
+//1386
 function fab(n as int) as int
 	if(n==1 || n==2) then
 		return 1
