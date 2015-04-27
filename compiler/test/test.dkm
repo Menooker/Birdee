@@ -1,5 +1,8 @@
 //1950
 //1386
+dim a as string="LL"
+println(a+"l")
+
 function fab(n as int) as int
 	if(n==1 || n==2) then
 		return 1

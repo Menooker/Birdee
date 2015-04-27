@@ -950,8 +950,6 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack_pointer));
 	vglobal=m->getGlobalVariable("bbp");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack));
-	vglobal=m->getGlobalVariable("arr_is_pointer");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.pointer_flags));
 	vglobal=m->getGlobalVariable("arr_sp");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.flg_sp));
 
