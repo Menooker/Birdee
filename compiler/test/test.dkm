@@ -1,6 +1,7 @@
 //1950
 //1386
-
+//1358
+/*
 dim a as string="LL"
 
 a=a+"L"
@@ -20,7 +21,7 @@ try
 catch Ex err
 
 end
-
+*/
 function fab(n as int) as int
 	if(n==1 || n==2) then
 		return 1
