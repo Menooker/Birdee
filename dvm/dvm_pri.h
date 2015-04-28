@@ -275,14 +275,22 @@ typedef struct {
     DVM_Value   value;
 } DVME_Constant;
 
-struct DVM_VirtualMachine_tag {
+struct _BdThread {
 	DVM_Value   retvar;
     Stack       stack;
-    Heap        heap;
     ExecutableEntry     *current_executable;
-    BFunction    *current_function;
     DVM_ObjectRef current_exception;
-    int         pc;
+	DVM_ObjectRef		ths;
+	BINT				exception_index;
+	BINT				bpc;
+	PExExceptionItem	estack;
+	BINT				esp;
+	PAutoVarContext     avstack;
+	BINT				asp;
+	struct _BdThread* next;
+};
+struct DVM_VirtualMachine_tag {
+
     BFunction    **function;
     int         function_count;
     ExecClass   **bclass;
@@ -298,21 +306,10 @@ struct DVM_VirtualMachine_tag {
     DVM_VTable  *string_v_table;
     DVM_Context *current_context;
     DVM_Context *free_context;
-
 	LLVMPExeEngine		exe_engine;
-	DVM_ObjectRef		ths;
-	//DVM_ObjectRef		cur_exception;
-	BINT				exception_index;
-	BINT				bpc;
-	PExExceptionItem	estack;
-	BINT				esp;
-
-	PAutoVarContext     avstack;
-	BINT				asp;
-
 	mRtlHashMap*			static_str_map;
-
-	BdVMFunction init_fun;
+	Heap heap;
+	struct _BdThread* mainvm;
 };
 
 typedef struct RefInNativeFunc_tag {
@@ -368,7 +365,7 @@ void dvm_initialize_value(DVM_VirtualMachine* dvm,DVM_TypeSpecifier *type, DVM_V
 /* error.c */
 void dvm_error_i(DVM_Executable *exe, BFunction *func,
                  int pc, RuntimeError id, ...);
-void dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...);
+//void dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...);
 int dvm_conv_pc_to_line_number(DVM_Executable *exe, BFunction *func, int pc);
 void dvm_format_message(DVM_ErrorDefinition *error_definition,
                         int id, VString *message, va_list ap);

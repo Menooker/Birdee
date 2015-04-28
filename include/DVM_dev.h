@@ -110,8 +110,6 @@ void DVM_set_exception(DVM_VirtualMachine *dvm, DVM_Context *context,
 void DVM_set_null(DVM_Value *value);
 DVM_ObjectRef DVM_up_cast(DVM_ObjectRef obj, int target_index);
 
-DVM_Value DVM_check_exception(DVM_VirtualMachine *dvm);
-
 /* heap.c */
 void DVM_check_gc(DVM_VirtualMachine *dvm);
 void DVM_add_reference_to_context(DVM_Context *context, DVM_Value value);

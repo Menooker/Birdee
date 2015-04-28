@@ -81,7 +81,10 @@ public:
 
   }
   ~MCJITHelper();
-
+	ExecutionEngine* MCJITHelper::getEngine(Module* m)
+	{
+		return this->EngineMap[m];
+	}
   Function *getFunction(const std::string FnName);
   //Module *getModuleForNewFunction();
   void *getPointerToFunction(Function* F);

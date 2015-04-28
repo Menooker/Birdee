@@ -100,24 +100,24 @@ void ExStackTrace(DVM_ObjectRef e)
 
 inline ExExceptionItem*  ExTopJumpBuffer()
 {
-	if(curdvm->esp>0)
+	if(curthread->esp>0)
 	{
-		return &(curdvm->estack[curdvm->esp-1]);
+		return &(curthread->estack[curthread->esp-1]);
 	}
 	ExUncaughtException();
 	return 0;
 }
-#define ExPopJumpBuffer() do{curdvm->esp-=1;if(curdvm->esp<0)ExUncaughtException();}while(0)
+#define ExPopJumpBuffer() do{curthread->esp-=1;if(curthread->esp<0)ExUncaughtException();}while(0)
 #define ExEnterTry() setjmp(ExPushJumpBuffer()->buf)
 
 ExJumpBuf*  ExPushJumpBuffer()
 {
-	PExExceptionItem ret=(PExExceptionItem)&curdvm->estack[curdvm->esp];
-	ret->exe=curdvm->current_executable ;
-	ret->ths=curdvm->ths;
-	ret->cur_exception=curdvm->current_exception;
-	ret->asp=curdvm->asp;
-	curdvm->esp+=1;
+	PExExceptionItem ret=(PExExceptionItem)&curthread->estack[curthread->esp];
+	ret->exe=curthread->current_executable ;
+	ret->ths=curthread->ths;
+	ret->cur_exception=curthread->current_exception;
+	ret->asp=curthread->asp;
+	curthread->esp+=1;
 	return &ret->jmpbuf;
 }
 
@@ -160,7 +160,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
     int stack_trace_index;
 
     va_start(ap, id); 
-	if(curdvm->esp <=0)
+	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
 		_BreakPoint();
@@ -203,17 +203,17 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 void ExNullPointerException()
 {
 	BINT index;
-	curdvm->current_exception=ExCreateExceptionEx(curdvm,DVM_NULL_POINTER_EXCEPTION_NAME,&index, NULL_POINTER_ERR, DVM_MESSAGE_ARGUMENT_END);
+	curthread->current_exception=ExCreateExceptionEx(curdvm,DVM_NULL_POINTER_EXCEPTION_NAME,&index, NULL_POINTER_ERR, DVM_MESSAGE_ARGUMENT_END);
 	ExRaiseException(index+1);
 }
 
 extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx);
 void ExUncaughtException()
 {
-	printf("UncaughtException %d\n",curdvm->exception_index);
-	if(curdvm->current_exception.data  && ExDoInstanceOf(&curdvm->current_exception,DVM_search_class(curdvm,"Exceptions","Exception")))
+	printf("UncaughtException %d\n",curthread->exception_index);
+	if(curthread->current_exception.data  && ExDoInstanceOf(&curthread->current_exception,DVM_search_class(curdvm,"Exceptions","Exception")))
 	{
-		printf("%s\n",curdvm->current_exception.v_table->exec_class->name );
+		printf("%s\n",curthread->current_exception.v_table->exec_class->name );
 	}
 
 	_BreakPoint()
@@ -224,35 +224,35 @@ void ExReraiseException()
 {
 
 	PExExceptionItem pit=ExTopJumpBuffer();
-	curdvm->current_executable=(ExecutableEntry*)pit->exe ;
-	curdvm->ths=pit->ths;
-	if(pit->asp>curdvm->asp)
+	curthread->current_executable=(ExecutableEntry*)pit->exe ;
+	curthread->ths=pit->ths;
+	if(pit->asp>curthread->asp)
 	{
 		//bad asp
 		_BreakPoint()
 	}
-	while(pit->asp<curdvm->asp)
+	while(pit->asp<curthread->asp)
 	{
 		AvPopContext();
 	}
 	//curdvm->current_exception =pit->cur_exception;
 	ExJumpBuf mybuf=pit->jmpbuf;
 	ExPopJumpBuffer();
-	longjmp(mybuf.buf ,curdvm->exception_index);
+	longjmp(mybuf.buf ,curthread->exception_index);
 }
 
 void ExRaiseException(BINT eindex)
 {
-	curdvm->exception_index=eindex;
+	curthread->exception_index=eindex;
 	PExExceptionItem pit=ExTopJumpBuffer();
-	curdvm->current_executable=(ExecutableEntry*)pit->exe ;
-	curdvm->ths=pit->ths;
-	if(pit->asp>curdvm->asp)
+	curthread->current_executable=(ExecutableEntry*)pit->exe ;
+	curthread->ths=pit->ths;
+	if(pit->asp>curthread->asp)
 	{
 		//bad asp
 		_BreakPoint()
 	}
-	while(pit->asp<curdvm->asp)
+	while(pit->asp<curthread->asp)
 	{
 		AvPopContext();
 	}
@@ -264,7 +264,7 @@ void ExRaiseException(BINT eindex)
 void ExArrayOutOfBoundException()
 {
 	BINT eindex;
-        curdvm->current_exception  = ExCreateExceptionEx(curdvm, ARRAY_INDEX_EXCEPTION_NAME,&eindex,
+        curthread->current_exception  = ExCreateExceptionEx(curdvm, ARRAY_INDEX_EXCEPTION_NAME,&eindex,
                                    INDEX_OUT_OF_BOUNDS_ERR,
                                    DVM_INT_MESSAGE_ARGUMENT, "index", -1,
                                    DVM_INT_MESSAGE_ARGUMENT, "size",
@@ -302,7 +302,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
     int stack_trace_index;
 
     va_start(ap, id); 
-	if(curdvm->esp <=0)
+	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
 		_BreakPoint();
@@ -316,7 +316,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
 	clsindex=	EXE_search_class(exe->executable , "Exceptions",class_name);
 	
     obj = dvm_create_class_object_i(dvm, class_index);
-	curdvm->current_exception=obj;
+	curthread->current_exception=obj;
 
 
     dvm_format_message(dvm_native_error_message_format, (int)id, &message, ap);

@@ -28,7 +28,7 @@ AcCache Cache[AcHashSize]={0};
 //Check if the array is good to access. May raise an exception
 void ExCheckArray(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index)
 {
-	BINT eindex;
+/*	BINT eindex;
     if (barray.data == NULL) {
         
         dvm->current_exception = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,&eindex,
@@ -47,7 +47,8 @@ void ExCheckArray(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index)
 		ExRaiseException(eindex+1);
         return ;
     }
-
+*/
+	_BreakPoint()
 }
 
 forceinline BINT*  AcGetPtri(DVM_VirtualMachine *dvm,DVM_ObjectRef barray,BINT index)

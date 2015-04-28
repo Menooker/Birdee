@@ -71,7 +71,7 @@ int dvm_wcscmp(wchar_t *s1, wchar_t *s2);
 wchar_t *dvm_wcscat(wchar_t *s1, wchar_t *s2);
 int dvm_mbstowcs_len(const char *src);
 void dvm_mbstowcs(const char *src, wchar_t *dest);
-wchar_t *dvm_mbstowcs_alloc(DVM_VirtualMachine *dvm, const char *src);
+wchar_t *dvm_mbstowcs_alloc(BdThread *dvm, const char *src);
 int dvm_wcstombs_len(const wchar_t *src);
 void dvm_wcstombs_i(const wchar_t *src, char *dest);
 char *dvm_wcstombs_alloc(const wchar_t *src);

@@ -799,7 +799,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
         dvm->top_level = new_entry;
     }
 
-	ExPrepareModule(&executable->module,dvm,new_entry);
+	ExInitThread(dvm->mainvm,&executable->module,ExPrepareModule(&executable->module,dvm,new_entry));
 
     return new_entry;
 }
@@ -807,14 +807,15 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 void
 initialize_constant(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
 {
-    DVM_Executable *exe = ee->executable;
+ /*   DVM_Executable *exe = ee->executable;
 
-    dvm->current_executable = ee;
-    dvm->current_function = NULL;
-    dvm->pc = 0;
+    //dvm->current_executable = ee;
+    //dvm->current_function = NULL;
+    //dvm->pc = 0;
     dvm_expand_stack(dvm, exe->constant_initializer.need_stack_size);
     dvm_execute_i(dvm, NULL, exe->constant_initializer.code,
-                  exe->constant_initializer.code_size, 0);
+                  exe->constant_initializer.code_size, 0);*/
+	//fix-me : urgent! implement this!!
 }
 
 void
@@ -902,23 +903,10 @@ DVM_create_virtual_machine(void)
     DVM_VirtualMachine *dvm;
 	ExInitExeEngine();
     dvm = MEM_malloc(sizeof(DVM_VirtualMachine));
-	dvm->static_str_map=RtlCreateHashmap();
-    dvm->stack.alloc_size = STACK_ALLOC_SIZE+2;
-    dvm->stack.stack = UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
-	dvm->stack.stack_pointer=dvm->stack.stack;
-	dvm->esp=0;
-	dvm->estack=UaGuardAlloc(sizeof(ExExceptionItem)*1024);
-	dvm->asp=0;
-	dvm->avstack=UaGuardAlloc(sizeof(AutoVarContext)*1024);
-    dvm->stack.pointer_flags
-        = MEM_malloc(sizeof(DVM_Boolean) * STACK_ALLOC_SIZE);
-	dvm->stack.flg_sp=dvm->stack.pointer_flags;
     dvm->heap.current_heap_size = 0;
     dvm->heap.header = NULL;
     dvm->heap.current_threshold = HEAP_THRESHOLD_SIZE;
-    dvm->current_executable = NULL;
-    dvm->current_function = NULL;
-    dvm->current_exception = dvm_null_object_ref;
+	dvm->static_str_map=RtlCreateHashmap();
     dvm->function = NULL;
     dvm->function_count = 0;
     dvm->bclass = NULL;
@@ -933,6 +921,7 @@ DVM_create_virtual_machine(void)
     dvm->current_context = NULL;
     dvm->free_context = NULL;
 	dvm->exe_engine=0;
+	dvm->mainvm=ExCreateThread();
     dvm_add_native_functions(dvm);
     set_built_in_methods(dvm);
 

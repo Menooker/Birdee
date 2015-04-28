@@ -254,7 +254,7 @@ DVM_create_array_object(DVM_VirtualMachine *dvm, DVM_Context *context,
 static void
 initialize_fields(DVM_VirtualMachine *dvm, ExecClass *ec, DVM_ObjectRef obj)
 {
-    DVM_Value value;
+    /*DVM_Value value;
 
     value.object = obj;
     dvm_push_object(dvm, value);
@@ -266,7 +266,8 @@ initialize_fields(DVM_VirtualMachine *dvm, ExecClass *ec, DVM_ObjectRef obj)
     dvm_execute_i(dvm, NULL, ec->dvm_class->field_initializer.code,
                   ec->dvm_class->field_initializer.code_size, 0);
 
-    dvm_pop_object(dvm);
+    dvm_pop_object(dvm);*/
+	//fix-me : urgent! init fields
 }
 
 
@@ -436,7 +437,7 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
     ExecutableEntry *ee_pos;
     DVM_Value* j;int i;
     DVM_Context *context_pos;
-
+	BdThread* th;
     for (obj = dvm->heap.header; obj; obj = obj->next) {
         gc_reset_mark(obj);
     }
@@ -449,13 +450,17 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
             }
         }
     }
-
-    for (i = 0,j= dvm->stack.stack; j < dvm->stack.stack_pointer; j++, i++) {
-        if (dvm->stack.pointer_flags[i]) {
-            gc_mark(&j->object);
-        }
-    }
-    gc_mark(&dvm->current_exception);
+	th=dvm->mainvm;
+	while(th)
+	{
+		for (i = 0,j= th->stack.stack; j < th->stack.stack_pointer; j++, i++) {
+			if (th->stack.pointer_flags[i]) {
+				gc_mark(&j->object);
+			}
+		}
+		gc_mark(&th->current_exception);
+		th=th->next;
+	}
     for (context_pos = dvm->current_context; context_pos;
          context_pos = context_pos->next) {
         gc_mark_ref_in_native_method(context_pos);

@@ -15,9 +15,10 @@ extern "C"
 	#include <Windows.h>
 	#define THREAD_ID HANDLE
 	//#define curdvm ((DVM_VirtualMachine*)TlsGetValue(dwTlsIndex))
-	extern  thread_local DVM_VirtualMachine* curdvm;
+	
 	#endif
-
+	extern  thread_local BdThread* curthread;
+	extern 	DVM_VirtualMachine* curdvm;
 	extern DWORD dwTlsIndex; 
 	typedef void (*UaTraceCallBack)(void* param,void* ebp,void* retaddr,void* calladdr);
 	long UaSetBufferUnreadable(void* buf,size_t sz);

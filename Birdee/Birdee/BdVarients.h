@@ -18,7 +18,7 @@ extern "C"
 #endif
 
 
-#define AvGetTopContext() (curdvm->avstack[curdvm->asp -1])
+#define AvGetTopContext() (curthread->avstack[curthread->asp -1])
 void AvPushNullContext();
 void AvPopContext();
 void AvGets();

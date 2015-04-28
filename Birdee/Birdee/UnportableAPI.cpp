@@ -7,7 +7,7 @@
 
 extern "C"
 {
-thread_local DVM_VirtualMachine* curdvm;
+thread_local BdThread* curthread;
 
 #ifdef BD_ON_VC
 #ifdef BD_ON_X86
@@ -67,7 +67,6 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
 		DVM_VirtualMachine_tag* param=(DVM_VirtualMachine_tag*)p;
 		TlsSetValue(dwTlsIndex,param);
-		param->init_fun(param->stack.stack);
 		return 0;
 	}
 

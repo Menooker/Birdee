@@ -731,18 +731,7 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
     return ret;
 }
 
-DVM_Value
-nv_test_native_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                    int arg_count, DVM_Value *args)
-{
-	DVM_Value ret={0};
-    DVM_Value dik_arg;
 
-    dik_arg.int_value = 13;
-    DVM_invoke_delegate(dvm, args[0], &dik_arg);
-
-    return ret;
-}
 
 
 	extern void UaBreakPoint(); //in UnportableAPI.cpp
