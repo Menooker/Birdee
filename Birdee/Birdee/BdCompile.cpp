@@ -114,6 +114,12 @@ BasicBlock* loopblock;
 BasicBlock* finallyblock;
 int isInTry=0;
 
+#ifndef BD_ON_GCC
+	#define THREAD_MODEL GlobalVariable::NotThreadLocal
+#else
+	#define THREAD_MODEL GlobalVariable::ThreadLocalMode::LocalDynamicTLSModel 
+#endif
+
 class BcParameter{
 public:
 	Value* v;
@@ -833,19 +839,19 @@ extern "C" void* BcNewModule(char* name)
 
 	//fix-me : this is an awkward bypass of an LLVM bug on external-linkage TLS variables. Fix me when the llvm bug is fixed (or never).
 	bpc=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
-		ConstPointer(Type::getInt32PtrTy(context)),"bpc",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer(Type::getInt32PtrTy(context)),"bpc",0,THREAD_MODEL,0,true);
 	bei=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
-		ConstPointer(Type::getInt32PtrTy(context)),"bei",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer(Type::getInt32PtrTy(context)),"bei",0,THREAD_MODEL,0,true);
 	beo=new GlobalVariable(*module,TyObjectRef->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
-		ConstPointer((PointerType*)TypStack),"beo",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer((PointerType*)TypStack),"beo",0,THREAD_MODEL,0,true);
 	bsp=new GlobalVariable(*module,TypStack->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
-		ConstPointer(TypStack->getPointerTo()),"bsp",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer(TypStack->getPointerTo()),"bsp",0,THREAD_MODEL,0,true);
 	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context)->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
-		ConstPointer(Type::getInt32PtrTy(context)->getPointerTo()),"arr_sp",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer(Type::getInt32PtrTy(context)->getPointerTo()),"arr_sp",0,THREAD_MODEL,0,true);
 	bretvar=new GlobalVariable(*module,TypStack,true,GlobalValue::WeakAnyLinkage,
-		ConstPointer((PointerType*)TypStack),"retvar",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer((PointerType*)TypStack),"retvar",0,THREAD_MODEL,0,true);
 	pthis=new GlobalVariable(*module,TypStack,true	,GlobalValue::WeakAnyLinkage,
-		ConstPointer((PointerType*)TypStack),"pthis",0,GlobalVariable::NotThreadLocal,0,true);
+		ConstPointer((PointerType*)TypStack),"pthis",0,THREAD_MODEL,0,true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);

@@ -19,8 +19,10 @@ typedef void (*BdVMFunction)(void *args, ...);
 #endif
 #ifdef BD_ON_VC // for MSVC
 	#define forceinline __forceinline
+	#define thread_local __declspec (thread)
 #elif defined BD_ON_GCC // for gcc on Linux/Apple OS X
 	#define forceinline __inline__ __attribute__((always_inline))
+	#define thread_local __thread
 #else
 	#define forceinline
 #endif

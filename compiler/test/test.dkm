@@ -1,27 +1,31 @@
 //1950
 //1386
 //1358
-/*
+//1320
+
 dim a as string="LL"
 
 a=a+"L"
 println(a)
 
 class Ex
-	dim k as int
-	sub llll() 
+	public k as int
+	public sub llll()
 		println(k)
 	end
 end
 
 try
 	Invoke(null,"fab",2)
+	dim ret as int=fab(4)
 	dim e as Ex=new Ex()
+	e.k=ret
 	throw e
 catch Ex err
-
+	err.llll()
+	println("catch")
 end
-*/
+
 function fab(n as int) as int
 	if(n==1 || n==2) then
 		return 1

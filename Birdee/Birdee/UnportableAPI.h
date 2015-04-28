@@ -15,7 +15,7 @@ extern "C"
 	#include <Windows.h>
 	#define THREAD_ID HANDLE
 	//#define curdvm ((DVM_VirtualMachine*)TlsGetValue(dwTlsIndex))
-	extern  __declspec (thread) DVM_VirtualMachine* curdvm;
+	extern  thread_local DVM_VirtualMachine* curdvm;
 	#endif
 
 	extern DWORD dwTlsIndex; 

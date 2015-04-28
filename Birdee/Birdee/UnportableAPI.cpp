@@ -7,7 +7,7 @@
 
 extern "C"
 {
-__declspec (thread) DVM_VirtualMachine* curdvm;
+thread_local DVM_VirtualMachine* curdvm;
 
 #ifdef BD_ON_VC
 #ifdef BD_ON_X86

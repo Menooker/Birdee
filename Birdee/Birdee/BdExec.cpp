@@ -59,8 +59,8 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 #define is_null_pointer(obj) (((obj)->data == NULL))
 
 #include "UnportableAPI.h"
-extern "C"  __declspec (thread) DVM_VirtualMachine* curdvm;
-__declspec (thread) int* cur_prep_regs[8]; // current dvm for ExPrepareModule
+extern "C"  thread_local DVM_VirtualMachine* curdvm;
+thread_local int* cur_prep_regs[8]; // current dvm for ExPrepareModule
 extern "C" void ExLoadFunction(void* args,...)
 {
 	va_list pvar;
