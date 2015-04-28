@@ -7,6 +7,7 @@ extern "C"{
 }
 
 #define ConstInt(bit,i) ConstantInt::get(Type::getInt32Ty(context),APInt(bit,i))
+#define ConstPointer(ty) llvm::ConstantPointerNull::get(ty)
 
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/Verifier.h"
@@ -102,7 +103,7 @@ GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
 GlobalVariable* beo;//exception obj //fix-me : release it!
 GlobalVariable* bsp;//stack top index //fix-me : release it!
-GlobalVariable* arr_sp;//stack base pointer //fix-me : release it!
+GlobalVariable* arr_sp;//arr of object booleans //fix-me : release it!
 //GlobalVariable* arr_is_pointer;//stack_value pointer indecator array //fix-me : release it!
 GlobalVariable* bretvar;//return value//fix-me : release it!
 GlobalVariable* pstatic;//static values//fix-me : release it!
@@ -344,7 +345,7 @@ void BcSwitchContext(Module* M,Type* t)
 	bsp=M->getGlobalVariable("bsp");
 	arr_sp=M->getGlobalVariable("arr_sp");
 	//arr_is_pointer=M->getGlobalVariable("arr_is_pointer");
-	bretvar=M->getGlobalVariable("bretvar");
+	bretvar=M->getGlobalVariable("retvar");
 	pstatic=M->getGlobalVariable("pstatic");
 	pthis=M->getGlobalVariable("pthis");
 }
@@ -371,10 +372,14 @@ Function* BcBuildPopImp()
 	fPop->addFnAttr(llvm::Attribute::AlwaysInline);
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fPop);
 	SwitchBlock(BB);
-	Value* vbsp=builder.CreateLoad(bsp);
-	Value* pp=builder.CreateLoad(vbsp);
-	Value* p1=builder.CreateGEP(pp,builder.CreateSub(zero,fPop->arg_begin()));
-	builder.CreateStore(p1,vbsp,true);
+	Value* pbsp=builder.CreateLoad(bsp);
+	Value* parr=builder.CreateLoad(arr_sp);
+	Value* vbsp=builder.CreateLoad(pbsp);
+	Value* varr=builder.CreateLoad(parr);
+
+	Value* popcnt=builder.CreateSub(zero,fPop->arg_begin());
+	builder.CreateStore(builder.CreateGEP(vbsp,popcnt),pbsp,true);
+	builder.CreateStore(builder.CreateGEP(varr,popcnt),parr,true);
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);
 	return fPop;
@@ -500,6 +505,8 @@ void BcBuildFldPtr(Type* ty)
 	return ;
 }
 
+
+
 void BcBuildArrPtr(Type* ty)
 {
 	BcGetCurrentCompilerContext()->FunctionUse[FunArrAddr]=1;
@@ -593,6 +600,37 @@ Function* BcBuildPush(char* name,int isptr,Type* ty)
 
 	return fret;
 }
+
+void BcBuildGetReg(Value* v,int index,Function* fGetReg)
+{
+	builder.CreateStore(builder.CreateBitCast(builder.CreateCall(fGetReg,ConstInt(32,index)),v->getType()->getPointerElementType()),v);
+}
+
+Function* BcBuildRegInit()
+{
+	std::vector<Type*> Args2(1,Type::getInt32Ty(context));
+	FunctionType* FT8 = FunctionType::get(Type::getInt32PtrTy(context),Args2,false);
+	Function* fGetReg=Function::Create(FT8, Function::ExternalLinkage,"system!GetReg", module);
+
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	FT8 = FunctionType::get(Type::getVoidTy(context),false);
+	Function* fret=Function::Create(FT8, Function::ExternalLinkage,"system!RegInit", module);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
+	SwitchBlock(BB);
+
+	BcBuildGetReg(bpc,0,fGetReg);
+	BcBuildGetReg(bei,1,fGetReg);
+	BcBuildGetReg(beo,2,fGetReg);
+	BcBuildGetReg(bsp,3,fGetReg);
+	BcBuildGetReg(arr_sp,4,fGetReg);
+	BcBuildGetReg(bretvar,5,fGetReg);
+	BcBuildGetReg(pthis,6,fGetReg);
+
+	builder.CreateRetVoid();
+	builder.restoreIP(IP);
+	return fret;
+}
+
 Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
@@ -603,14 +641,16 @@ Function* BcBuildPushImp(char* name,int isptr,Type* ty)
 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
 	SwitchBlock(BB);
 
-	Value* vbsp=builder.CreateLoad(bsp);
-	Value* varr=builder.CreateLoad(arr_sp);
+	Value* pbsp=builder.CreateLoad(bsp);
+	Value* parr=builder.CreateLoad(arr_sp);
+	Value* vbsp=builder.CreateLoad(pbsp);
+	Value* varr=builder.CreateLoad(parr);
 	//Value* varr=builder.CreateLoad(arr_is_pointer);
 	builder.CreateStore(ConstInt(32,isptr),varr);
 	Value* re=builder.CreateBitCast(vbsp,ty->getPointerTo());
 	builder.CreateStore(fret->arg_begin(),re);
-	builder.CreateStore(builder.CreateGEP(vbsp,ConstantInt::get(context,APInt(32,1))),bsp);
-	builder.CreateStore(builder.CreateGEP(varr,ConstantInt::get(context,APInt(32,1))),arr_sp);
+	builder.CreateStore(builder.CreateGEP(vbsp,ConstantInt::get(context,APInt(32,1))),pbsp);
+	builder.CreateStore(builder.CreateGEP(varr,ConstantInt::get(context,APInt(32,1))),parr);
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);
 	return fret;
@@ -781,15 +821,32 @@ extern "C" void* BcNewModule(char* name)
 	fBoolToStr = Function::Create(FT4, Function::ExternalLinkage,"system!BoolToStr", module);
 
 	//FunStoreStaicSwitch[0]=fStoreStaticInt;FunStoreStaicSwitch[1]=fStoreStaticDouble;FunStoreStaicSwitch[2]=fStoreStaticString;
-	bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");
+	/*bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");
 	beo=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"beo");
 	bsp=new GlobalVariable(*module,TypStack,false,GlobalValue::ExternalLinkage ,0,"bsp");//bsp->setInitializer((Constant*)zero);
 	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_sp");
 	bretvar=new GlobalVariable(*module,TyObjectRef,false,GlobalValue::ExternalLinkage,0,"retvar");
 	pthis=new GlobalVariable(*module,TyObjectRef,false	,GlobalValue::ExternalLinkage,0,"pthis");
-	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");
+	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic");*/
 	//arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");
+
+	//fix-me : this is an awkward bypass of an LLVM bug on external-linkage TLS variables. Fix me when the llvm bug is fixed (or never).
+	bpc=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
+		ConstPointer(Type::getInt32PtrTy(context)),"bpc",0,GlobalVariable::NotThreadLocal,0,true);
+	bei=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
+		ConstPointer(Type::getInt32PtrTy(context)),"bei",0,GlobalVariable::NotThreadLocal,0,true);
+	beo=new GlobalVariable(*module,TyObjectRef->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+		ConstPointer((PointerType*)TypStack),"beo",0,GlobalVariable::NotThreadLocal,0,true);
+	bsp=new GlobalVariable(*module,TypStack->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+		ConstPointer(TypStack->getPointerTo()),"bsp",0,GlobalVariable::NotThreadLocal,0,true);
+	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context)->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+		ConstPointer(Type::getInt32PtrTy(context)->getPointerTo()),"arr_sp",0,GlobalVariable::NotThreadLocal,0,true);
+	bretvar=new GlobalVariable(*module,TypStack,true,GlobalValue::WeakAnyLinkage,
+		ConstPointer((PointerType*)TypStack),"retvar",0,GlobalVariable::NotThreadLocal,0,true);
+	pthis=new GlobalVariable(*module,TypStack,true	,GlobalValue::WeakAnyLinkage,
+		ConstPointer((PointerType*)TypStack),"pthis",0,GlobalVariable::NotThreadLocal,0,true);
+	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	fInvoke = Function::Create(FTInvoke, Function::ExternalLinkage,"system!Invoke", module);
@@ -1022,11 +1079,11 @@ Value* BcGenerateBinaryExpressionEx(DVM_Executable *exe, Block *block,Expression
 		case DIV_EXPRESSION:
 		case MOD_EXPRESSION:
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunAddVar+kind-ADD_EXPRESSION));
-			return builder.CreateLoad(bretvar);
+			return builder.CreateLoad(builder.CreateLoad(bretvar));
 			break;
 		}
 		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunCmpVar));
-		Value* result=builder.CreateLoad(builder.CreateBitCast(bretvar,Type::getInt32PtrTy(context)));
+		Value* result=builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),Type::getInt32PtrTy(context)));
 		switch(kind)
 		{
 		case EQ_EXPRESSION:
@@ -1168,19 +1225,22 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 		popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
 	}
     Value* obj= BcGenerateExpression(exe, block,fce->function->u.member_expression.expression);
-	Value* oldthis=builder.CreateLoad(pthis);
-	builder.CreateStore(obj,pthis);
+	Value* _pthis=builder.CreateLoad(pthis);
+	Value* oldthis=builder.CreateLoad(_pthis);
+	builder.CreateStore(obj,_pthis);
 	if(popcnt)
-		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register //fix-me : no need for bpc?
+		builder.CreateStore(ConstInt(32,popcnt),builder.CreateLoad(bpc)); //set param_count register //fix-me : no need for bpc?
 	builder.CreateCall(fCall,ConstInt(32,method_index));
-	builder.CreateStore(oldthis,pthis);
+	builder.CreateStore(oldthis,_pthis);
 	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt && !isBuiltInMethod)
 	{
-		builder.CreateStore(bsp,builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt))); //bsp += ....
+		_BreakPoint() //check-me
+		builder.CreateCall(GetPop(),ConstInt(32,popcnt));
+		//builder.CreateStore(bsp,builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt))); //bsp += ....
 	}
 	if(fce->function->type->basic_type!=DVM_VOID_TYPE) //
-		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset3(expr->type->basic_type )]));//check-me : get_opcode_type_offset???
+		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[get_opcode_type_offset3(expr->type->basic_type )]));//check-me : get_opcode_type_offset???
 	else
 		return 0;
     //generate_code(ob, expr->line_number, DVM_PUSH_METHOD, method_index);
@@ -1218,7 +1278,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	std::vector<Value*> md(1,ConstInt(32,expr->line_number));
 
 	if(popcnt)
-		builder.CreateStore(ConstInt(32,popcnt),bpc); //set param_count register
+		builder.CreateStore(ConstInt(32,popcnt),builder.CreateLoad(bpc)); //set param_count register
 
 	//fid->getType()->dump();
 	if(isDele)
@@ -1231,13 +1291,14 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt)
 	{
-		Value* newsp=builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt));
-		builder.CreateStore(newsp,bsp); //bsp += ....
+		builder.CreateCall(GetPop(),ConstInt(32,popcnt));
+		//Value* newsp=builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt));
+		//builder.CreateStore(newsp,bsp); //bsp += ....
 	}
 	if(rtype->basic_type==DVM_BOOLEAN_TYPE)
-		return builder.CreateIsNotNull(builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset(rtype)])));
+		return builder.CreateIsNotNull(builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[get_opcode_type_offset(rtype)])));
 	if(rtype->basic_type!=DVM_VOID_TYPE) //
-		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[get_opcode_type_offset(rtype)]));
+		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[get_opcode_type_offset(rtype)]));
 	else
 		return 0;
 
@@ -1534,7 +1595,7 @@ Value* BcGenerateIncDecExpression(DVM_Executable *exe, Block *block,Expression *
 	{
 		builder.CreateCall(GetPush(2),v);
 		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunVarInt));
-		v=builder.CreateLoad(builder.CreatePointerCast(bretvar,Type::getInt32PtrTy(context)));
+		v=builder.CreateLoad(builder.CreatePointerCast(builder.CreateLoad(bretvar),Type::getInt32PtrTy(context)));
 	}
 	Value* retv;
     if (kind == INCREMENT_EXPRESSION) {
@@ -1590,7 +1651,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 	case VAR_TO_STRING_CAST:
 		builder.CreateCall(GetPush(2),v);
 		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunVarInt+(expr->u.cast.type-VAR_TO_INT_CAST)));
-		return builder.CreateLoad(builder.CreateBitCast(bretvar,TypeSwitch[expr->u.cast.type-VAR_TO_INT_CAST]));
+		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[expr->u.cast.type-VAR_TO_INT_CAST]));
 		break;
     case ENUM_TO_STRING_CAST:
 		_BreakPoint() //fix-me : not implemented
@@ -1760,7 +1821,7 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 
 Value* BcGenerateThisExpression(DVM_Executable *exe, Block *block,Expression *expr)
 {
-    return builder.CreateLoad(pthis);
+	return builder.CreateLoad(builder.CreateLoad(pthis));
 }
 
 Value* BcGenerateNull(DVM_Executable *exe, Expression *expr)
@@ -1770,7 +1831,7 @@ Value* BcGenerateNull(DVM_Executable *exe, Expression *expr)
 
 Value* BcGenerateSuper(DVM_Executable *exe, Block *block,Expression *expr)
 {
-    builder.CreateCall(GetPush(2),builder.CreateLoad(pthis));
+    builder.CreateCall(GetPush(2),builder.CreateLoad(builder.CreateLoad(pthis)));
 	return builder.CreateCall(fGetSuper);
 }
 
@@ -2068,7 +2129,7 @@ void BcGenerateReturnStatement(DVM_Executable *exe, Block *block,Statement *stat
 		builder.CreateCall(fLeaveTry);
     Value* v=BcGenerateExpression(exe, block, statement->u.return_s.return_value);
 	//printf("%d",v->getType()->getTypeID());
-	builder.CreateStore(v,builder.CreateBitCast(bretvar,v->getType()->getPointerTo()));
+	builder.CreateStore(v,builder.CreateBitCast(builder.CreateLoad(bretvar),v->getType()->getPointerTo()));
 	builder.CreateRetVoid();
 	//BasicBlock* bcon=BasicBlock::Create(context,"dummy",curfun);
 	//SwitchBlock(bcon);
@@ -2117,8 +2178,8 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	BasicBlock *bcont = BasicBlock::Create(context,"conti",curfun);//fix-me : may be improved
 	BasicBlock *bcatch;
 
-
-	Value* oldsp=builder.CreateLoad(bsp);
+	Value* pbsp=builder.CreateLoad(bsp);
+	Value* oldsp=builder.CreateLoad(pbsp);
 
 	Value* pIsNor=builder.CreateAlloca(Type::getInt1Ty(context) );
 	builder.CreateStore(ConstantInt::get(Type::getInt1Ty(context),APInt(1,0)),pIsNor);
@@ -2136,10 +2197,10 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 		bcatch=BasicBlock::Create(context,StringRef("catch"),curfun,bnor);
 		sw->addCase((ConstantInt*)ConstInt(32,catch_pos->type->u.class_ref.class_index+1),bcatch);
 		SwitchBlock(bcatch);
-		Value* excep=builder.CreateLoad(beo);
+		Value* excep=builder.CreateLoad(builder.CreateLoad(beo));
         BcGenerateSaveToIdentifier(catch_pos->variable_declaration,excep,catch_pos->line_number,-1);
         BcGenerateBlock(exe, catch_pos->block,catch_pos->block->statement_list, bcatch);
-        builder.CreateStore(oldsp,bsp);
+        builder.CreateStore(oldsp,pbsp);
 		builder.CreateBr(bnor);
 
     }
@@ -2181,8 +2242,8 @@ void BcGenerateThrowStatement(DVM_Executable *exe, Block *block,Statement *state
 	Value* v;
     if (statement->u.throw_s.exception) {
         v = BcGenerateExpression(exe, block, statement->u.throw_s.exception);
-		builder.CreateStore(zero,bei);
-		builder.CreateStore(v,beo);
+		builder.CreateStore(zero,builder.CreateLoad(bei));
+		builder.CreateStore(v,builder.CreateLoad(beo));
 		builder.CreateCall (fRaise,ConstInt(32,statement->u.throw_s.exception->type->u.class_ref.class_index+1));
         //generate_code(ob, statement->line_number, DVM_THROW);
     } else {
@@ -2552,7 +2613,7 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
                 builder.CreateCall(FldPut[get_opcode_type_offset(member_pos->u.field.type)],arg);*/
 				int mty=get_opcode_type_offset(member_pos->u.field.type); //fix-me : code size optmization here
 				Value* vv=BcGenerateExpression(exe, NULL, member_pos->u.field.initializer);
-				Value* obj=builder.CreateLoad(pthis);
+				Value* obj=builder.CreateLoad(builder.CreateLoad(pthis));
 				Value* fld=builder.CreateCall(GetFldAddr(),obj);
 				fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member_pos->u.field.field_index)),TypeSwitch[mty]);
 				builder.CreateStore(v,fld);

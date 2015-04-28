@@ -1,7 +1,25 @@
 //1950
 //1386
+
 dim a as string="LL"
-println(a+"l")
+
+a=a+"L"
+println(a)
+
+class Ex
+	dim k as int
+	sub llll() 
+		println(k)
+	end
+end
+
+try
+	Invoke(null,"fab",2)
+	dim e as Ex=new Ex()
+	throw e
+catch Ex err
+
+end
 
 function fab(n as int) as int
 	if(n==1 || n==2) then

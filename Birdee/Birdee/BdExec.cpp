@@ -36,6 +36,7 @@ llvm::Function* BcBuildArrPtrImp(llvm::Type *);
 llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
 llvm::Function* BcBuildPushImp(char* name,int isptr,Type* ty);
 llvm::Function* BcBuildPopImp();
+llvm::Function* BcBuildRegInit();
 void BcSwitchContext(Module* M,Type* t);
 
 
@@ -58,8 +59,8 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 #define is_null_pointer(obj) (((obj)->data == NULL))
 
 #include "UnportableAPI.h"
-
-
+extern "C"  __declspec (thread) DVM_VirtualMachine* curdvm;
+__declspec (thread) int* cur_prep_regs[8]; // current dvm for ExPrepareModule
 extern "C" void ExLoadFunction(void* args,...)
 {
 	va_list pvar;
@@ -917,11 +918,20 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 //*/
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
 
+int* ExGetReg(BINT i)
+{
+	return cur_prep_regs[i];
+}
+
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
 	//if(ee->executable->is_required)
 	//	return 0;
 	Module* m=(Module*)mod->mod;
+	cur_prep_regs[0]=(int*)&dvm->bpc;                 cur_prep_regs[1]=(int*)&dvm->exception_index;
+	cur_prep_regs[2]=(int*)&dvm->current_exception;  cur_prep_regs[3]=(int*)&dvm->stack.stack_pointer;
+	cur_prep_regs[4]=(int*)&dvm->stack.flg_sp;       cur_prep_regs[5]=(int*)&dvm->retvar;
+	cur_prep_regs[6]=(int*)&dvm->ths;
 
 	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 
@@ -940,7 +950,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
 	
-	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
+/*	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
 	vglobal=m->getGlobalVariable("bei");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->exception_index ));
@@ -952,18 +962,20 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack));
 	vglobal=m->getGlobalVariable("arr_sp");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.flg_sp));
-
-
 	vglobal=m->getGlobalVariable("retvar");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->retvar));
-	vglobal=m->getGlobalVariable("pstatic");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
-	vglobal=m->getGlobalVariable("pthis");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));
 
-	//sys::DynamicLibrary::AddSymbol("arr_is_pointer",&(dvm->stack.pointer_flags));
+	vglobal=m->getGlobalVariable("pthis");
+	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));*/
+
+	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
+	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
 
 	Function *f; //fix-me : For MCJIT ,TheExecutionEngine->addGlobalMapping is not needed
+	f=m->getFunction("system!GetReg");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExGetReg);
+	MCJIT->addGlobalMapping("system!GetReg",(void*)ExGetReg);
+
 	f=m->getFunction("string!LoadStringFromPool");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExLoadStringFromPool);
 	MCJIT->addGlobalMapping("string!LoadStringFromPool",(void*)ExLoadStringFromPool);
@@ -1090,7 +1102,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	InitOptimizer(*pm,TheExecutionEngine,m);
 	delete pm; 
 
-
+	void(*RegInit)();
+	RegInit=(void(*)())TheExecutionEngine->getPointerToFunction(m->getFunction("system!RegInit"));
+	RegInit();
 	return TheExecutionEngine;
 }
 
@@ -1133,7 +1147,7 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
 
 	
-	Type* TyO=m->getGlobalVariable("bsp")->getType()->getPointerElementType()->getPointerElementType();
+	Type* TyO=m->getGlobalVariable("bsp")->getType()->getPointerElementType()->getPointerElementType()->getPointerElementType();
 	//TyO->dump();
 	BcSwitchContext(m,TyO);
 	Function* f;
@@ -1172,4 +1186,5 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	{
 		replaceAllUsesWith(f,BcBuildPopImp());
 	}
+	BcBuildRegInit();
 }
