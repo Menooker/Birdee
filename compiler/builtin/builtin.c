@@ -8,6 +8,8 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"declare sub BreakPoint()\n",
 	"declare function GetClock() as int\n",
 	"declare function gets() as string\n",
+	"delegate thread_proc() as int\n",
+	"declare function CreateThread(proc as thread_proc) as int\n",
     "sub println(str as string) \n",
     "    print(str )\n",
 	"	print( \"\\n\")\n",

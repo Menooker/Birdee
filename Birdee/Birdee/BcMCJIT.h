@@ -81,7 +81,7 @@ public:
 
   }
   ~MCJITHelper();
-	ExecutionEngine* MCJITHelper::getEngine(Module* m)
+	ExecutionEngine* getEngine(Module* m)
 	{
 		return this->EngineMap[m];
 	}
@@ -97,16 +97,18 @@ public:
   void addGlobalMapping(const std::string& Name,void*);
 
   ExecutionEngine *compileModule(Module *M);
-
-private:
   typedef std::vector<Module*> ModuleVector;
+  ModuleVector  Modules;
+  std::map<Module *, ExecutionEngine *> EngineMap;
+private:
+
   bool mUseMC;
  // MCJITObjectCache OurObjectCache;
   ExecutionEngine* EE;
   //LLVMContext  &Context;
-  ModuleVector  Modules;
+
   std::map<std::string, void *> GlobalMap;
-  std::map<Module *, ExecutionEngine *> EngineMap;
+
 
   Module       *CurrentModule;
 };

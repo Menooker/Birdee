@@ -287,7 +287,10 @@ struct _BdThread {
 	BINT				esp;
 	PAutoVarContext     avstack;
 	BINT				asp;
+	void*				tid;
+	BINT				main;
 	struct _BdThread* next;
+	struct _BdThread* prv;
 };
 struct DVM_VirtualMachine_tag {
 

@@ -799,7 +799,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
         dvm->top_level = new_entry;
     }
 
-	ExInitThread(dvm->mainvm,&executable->module,ExPrepareModule(&executable->module,dvm,new_entry));
+	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
 
     return new_entry;
 }
@@ -922,6 +922,7 @@ DVM_create_virtual_machine(void)
     dvm->free_context = NULL;
 	dvm->exe_engine=0;
 	dvm->mainvm=ExCreateThread();
+	ExInitRegArray(dvm->mainvm);
     dvm_add_native_functions(dvm);
     set_built_in_methods(dvm);
 

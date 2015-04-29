@@ -835,7 +835,8 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
                                src->type->derive->u.function_d.parameter_list,
                                src->type->derive->u.function_d.throws);
         cast_expr = alloc_cast_expression(FUNCTION_TO_DELEGATE_CAST, src);
-        cast_expr->type = dele_type;
+		*dele_type = *(dest); //modified
+        cast_expr->type = dele_type; //here is a bug of original codes. cast should return the dest's type
         return cast_expr;
     }
 

@@ -17,7 +17,7 @@ extern "C"
 #define BD_FLOOR(a,b) (a/b+ (a%b ? 1:0))
 //#define JUMPBUF_CNT (BD_FLOOR(sizeof(ExJumpBuf),sizeof(DVM_Value)))
 extern void ExCall(BINT index);
-extern void ExDoInvoke(BINT index);
+extern "C" void ExDoInvoke(BINT index);
 
 extern "C"
 {

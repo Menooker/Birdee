@@ -26,7 +26,9 @@ extern "C"
 	void* UaGuardAlloc(size_t sz);
 	void UaGuardFree(void* p);
 	void  UaStackTrace(UaTraceCallBack cb,void* param);
-	THREAD_ID UaCreateThread(DVM_VirtualMachine* vm);
+	THREAD_ID UaCreateThread(BdThread* vm,int go);
+	THREAD_ID UaGetCurrentThread();
+	void UaStopThread(THREAD_ID t);
 	void UaSetCurVM(DVM_VirtualMachine* vm);
 	void UaInitTls();
 

@@ -114,11 +114,10 @@ BasicBlock* loopblock;
 BasicBlock* finallyblock;
 int isInTry=0;
 
-#ifndef BD_ON_GCC
-	#define THREAD_MODEL GlobalVariable::NotThreadLocal
-#else
-	#define THREAD_MODEL GlobalVariable::ThreadLocalMode::LocalDynamicTLSModel 
-#endif
+
+
+#define THREAD_MODEL GlobalVariable::LocalDynamicTLSModel
+
 
 class BcParameter{
 public:
@@ -340,20 +339,24 @@ int BcBinaryExpressionType(Expression *left, Expression *right,int code)
 
     return offset;
 }
-
+#ifndef BD_ON_GCC
+#define SetThreadLocal(n) n->setThreadLocal(false)
+#else
+#define SetThreadLocal(n)
+#endif
 void BcSwitchContext(Module* M,Type* t)
 {
 	TyObjectRef=(llvm::StructType*)t;
 	module=M;
-	bpc=M->getGlobalVariable("bpc");
-	bei=M->getGlobalVariable("bei");
-	beo=M->getGlobalVariable("beo");
-	bsp=M->getGlobalVariable("bsp");
-	arr_sp=M->getGlobalVariable("arr_sp");
+	bpc=M->getGlobalVariable("bpc");SetThreadLocal(bpc);
+	bei=M->getGlobalVariable("bei");SetThreadLocal(bei);
+	beo=M->getGlobalVariable("beo");SetThreadLocal(beo);
+	bsp=M->getGlobalVariable("bsp");SetThreadLocal(bsp);
+	arr_sp=M->getGlobalVariable("arr_sp");SetThreadLocal(arr_sp);
 	//arr_is_pointer=M->getGlobalVariable("arr_is_pointer");
-	bretvar=M->getGlobalVariable("retvar");
+	bretvar=M->getGlobalVariable("retvar");SetThreadLocal(bretvar);
 	pstatic=M->getGlobalVariable("pstatic");
-	pthis=M->getGlobalVariable("pthis");
+	pthis=M->getGlobalVariable("pthis");SetThreadLocal(pthis);
 }
 
 void BcBuildPop()
@@ -1207,6 +1210,8 @@ int BcGeneratePushArgument(DVM_Executable *exe, Block *block,ArgumentList *arg_l
 	{
 		Value* v=BcGenerateExpression(exe,block,stk.top());
 		v=BcBitToInt(v);
+		v->getType()->dump();
+		int a=get_opcode_type_offset(stk.top()->type);
 		builder.CreateCall(GetPush(get_opcode_type_offset(stk.top()->type)),v);
 		stk.pop();
 	}

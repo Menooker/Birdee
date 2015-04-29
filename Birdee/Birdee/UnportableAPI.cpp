@@ -63,11 +63,21 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		}
 	}
 
+	extern void ThThreadStub(BdThread*);
 	DWORD __stdcall UaThreadStub(PVOID p)
 	{
-		DVM_VirtualMachine_tag* param=(DVM_VirtualMachine_tag*)p;
-		TlsSetValue(dwTlsIndex,param);
+		ThThreadStub((BdThread*)p);
 		return 0;
+	}
+
+	THREAD_ID UaGetCurrentThread()
+	{
+		return GetCurrentThread();
+	}
+
+	void UaStopThread(THREAD_ID t)
+	{
+		TerminateThread(t,0);
 	}
 
 	void UaSetCurVM(DVM_VirtualMachine_tag* vm)
@@ -76,9 +86,9 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		//TlsSetValue(dwTlsIndex,vm);
 	}
 
-	THREAD_ID UaCreateThread(DVM_VirtualMachine_tag* vm)
+	THREAD_ID UaCreateThread(BdThread* vm,int go)
 	{
-		HANDLE h=CreateThread(0,0,UaThreadStub,vm,0,0);
+		HANDLE h=CreateThread(0,0,UaThreadStub,vm,go?0:CREATE_SUSPENDED,0);
 		return h;
 	}
 

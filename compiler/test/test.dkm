@@ -3,10 +3,20 @@
 //1358
 //1320
 
-dim a as string="LL"
+delegate dele_k() as int
 
-a=a+"L"
-println(a)
+sub go(k as dele_k)
+	println(k())
+end
+
+function f1() as int
+	println("thread!!!")
+	println(fab(33))
+	return 1
+end
+
+CreateThread(f1)
+
 
 class Ex
 	public k as int
@@ -35,4 +45,5 @@ end
 dim t as int=GetClock()
 println(fab(33))
 println(GetClock()-t)
+
 

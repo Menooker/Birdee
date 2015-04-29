@@ -159,6 +159,9 @@
     <ClInclude Include="hash_compatible.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BdThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
@@ -291,6 +294,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\compiler\fix_tree.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdThread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

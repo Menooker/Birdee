@@ -318,7 +318,7 @@ void ExGetClock(DVM_Value* v)
 }
 
 
-void  ExDoInvoke(BINT transindex)
+extern "C" void  ExDoInvoke(BINT transindex)
 {
 	DVM_Value* oldsp=curthread->stack.stack_pointer;
 	DVM_Boolean* old_arrsp=curthread->stack.flg_sp;
@@ -589,7 +589,10 @@ extern "C" BdThread* ExCreateThread()
 
     th->current_executable = NULL;
     th->current_exception = dvm_null_object_ref;
+	th->main=NULL;
 	th->next=NULL;
+	th->tid=NULL;
+	th->prv=NULL;
 	return th;
 }
 
@@ -611,8 +614,16 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 	//curdvm=dvm;
 }
 
-	extern "C" int hit;
-	extern "C" int miss;
+void ExStopAllThreads()
+{
+	BdThread* t=curdvm->mainvm->next;
+	while(t)
+	{
+		UaStopThread(t->tid);
+		t=t->next;
+	}
+}
+
 extern "C" void ExGoMain()
 {
 
@@ -624,8 +635,8 @@ extern "C" void ExGoMain()
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curthread->stack.stack);
-	//m->dump();
-	printf("h=%d m=%d",hit,miss);
+	ExStopAllThreads();
+	_BreakPoint()
 }
 
 
@@ -959,18 +970,46 @@ int* ExGetReg(BINT i)
 	return cur_prep_regs[i];
 }
 
-extern "C" void ExInitThread(BdThread* t,struct LLVM_Data* mod,void* eng)
+extern "C" void ExInitRegArray(BdThread* t)
 {
 	cur_prep_regs[0]=(int*)&t->bpc;                 cur_prep_regs[1]=(int*)&t->exception_index;
 	cur_prep_regs[2]=(int*)&t->current_exception;  cur_prep_regs[3]=(int*)&t->stack.stack_pointer;
 	cur_prep_regs[4]=(int*)&t->stack.flg_sp;       cur_prep_regs[5]=(int*)&t->retvar;
 	cur_prep_regs[6]=(int*)&t->ths;
-	Module* m=(Module*)mod->mod;
+}
+
+//Init thread's reg in one module.
+extern "C" void ExInitThread(BdThread* t,void* mod,void* eng)
+{
+
+	Module* m=(Module*)mod;
 	ExecutionEngine* e=(ExecutionEngine*)eng;
 	void(*RegInit)();
 	RegInit=(void(*)())e->getPointerToFunction(m->getFunction("system!RegInit"));
 	RegInit();
 }
+
+//Init thread's reg in all modules. Used in threads other than the main thread
+//should be called in the new thread
+extern "C" void ExInitThreadInAllModules()
+{
+	ExInitRegArray(curthread);
+	MCJITHelper* MCJIT=(MCJITHelper*) curdvm->exe_engine;
+	MCJITHelper::ModuleVector::iterator it, end;
+	for (it = MCJIT->Modules.begin(), end = MCJIT->Modules.end();it != end; ++it) {
+		std::map<Module*, ExecutionEngine*>::iterator mapIt = MCJIT->EngineMap.find(*it);
+		if (mapIt != MCJIT->EngineMap.end())
+		{
+			ExInitThread(curthread,mapIt->first,mapIt->second);
+		}
+		else
+		{
+			_BreakPoint()
+		}
+	}
+}
+
+
 
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
