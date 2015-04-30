@@ -119,7 +119,7 @@ DVM_ObjectRef ExGetSuper()
 void ExArraySize(DVM_Value *args)
 {
     DVM_Object *barray;
-    barray = curthread->ths.data ;
+    barray = args->object.data ;
     DBG_assert(barray->type == ARRAY_OBJECT, ("barray->type..%d", barray->type));
 
     curthread->retvar.int_value = barray->u.barray.size;
@@ -128,7 +128,7 @@ void ExArraySize(DVM_Value *args)
 void ExStringLength(DVM_Value *args)
 {
     DVM_Object *barray;
-    barray = curthread->ths.data ;
+    barray = args->object.data ;
     DBG_assert(barray->type == STRING_OBJECT, ("barray->type..%d", barray->type));
     curthread->retvar.int_value = barray->u.string.length;
 
@@ -145,7 +145,7 @@ void ExStringSubstr(DVM_Value *args)
 
     pos = args[1].int_value;
     len = args[0].int_value;
-    str = curthread->ths.data;
+    str = args[2].object.data;
     DBG_assert(str->type == STRING_OBJECT,
                ("str->type..%d", str->type));
 
@@ -337,16 +337,17 @@ extern "C" void  ExDoInvoke(BINT transindex)
 	ExecutableEntry * ee=curthread->current_executable;
     if(bf->u.diksam_f.executable)
 		curthread->current_executable = bf->u.diksam_f.executable;
-/*    if (bf->is_method) {
+    if (bf->is_method) {
         base--; // for this
-    }*/
+		old_arrsp--;
+    }
 
 	curthread->stack.stack_pointer += bf->local_cnt ;	curthread->stack.flg_sp+=bf->local_cnt ;
     BcInitLocalVar(curthread,curdvm, bf,((char*)oldsp-(char*)curthread->stack.stack)/sizeof(DVM_Value));
 	AvPushNullContext();
 	bf->pfun(base,transindex);
 	AvPopContext();
-	curthread->stack.stack_pointer=oldsp - bf->param_cnt; curthread->stack.flg_sp=old_arrsp - bf->param_cnt;
+	curthread->stack.stack_pointer=base; curthread->stack.flg_sp=old_arrsp - bf->param_cnt;
 	curthread->current_executable=ee;
 }
 
@@ -553,7 +554,7 @@ void ExInvoke(BINT index)
 void ExCall(BINT index)
 {
 	int rindex=0;
-            DVM_ObjectRef obj = curthread->ths ;
+	DVM_ObjectRef obj = (curthread->stack.stack_pointer-1)->object ;
             if (is_null_pointer(&obj)) {
                 ExNullPointerException();
 
@@ -874,10 +875,10 @@ DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
 {
 	int class_index = curthread->current_executable->class_table[idx_in_exe];
     DVM_ObjectRef ret= dvm_create_class_object_i(curdvm, class_index);
-	DVM_ObjectRef oldthis=curthread->ths;
-	curthread->ths=ret;
+	curthread->stack.stack_pointer->object=ret;
+	*curthread->stack.flg_sp=DVM_TRUE;
+	curthread->stack.stack_pointer++; curthread->stack.flg_sp++;
 	ExCall(methodid);
-	curthread->ths=oldthis;
 	return ret;
 }
 

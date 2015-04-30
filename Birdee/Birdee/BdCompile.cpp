@@ -48,7 +48,7 @@ Function* fChainString;
 Function* fCmpString;
 Function* fCmpObject;// == ret:0; != ret:1
 Value* zero=ConstantInt::get(Type::getInt32Ty(context),APInt(32,0));
-Function *curfun;
+Function *curfun;int curfun_param_cnt=0;
 llvm::Instruction* IP;
 llvm::DebugLoc * dbgloc;
 BasicBlock * mainblock;
@@ -1236,13 +1236,15 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 		popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
 	}
     Value* obj= BcGenerateExpression(exe, block,fce->function->u.member_expression.expression);
-	Value* _pthis=builder.CreateLoad(pthis);
+	/*Value* _pthis=builder.CreateLoad(pthis);
 	Value* oldthis=builder.CreateLoad(_pthis);
-	builder.CreateStore(obj,_pthis);
+	builder.CreateStore(obj,_pthis);*/
+	builder.CreateCall(GetPush(2),obj);
 	if(popcnt)
 		builder.CreateStore(ConstInt(32,popcnt),builder.CreateLoad(bpc)); //set param_count register //fix-me : no need for bpc?
 	builder.CreateCall(fCall,ConstInt(32,method_index));
-	builder.CreateStore(oldthis,_pthis);
+	//builder.CreateStore(oldthis,_pthis);
+	
 	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt && !isBuiltInMethod)
 	{
@@ -1832,7 +1834,7 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 
 Value* BcGenerateThisExpression(DVM_Executable *exe, Block *block,Expression *expr)
 {
-	return builder.CreateLoad(builder.CreateLoad(pthis));
+	return builder.CreateLoad(builder.CreateGEP(curfun->arg_begin(),ConstInt(32,curfun_param_cnt)));
 }
 
 Value* BcGenerateNull(DVM_Executable *exe, Expression *expr)
@@ -1842,7 +1844,7 @@ Value* BcGenerateNull(DVM_Executable *exe, Expression *expr)
 
 Value* BcGenerateSuper(DVM_Executable *exe, Block *block,Expression *expr)
 {
-    builder.CreateCall(GetPush(2),builder.CreateLoad(builder.CreateLoad(pthis)));
+    builder.CreateCall(GetPush(2),BcGenerateThisExpression(exe,block,expr));
 	return builder.CreateCall(fGetSuper);
 }
 
@@ -2585,6 +2587,7 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 llvm::Function* BcGenerateFunction(DVM_Executable *exe, FunctionDefinition * src,char* clsname)
 {
 	char buf[512];
+	curfun_param_cnt=src->param_cnt;
 	if(clsname)
 	{
 		if(sprintf_s(buf,512,"%s#%s",clsname,src->name )==-1)
@@ -2624,7 +2627,7 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
                 builder.CreateCall(FldPut[get_opcode_type_offset(member_pos->u.field.type)],arg);*/
 				int mty=get_opcode_type_offset(member_pos->u.field.type); //fix-me : code size optmization here
 				Value* vv=BcGenerateExpression(exe, NULL, member_pos->u.field.initializer);
-				Value* obj=builder.CreateLoad(builder.CreateLoad(pthis));
+				Value* obj=BcGenerateThisExpression(exe,NULL,NULL);
 				Value* fld=builder.CreateCall(GetFldAddr(),obj);
 				fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member_pos->u.field.field_index)),TypeSwitch[mty]);
 				builder.CreateStore(v,fld);

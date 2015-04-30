@@ -2585,10 +2585,12 @@ static void add_local_variable(FunctionDefinition *fd, Declaration *decl,
     fd->local_variable
         = MEM_realloc(fd->local_variable,
                       sizeof(Declaration*) * (fd->local_variable_count+1));
-	//if(fd->class_definition && fd->local_variable_count==0)
-	//	fd->local_variable_count=1; //for "this"
     fd->local_variable[fd->local_variable_count] = decl;
-	decl->variable_index = fd->local_variable_count;
+    if (fd->class_definition && !is_parameter) {
+        decl->variable_index = fd->local_variable_count + 1; /* for this */
+    } else {
+        decl->variable_index = fd->local_variable_count;
+    }
 	decl->is_param=is_parameter;
     fd->local_variable_count++;
 }

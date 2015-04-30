@@ -15,13 +15,13 @@ function f1() as int
 	return 1
 end
 
-CreateThread(f1)
-CreateThread(f1)
+//CreateThread(f1)
+//CreateThread(f1)
 
 class Ex
 	public k as int
-	public sub llll()
-		println(k)
+	public sub llll(a as string)
+		println(a+k)
 	end
 end
 
@@ -29,10 +29,10 @@ try
 	Invoke(null,"fab",2)
 	dim ret as int=fab(4)
 	dim e as Ex=new Ex()
-	e.k=ret
+	e.k=13
 	throw e
 catch Ex err
-	err.llll()
+	err.llll("res")
 	println("catch")
 end
 
@@ -43,7 +43,7 @@ function fab(n as int) as int
 	return fab(n-1)+fab(n-2)
 end
 dim t as int=GetClock()
-println(fab(33))
+//println(fab(33))
 println(GetClock()-t)
 
 
