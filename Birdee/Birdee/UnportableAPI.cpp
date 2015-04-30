@@ -51,7 +51,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 
 #ifdef BD_ON_WINDOWS
-	DWORD dwTlsIndex; 
+	DWORD dwTlsIndex;
 
 	void UaInitTls()
 	{
@@ -77,7 +77,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 	void UaStopThread(THREAD_ID t)
 	{
-		TerminateThread(t,0);
+		TerminateThread(t,1024);
 	}
 
 	void UaSetCurVM(DVM_VirtualMachine_tag* vm)

@@ -142,7 +142,7 @@ void ExStringSubstr(DVM_Value *args)
     int pos;
     int len;
     int org_len;
-	
+
     pos = args[1].int_value;
     len = args[0].int_value;
     str = curthread->ths.data;
@@ -150,7 +150,7 @@ void ExStringSubstr(DVM_Value *args)
                ("str->type..%d", str->type));
 
     org_len = DVM_string_length(curdvm, str);
-    
+
     if (pos < 0 || pos >= org_len) {
         ExRaiseNativeException(curdvm,
                           DVM_DIKSAM_DEFAULT_PACKAGE,
@@ -163,7 +163,7 @@ void ExStringSubstr(DVM_Value *args)
 		return;
     }
     if (len < 0 || pos + len > org_len) {
-        ExRaiseNativeException(curdvm, 
+        ExRaiseNativeException(curdvm,
                           DVM_DIKSAM_DEFAULT_PACKAGE,
                           STRING_INDEX_EXCEPTION_NAME,
                           STRING_SUBSTR_LEN_ERR,
@@ -636,7 +636,9 @@ extern "C" void ExGoMain()
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curthread->stack.stack);
 	ExStopAllThreads();
-	_BreakPoint()
+    //_BreakPoint()
+
+
 }
 
 
@@ -863,7 +865,7 @@ DVM_ObjectRef ExNewArray(BINT ty,BINT dim)
 DVM_ObjectRef ExArrayLiteral(BINT ty,BINT size)
 {
             DVM_ObjectRef barray;
-            barray = create_array_literal_int(curdvm, size);
+            barray = create_array_literal_int(curdvm, size);//fix-me : double,obj
             curthread->stack.stack_pointer -= size; curthread->stack.flg_sp -=size;
             return barray;
 }
@@ -1026,7 +1028,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(dvm->exe_engine)
 	{
 		MCJIT=(MCJITHelper*) dvm->exe_engine;
-		
+
 	}
 	else
 	{
@@ -1034,7 +1036,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 		dvm->exe_engine=MCJIT;
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
-	
+
 /*	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
 	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
 	vglobal=m->getGlobalVariable("bei");
@@ -1178,14 +1180,14 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
 	MCJIT->addGlobalMapping("autovar!getorcreate",(void*)AvGetOrCreateVar);
 
-	
-	
-	//m->dump();	
-	
+
+
+	//m->dump();
+
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;
 	InitOptimizer(*pm,TheExecutionEngine,m);
-	delete pm; 
+	delete pm;
 	return TheExecutionEngine;
 }
 
@@ -1227,7 +1229,7 @@ void replaceAllUsesWith(Value* ths,Value *New) {
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 {
 
-	
+
 	Type* TyO=m->getGlobalVariable("bsp")->getType()->getPointerElementType()->getPointerElementType()->getPointerElementType();
 	//TyO->dump();
 	BcSwitchContext(m,TyO);

@@ -25,7 +25,7 @@ extern "C"
 	{
 
 		curthread=param;
-		param->tid=(void*)UaGetCurrentThread();
+		//param->tid=(void*)UaGetCurrentThread();
 		ExInitThreadInAllModules();
 		ExDoInvoke(param->main);
 		printf("Thread exits. Stack check: %d\n",curthread->stack.stack_pointer-curthread->stack.stack);
@@ -50,11 +50,12 @@ extern "C"
 		} else {
 			ExSystemRaise(ExBadFunctionIndex);
 		}
-		
+
 		BdThread* th=ExCreateThread();
 		th->main=func_idx;
 		ThAddThreadToList(th);
-		curthread->retvar.int_value=(BINT)UaCreateThread(th,1);
+		th->tid=UaCreateThread(th,1);
+		curthread->retvar.int_value=(BINT)th->tid;
 	}
 
 
