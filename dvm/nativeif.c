@@ -141,11 +141,9 @@ DVM_array_set_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     if (status != DVM_SUCCESS) {
         return status;
     }
-
+*/
     barray.data->u.barray.u.object[index] = value;
-	*/
-	_BreakPoint()
-	//abandoned
+	
     return DVM_SUCCESS;
 }
 
