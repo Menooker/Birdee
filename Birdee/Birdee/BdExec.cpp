@@ -59,6 +59,7 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 #define is_null_pointer(obj) (((obj)->data == NULL))
 
 #include "UnportableAPI.h"
+#include "BdThread.h"
 extern "C"  thread_local BdThread* curthread;
 extern "C"
 {
@@ -612,15 +613,6 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 	//curdvm=dvm;
 }
 
-void ExStopAllThreads()
-{
-	BdThread* t=curdvm->mainvm->next;
-	while(t)
-	{
-		UaStopThread(t->tid);
-		t=t->next;
-	}
-}
 
 extern "C" void ExGoMain()
 {
@@ -633,7 +625,7 @@ extern "C" void ExGoMain()
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curthread->stack.stack);
-	ExStopAllThreads();
+	ThStopAllThreads();
     //_BreakPoint()
 
 

@@ -2,21 +2,23 @@
 #define _H_UNPORTABLE_API
 
 #include "Conf.h"
+	#ifdef BD_ON_WINDOWS
+		#include <Windows.h>
+		typedef void* THREAD_ID;
+		#define BD_LOCK CRITICAL_SECTION
+
+	#endif
+	#undef min
+	#undef max
+
 #include <stdio.h>
-
-
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 	#include "../../dvm/dvm_pri.h"
-	#ifdef BD_ON_WINDOWS
-	#include <Windows.h>
-	#define THREAD_ID HANDLE
-	//#define curdvm ((DVM_VirtualMachine*)TlsGetValue(dwTlsIndex))
-	
-	#endif
+
 	extern  thread_local BdThread* curthread;
 	extern 	DVM_VirtualMachine* curdvm;
 	extern DWORD dwTlsIndex; 
@@ -31,8 +33,10 @@ extern "C"
 	void UaStopThread(THREAD_ID t);
 	void UaSetCurVM(DVM_VirtualMachine* vm);
 	void UaInitTls();
-
-
+	void UaInitLock(BD_LOCK* lc);
+	void UaKillLock(BD_LOCK* lc);
+	void UaEnterLock(BD_LOCK* lc);
+	void UaLeaveLock(BD_LOCK* lc);
 #ifdef __cplusplus
 }
 #endif

@@ -1,11 +1,14 @@
 #ifndef DVM_PRI_H_INCLUDED
 #define DVM_PRI_H_INCLUDED
+
 #include "..\include\DVM_code.h"
 #include "..\include\DVM_dev.h"
 #include "..\include\share.h"
 #include "..\Birdee\Birdee\BdException.h"
 #include "..\Birdee\Birdee\BirdeeDef.h"
 #include "..\Birdee\Birdee\BdHashMap.h"
+#include "..\Birdee\Birdee\UnportableAPI.h"
+
 #include <stdarg.h>
 
 #define ExHeapFreedType 0xfeeeaeee
@@ -287,7 +290,7 @@ struct _BdThread {
 	BINT				esp;
 	PAutoVarContext     avstack;
 	BINT				asp;
-	void*				tid;
+	THREAD_ID				tid;
 	BINT				main;
 	struct _BdThread* next;
 	struct _BdThread* prv;
@@ -312,6 +315,7 @@ struct DVM_VirtualMachine_tag {
 	LLVMPExeEngine		exe_engine;
 	mRtlHashMap*			static_str_map;
 	Heap heap;
+	BD_LOCK thread_lock;
 	struct _BdThread* mainvm;
 };
 

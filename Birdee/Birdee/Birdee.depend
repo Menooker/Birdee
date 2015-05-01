@@ -67,7 +67,7 @@
 1428393764 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\error_message_compiler.c
 	"diksamc.h"
 
-1430303686 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\fix_tree.c
+1430402163 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\fix_tree.c
 	<math.h>
 	<string.h>
 	"..\include\MEM.h"
@@ -78,7 +78,7 @@
 1430206159 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\birdeedef.h
 	"Conf.h"
 
-1425131267 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\conf.h
+1430474292 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\conf.h
 
 1427872675 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\generate.cpp
 	"../Birdee/Birdee/BdCompile.h"
@@ -733,7 +733,7 @@
 	"..\include\DVM_dev.h"
 	"dvm_pri.h"
 
-1430310196 d:\menooker\birdee\build0\diksam_book_0_1\dvm\dvm_pri.h
+1430474937 d:\menooker\birdee\build0\diksam_book_0_1\dvm\dvm_pri.h
 	"..\include\DVM_code.h"
 	"..\include\DVM_dev.h"
 	"..\include\share.h"
@@ -741,6 +741,7 @@
 	"..\Birdee\Birdee\BirdeeDef.h"
 	"..\Birdee\Birdee\BdHashMap.h"
 	<stdarg.h>
+	"..\Birdee\Birdee\BdSystemTypes.h"
 
 1430311326 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexception.h
 	<setjmp.h>
@@ -767,11 +768,11 @@
 	"..\..\include\MEM.h"
 	"..\..\dvm\dvm_pri.h"
 
-1430309518 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.h
+1430472118 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.h
 	"Conf.h"
 	<stdio.h>
+	"BdSystemTypes.h"
 	"../../dvm/dvm_pri.h"
-	<Windows.h>
 
 1430224735 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\heap.c
 	<stdio.h>
@@ -1620,8 +1621,12 @@
 1430361935 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdthread.cpp
 	"BdThread.h"
 
-1430308189 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdthread.h
+1430472381 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdthread.h
 	"Conf.h"
 	"BdExec.h"
 	"UnportableAPI.h"
+
+1430474858 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdsystemtypes.h
+	"Conf.h"
+	<Windows.h>
 

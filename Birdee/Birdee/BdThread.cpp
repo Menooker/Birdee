@@ -4,21 +4,37 @@ extern "C"
 {
 
 	void ThAddThreadToList(BdThread* t)
-	{//fix-me : @thread lock the curdvm?
+	{
+		UaEnterLock(&curdvm->thread_lock);
 		BdThread* head=curdvm->mainvm->next;
 		if(head)
 			head->prv=t;
 		t->next=head;
 		t->prv=curdvm->mainvm;
 		curdvm->mainvm->next=t;
+		UaLeaveLock(&curdvm->thread_lock);
 	}
 
 	void ThRemoveThreadFromList(BdThread* t)
-	{//fix-me : @thread lock the curdvm?
+	{
+		UaEnterLock(&curdvm->thread_lock);
 		BdThread* nxt=t->next;
 		if(nxt)
 			nxt->prv=t->prv;
 		t->prv->next=nxt;
+		UaLeaveLock(&curdvm->thread_lock);
+	}
+
+	void ThStopAllThreads()
+	{
+		UaEnterLock(&curdvm->thread_lock);
+		BdThread* t=curdvm->mainvm->next;
+		while(t)
+		{
+			UaStopThread(t->tid);
+			t=t->next;
+		}
+		UaLeaveLock(&curdvm->thread_lock);
 	}
 
 	void ThThreadStub(BdThread* param)

@@ -92,6 +92,25 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		return h;
 	}
 
+	void UaInitLock(BD_LOCK* lc)
+	{
+		InitializeCriticalSection(lc);
+	}
+
+	void UaKillLock(BD_LOCK* lc)
+	{
+		DeleteCriticalSection(lc);
+	}
+
+	void UaEnterLock(BD_LOCK* lc)
+	{
+		EnterCriticalSection(lc);
+	}
+
+	void UaLeaveLock(BD_LOCK* lc)
+	{
+		LeaveCriticalSection(lc);
+	}
 
 #if (defined(BD_ON_GCC) & defined(BD_ON_X86))
 	typedef void(__stdcall *ptDbgBreakPoint)(void);

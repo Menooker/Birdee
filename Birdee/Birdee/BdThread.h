@@ -9,7 +9,7 @@
 extern "C"
 {
 #endif
-
+	void ThStopAllThreads();
 	void ThCreateThread();
 #ifdef __cplusplus
 }

@@ -922,6 +922,7 @@ DVM_create_virtual_machine(void)
     dvm->free_context = NULL;
 	dvm->exe_engine=0;
 	dvm->mainvm=ExCreateThread();
+	UaInitLock(&dvm->thread_lock); 
 	ExInitRegArray(dvm->mainvm);
     dvm_add_native_functions(dvm);
     set_built_in_methods(dvm);
