@@ -27,14 +27,14 @@ extern "C"
 
 	void ThStopAllThreads()
 	{
-		//UaEnterLock(&curdvm->thread_lock);
+		UaEnterLock(&curdvm->thread_lock);
 		BdThread* t=curdvm->mainvm->next;
 		while(t)
 		{
 			UaStopThread(t->tid);
 			t=t->next;
 		}
-		//UaLeaveLock(&curdvm->thread_lock);
+		UaLeaveLock(&curdvm->thread_lock);
 	}
 
 	void ThThreadStub(BdThread* param)

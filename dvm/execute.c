@@ -135,7 +135,7 @@ invoke_native_function(DVM_VirtualMachine *dvm,
     CallInfo *call_info;
     int i;
 
-    (*sp_p)--; // function index 
+    (*sp_p)--; // function index
     stack = dvm->stack.stack;
     DBG_assert(callee->kind == NATIVE_FUNCTION,
                ("callee->kind..%d", callee->kind));
@@ -246,7 +246,7 @@ invoke_diksam_function(DVM_VirtualMachine *dvm,
 
     *base_p = *sp_p - callee_p->parameter_count - 1;
     if (callee_p->is_method) {
-        (*base_p)--; // for this 
+        (*base_p)--; // for this
     }
     *caller_p = callee;
 
@@ -277,7 +277,7 @@ do_return(DVM_VirtualMachine *dvm, BFunction **func_p,
 
     //arg_count = callee_p->parameter_count;
     //if (callee_p->is_method) {
-    //    arg_count++; // for this 
+    //    arg_count++; // for this
     //}
     //call_info = (CallInfo*)&dvm->stack.stack[*base_p + arg_count];
 
@@ -306,7 +306,7 @@ do_return(DVM_VirtualMachine *dvm, BFunction **func_p,
 }
 
 // This function returns DVM_TRUE if this function was called from native.
- 
+
 static DVM_Boolean
 return_function(DVM_VirtualMachine *dvm, BFunction **func_p,
                 DVM_Byte **code_p, int *code_size_p, int *pc_p, int *base_p,
@@ -620,7 +620,7 @@ throw_in_try(DVM_VirtualMachine *dvm,
     }
     *pc_p = cb->blktry[try_idx].finally_start_pc;
     reset_stack_pointer(dvm_func, sp_p, base);
-    
+
     return DVM_TRUE;
 }
 
@@ -648,7 +648,7 @@ add_stack_trace(DVM_VirtualMachine *dvm, DVM_Executable *exe,
     stack_trace = dvm_create_class_object_i(dvm, class_index);
     STO_WRITE(dvm, 0, stack_trace);
     dvm->stack.stack_pointer++;
-    
+
     line_number_index
         = DVM_get_field_index(dvm, stack_trace, "line_number");
     stack_trace.data->u.class_object.field[line_number_index].int_value
@@ -724,7 +724,7 @@ invoke_diksam_function_from_native(DVM_VirtualMachine *dvm,
 	//call_info = (CallInfo*)&dvm->stack.stack[dvm->stack.stack_pointer];
 	//call_info->caller = dvm->current_function;
 	//call_info->caller_address = CALL_FROM_NATIVE;
-	//call_info->base = 0; // dummy 
+	//call_info->base = 0; // dummy
 	//for (i = 0; i < CALL_INFO_ALIGN_SIZE; i++) {
 	//	dvm->stack.pointer_flags[dvm->stack.stack_pointer + i] = DVM_FALSE;
 	//	dvm->pc = 0;
@@ -791,7 +791,7 @@ do_throw(DVM_VirtualMachine *dvm,
 
 DVM_ObjectRef
 dvm_create_exception(DVM_VirtualMachine *dvm, char *class_name,
-                     RuntimeError id, ...) 
+                     RuntimeError id, ...)
 {
 	DVM_ObjectRef obj;
 	return obj;
@@ -799,7 +799,7 @@ dvm_create_exception(DVM_VirtualMachine *dvm, char *class_name,
 }
 
 // This function returns DVM_TRUE if this function was called from native.
- 
+
 static DVM_Boolean
 throw_null_pointer_exception(DVM_VirtualMachine *dvm, BFunction **func_p,
                              DVM_Byte **code_p, int *code_size_p, int *pc_p,
@@ -810,7 +810,7 @@ throw_null_pointer_exception(DVM_VirtualMachine *dvm, BFunction **func_p,
 
     ex = dvm_create_exception(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,
                               NULL_POINTER_ERR, DVM_MESSAGE_ARGUMENT_END);
-    STO_WRITE(dvm, 0, ex); // BUGBUG? irane? 
+    STO_WRITE(dvm, 0, ex); // BUGBUG? irane?
     dvm->stack.stack_pointer++;
     return do_throw(dvm, func_p, code_p, code_size_p, pc_p, base_p,
                     ee_p, exe_p, &ex);
@@ -840,10 +840,10 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
  //   exe = dvm->current_executable->executable;
 
  //   while (pc < code_size) {
- //       
+ //
  //       //dvm_dump_instruction(stderr, code, pc);
  //       //fprintf(stderr, "\tsp(%d)\n", dvm->stack.stack_pointer);
- //       
+ //
  //       switch ((DVM_Opcode)code[pc]) {
  //       case DVM_PUSH_INT_1BYTE:
  //           STI_WRITE(dvm, 0, code[pc+1]);
@@ -873,7 +873,7 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
  //           pc++;
  //           break;
  //       case DVM_PUSH_DOUBLE:
- //           STD_WRITE(dvm, 0, 
+ //           STD_WRITE(dvm, 0,
  //                     exe->constant_pool[GET_2BYTE_INT(&code[pc+1])]
  //                     .u.c_double);
  //           dvm->stack.stack_pointer++;
@@ -1749,7 +1749,7 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
 
  //           break;
  //       }
- //       case DVM_INVOKE: // FALLTHRU 
+ //       case DVM_INVOKE: // FALLTHRU
  //       case DVM_INVOKE_DELEGATE:
  //       {
  //           int func_idx;
@@ -1771,7 +1771,7 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
  //                       = (delegate.data->u.delegate.object.v_table
  //                          ->table[delegate.data->u.delegate.index].index);
  //                   STO_WRITE(dvm, -1, delegate.data->u.delegate.object);
- //                   dvm->stack.stack_pointer++; // for func index 
+ //                   dvm->stack.stack_pointer++; // for func index
  //               }
  //           } else {
  //               func_idx = STI(dvm, -1);
@@ -1871,7 +1871,7 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
  //       {
  //           DVM_ObjectRef* obj = &STO(dvm, -1);
  //           ExecClass *this_class;
- //           
+ //
  //           this_class = obj->v_table->exec_class;
  //           obj->v_table = this_class->super_class->class_table;
  //           pc++;
@@ -1931,7 +1931,7 @@ dvm_execute_i(DVM_VirtualMachine *dvm, BFunction *func,
  //       default:
  //           DBG_assert(0, ("code[%d]..%d\n", pc, code[pc]));
  //       }
- //       // MEM_check_all_blocks(); 
+ //       // MEM_check_all_blocks();
  //   }
  //EXECUTE_END:
  //   ;
@@ -2041,8 +2041,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
 	AvDisposeMainMap();
 	RtlDisposeHashmap(dvm->static_str_map);
 	dvm->static_str_map=0;
-	UaKillLock(&dvm->thread_lock); 
-	UaKillLock(&dvm->heap.lock);
+
 	//UaRestoreBufferStatus(&dvm->stack.stack[STACK_ALLOC_SIZE],sizeof(DVM_Value)*2,dvm->stack.oldProtect);
     while (dvm->executable_entry) {
         ee_temp = dvm->executable_entry;
@@ -2058,7 +2057,7 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
     dvm_garbage_collect(dvm);
 
 
-	
+
 	dvm->mainvm=NULL;
 	while(th)
 	{
@@ -2105,6 +2104,8 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
     MEM_free(dvm->string_v_table);
     MEM_free(dvm->bclass);
 	ExFreeMCJIT(dvm->exe_engine);
+    UaKillLock(&dvm->thread_lock);
+	UaKillLock(&dvm->heap.lock);
     MEM_free(dvm);
-	
+
 }

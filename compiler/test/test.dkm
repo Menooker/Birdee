@@ -11,7 +11,7 @@ end
 
 function f1() as int
 	println("thread!!!")
-	println(fab(33))
+	println(fab(3))
 	return 1
 end
 
