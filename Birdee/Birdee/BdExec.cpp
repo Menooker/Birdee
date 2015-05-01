@@ -588,6 +588,7 @@ extern "C" BdThread* ExCreateThread()
 
     th->current_executable = NULL;
     th->current_exception = dvm_null_object_ref;
+	th->new_obj=dvm_null_object_ref;
 	th->main=NULL;
 	th->next=NULL;
 	th->tid=NULL;

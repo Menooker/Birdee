@@ -219,6 +219,7 @@ struct DVM_Object_tag {
 typedef struct {
     int         current_heap_size;
     int         current_threshold;
+	BD_LOCK		lock;
     DVM_Object  *header;
 } Heap;
 

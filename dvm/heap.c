@@ -29,6 +29,8 @@ alloc_object(DVM_VirtualMachine *dvm, ObjectType type)
     DVM_ObjectRef ret;
 
     DVM_check_gc(dvm);
+
+	UaEnterLock(&dvm->heap.lock);
     ret.v_table = NULL;
     ret.data = MEM_malloc(sizeof(DVM_Object));
     dvm->heap.current_heap_size += sizeof(DVM_Object);
@@ -40,7 +42,8 @@ alloc_object(DVM_VirtualMachine *dvm, ObjectType type)
     if (ret.data->next) {
         ret.data->next->prev = ret.data;
     }
-
+	curthread->new_obj=ret;
+	UaLeaveLock(&dvm->heap.lock);
     return ret;
 }
 
@@ -429,7 +432,7 @@ gc_reset_mark(DVM_Object *obj)
     obj->marked = DVM_FALSE;
 }
 
-extern void AvMarkObjects();
+extern void AvMarkObjects(BdThread* th);
 static void
 gc_mark_objects(DVM_VirtualMachine *dvm)
 {
@@ -459,6 +462,8 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
 			}
 		}
 		gc_mark(&th->current_exception);
+		gc_mark(&th->new_obj);
+		AvMarkObjects(th);
 		th=th->next;
 	}
     for (context_pos = dvm->current_context; context_pos;
@@ -469,7 +474,7 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
          context_pos = context_pos->next) {
         gc_mark_ref_in_native_method(context_pos);
     }
-	AvMarkObjects();
+	
 }
 
 static DVM_Boolean
@@ -583,8 +588,12 @@ void
 dvm_garbage_collect(DVM_VirtualMachine *dvm)
 {
     DVM_Boolean call_finalizer;
-    do {
-        gc_mark_objects(dvm);
-        call_finalizer = gc_sweep_objects(dvm);
-    } while(call_finalizer);
+	UaEnterLock(&dvm->heap.lock);
+		do {
+			UaEnterLock(&dvm->thread_lock);
+				gc_mark_objects(dvm);
+			UaLeaveLock(&dvm->thread_lock);
+			call_finalizer = gc_sweep_objects(dvm);
+		} while(call_finalizer);
+	UaLeaveLock(&dvm->heap.lock);
 }

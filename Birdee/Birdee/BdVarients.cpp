@@ -616,7 +616,7 @@ DVM_ObjectRef AvGetVar(char* name)
 
 
 extern "C" void gc_mark(DVM_ObjectRef *ref);
-void AvMarkObjects()
+void AvMarkObjects(BdThread* th)
 {
 	hash_map<string,DVM_ObjectRef>::iterator it;
 	for(it=MainMap.begin();it!=MainMap.end();it++)
@@ -626,7 +626,7 @@ void AvMarkObjects()
 	}
 	for(int i=0;i<curthread->asp ;i++)
 	{
-		AvMap* pp=(AvMap*)curthread->avstack[i].p;
+		AvMap* pp=(AvMap*)th->avstack[i].p;
 		if(pp)
 		{
 			for(it=(*pp).begin();it!=(*pp).end();it++)
