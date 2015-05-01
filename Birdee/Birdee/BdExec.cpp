@@ -333,21 +333,18 @@ extern "C" void  ExDoInvoke(BINT transindex)
     }
 	//dvm_expand_stack(curdvm,bf->local_cnt);
 
-	base=oldsp - bf->param_cnt;
+	base=oldsp - bf->param_cnt-(int)bf->is_method;
 	ExecutableEntry * ee=curthread->current_executable;
     if(bf->u.diksam_f.executable)
 		curthread->current_executable = bf->u.diksam_f.executable;
-    if (bf->is_method) {
-        base--; // for this
-		old_arrsp--;
-    }
+
 
 	curthread->stack.stack_pointer += bf->local_cnt ;	curthread->stack.flg_sp+=bf->local_cnt ;
     BcInitLocalVar(curthread,curdvm, bf,((char*)oldsp-(char*)curthread->stack.stack)/sizeof(DVM_Value));
 	AvPushNullContext();
 	bf->pfun(base,transindex);
 	AvPopContext();
-	curthread->stack.stack_pointer=base; curthread->stack.flg_sp=old_arrsp - bf->param_cnt;
+	curthread->stack.stack_pointer=base; curthread->stack.flg_sp=old_arrsp - bf->param_cnt-(int)bf->is_method;
 	curthread->current_executable=ee;
 }
 
@@ -978,7 +975,6 @@ extern "C" void ExInitRegArray(BdThread* t)
 	cur_prep_regs[0]=(int*)&t->bpc;                 cur_prep_regs[1]=(int*)&t->exception_index;
 	cur_prep_regs[2]=(int*)&t->current_exception;  cur_prep_regs[3]=(int*)&t->stack.stack_pointer;
 	cur_prep_regs[4]=(int*)&t->stack.flg_sp;       cur_prep_regs[5]=(int*)&t->retvar;
-	cur_prep_regs[6]=(int*)&t->ths;
 }
 
 //Init thread's reg in one module.

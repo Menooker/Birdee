@@ -280,7 +280,7 @@ struct _BdThread {
     Stack       stack;
     ExecutableEntry     *current_executable;
     DVM_ObjectRef current_exception;
-	DVM_ObjectRef		ths;
+	DVM_ObjectRef		new_obj;
 	BINT				exception_index;
 	BINT				bpc;
 	PExExceptionItem	estack;

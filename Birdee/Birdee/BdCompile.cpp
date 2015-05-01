@@ -107,7 +107,6 @@ GlobalVariable* arr_sp;//arr of object booleans //fix-me : release it!
 //GlobalVariable* arr_is_pointer;//stack_value pointer indecator array //fix-me : release it!
 GlobalVariable* bretvar;//return value//fix-me : release it!
 GlobalVariable* pstatic;//static values//fix-me : release it!
-GlobalVariable* pthis;//this//fix-me : release it!
 
 BasicBlock* contiblock;
 BasicBlock* loopblock;
@@ -356,7 +355,6 @@ void BcSwitchContext(Module* M,Type* t)
 	//arr_is_pointer=M->getGlobalVariable("arr_is_pointer");
 	bretvar=M->getGlobalVariable("retvar");SetThreadLocal(bretvar);
 	pstatic=M->getGlobalVariable("pstatic");
-	pthis=M->getGlobalVariable("pthis");SetThreadLocal(pthis);
 }
 
 void BcBuildPop()
@@ -633,7 +631,6 @@ Function* BcBuildRegInit()
 	BcBuildGetReg(bsp,3,fGetReg);
 	BcBuildGetReg(arr_sp,4,fGetReg);
 	BcBuildGetReg(bretvar,5,fGetReg);
-	BcBuildGetReg(pthis,6,fGetReg);
 
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);
@@ -853,8 +850,6 @@ extern "C" void* BcNewModule(char* name)
 		ConstPointer(Type::getInt32PtrTy(context)->getPointerTo()),"arr_sp",0,THREAD_MODEL,0,true);
 	bretvar=new GlobalVariable(*module,TypStack,true,GlobalValue::WeakAnyLinkage,
 		ConstPointer((PointerType*)TypStack),"retvar",0,THREAD_MODEL,0,true);
-	pthis=new GlobalVariable(*module,TypStack,true	,GlobalValue::WeakAnyLinkage,
-		ConstPointer((PointerType*)TypStack),"pthis",0,THREAD_MODEL,0,true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);

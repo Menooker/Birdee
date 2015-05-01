@@ -43,7 +43,7 @@ function fab(n as int) as int
 	return fab(n-1)+fab(n-2)
 end
 dim t as int=GetClock()
-//println(fab(33))
+println(fab(33))
 println(GetClock()-t)
 
 

@@ -114,7 +114,6 @@ ExJumpBuf*  ExPushJumpBuffer()
 {
 	PExExceptionItem ret=(PExExceptionItem)&curthread->estack[curthread->esp];
 	ret->exe=curthread->current_executable ;
-	ret->ths=curthread->ths;
 	ret->cur_exception=curthread->current_exception;
 	ret->asp=curthread->asp;
 	curthread->esp+=1;
@@ -225,7 +224,6 @@ void ExReraiseException()
 
 	PExExceptionItem pit=ExTopJumpBuffer();
 	curthread->current_executable=(ExecutableEntry*)pit->exe ;
-	curthread->ths=pit->ths;
 	if(pit->asp>curthread->asp)
 	{
 		//bad asp
@@ -246,7 +244,6 @@ void ExRaiseException(BINT eindex)
 	curthread->exception_index=eindex;
 	PExExceptionItem pit=ExTopJumpBuffer();
 	curthread->current_executable=(ExecutableEntry*)pit->exe ;
-	curthread->ths=pit->ths;
 	if(pit->asp>curthread->asp)
 	{
 		//bad asp
