@@ -581,7 +581,7 @@ add_methods(DVM_VirtualMachine *dvm, DVM_Executable *exe,
     int         method_count;
     DVM_VTable  *v_table;
     int         i;
-    DVM_Class   *interface;
+    DVM_Class   *binterface;
     int         method_idx;
 
     v_table = alloc_v_table(dest);
@@ -593,14 +593,14 @@ add_methods(DVM_VirtualMachine *dvm, DVM_Executable *exe,
 
     for (i = 0; i < src->interface_count; i++) {
         dest->interface_v_table[i] = alloc_v_table(dest);
-        interface = search_class_from_executable(exe,
+        binterface = search_class_from_executable(exe,
                                                  src->interface_[i].name);
         dest->interface_v_table[i]->table
-            = MEM_malloc(sizeof(VTableItem) * interface->method_count);
-        dest->interface_v_table[i]->table_size = interface->method_count;
-        for (method_idx = 0; method_idx < interface->method_count;
+            = MEM_malloc(sizeof(VTableItem) * binterface->method_count);
+        dest->interface_v_table[i]->table_size = binterface->method_count;
+        for (method_idx = 0; method_idx < binterface->method_count;
              method_idx++) {
-            set_v_table(dvm, src, &interface->method[method_idx],
+            set_v_table(dvm, src, &binterface->method[method_idx],
                         &dest->interface_v_table[i]->table[method_idx],
                         DVM_TRUE);
         }
@@ -640,14 +640,14 @@ set_super_class(DVM_VirtualMachine *dvm, DVM_Executable *exe,
                                    dvm_class->super_class->name);
             dvm->bclass[class_idx]->super_class = dvm->bclass[super_class_index];
         }
-        dvm->bclass[class_idx]->interface
+        dvm->bclass[class_idx]->binterface
             = MEM_malloc(sizeof(ExecClass*) * dvm_class->interface_count);
         for (if_idx = 0; if_idx < dvm_class->interface_count; if_idx++) {
             interface_index
                 = DVM_search_class(dvm,
                                    dvm_class->interface_[if_idx].package_name,
                                    dvm_class->interface_[if_idx].name);
-            dvm->bclass[class_idx]->interface[if_idx]
+            dvm->bclass[class_idx]->binterface[if_idx]
                 = dvm->bclass[interface_index];
         }
     }
@@ -799,7 +799,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
         dvm->top_level = new_entry;
     }
 
-	ExPrepareModule(&executable->module,dvm,new_entry);
+	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
 
     return new_entry;
 }
@@ -807,14 +807,15 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 void
 initialize_constant(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
 {
-    DVM_Executable *exe = ee->executable;
+ /*   DVM_Executable *exe = ee->executable;
 
-    dvm->current_executable = ee;
-    dvm->current_function = NULL;
-    dvm->pc = 0;
+    //dvm->current_executable = ee;
+    //dvm->current_function = NULL;
+    //dvm->pc = 0;
     dvm_expand_stack(dvm, exe->constant_initializer.need_stack_size);
     dvm_execute_i(dvm, NULL, exe->constant_initializer.code,
-                  exe->constant_initializer.code_size, 0);
+                  exe->constant_initializer.code_size, 0);*/
+	//fix-me : urgent! implement this!!
 }
 
 void
@@ -902,22 +903,10 @@ DVM_create_virtual_machine(void)
     DVM_VirtualMachine *dvm;
 	ExInitExeEngine();
     dvm = MEM_malloc(sizeof(DVM_VirtualMachine));
-	dvm->static_str_map=RtlCreateHashmap();
-    dvm->stack.alloc_size = STACK_ALLOC_SIZE+2;
-    dvm->stack.stack = UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
-	dvm->esp=0;
-	dvm->estack=UaGuardAlloc(sizeof(ExExceptionItem)*1024);
-	dvm->asp=0;
-	dvm->avstack=UaGuardAlloc(sizeof(AutoVarContext)*1024);
-    dvm->stack.pointer_flags
-        = MEM_malloc(sizeof(DVM_Boolean) * STACK_ALLOC_SIZE);
-    dvm->stack.stack_pointer = 0;
     dvm->heap.current_heap_size = 0;
     dvm->heap.header = NULL;
     dvm->heap.current_threshold = HEAP_THRESHOLD_SIZE;
-    dvm->current_executable = NULL;
-    dvm->current_function = NULL;
-    dvm->current_exception = dvm_null_object_ref;
+	dvm->static_str_map=RtlCreateHashmap();
     dvm->function = NULL;
     dvm->function_count = 0;
     dvm->bclass = NULL;
@@ -932,6 +921,10 @@ DVM_create_virtual_machine(void)
     dvm->current_context = NULL;
     dvm->free_context = NULL;
 	dvm->exe_engine=0;
+	dvm->mainvm=ExCreateThread();
+	UaInitLock(&dvm->thread_lock); 
+	UaInitLock(&dvm->heap.lock);
+	ExInitRegArray(dvm->mainvm);
     dvm_add_native_functions(dvm);
     set_built_in_methods(dvm);
 

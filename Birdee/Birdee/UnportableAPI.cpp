@@ -7,7 +7,7 @@
 
 extern "C"
 {
-
+thread_local BdThread* curthread;
 
 #ifdef BD_ON_VC
 #ifdef BD_ON_X86
@@ -51,6 +51,76 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 
 #ifdef BD_ON_WINDOWS
+	DWORD dwTlsIndex;
+
+	void UaInitTls()
+	{
+		dwTlsIndex = TlsAlloc();
+		if(dwTlsIndex==TLS_OUT_OF_INDEXES)
+		{
+			fprintf(stderr,"TLS out of indexes");
+			exit(0);
+		}
+	}
+
+	extern void ThThreadStub(BdThread*);
+	DWORD __stdcall UaThreadStub(PVOID p)
+	{
+		ThThreadStub((BdThread*)p);
+		return 0;
+	}
+
+	THREAD_ID UaGetCurrentThread()
+	{
+		return GetCurrentThread();
+	}
+
+	void UaStopThread(THREAD_ID t)
+	{
+		TerminateThread(t,1024);
+	}
+
+	void UaSetCurVM(DVM_VirtualMachine_tag* vm)
+	{
+		curdvm=vm;
+		//TlsSetValue(dwTlsIndex,vm);
+	}
+
+	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
+	{
+		vm->new_obj=arg;
+		HANDLE h=CreateThread(0,0,UaThreadStub,vm,go?0:CREATE_SUSPENDED,0);
+		return h;
+	}
+
+	void UaSuspendThread(THREAD_ID id)
+	{
+		SuspendThread(id);
+	}
+
+	void UaResumeThread(THREAD_ID id)
+	{
+		ResumeThread(id);
+	}
+	void UaInitLock(BD_LOCK* lc)
+	{
+		InitializeCriticalSection(lc);
+	}
+
+	void UaKillLock(BD_LOCK* lc)
+	{
+		DeleteCriticalSection(lc);
+	}
+
+	void UaEnterLock(BD_LOCK* lc)
+	{
+		EnterCriticalSection(lc);
+	}
+
+	void UaLeaveLock(BD_LOCK* lc)
+	{
+		LeaveCriticalSection(lc);
+	}
 
 #if (defined(BD_ON_GCC) & defined(BD_ON_X86))
 	typedef void(__stdcall *ptDbgBreakPoint)(void);

@@ -12,14 +12,14 @@ check_array(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 {
     if (barray.data == NULL) {
         *exception_p
-            = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,NULL,
+            = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,NULL, //fix-me : urgent! should set the class id!!!
                                    NULL_POINTER_ERR,
                                    DVM_MESSAGE_ARGUMENT_END);
         return DVM_ERROR;
     }
     if (index < 0 || index >= barray.data->u.barray.size) {
         *exception_p
-            = dvm_create_exception(dvm, ARRAY_INDEX_EXCEPTION_NAME,
+            = ExCreateExceptionEx(dvm, ARRAY_INDEX_EXCEPTION_NAME,NULL,
                                    INDEX_OUT_OF_BOUNDS_ERR,
                                    DVM_INT_MESSAGE_ARGUMENT, "index", index,
                                    DVM_INT_MESSAGE_ARGUMENT, "size",
@@ -34,7 +34,7 @@ DVM_ErrorStatus
 DVM_array_get_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
                   int *value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+/*    DVM_ErrorStatus status;
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
                          dvm->current_function, dvm->pc, exception_p);
@@ -43,7 +43,9 @@ DVM_array_get_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     }
 
     *value = barray.data->u.barray.u.int_array[index];
-
+	*/
+	_BreakPoint()
+	//abandoned
     return DVM_SUCCESS;
 }
 
@@ -52,7 +54,7 @@ DVM_array_get_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray,
                      int index, double *value, DVM_ObjectRef *exception_p)
 {
     DVM_ErrorStatus status;
-
+	/*
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
                          dvm->current_function, dvm->pc, exception_p);
@@ -61,7 +63,9 @@ DVM_array_get_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray,
     }
 
     *value = barray.data->u.barray.u.double_array[index];
-
+	*/
+	_BreakPoint()
+	//abandoned
     return DVM_SUCCESS;
 }
 
@@ -69,7 +73,7 @@ DVM_ErrorStatus
 DVM_array_get_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
                      DVM_ObjectRef *value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+ /*   DVM_ErrorStatus status;
 
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
@@ -79,7 +83,9 @@ DVM_array_get_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     }
 
     *value = barray.data->u.barray.u.object[index];
-
+	*/
+	_BreakPoint()
+	//abandoned
     return DVM_SUCCESS;
 }
 
@@ -87,7 +93,7 @@ DVM_ErrorStatus
 DVM_array_set_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
                   int value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+/*    DVM_ErrorStatus status;
 
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
@@ -97,7 +103,9 @@ DVM_array_set_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     }
 
     barray.data->u.barray.u.int_array[index] = value;
-
+	*/
+	_BreakPoint()
+	//abandoned
     return DVM_SUCCESS;
 }
 
@@ -105,7 +113,7 @@ DVM_ErrorStatus
 DVM_array_set_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
                      double value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+/*    DVM_ErrorStatus status;
 
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
@@ -115,7 +123,9 @@ DVM_array_set_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     }
 
     barray.data->u.barray.u.double_array[index] = value;
-
+	*/
+	_BreakPoint()
+	//abandoned
     return DVM_SUCCESS;
 }
 
@@ -123,7 +133,7 @@ DVM_ErrorStatus
 DVM_array_set_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
                      DVM_ObjectRef value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+/*    DVM_ErrorStatus status;
 
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,
@@ -131,9 +141,9 @@ DVM_array_set_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     if (status != DVM_SUCCESS) {
         return status;
     }
-
+*/
     barray.data->u.barray.u.object[index] = value;
-
+	
     return DVM_SUCCESS;
 }
 
@@ -309,9 +319,7 @@ DVM_string_get_string(DVM_VirtualMachine *dvm, DVM_Object *string)
 }
 
 static DVM_ErrorStatus
-check_string_index(DVM_VirtualMachine *dvm, DVM_ObjectRef str, int index,
-                   DVM_Executable *exe, BFunction *func, int pc,
-                   DVM_ObjectRef *exception_p)
+check_string_index(DVM_VirtualMachine *dvm, DVM_ObjectRef str, int index, DVM_ObjectRef *exception_p)
 {
     if (is_object_null(str)) {
         *exception_p
@@ -339,9 +347,7 @@ DVM_string_get_character(DVM_VirtualMachine *dvm, DVM_ObjectRef string,
                          int index, DVM_Char *ch, DVM_ObjectRef *exception_p)
 {
     DVM_ErrorStatus status;
-    status = check_string_index(dvm, string, index,
-                                dvm->current_executable->executable,
-                                dvm->current_function, dvm->pc, exception_p);
+    status = check_string_index(dvm, string, index, exception_p);
     if (status != DVM_SUCCESS) {
         return status;
     }
@@ -439,7 +445,7 @@ DVM_set_exception(DVM_VirtualMachine *dvm, DVM_Context *context,
                   char *package_name, char *class_name,
                   int error_id, ...)
 {
-    int class_index;
+ /*   int class_index;
     DVM_ObjectRef obj;
     VString     message;
     va_list     ap;
@@ -465,6 +471,9 @@ DVM_set_exception(DVM_VirtualMachine *dvm, DVM_Context *context,
         = dvm_create_array_object_i(dvm, 0);
 
     dvm->current_exception = obj;
+	*/
+	_BreakPoint()
+	//abandoned
 }
 
 void
@@ -485,12 +494,3 @@ DVM_up_cast(DVM_ObjectRef obj, int target_index)
     return ret;
 }
 
-DVM_Value
-DVM_check_exception(DVM_VirtualMachine *dvm)
-{
-    DVM_Value ret;
-
-    ret.object = dvm->current_exception;
-
-    return ret;
-}

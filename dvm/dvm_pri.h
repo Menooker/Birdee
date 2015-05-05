@@ -1,11 +1,14 @@
 #ifndef DVM_PRI_H_INCLUDED
 #define DVM_PRI_H_INCLUDED
+
 #include "..\include\DVM_code.h"
 #include "..\include\DVM_dev.h"
 #include "..\include\share.h"
 #include "..\Birdee\Birdee\BdException.h"
 #include "..\Birdee\Birdee\BirdeeDef.h"
 #include "..\Birdee\Birdee\BdHashMap.h"
+#include "..\Birdee\Birdee\UnportableAPI.h"
+
 #include <stdarg.h>
 
 #define ExHeapFreedType 0xfeeeaeee
@@ -120,8 +123,9 @@ typedef union {
 
 typedef struct {
     BINT         alloc_size;
-    BINT         stack_pointer;
+    DVM_Value   *stack_pointer;
     DVM_Value   *stack;
+	DVM_Boolean *flg_sp;
     DVM_Boolean *pointer_flags;
 } Stack;
 
@@ -215,6 +219,7 @@ struct DVM_Object_tag {
 typedef struct {
     int         current_heap_size;
     int         current_threshold;
+	BD_LOCK		lock;
     DVM_Object  *header;
 } Heap;
 
@@ -233,7 +238,7 @@ typedef struct ExecClass_tag {
     struct ExecClass_tag *super_class;
     DVM_VTable          *class_table;
     int                 interface_count;
-    struct ExecClass_tag **interface;
+    struct ExecClass_tag **binterface;
     DVM_VTable          **interface_v_table;
     int                 field_count;
     DVM_TypeSpecifier   **field_type;
@@ -274,14 +279,25 @@ typedef struct {
     DVM_Value   value;
 } DVME_Constant;
 
-struct DVM_VirtualMachine_tag {
+struct _BdThread {
 	DVM_Value   retvar;
     Stack       stack;
-    Heap        heap;
     ExecutableEntry     *current_executable;
-    BFunction    *current_function;
     DVM_ObjectRef current_exception;
-    int         pc;
+	DVM_ObjectRef		new_obj;
+	BINT				exception_index;
+	BINT				bpc;
+	PExExceptionItem	estack;
+	BINT				esp;
+	PAutoVarContext     avstack;
+	BINT				asp;
+	THREAD_ID				tid;
+	BINT				main;
+	struct _BdThread* next;
+	struct _BdThread* prv;
+};
+struct DVM_VirtualMachine_tag {
+
     BFunction    **function;
     int         function_count;
     ExecClass   **bclass;
@@ -297,20 +313,11 @@ struct DVM_VirtualMachine_tag {
     DVM_VTable  *string_v_table;
     DVM_Context *current_context;
     DVM_Context *free_context;
-
 	LLVMPExeEngine		exe_engine;
-	DVM_ObjectRef		ths;
-	//DVM_ObjectRef		cur_exception;
-	BINT				exception_index;
-	BINT				bpc;
-	PExExceptionItem	estack;
-	BINT				esp;
-
-	PAutoVarContext     avstack;
-	BINT				asp;
-
 	mRtlHashMap*			static_str_map;
-
+	Heap heap;
+	BD_LOCK thread_lock;
+	struct _BdThread* mainvm;
 };
 
 typedef struct RefInNativeFunc_tag {
@@ -366,7 +373,7 @@ void dvm_initialize_value(DVM_VirtualMachine* dvm,DVM_TypeSpecifier *type, DVM_V
 /* error.c */
 void dvm_error_i(DVM_Executable *exe, BFunction *func,
                  int pc, RuntimeError id, ...);
-void dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...);
+//void dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...);
 int dvm_conv_pc_to_line_number(DVM_Executable *exe, BFunction *func, int pc);
 void dvm_format_message(DVM_ErrorDefinition *error_definition,
                         int id, VString *message, va_list ap);

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string>
 #include "hash_compatible.h"
-
+#include "UnportableAPI.h"
 
 using namespace std;
 
@@ -12,7 +12,7 @@ extern "C"
 {
 #include "../../dvm/dvm_pri.h"
 #include "../../include/MEM.h"
-DVM_VirtualMachine_tag* curdvm;
+//DVM_VirtualMachine_tag* curdvm;
 
 
 typedef hash_map<string,DVM_ObjectRef> AvMap;
@@ -30,14 +30,14 @@ void AvDisposeMap(AvMap* mp)
 
 void AvPushNullContext()
 {
-	curdvm->avstack[curdvm->asp].p=0;
-	curdvm->asp++;
+	curthread->avstack[curthread->asp].p=0;
+	curthread->asp++;
 }
 
 void AvPopContext()
 {
-	curdvm->asp--;
-	AvMap* pp=(AvMap*)curdvm->avstack[curdvm->asp].p;
+	curthread->asp--;
+	AvMap* pp=(AvMap*)curthread->avstack[curthread->asp].p;
 	if(pp)
 	{
 		AvDisposeMap(pp);//fix-me : should we disopse the Varients here or let GC do the clean work?
@@ -51,7 +51,7 @@ void AvPutContext()
 	AvMap* newmap=(AvMap*)MEM_malloc(sizeof(AvMap));
 
 	newmap=new(newmap)AvMap(); //check-me
-	curdvm->avstack[curdvm->asp-1].p=newmap;
+	curthread->avstack[curthread->asp-1].p=newmap;
 
 }
 
@@ -81,13 +81,13 @@ BdStatus AvDoGeti(ExVarient* va,BINT* ret)
 
 void AvGeti()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
 	ExVarient* va=v->data->u.var.pobj;
-	if(AvDoGeti(va,&curdvm->retvar.int_value))
+	if(AvDoGeti(va,&curthread->retvar.int_value))
 	{
 		ExSystemRaise(ExVarBadStringForNumber);
 	}
-	curdvm->stack.stack_pointer--;
+	curthread->stack.stack_pointer--;curthread->stack.flg_sp--;
 }
 
 BdStatus AvDoGetd(ExVarient* va,double* ret)
@@ -114,13 +114,13 @@ BdStatus AvDoGetd(ExVarient* va,double* ret)
 
 void AvGetd()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
 	ExVarient* va=v->data->u.var.pobj;
-	if(AvDoGetd(va,&curdvm->retvar.double_value))
+	if(AvDoGetd(va,&curthread->retvar.double_value))
 	{
 		ExSystemRaise(ExVarBadStringForNumber);
 	}
-	curdvm->stack.stack_pointer--;
+	curthread->stack.stack_pointer--;curthread->stack.flg_sp--;
 }
 
 DVM_ObjectRef AvPrintf(wchar_t* str,...)
@@ -158,44 +158,74 @@ DVM_ObjectRef AvDoGets(ExVarient* va)
 
 void AvGets()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
 	ExVarient* va=v->data->u.var.pobj;
-	curdvm->retvar.object =AvDoGets(va);
-	curdvm->stack.stack_pointer--;
+	curthread->retvar.object =AvDoGets(va);
+	curthread->stack.stack_pointer--;curthread->stack.flg_sp--;
+}
+
+
+void AvNewi()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	BINT val=(curthread->stack.stack_pointer-1)->int_value  ;
+	v.data->u.var.pobj->type=AV_INT;
+	v.data->u.var.pobj->v.int_value=val;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+}
+
+void AvNewd()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	double val=(curthread->stack.stack_pointer-1)->double_value   ;
+	v.data->u.var.pobj->type=AV_DOUBLE;
+	v.data->u.var.pobj->v.double_value =val;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+}
+void AvNews()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	//DVM_ObjectRef val=(curthread->stack.stack_pointer-2)->object ;
+	v.data->u.var.pobj->type = AV_STRING;
+	v.data->u.var.pobj->v.object =(curthread->stack.stack_pointer-1)->object;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
 }
 
 
 void AvSeti()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
-	BINT val=curdvm->stack.stack[curdvm->stack.stack_pointer-2].int_value  ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
+	BINT val=(curthread->stack.stack_pointer-2)->int_value  ;
 	v->data->u.var.pobj->type=AV_INT;
 	v->data->u.var.pobj->v.int_value=val;
-	curdvm->stack.stack_pointer-=2;
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 void AvSetd()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
-	double val=curdvm->stack.stack[curdvm->stack.stack_pointer-2].double_value   ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
+	double val=(curthread->stack.stack_pointer-2)->double_value   ;
 	v->data->u.var.pobj->type=AV_DOUBLE;
 	v->data->u.var.pobj->v.double_value =val;
-	curdvm->stack.stack_pointer-=2;
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 void AvSets()
 {
-	DVM_ObjectRef* v=&curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
-	//DVM_ObjectRef val=curdvm->stack.stack[curdvm->stack.stack_pointer-2].object ;
+	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;
+	//DVM_ObjectRef val=(curthread->stack.stack_pointer-2)->object ;
 	v->data->u.var.pobj->type = AV_STRING;
-	v->data->u.var.pobj->v.object =curdvm->stack.stack[curdvm->stack.stack_pointer-2].object;
-	curdvm->stack.stack_pointer-=2;
+	v->data->u.var.pobj->v.object =(curthread->stack.stack_pointer-2)->object;
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 void AvCopyVar()
 {
-	DVM_ObjectRef* v = &curdvm->stack.stack[curdvm->stack.stack_pointer-1].object ;
-	ExVarient* src = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
+	DVM_ObjectRef* v = &(curthread->stack.stack_pointer-1)->object ;
+	ExVarient* src = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
 	*v->data->u.var.pobj = *src;
-	curdvm->stack.stack_pointer-=2;
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 
@@ -254,10 +284,10 @@ DVM_ObjectRef AvDoAdd(ExVarient* a,ExVarient* b)
 void AvAdd()
 {
 
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.object=AvDoAdd(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.object=AvDoAdd(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
@@ -310,10 +340,10 @@ DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
 }
 void AvSub()
 {
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.object=AvDoSub(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.object=AvDoSub(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
@@ -366,10 +396,10 @@ DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
 }
 void AvMul()
 {
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.object=AvDoMul(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.object=AvDoMul(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
@@ -422,10 +452,10 @@ DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
 }
 void AvDiv()
 {
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.object=AvDoDiv(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.object=AvDoDiv(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
@@ -478,10 +508,10 @@ DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
 }
 void AvMod()
 {
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.object=AvDoMod(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.object=AvDoMod(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 BINT AvCmpDouble(double d)
@@ -536,10 +566,10 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 }
 void AvCmp()
 {
-	ExVarient* rv = curdvm->stack.stack[curdvm->stack.stack_pointer-1].object.data->u.var.pobj;
-	ExVarient* lv = curdvm->stack.stack[curdvm->stack.stack_pointer-2].object.data->u.var.pobj;
-	curdvm->retvar.int_value=AvDoCmp(lv,rv);
-	curdvm->stack.stack_pointer-=2;
+	ExVarient* rv = (curthread->stack.stack_pointer-1)->object.data->u.var.pobj;
+	ExVarient* lv = (curthread->stack.stack_pointer-2)->object.data->u.var.pobj;
+	curthread->retvar.int_value=AvDoCmp(lv,rv);
+	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
 DVM_ObjectRef AvGetOrCreateVar(char* name)
@@ -616,7 +646,7 @@ DVM_ObjectRef AvGetVar(char* name)
 
 
 extern "C" void gc_mark(DVM_ObjectRef *ref);
-void AvMarkObjects()
+void AvMarkObjects(BdThread* th)
 {
 	hash_map<string,DVM_ObjectRef>::iterator it;
 	for(it=MainMap.begin();it!=MainMap.end();it++)
@@ -624,9 +654,9 @@ void AvMarkObjects()
 		gc_mark(&it->second);
 
 	}
-	for(int i=0;i<curdvm->asp ;i++)
+	for(int i=0;i<curthread->asp ;i++)
 	{
-		AvMap* pp=(AvMap*)curdvm->avstack[i].p;
+		AvMap* pp=(AvMap*)th->avstack[i].p;
 		if(pp)
 		{
 			for(it=(*pp).begin();it!=(*pp).end();it++)

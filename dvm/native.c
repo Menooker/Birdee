@@ -8,8 +8,9 @@
 #include "dvm_pri.h"
 #include "..\Birdee\Birdee\BdVarients.h"
 #include "..\Birdee\Birdee\BdExec.h"
+#include "..\Birdee\Birdee\BdThread.h"
 
-extern DVM_VirtualMachine *curdvm;
+//extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
 
 static DVM_NativePointerInfo st_file_type_info = {
@@ -731,18 +732,7 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
     return ret;
 }
 
-DVM_Value
-nv_test_native_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
-                    int arg_count, DVM_Value *args)
-{
-	DVM_Value ret={0};
-    DVM_Value dik_arg;
 
-    dik_arg.int_value = 13;
-    DVM_invoke_delegate(dvm, args[0], &dik_arg);
-
-    return ret;
-}
 
 
 	extern void UaBreakPoint(); //in UnportableAPI.cpp
@@ -757,6 +747,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Seti", AvSeti, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Setd", AvSetd, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Sets", AvSets, 2,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Newi", AvNewi, 1,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Newd", AvNewd, 1,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!News", AvNews, 1,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!CopyVar", AvCopyVar, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!AddVar", AvAdd, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!SubVar", AvSub, 2,DVM_FALSE);
@@ -764,9 +757,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!DivVar", AvDiv, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!ModVar", AvMod, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!CmpVar", AvCmp, 2,DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE, DVM_FALSE);
-    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE, DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);
@@ -775,6 +768,8 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "BreakPoint", UaBreakPoint, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
+	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 3,DVM_FALSE);
+
 
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,

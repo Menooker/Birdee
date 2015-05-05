@@ -67,6 +67,9 @@
     <None Include="template_test.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="list.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -154,6 +157,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="hash_compatible.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdThread.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -288,6 +294,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\compiler\fix_tree.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdThread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

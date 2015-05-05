@@ -6,7 +6,7 @@
 #include "dvm_pri.h"
 
 wchar_t *
-dvm_mbstowcs_alloc(DVM_VirtualMachine *dvm, const char *src)
+dvm_mbstowcs_alloc(BdThread *dvm, const char *src)
 {
     int len;
     wchar_t *ret;
@@ -15,8 +15,8 @@ dvm_mbstowcs_alloc(DVM_VirtualMachine *dvm, const char *src)
     if (len < 0) {
         if (dvm) {
             dvm_error_i(dvm->current_executable->executable,
-                        dvm->current_function,
-                        dvm->pc,
+                        NULL,
+                        0,
                         BAD_MULTIBYTE_CHARACTER_ERR,
                         DVM_MESSAGE_ARGUMENT_END);
         } else {

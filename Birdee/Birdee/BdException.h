@@ -27,7 +27,8 @@ enum ExExceptions{
 	ExBadParameterType,
 	ExFunctionNotFound,
 	ExBadParameterNum,
-	ExBadFunctionIndex
+	ExBadFunctionIndex,
+	ExMultiThreadNotSupported
 };
 
 #ifdef __cplusplus

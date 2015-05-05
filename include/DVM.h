@@ -1,10 +1,10 @@
 #ifndef PUBLIC_DVM_H_INCLUDED
 #define PUBLIC_DVM_H_INCLUDED
-
+#include "../Birdee/Birdee/BirdeeDef.h"
 typedef struct DVM_Executable_tag DVM_Executable;
 typedef struct DVM_ExecutableList_tag DVM_ExecutableList;
 typedef struct DVM_VirtualMachine_tag DVM_VirtualMachine;
-
+typedef struct _BdThread BdThread;
 typedef struct DVM_Object_tag DVM_Object;
 typedef struct DVM_String_tag DVM_String;
 typedef struct ExVarient_tag ExVarient;

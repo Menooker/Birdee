@@ -214,7 +214,7 @@ dvm_error_i(DVM_Executable *exe, BFunction *func, int pc,
     va_end(ap);
     exit(1);
 }
-
+/*
 void
 dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...)
 {
@@ -222,11 +222,11 @@ dvm_error_n(DVM_VirtualMachine *dvm, RuntimeError id, ...)
     self_check();
     va_start(ap, id);
     error_v(dvm->current_executable->executable,
-            dvm->current_function, dvm->pc, id, ap);
+            NULL,NULL, id, ap);
     va_end(ap);
 
     exit(1);
-}
+}*/
 
 void
 dvm_format_message(DVM_ErrorDefinition *error_definition,

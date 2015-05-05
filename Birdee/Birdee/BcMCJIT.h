@@ -2,7 +2,6 @@
 #define _H_BIRDEE_BCMCJIT
 #include "BirdeeDef.h"
 
-
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
@@ -82,7 +81,10 @@ public:
 
   }
   ~MCJITHelper();
-
+	ExecutionEngine* getEngine(Module* m)
+	{
+		return this->EngineMap[m];
+	}
   Function *getFunction(const std::string FnName);
   //Module *getModuleForNewFunction();
   void *getPointerToFunction(Function* F);
@@ -95,16 +97,18 @@ public:
   void addGlobalMapping(const std::string& Name,void*);
 
   ExecutionEngine *compileModule(Module *M);
-
-private:
   typedef std::vector<Module*> ModuleVector;
+  ModuleVector  Modules;
+  std::map<Module *, ExecutionEngine *> EngineMap;
+private:
+
   bool mUseMC;
  // MCJITObjectCache OurObjectCache;
   ExecutionEngine* EE;
   //LLVMContext  &Context;
-  ModuleVector  Modules;
+
   std::map<std::string, void *> GlobalMap;
-  std::map<Module *, ExecutionEngine *> EngineMap;
+
 
   Module       *CurrentModule;
 };

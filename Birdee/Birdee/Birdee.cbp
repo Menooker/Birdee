@@ -12,12 +12,14 @@
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
 				<Compiler>
+					<Add option="-g" />
 					<Add option="-DWIN32" />
 					<Add option="-D_DEBUG" />
 					<Add option="-D_CONSOLE" />
 					<Add option="-D__STDC_LIMIT_MACROS" />
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
+					<Add option="-DBD_ON_WINDOWS" />
 					<Add directory="D:/Menooker/libLLVMlite/llvm-3.4.2.src/include" />
 					<Add directory="D:/Menooker/libLLVMlite/build_codeblocks0/include" />
 					<Add directory="$(IncludePath)" />
@@ -172,6 +174,8 @@
 		<Unit filename="BdHashMap.cpp" />
 		<Unit filename="BdHashMap.h" />
 		<Unit filename="BdLoader.cpp" />
+		<Unit filename="BdThread.cpp" />
+		<Unit filename="BdThread.h" />
 		<Unit filename="BdVarients.cpp" />
 		<Unit filename="BdVarients.h" />
 		<Unit filename="Birdee.cpp" />

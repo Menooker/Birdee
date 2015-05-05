@@ -54,7 +54,6 @@ int DVM_search_class(DVM_VirtualMachine *dvm, char *package_name, char *name);
 //int EXE_search_class(DVM_Executable *exe, char *package_name, char *name);
 /* execute.c */
 
-typedef void (*BdVMFunction)(void *args, ...);
 DVM_Context *DVM_push_context(DVM_VirtualMachine *dvm);
 void DVM_pop_context(DVM_VirtualMachine *dvm, DVM_Context *context);
 DVM_Context *DVM_create_context(DVM_VirtualMachine *dvm);
@@ -110,8 +109,6 @@ void DVM_set_exception(DVM_VirtualMachine *dvm, DVM_Context *context,
                        int error_id, ...);
 void DVM_set_null(DVM_Value *value);
 DVM_ObjectRef DVM_up_cast(DVM_ObjectRef obj, int target_index);
-
-DVM_Value DVM_check_exception(DVM_VirtualMachine *dvm);
 
 /* heap.c */
 void DVM_check_gc(DVM_VirtualMachine *dvm);

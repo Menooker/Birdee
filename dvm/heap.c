@@ -4,7 +4,8 @@
 #include "..\include\DBG.h"
 #include "dvm_pri.h"
 #include "..\Birdee\Birdee\BdHashMap.h"
-extern DVM_VirtualMachine* curdvm;
+#include "..\Birdee\Birdee\UnportableAPI.h"
+//extern DVM_VirtualMachine* curdvm;
 
 void
 DVM_check_gc(DVM_VirtualMachine *dvm)
@@ -28,6 +29,8 @@ alloc_object(DVM_VirtualMachine *dvm, ObjectType type)
     DVM_ObjectRef ret;
 
     DVM_check_gc(dvm);
+
+	UaEnterLock(&dvm->heap.lock);
     ret.v_table = NULL;
     ret.data = MEM_malloc(sizeof(DVM_Object));
     dvm->heap.current_heap_size += sizeof(DVM_Object);
@@ -39,7 +42,8 @@ alloc_object(DVM_VirtualMachine *dvm, ObjectType type)
     if (ret.data->next) {
         ret.data->next->prev = ret.data;
     }
-
+	curthread->new_obj=ret;
+	UaLeaveLock(&dvm->heap.lock);
     return ret;
 }
 
@@ -253,7 +257,7 @@ DVM_create_array_object(DVM_VirtualMachine *dvm, DVM_Context *context,
 static void
 initialize_fields(DVM_VirtualMachine *dvm, ExecClass *ec, DVM_ObjectRef obj)
 {
-    DVM_Value value;
+    /*DVM_Value value;
 
     value.object = obj;
     dvm_push_object(dvm, value);
@@ -265,7 +269,8 @@ initialize_fields(DVM_VirtualMachine *dvm, ExecClass *ec, DVM_ObjectRef obj)
     dvm_execute_i(dvm, NULL, ec->dvm_class->field_initializer.code,
                   ec->dvm_class->field_initializer.code_size, 0);
 
-    dvm_pop_object(dvm);
+    dvm_pop_object(dvm);*/
+	//fix-me : urgent! init fields
 }
 
 
@@ -427,19 +432,22 @@ gc_reset_mark(DVM_Object *obj)
     obj->marked = DVM_FALSE;
 }
 
-extern void AvMarkObjects();
+extern void AvMarkObjects(BdThread* th);
+extern void ThPauseTheWorld();
+extern void ThResumeTheWorld();
 static void
 gc_mark_objects(DVM_VirtualMachine *dvm)
 {
     DVM_Object *obj;
     ExecutableEntry *ee_pos;
-    int i;
+    DVM_Value* j;int i;
     DVM_Context *context_pos;
-
+	BdThread* th;
     for (obj = dvm->heap.header; obj; obj = obj->next) {
         gc_reset_mark(obj);
     }
 
+	ThPauseTheWorld();
     for (ee_pos = dvm->executable_entry; ee_pos; ee_pos = ee_pos->next) {
         for (i = 0; i < ee_pos->static_v.variable_count; i++) {
             if (is_reference_type(ee_pos->executable
@@ -449,12 +457,22 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
         }
     }
 
-    for (i = 0; i < dvm->stack.stack_pointer; i++) {
-        if (dvm->stack.pointer_flags[i]) {
-            gc_mark(&dvm->stack.stack[i].object);
-        }
-    }
-    gc_mark(&dvm->current_exception);
+	UaEnterLock(&dvm->thread_lock);
+	th=dvm->mainvm;
+	while(th)
+	{
+		for (i = 0,j= th->stack.stack; j < th->stack.stack_pointer; j++, i++) {
+			if (th->stack.pointer_flags[i]) {
+				gc_mark(&j->object);
+			}
+		}
+		gc_mark(&th->current_exception);
+		gc_mark(&th->new_obj);
+		AvMarkObjects(th);
+		th=th->next;
+	}
+	UaLeaveLock(&dvm->thread_lock);
+
     for (context_pos = dvm->current_context; context_pos;
          context_pos = context_pos->next) {
         gc_mark_ref_in_native_method(context_pos);
@@ -463,7 +481,8 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
          context_pos = context_pos->next) {
         gc_mark_ref_in_native_method(context_pos);
     }
-	AvMarkObjects();
+	ThResumeTheWorld();
+	
 }
 
 static DVM_Boolean
@@ -577,8 +596,11 @@ void
 dvm_garbage_collect(DVM_VirtualMachine *dvm)
 {
     DVM_Boolean call_finalizer;
-    do {
-        gc_mark_objects(dvm);
-        call_finalizer = gc_sweep_objects(dvm);
-    } while(call_finalizer);
+	UaEnterLock(&dvm->heap.lock);
+		do {
+			
+			gc_mark_objects(dvm);
+			call_finalizer = gc_sweep_objects(dvm);
+		} while(call_finalizer);
+	UaLeaveLock(&dvm->heap.lock);
 }
