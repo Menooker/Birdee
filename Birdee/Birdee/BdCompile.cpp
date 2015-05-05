@@ -1661,6 +1661,14 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunVarInt+(expr->u.cast.type-VAR_TO_INT_CAST)));
 		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[expr->u.cast.type-VAR_TO_INT_CAST]));
 		break;
+	case INT_TO_VAR_CAST:
+	case DOUBLE_TO_VAR_CAST:
+	case STRING_TO_VAR_CAST:
+		builder.CreateCall(GetPush(get_opcode_type_offset(expr->u.cast.operand->type)),v);
+
+		builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunNewIntVar+(expr->u.cast.type-INT_TO_VAR_CAST)));
+		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypStack));
+		break;
     case ENUM_TO_STRING_CAST:
 		_BreakPoint() //fix-me : not implemented
         break;

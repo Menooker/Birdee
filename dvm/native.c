@@ -747,6 +747,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Seti", AvSeti, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Setd", AvSetd, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Sets", AvSets, 2,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Newi", AvNewi, 1,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!Newd", AvNewd, 1,DVM_FALSE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!News", AvNews, 1,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!CopyVar", AvCopyVar, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!AddVar", AvAdd, 2,DVM_FALSE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME, "Var!SubVar", AvSub, 2,DVM_FALSE);
@@ -765,7 +768,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "BreakPoint", UaBreakPoint, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
-	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 1,DVM_FALSE);
+	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 3,DVM_FALSE);
 
 
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);

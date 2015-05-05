@@ -86,12 +86,22 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		//TlsSetValue(dwTlsIndex,vm);
 	}
 
-	THREAD_ID UaCreateThread(BdThread* vm,int go)
+	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
 	{
+		vm->new_obj=arg;
 		HANDLE h=CreateThread(0,0,UaThreadStub,vm,go?0:CREATE_SUSPENDED,0);
 		return h;
 	}
 
+	void UaSuspendThread(THREAD_ID id)
+	{
+		SuspendThread(id);
+	}
+
+	void UaResumeThread(THREAD_ID id)
+	{
+		ResumeThread(id);
+	}
 	void UaInitLock(BD_LOCK* lc)
 	{
 		InitializeCriticalSection(lc);

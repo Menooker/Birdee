@@ -2,6 +2,33 @@
 
 extern "C"
 {
+	void ThPauseTheWorld()
+	{
+		BdThread* self=curthread,*th;
+		UaEnterLock(&curdvm->thread_lock);
+		th=curdvm->mainvm;
+		while(th)
+		{
+			if(th!=self)
+				UaSuspendThread(th->tid);
+			th=th->next;
+		}
+		UaLeaveLock(&curdvm->thread_lock);
+	}
+
+	void ThResumeTheWorld()
+	{
+		BdThread* self=curthread,*th;
+		UaEnterLock(&curdvm->thread_lock);
+		th=curdvm->mainvm;
+		while(th)
+		{
+			if(th!=self)
+				UaResumeThread(th->tid);
+			th=th->next;
+		}
+		UaLeaveLock(&curdvm->thread_lock);
+	}
 
 	void ThAddThreadToList(BdThread* t)
 	{
@@ -41,6 +68,8 @@ extern "C"
 	{
 
 		curthread=param;
+		param->stack.stack_pointer->object=param->new_obj;  *param->stack.flg_sp = DVM_TRUE;
+		param->stack.stack_pointer ++; param->stack.flg_sp++;
 		//param->tid=(void*)UaGetCurrentThread();
 		ExInitThreadInAllModules();
 		ExDoInvoke(param->main);
@@ -49,10 +78,12 @@ extern "C"
 		ExFreeThread(param);
 	}
 
-	void ThCreateThread()
+	void ThCreateThread(DVM_Value* args)
 	{
-		DVM_ObjectRef del_obj=(curthread->stack.stack_pointer-1)->object;
-		curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+		DVM_ObjectRef del_obj=args[2].object;
+		DVM_Boolean run=(DVM_Boolean)args[1].int_value;
+		DVM_ObjectRef arg=args[0].object;
+		curthread->stack.stack_pointer-=3 ;curthread->stack.flg_sp-=3;
 #ifndef BD_ON_GCC
 		ExSystemRaise(ExMultiThreadNotSupported);
 #endif
@@ -70,7 +101,7 @@ extern "C"
 		BdThread* th=ExCreateThread();
 		th->main=func_idx;
 		ThAddThreadToList(th);
-		th->tid=UaCreateThread(th,1);
+		th->tid=UaCreateThread(th,1,arg);
 		curthread->retvar.int_value=(BINT)th->tid;
 	}
 

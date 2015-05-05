@@ -10,7 +10,9 @@ extern "C"
 {
 #endif
 	void ThStopAllThreads();
-	void ThCreateThread();
+	void ThCreateThread(DVM_Value* args);
+	void ThPauseTheWorld();
+	void ThResumeTheWorld();
 #ifdef __cplusplus
 }
 #endif

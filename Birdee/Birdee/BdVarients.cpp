@@ -165,6 +165,36 @@ void AvGets()
 }
 
 
+void AvNewi()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	BINT val=(curthread->stack.stack_pointer-1)->int_value  ;
+	v.data->u.var.pobj->type=AV_INT;
+	v.data->u.var.pobj->v.int_value=val;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+}
+
+void AvNewd()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	double val=(curthread->stack.stack_pointer-1)->double_value   ;
+	v.data->u.var.pobj->type=AV_DOUBLE;
+	v.data->u.var.pobj->v.double_value =val;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+}
+void AvNews()
+{
+	DVM_ObjectRef v=ExCreateVar(curdvm,0);
+	//DVM_ObjectRef val=(curthread->stack.stack_pointer-2)->object ;
+	v.data->u.var.pobj->type = AV_STRING;
+	v.data->u.var.pobj->v.object =(curthread->stack.stack_pointer-1)->object;
+	curthread->retvar.object=v;
+	curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+}
+
+
 void AvSeti()
 {
 	DVM_ObjectRef* v=&(curthread->stack.stack_pointer-1)->object ;

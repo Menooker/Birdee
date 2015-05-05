@@ -28,7 +28,7 @@ extern "C"
 	void* UaGuardAlloc(size_t sz);
 	void UaGuardFree(void* p);
 	void  UaStackTrace(UaTraceCallBack cb,void* param);
-	THREAD_ID UaCreateThread(BdThread* vm,int go);
+	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg);
 	THREAD_ID UaGetCurrentThread();
 	void UaStopThread(THREAD_ID t);
 	void UaSetCurVM(DVM_VirtualMachine* vm);
@@ -37,6 +37,8 @@ extern "C"
 	void UaKillLock(BD_LOCK* lc);
 	void UaEnterLock(BD_LOCK* lc);
 	void UaLeaveLock(BD_LOCK* lc);
+	void UaSuspendThread(THREAD_ID id);
+	void UaResumeThread(THREAD_ID id);
 #ifdef __cplusplus
 }
 #endif
