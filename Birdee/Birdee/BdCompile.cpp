@@ -2210,8 +2210,11 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 		Value* excep=builder.CreateLoad(builder.CreateLoad(beo));
         BcGenerateSaveToIdentifier(catch_pos->variable_declaration,excep,catch_pos->line_number,-1);
         BcGenerateBlock(exe, catch_pos->block,catch_pos->block->statement_list, bcatch);
-        builder.CreateStore(oldsp,pbsp);
-		builder.CreateBr(bnor);
+		if(!(--bcatch->getInstList().end())->isTerminator())
+		{
+			builder.CreateStore(oldsp,pbsp);
+			builder.CreateBr(bnor);
+		}
 
     }
 
@@ -2236,7 +2239,8 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
     if (try_s->finally_block) {
         BcGenerateBlock(exe, try_s->finally_block, try_s->finally_block->statement_list,bnor);
     }
-	builder.CreateCondBr(builder.CreateLoad(pIsNor),bcont,bfail);
+	if(!(--bfin->getInstList().end())->isTerminator())
+		builder.CreateCondBr(builder.CreateLoad(pIsNor),bcont,bfail);
 
 	SwitchBlock(bfail);
 	builder.CreateCall(fReraise);

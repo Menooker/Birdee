@@ -5,6 +5,8 @@ interface Hashable
 	public virtual declare function equals(k as Hashable) as boolean
 end
 
+class StackEmptyException
+end
 
 class HString : Hashable
 	public str as string
@@ -25,21 +27,33 @@ class HString : Hashable
 	end
 end
 
-class Object : Hashable
+public abstract class Container <T>
+	public abstract  virtual declare sub push(t as T)
+	public abstract  virtual declare function pop() as T throws StackEmptyException
+end
+
+class Object<T> : Container,Hashable
 	public override function hash() as int
 		return 0
 	end
 	public virtual override function equals(k as Hashable) as boolean
 		try
-			dim in as Object=k::Object:>
-			return in==this
+			//dim in as Object<T> =k::Object:>
+			//return in==this
+			return true
 		catch ClassCastException e
-			e.print_stack_trace()
+			return false
 		end
+	end
+	public virtual override sub push(t as T)
+		//push
+	end
+	public virtual override function pop() as T throws StackEmptyException
+		//pop
 	end
 end
 
-dim a as Object=new Object()
+dim a as Object<HString> =new Object()
 dim b as HString=new HString("JI")
 println(a.equals(b))
 
