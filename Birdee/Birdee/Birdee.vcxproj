@@ -95,6 +95,7 @@
     <None Include="req2.dkh" />
     <None Include="template_test.txt" />
     <None Include="test_delegate.txt" />
+    <None Include="thread.txt" />
     <None Include="vartest.dkm" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,31 @@
+//1950
+//1386
+//1358
+//1320
+/*
+function f1(arg as var) as int
+	println("thread!!!" + arg)
+	println("thread" + arg + ":" + fab(arg))
+	return 1
+end
+
+
+CreateThread(f1,true,3)
+CreateThread(f1,true,5)
+
+function fab(n as int) as int
+	if(n==1 || n==2) then
+		return 1
+	end
+	return fab(n-1)+fab(n-2)
+end
+
+
+
+
+dim a as string
+for #i=0;#i<10000;#i++
+	a=#i+"hehe\n"
+end
+print(a)
+*/

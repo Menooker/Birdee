@@ -58,16 +58,19 @@
     <None Include="ab.dkm">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="Exceptions2.dkh">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="Exceptions.dkh">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="template_test.txt">
       <Filter>资源文件</Filter>
     </None>
     <None Include="list.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="thread.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="Exceptions2.dkh">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="Exceptions.dkh">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

@@ -83,6 +83,7 @@ Function *fGetSuper;
 Function *fGetVar;
 Function *fGetOrCreateVar;
 Function *fDownCast;
+Function *fUpCast;
 
 Function *fArrBdChk;
 Function *fPop;
@@ -741,6 +742,7 @@ extern "C" void* BcNewModule(char* name)
 	FunctionType* FT2 = FunctionType::get(TyObjectRef,Args2, false);
 	fLoadStringFromPool = Function::Create(FT2, Function::ExternalLinkage,"string!LoadStringFromPool", module);
 	fDownCast=Function::Create(FT2, Function::ExternalLinkage,"system!DownCast", module);
+	fUpCast=Function::Create(FT2, Function::ExternalLinkage,"system!UpCast", module);
 	fNewDelegate = Function::Create(FT2, Function::ExternalLinkage,"system!NewDelegate", module);
 
 	std::vector<Type*> Args3(2,TyObjectRef);//temp : to del
@@ -1856,7 +1858,7 @@ Value* BcGenerateSuper(DVM_Executable *exe, Block *block,Expression *expr)
 
 Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression *expr) //fix-me : implement line-numbers
 {
-	Value* lv,*rv;
+	Value* lv,*rv;		Value* va;
 	int i;
 	if(expr->kind <=15 && expr->kind >=13 )
 	{
@@ -2029,24 +2031,19 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
         return BcGenerateSuper(exe, current_block, expr);
         break;
     case DOWN_CAST_EXPRESSION:
-		Value* va;
 		va = BcGenerateExpression(exe, current_block, expr->u.down_cast.operand);
 		builder.CreateCall(GetPush(2),va);
         return builder.CreateCall(fDownCast,ConstInt(32,expr->u.down_cast.type->u.class_ref.class_index));
         break;
-
+    case UP_CAST_EXPRESSION:
+		va = BcGenerateExpression(exe, current_block, expr->u.up_cast.operand);
+		builder.CreateCall(GetPush(2),va);
+		return builder.CreateCall(fUpCast,ConstInt(32,expr->u.up_cast.interface_index));
+        break;
 
  /*    case INSTANCEOF_EXPRESSION:
         generate_instanceof_expression(exe, current_block, expr, ob);
         break;
-    case DOWN_CAST_EXPRESSION:
-        generate_down_cast_expression(exe, current_block, expr, ob);
-        break;
-
-    case UP_CAST_EXPRESSION:
-        generate_up_cast_expression(exe, current_block, expr, ob);
-        break;
-
     case ENUMERATOR_EXPRESSION:
         generate_int_expression(exe, expr->line_number,
                                 expr->u.enumerator.enumerator->value,
@@ -2134,15 +2131,12 @@ void BcGenerateReturnStatement(DVM_Executable *exe, Block *block,Statement *stat
     DBG_assert(statement->u.return_s.return_value != NULL,
                ("return value is null."));
 
-    /*for (block_p = block; block_p; block_p = block_p->outer_block) {
+    for (block_p = block; block_p; block_p = block_p->outer_block) {
         if (block_p->type == TRY_CLAUSE_BLOCK
             || block_p->type == CATCH_CLAUSE_BLOCK) {
-            generate_code(ob, statement->line_number,
-                          DVM_GO_FINALLY, compiler->current_finally_label);
+            builder.CreateCall(fLeaveTry); //fix-me : finally
         }
-    }*/ //fix-me : try-finally
-	if(isInTry)
-		builder.CreateCall(fLeaveTry);
+    }
     Value* v=BcGenerateExpression(exe, block, statement->u.return_s.return_value);
 	//printf("%d",v->getType()->getTypeID());
 	builder.CreateStore(v,builder.CreateBitCast(builder.CreateLoad(bretvar),v->getType()->getPointerTo()));
@@ -2227,7 +2221,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	isInTry=1;
     BcGenerateBlock(exe, try_s->try_block,
                             try_s->try_block->statement_list, btry);
-	if(!btry->getInstList().end()->isTerminator())
+	if(!(--btry->getInstList().end())->isTerminator())
 	{
 		builder.CreateCall(fLeaveTry);
 		builder.CreateBr(bnor);

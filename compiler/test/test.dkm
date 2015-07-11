@@ -1,31 +1,46 @@
-//1950
-//1386
-//1358
-//1320
+require Exceptions
 
-function f1(arg as var) as int
-	println("thread!!!" + arg)
-	println("thread" + arg + ":" + fab(arg))
-	return 1
+interface Hashable
+	public virtual declare function hash() as int
+	public virtual declare function equals(k as Hashable) as boolean
 end
 
 
-CreateThread(f1,true,3)
-CreateThread(f1,true,5)
-
-function fab(n as int) as int
-	if(n==1 || n==2) then
-		return 1
+class HString : Hashable
+	public str as string
+	public virtual constructor  initialize(i as string)
+		str=i
 	end
-	return fab(n-1)+fab(n-2)
+	public virtual override function hash() as int
+		dim i as int
+		dim key as int =0
+		for i=0;i<str.length()-1;i++
+			key = key * (str[i]*2+str[i+1])+ (str[i]+str[i+1]*2)
+		end
+		return key
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		dim in as HString=k::HString:>
+		return in.str==str
+	end
 end
 
-
-
-
-dim a as string
-for #i=0;#i<10000;#i++
-	a=#i+"hehe\n"
+class Object : Hashable
+	public override function hash() as int
+		return 0
+	end
+	public virtual override function equals(k as Hashable) as boolean
+		try
+			dim in as Object=k::Object:>
+			return in==this
+		catch ClassCastException e
+			e.print_stack_trace()
+		end
+	end
 end
-print(a)
+
+dim a as Object=new Object()
+dim b as HString=new HString("JI")
+println(a.equals(b))
+
 

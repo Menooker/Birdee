@@ -90,8 +90,7 @@ extern "C" void ExLoadFunction(void* args,...)
 
 }
 
-
-DVM_ObjectRef ExDownCast(BINT index)
+DVM_ObjectRef ExUpCast(BINT index)
 {
 			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
 			DVM_ObjectRef ret=obj;
@@ -103,6 +102,100 @@ DVM_ObjectRef ExDownCast(BINT index)
                     = obj.v_table->exec_class->interface_v_table[index];
             }
 			return ret;
+}
+
+DVM_Boolean
+ExInstanceofImp(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj,
+                   int target_idx,
+                   DVM_Boolean *is_interface, int *interface_idx)
+{
+    ExecClass *pos;
+    int i;
+
+    for (pos = obj->v_table->exec_class->super_class; pos;
+         pos = pos->super_class) {
+        if (pos->class_index == target_idx) {
+            *is_interface = DVM_FALSE;
+            return DVM_TRUE;
+        }
+    }
+
+    for (i = 0; i < obj->v_table->exec_class->interface_count; i++) {
+        if (obj->v_table->exec_class->binterface[i]->class_index
+            == target_idx) {
+            *is_interface = DVM_TRUE;
+            *interface_idx = i;
+            return DVM_TRUE;
+        }
+    }
+    return DVM_FALSE;
+}
+
+
+DVM_ErrorStatus
+ExCheckDownCast(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj, int target_idx,
+                DVM_Boolean *is_same_class,
+                DVM_Boolean *is_interface, int *interface_index)
+{
+    if (obj->v_table->exec_class->class_index == target_idx) {
+        *is_same_class = DVM_TRUE;
+        return DVM_SUCCESS;
+    }
+    *is_same_class = DVM_FALSE;
+
+    if (!ExInstanceofImp(dvm, obj, target_idx,
+                            is_interface, interface_index)) {
+        return DVM_ERROR;
+    }
+
+    return DVM_SUCCESS;
+}
+
+DVM_ObjectRef ExDownCast(BINT index)
+{
+			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
+			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+
+            DVM_Boolean is_same_class;
+            DVM_Boolean is_interface;
+            int interface_idx;
+            DVM_ErrorStatus status;
+            DVM_ObjectRef exception;
+			int classid;
+            do {
+                if (is_null_pointer(&obj)) {
+                    ExNullPointerException();
+                }
+                status = ExCheckDownCast(curdvm, &obj, index,
+                                         &is_same_class,
+                                         &is_interface, &interface_idx);
+                if (status != DVM_SUCCESS) {
+                    curthread->current_exception= ExCreateExceptionEx(curdvm,
+                                               CLASS_CAST_EXCEPTION_NAME,
+											   &classid,
+                                               CLASS_CAST_ERR,
+                                               DVM_STRING_MESSAGE_ARGUMENT,
+                                               "org",
+                                               obj.v_table->exec_class->name,
+                                               DVM_STRING_MESSAGE_ARGUMENT,
+                                               "target",
+											   curdvm->bclass[curthread->current_executable->class_table[index]]->name,
+                                               DVM_MESSAGE_ARGUMENT_END);
+                    ExRaiseException(classid+1);
+                    break;
+                }
+                if (!is_same_class) {
+                    if (is_interface) {
+                        obj.v_table
+                            = obj.v_table->exec_class
+                            ->interface_v_table[interface_idx];
+                    } else {
+                        obj.v_table = obj.v_table->exec_class->class_table;
+                    }
+                }
+                
+            } while (0);
+			return obj;
 }
 
 DVM_ObjectRef ExGetSuper()
@@ -1089,6 +1182,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!DownCast");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExDownCast);
 	MCJIT->addGlobalMapping("system!DownCast",(void*)ExDownCast);
+	f=m->getFunction("system!UpCast");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExUpCast);
+	MCJIT->addGlobalMapping("system!UpCast",(void*)ExUpCast);
 	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
