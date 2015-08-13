@@ -2210,7 +2210,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 		Value* excep=builder.CreateLoad(builder.CreateLoad(beo));
         BcGenerateSaveToIdentifier(catch_pos->variable_declaration,excep,catch_pos->line_number,-1);
         BcGenerateBlock(exe, catch_pos->block,catch_pos->block->statement_list, bcatch);
-		if(!(--bcatch->getInstList().end())->isTerminator())
+		if(bcatch->getInstList().empty() || !bcatch->getInstList().back().isTerminator())
 		{
 			builder.CreateStore(oldsp,pbsp);
 			builder.CreateBr(bnor);
@@ -2224,7 +2224,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 	isInTry=1;
     BcGenerateBlock(exe, try_s->try_block,
                             try_s->try_block->statement_list, btry);
-	if(!(--btry->getInstList().end())->isTerminator())
+	if(btry->getInstList().empty() || !btry->getInstList().back().isTerminator())
 	{
 		builder.CreateCall(fLeaveTry);
 		builder.CreateBr(bnor);
@@ -2239,7 +2239,7 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
     if (try_s->finally_block) {
         BcGenerateBlock(exe, try_s->finally_block, try_s->finally_block->statement_list,bnor);
     }
-	if(!(--bfin->getInstList().end())->isTerminator())
+	if(bfin->getInstList().empty() || !bfin->getInstList().back().isTerminator())
 		builder.CreateCondBr(builder.CreateLoad(pIsNor),bcont,bfail);
 
 	SwitchBlock(bfail);
