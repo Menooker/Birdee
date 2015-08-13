@@ -178,8 +178,8 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"unsafe"          return UNSAFE;
 <INITIAL>"safe"          return SAFE;
 
-<INITIAL>"{\n"          {increment_line_number();  return LC;}
-<INITIAL>"}\n"          {increment_line_number();  return RC;}
+<INITIAL>"{"          {return LC;}
+<INITIAL>"}"          {return RC;}
 <INITIAL>[\n]+          {increment_line_number_int(yyleng);  BEGIN CHK_END_BLOCK;  return CR;}
 <INITIAL>"["            return LB;
 <INITIAL>"]"            return RB;

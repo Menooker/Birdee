@@ -34,7 +34,7 @@ end
 
 class Object<T> : Container,Hashable
 	public override function hash() as int
-		return 0
+		return 12
 	end
 	public virtual override function equals(k as Hashable) as boolean
 		try
@@ -53,8 +53,11 @@ class Object<T> : Container,Hashable
 	end
 end
 
+
 dim a as Object<HString> =new Object()
 dim b as HString=new HString("JI")
 println(a.equals(b))
-
+dim arr as int[]
+arr={1,2,a.hash()}
+println(arr[2])
 
