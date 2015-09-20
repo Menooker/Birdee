@@ -861,6 +861,9 @@ static VTableItem st_array_method_v_table[] = {
 };
 
 static VTableItem st_string_method_v_table[] = {
+	{STRING_PREFIX "hash", FUNCTION_NOT_FOUND},
+    {STRING_PREFIX "equals", FUNCTION_NOT_FOUND},
+    {STRING_PREFIX "tostr", FUNCTION_NOT_FOUND},
     {STRING_PREFIX STRING_METHOD_LENGTH, FUNCTION_NOT_FOUND},
     {STRING_PREFIX STRING_METHOD_SUBSTR, FUNCTION_NOT_FOUND},
 };

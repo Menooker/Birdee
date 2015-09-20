@@ -22,6 +22,12 @@ typedef struct {
     int parameter_count;
 } BuiltInMethod;
 
+typedef struct {
+    char *name;
+    BuiltInMethod *method;
+    int method_count;
+} BuiltInClass;
+
 static BuiltInMethodParameter st_array_resize_arg[] = {
     {"new_size", DVM_INT_TYPE}
 };
@@ -52,22 +58,39 @@ static BuiltInMethodParameter st_string_substr_arg[] = {
     {"start", DVM_INT_TYPE},
     {"length", DVM_INT_TYPE}
 };
-
+static BuiltInMethodParameter st_object_equals_arg[] = {
+    {"obj", DVM_UNSPECIFIED_IDENTIFIER_TYPE}
+};
 static BuiltInMethod st_string_method[] = {
+	{"hash", DVM_INT_TYPE, NULL, 0},
+	{"equals", DVM_BOOLEAN_TYPE, st_object_equals_arg,ARRAY_SIZE(st_object_equals_arg) },
+	{"tostr", DVM_STRING_TYPE, NULL, 0},
     {"length", DVM_INT_TYPE, NULL, 0},
     {"substr", DVM_STRING_TYPE, st_string_substr_arg,
      ARRAY_SIZE(st_string_substr_arg)},
 };
 
+static BuiltInMethod st_object_method[] = {
+	{"hash", DVM_INT_TYPE, NULL, 0},
+	{"equals", DVM_BOOLEAN_TYPE, st_object_equals_arg,ARRAY_SIZE(st_object_equals_arg) },
+	{"tostr", DVM_STRING_TYPE, NULL, 0},
+};
+
+
+static BuiltInClass st_builtin_class[]={
+	{"Object",st_object_method,ARRAY_SIZE(st_object_method)},
+};
+
 static FunctionDefinition *
-create_built_in_method(BuiltInMethod *src, int method_count)
+create_built_in_method(DKC_Compiler* compiler,BuiltInMethod *src, int method_count)
 {
     int i;
     int param_idx;
     ParameterList *param_list;
     FunctionDefinition *fd_array;
-
+	
     fd_array = dkc_malloc(sizeof(FunctionDefinition) * method_count);
+	memset(fd_array,0,sizeof(FunctionDefinition) * method_count);
     for (i = 0; i < method_count; i++) {
         fd_array[i].name = src[i].name;
         fd_array[i].type = dkc_alloc_type_specifier(src[i].return_type);
@@ -75,6 +98,13 @@ create_built_in_method(BuiltInMethod *src, int method_count)
         for (param_idx = 0; param_idx < src[i].parameter_count; param_idx++) {
             TypeSpecifier *type
                 = dkc_alloc_type_specifier(src[i].parameter[param_idx].type);
+			if(src[i].parameter[param_idx].type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
+			{
+				/*type->u.class_ref.class_definition=compiler->class_definition_list;
+				type->u.class_ref.class_index=0;
+				type->u.class_ref.tylist=NULL;*/
+				type->identifier="Object";
+			}
             if (param_list) {
                 param_list
                     = dkc_chain_parameter(param_list, type,
@@ -85,10 +115,65 @@ create_built_in_method(BuiltInMethod *src, int method_count)
                                            src[i].parameter[param_idx].name);
             }
         }
+		fd_array[i].param_cnt=src[i].parameter_count;
         fd_array[i].parameter = param_list;
         fd_array[i].throws = NULL;
     }
     return fd_array;
+}
+
+static void
+create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,ClassDefinition** out)
+{
+	int i,j;
+	ClassDefinition* cd,*ret;
+	FunctionDefinition* fd;
+	MemberDeclaration* md;
+	PackageName* pn;
+	ClassDefinition* last=NULL;
+	MemberDeclaration** mnext;
+
+	pn=(PackageName*)dkc_malloc(sizeof(PackageName));
+	pn->name="diksam"; //"diksam.lang"
+	pn->next=(PackageName*)dkc_malloc(sizeof(PackageName));
+	pn->next->name="lang";
+	pn->next->next=NULL;
+
+	
+	for(i=0;i<cls_count;i++)
+	{
+		cd=(ClassDefinition*)dkc_malloc(sizeof(ClassDefinition));
+		*out=cd;
+		cd->access_modifier=DVM_PUBLIC_ACCESS;
+		cd->class_or_interface=DVM_INTERFACE_DEFINITION;
+		cd->extends=NULL;
+		cd->interface_list=NULL;
+		cd->is_abstract=DVM_TRUE;
+		cd->line_number=0;
+		
+		mnext=&cd->member;
+		for(j=0;j<src->method_count;j++)
+		{
+			md=(MemberDeclaration*)dkc_malloc(sizeof(MemberDeclaration));
+			*mnext=md;
+			md->access_modifier=DVM_PUBLIC_ACCESS;
+			md->kind=METHOD_MEMBER;
+			md->line_number=0;
+			md->u.method.function_definition=create_built_in_method(compiler,&src->method[j],1);
+			md->u.method.is_abstract=DVM_TRUE;md->u.method.is_virtual=DVM_TRUE;
+			md->u.method.is_override=DVM_FALSE;md->u.method.is_constructor=DVM_FALSE;
+			md->u.method.method_index=-1;
+			mnext=&md->next;
+		}
+		*mnext=NULL;
+		cd->name=src->name;
+		cd->templates=NULL;
+		cd->super_class=NULL;
+		cd->package_name=pn;
+		out=&cd->next;
+	}
+	*out=NULL;
+	return;
 }
 
 DKC_Compiler *
@@ -130,15 +215,19 @@ DKC_create_compiler(void)
     compiler->current_catch_clause = NULL;
     compiler->input_mode = FILE_INPUT_MODE;
     compiler->required_list = NULL;
+
+	
+
     compiler->array_method_count = ARRAY_SIZE(st_array_method);
     compiler->array_method
-        = create_built_in_method(st_array_method,
+        = create_built_in_method(compiler,st_array_method,
                                  ARRAY_SIZE(st_array_method));
     compiler->string_method_count = ARRAY_SIZE(st_string_method);
     compiler->string_method
-        = create_built_in_method(st_string_method,
+        = create_built_in_method(compiler,st_string_method,
                                  ARRAY_SIZE(st_string_method));
-
+	
+	
 #ifdef EUC_SOURCE
     compiler->source_encoding = EUC_ENCODING;
 #else
@@ -524,7 +613,12 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
     DVM_Executable *exe;
 	int fcnt,i;
 	DVM_ExecutableItem* pCur;PackageName packagename={0,0};DKC_Compiler* newcomp;char search_file[260];SearchFileStatus status;//modified
+	DKC_Compiler* back_compiler;
 
+	back_compiler = dkc_get_current_compiler();
+	dkc_set_current_compiler(compiler);
+	create_built_in_class(compiler,st_builtin_class,ARRAY_SIZE(st_builtin_class),&compiler->class_definition_list);
+	dkc_set_current_compiler(back_compiler);
 
     DBG_assert(st_compiler_list == NULL,
                ("st_compiler_list != NULL(%p)", st_compiler_list));

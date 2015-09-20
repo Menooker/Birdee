@@ -464,11 +464,15 @@ typedef struct {
 } IndexExpression;
 
 typedef struct MemberDeclaration_tag MemberDeclaration;
+typedef struct FunctionDefinition_tag FunctionDefinition;
 
 typedef struct {
     Expression          *expression;
     char                *member_name;
-    MemberDeclaration   *declaration;
+    union{
+		MemberDeclaration   *declaration; //for class
+		FunctionDefinition *fd;// for array or string
+	};
     int         method_index; /* use for only barray and string */
 } MemberExpression;
 

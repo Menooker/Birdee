@@ -1995,8 +1995,9 @@ fix_string_method_expression(Expression *expr,
     }
     fd = &compiler->string_method[i];
     expr->u.member_expression.method_index = i;
+	
+	expr->u.member_expression.fd=fd;
     expr->type = create_function_derive_type(fd);
-
     return expr;
 }
 
@@ -3476,7 +3477,6 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
             member_pos = member_pos->next) {
         if (member_pos->kind == METHOD_MEMBER) {
             fix_function(member_pos->u.method.function_definition);
-
             super_member
                 = search_member_in_super(class_pos,
                                             member_pos->u.method
@@ -3505,6 +3505,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                                         .function_definition->name,
                                         MESSAGE_ARGUMENT_END);
                 }
+				
                 check_method_override(super_member, member_pos);
                 member_pos->u.method.method_index
                     = super_member->u.method.method_index;
@@ -3650,12 +3651,14 @@ fix_constant_list(DKC_Compiler *compiler)
     }
 }
 
+
+
 void
 dkc_fix_tree(DKC_Compiler *compiler)
 {
     FunctionDefinition *func_pos;
     DeclarationList *dl;
-    int var_count = 0;
+    int var_count = 0,i;
     ExceptionList *el = NULL;
 	BcGetCurrentCompilerContext()->curcls=NULL;
 

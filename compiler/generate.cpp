@@ -1109,6 +1109,8 @@ int get_method_index_Ex(MemberExpression *member,int* outParamCnt)
     if (dkc_is_array(member->expression->type)
         || dkc_is_string(member->expression->type)) {
         method_index = member->method_index;
+		if(outParamCnt)
+			*outParamCnt=member->fd->param_cnt;
     } else {
         DBG_assert(member->declaration->kind == METHOD_MEMBER,
                    ("member->declaration->kind..%d",

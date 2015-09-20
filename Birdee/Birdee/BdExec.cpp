@@ -228,6 +228,46 @@ void ExStringLength(DVM_Value *args)
 
 }
 
+BINT BKDRHash(char *str,size_t len)  
+{  
+    size_t hash = 0; 
+	for(int i=0;i<len; i++,str++)  
+    {   
+		size_t ch=*str;
+        hash = hash * 131 + ch; 
+    }
+    return hash;  
+}  
+
+void ExStringHash(DVM_Value *args)
+{
+    DVM_Object *barray;
+    barray = args->object.data ;
+    DBG_assert(barray->type == STRING_OBJECT, ("barray->type..%d", barray->type));
+	curthread->retvar.int_value= BKDRHash((char*)barray->u.string.string,barray->u.string.length * sizeof(barray->u.string.string[0]));
+}
+
+void ExStringEquals(DVM_Value *args)
+{
+    DVM_Object *bobj, *bthis;
+    bobj = args->object.data ;
+    if(bobj->type != STRING_OBJECT)
+	{
+		curthread->retvar.int_value=DVM_FALSE; 
+		return;
+	}
+    bthis = args[1].object.data ;
+    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));	
+	curthread->retvar.int_value = dvm_wcscmp(bthis->u.string.string,bobj->u.string.string)?DVM_FALSE:DVM_TRUE;
+}
+
+void ExStringTostr(DVM_Value *args)
+{
+    DVM_Object  *bthis;
+    bthis = args->object.data ;
+    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));	
+	curthread->retvar = *args; 
+}
 
 void ExStringSubstr(DVM_Value *args)
 {

@@ -760,6 +760,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,ARRAY_PREFIX ARRAY_METHOD_SIZE,ExArraySize, 0, DVM_TRUE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_LENGTH,ExStringLength, 0, DVM_TRUE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR,ExStringSubstr, 2, DVM_TRUE);
+	DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"string#hash",ExStringHash, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"string#equals",ExStringEquals, 1, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"string#tostr",ExStringTostr, 0, DVM_TRUE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);

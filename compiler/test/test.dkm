@@ -1,14 +1,9 @@
 require Exceptions
 
-interface Hashable
-	public virtual declare function hash() as int
-	public virtual declare function equals(k as Hashable) as boolean
-end
-
 class StackEmptyException
 end
 
-class HString : Hashable
+class HString : Object
 	public str as string
 	public virtual constructor  initialize(i as string)
 		str=i
@@ -21,7 +16,10 @@ class HString : Hashable
 		end
 		return key
 	end
-	public virtual override function equals(k as Hashable) as boolean
+	public virtual override function equals(k as Object) as boolean
+		if k==null then
+			return false
+		end
 		dim in as HString=k::HString:>
 		return in.str==str
 	end
@@ -32,32 +30,18 @@ public abstract class Container <T>
 	public abstract  virtual declare function pop() as T throws StackEmptyException
 end
 
-class Object<T> : Container,Hashable
-	public override function hash() as int
-		return 12
-	end
-	public virtual override function equals(k as Hashable) as boolean
-		try
-			//dim in as Object<T> =k::Object:>
-			//return in==this
-			return true
-		catch ClassCastException e
-			return false
-		end
-	end
-	public virtual override sub push(t as T)
-		//push
-	end
-	public virtual override function pop() as T throws StackEmptyException
-		//pop
-	end
-end
 
 
-dim a as Object<HString> =new Object()
+/*
+dim a as Object
 dim b as HString=new HString("JI")
+println(b.equals(a))
+println(b.equals("KK"))
+*/
+dim b as HString=new HString("JI")
+dim a as string="LL"
+//println(a.hash())
+//println(a.tostr())
 println(a.equals(b))
-dim arr as int[]
-arr={1,2,a.hash()}
-println(arr[2])
+println(b.tostr())
 

@@ -1217,21 +1217,14 @@ int BcGeneratePushArgument(DVM_Executable *exe, Block *block,ArgumentList *arg_l
 
 Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 {
-    int method_index,popcnt=-1,isBuiltInMethod=0;
+    int method_index,popcnt=-1;
     MemberExpression *member;
 	FunctionCallExpression *fce = &expr->u.function_call_expression;
 
     member = &fce->function->u.member_expression;
     method_index = get_method_index_Ex(member,&popcnt); //param_cnt => popcnt
-	if(popcnt==-1) // if it is a BuiltIn Method
-	{
-		isBuiltInMethod=1;
-		popcnt=0;
-	}
-	else
-	{
-		popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
-	}
+	popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
+
     Value* obj= BcGenerateExpression(exe, block,fce->function->u.member_expression.expression);
 	/*Value* _pthis=builder.CreateLoad(pthis);
 	Value* oldthis=builder.CreateLoad(_pthis);
@@ -1243,12 +1236,6 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 	//builder.CreateStore(oldthis,_pthis);
 	
 	DBG_assert((popcnt>=0),("Pop count < 0"));
-	if(popcnt && !isBuiltInMethod)
-	{
-		_BreakPoint() //check-me
-		builder.CreateCall(GetPop(),ConstInt(32,popcnt));
-		//builder.CreateStore(bsp,builder.CreateSub(builder.CreateLoad(bsp),ConstInt(32,popcnt))); //bsp += ....
-	}
 	if(fce->function->type->basic_type!=DVM_VOID_TYPE) //
 		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[get_opcode_type_offset3(expr->type->basic_type )]));//check-me : get_opcode_type_offset???
 	else
