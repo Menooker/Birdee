@@ -3399,6 +3399,9 @@ get_super_field_method_count(ClassDefinition *cd,
     *method_index_out = method_index + 1;
 }
 
+
+
+
 static MemberDeclaration *
 search_member_in_super(ClassDefinition *class_def, char *member_name)
 {
@@ -3565,6 +3568,9 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
 	BcGetCurrentCompilerContext()->curcls=oldcls;
 }
 
+
+extern void check_all_abstract_is_implemented(ClassDefinition* to_chk);//in BdCompile.cpp
+
 static void
 fix_class_list(DKC_Compiler *compiler)
 {
@@ -3597,8 +3603,10 @@ fix_class_list(DKC_Compiler *compiler)
         compiler->current_class_definition = NULL;BcGetCurrentCompilerContext()->curcls=NULL;
     }
 
+
     for (class_pos = compiler->class_definition_list;
          class_pos; class_pos = class_pos->next) {
+		check_all_abstract_is_implemented(class_pos);
 		fix_member_id(compiler,class_pos);
     }
 	

@@ -3,11 +3,18 @@ require Exceptions
 class StackEmptyException
 end
 
+abstract class PObject
+	public abstract virtual declare function hash() as int
+	public abstract virtual declare function equals(k as PObject) as boolean
+end
+
+
 class HString : Object
 	public str as string
 	public virtual constructor  initialize(i as string)
 		str=i
 	end
+
 	public virtual override function hash() as int
 		dim i as int
 		dim key as int =0
@@ -16,6 +23,7 @@ class HString : Object
 		end
 		return key
 	end
+
 	public virtual override function equals(k as Object) as boolean
 		if k==null then
 			return false
@@ -23,14 +31,10 @@ class HString : Object
 		dim in as HString=k::HString:>
 		return in.str==str
 	end
+	public virtual override function tostr() as string
+		return str
+	end
 end
-
-public abstract class Container <T>
-	public abstract  virtual declare sub push(t as T)
-	public abstract  virtual declare function pop() as T throws StackEmptyException
-end
-
-
 
 /*
 dim a as Object
@@ -40,8 +44,8 @@ println(b.equals("KK"))
 */
 dim b as HString=new HString("JI")
 dim a as string="LL"
-//println(a.hash())
-//println(a.tostr())
+println(a.hash())
+println(a.tostr())
 println(a.equals(b))
 println(b.tostr())
 

@@ -194,6 +194,53 @@ get_opcode_type_offset3(int type)
     return 0;
 }
 
+
+static void do_check_abstract(ClassDefinition *super,ClassDefinition *chk,std::hash_map<std::string,int>& map)
+{
+	MemberDeclaration *member = NULL;
+	ExtendsList *extends_p;
+	bool isInterface= (super->class_or_interface==DVM_INTERFACE_DEFINITION);
+	for (member = super->member; member;member = member->next) {
+        if (member->kind == METHOD_MEMBER &&
+			(isInterface || (member->u.method.is_abstract && member->u.method.function_definition->block==NULL) )) {// if is interface or an unimplemented abstract
+            if(map.find(member->u.method.function_definition->name)==map.end())
+			{
+				dkc_compile_error(chk->line_number,
+                    ABSTRACT_NOT_IMPLEMENTED_ERR,
+                    STRING_MESSAGE_ARGUMENT, "name",
+                    chk->name,
+                    STRING_MESSAGE_ARGUMENT, "member_name",
+                    member->u.method.function_definition->name,
+					STRING_MESSAGE_ARGUMENT, "name2",
+                    super->name,
+                    MESSAGE_ARGUMENT_END);
+			}
+        }
+		if(member->kind == METHOD_MEMBER && member->u.method.is_override && member->u.method.function_definition->block) //if is implemented
+		{
+			map[member->u.method.function_definition->name]=1;
+		}
+    }
+
+	if (super->super_class) {
+        do_check_abstract(super->super_class,chk,map);
+    }
+    for (extends_p = super->interface_list; extends_p;
+         extends_p = extends_p->next) {
+		do_check_abstract(extends_p->class_definition,chk,map);
+    }
+
+}
+
+extern "C" void check_all_abstract_is_implemented(ClassDefinition* to_chk)
+{
+	if(to_chk->is_abstract || to_chk->class_or_interface==DVM_INTERFACE_DEFINITION)
+		return;
+	std::hash_map<std::string,int> map;
+	do_check_abstract(to_chk,to_chk,map);
+}
+
+
 bool isArrayAddressSet(int index,int isLocal)
 {
 	int cacheindex=index;
