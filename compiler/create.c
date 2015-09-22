@@ -1192,7 +1192,9 @@ void dkc_class_define(MemberDeclaration *member_list)
         pos->next = cd;
     }
     cd->member = member_list;
+	cd->checked=0;
     compiler->current_class_definition = NULL;
+	
 }
 
 ExtendsList *

@@ -600,9 +600,23 @@ add_methods(DVM_VirtualMachine *dvm, DVM_Executable *exe,
         dest->interface_v_table[i]->table_size = binterface->method_count;
         for (method_idx = 0; method_idx < binterface->method_count;
              method_idx++) {
+			if(!dvm->classObject)
+				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
+                                ECT_CLASS_NOT_LOADED_ERR,
+                                DVM_MESSAGE_ARGUMENT_END);
             set_v_table(dvm, src, &binterface->method[method_idx],
                         &dest->interface_v_table[i]->table[method_idx],
                         DVM_TRUE);
+			if(dvm->classObject==binterface && dest->interface_v_table[i]->table[method_idx].index==-1)//special case for Object class
+			{
+				char *func_name;
+				int  func_idx;
+
+				func_name = dvm_create_method_function_name("Object", binterface->method[method_idx].name);
+				func_idx = dvm_search_function(dvm, "diksam.lang", func_name);
+				MEM_free(func_name);
+				dest->interface_v_table[i]->table[method_idx].index = func_idx;
+			}
         }
     }
 }
@@ -611,9 +625,11 @@ static void
 add_class(DVM_VirtualMachine *dvm, DVM_Executable *exe,
           DVM_Class *src, ExecClass *dest)
 {
-
+	if(!strcmp(src->name,"Object") && !strcmp(src->package_name,"diksam.lang"))
+		dvm->classObject=src;
     add_fields(exe, src, dest);
     add_methods(dvm, exe, src, dest);
+
 }
 
 static void
@@ -925,6 +941,7 @@ DVM_create_virtual_machine(void)
     dvm->free_context = NULL;
 	dvm->exe_engine=0;
 	dvm->mainvm=ExCreateThread();
+	dvm->classObject=NULL;
 	UaInitLock(&dvm->thread_lock); 
 	UaInitLock(&dvm->heap.lock);
 	ExInitRegArray(dvm->mainvm);

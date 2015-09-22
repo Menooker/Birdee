@@ -18,6 +18,7 @@ DVM_ErrorDefinition dvm_error_message_format[] = {
     {L"重复定义了枚举类型$(package)#$(name)。"},
     {L"重复定义了字面量$(package)#$(name)。"},
     {L"由于函数$(name)没有指定包，不能动态加载。"},
+    {L"Object类没有被加载。"},
     {L"dummy"}
 };
 

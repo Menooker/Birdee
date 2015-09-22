@@ -825,6 +825,7 @@ struct ClassDefinition_tag {
     MemberDeclaration *member;
     int line_number;
     struct ClassDefinition_tag *next;
+	int  checked; //fix-me : A temporary flag, find a way to remove it!!
 };
 
 typedef struct CompilerList_tag {

@@ -60,6 +60,7 @@ typedef enum {
     ENUM_MULTIPLE_DEFINE_ERR,
     CONSTANT_MULTIPLE_DEFINE_ERR,
     DYNAMIC_LOAD_WITHOUT_PACKAGE_ERR,
+	ECT_CLASS_NOT_LOADED_ERR,
     RUNTIME_ERROR_COUNT_PLUS_1
 } RuntimeError;
 
@@ -318,6 +319,7 @@ struct DVM_VirtualMachine_tag {
 	Heap heap;
 	BD_LOCK thread_lock;
 	struct _BdThread* mainvm;
+	DVM_Class* classObject;
 };
 
 typedef struct RefInNativeFunc_tag {

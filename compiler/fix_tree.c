@@ -775,6 +775,14 @@ create_to_string_cast(Expression *src)
 }
 
 
+int isClassOfObject(ClassDefinition * cd)
+{
+		return (!strcmp(cd->name,"Object") &&
+			(cd->package_name && !strcmp(cd->package_name->name,"diksam")) &&
+			(cd->package_name->next && !strcmp(cd->package_name->next->name,"lang")) &&
+			(cd->package_name->next->next==NULL) );//fix-me : can be improved by just compare to the pointer of the "Object" class
+}
+
 //added var
 static Expression *
 create_assign_cast(Expression *src, TypeSpecifier *dest)
@@ -876,12 +884,20 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
 	{
 		return src;
 	}
-	if(src->type->basic_type==DVM_TEMPLATE_TYPE && BcGetCurrentCompilerContext()->curcls )
+	else if(src->type->basic_type==DVM_TEMPLATE_TYPE && BcGetCurrentCompilerContext()->curcls )
 	{
 		TypeSpecifier* superty=BcGetTemplateSuperType(BcGetCurrentCompilerContext()->curcls->templates ,src->type->u.template_id);
 		if(superty)
 			*src->type=*superty;
 		return create_assign_cast(src,dest);
+	}
+	else if (dkc_is_string(src->type) && dkc_is_class_object(dest))//allow strings to cast to "Object"
+	{
+		ClassDefinition* cd=dest->u.class_ref.class_definition;
+		if(isClassOfObject(cd) ) //fix-me : can be improved by just compare to the pointer of the "Object" class
+		{
+			return src;
+		}
 	}
 	cast_mismatch_error(src->line_number, src->type, dest);
     return NULL; /* make compiler happy. */
@@ -3449,27 +3465,38 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
 {
     MemberDeclaration *member_pos;
     MemberDeclaration *super_member;
+	ExtendsList* el;
     int field_index;
     int method_index;
     char *abstract_method_name;
 	ClassDefinition* oldcls=BcGetCurrentCompilerContext()->curcls;
-    for (member_pos = class_pos->member; member_pos; 
+	if(class_pos->checked)
+		return;
+/* //old ways to check if the class if fixed
+   for (member_pos = class_pos->member; member_pos; 
             member_pos = member_pos->next) {         //fix-me : improve here!! find an efficient way to check if the class's methodid is OK
         if (member_pos->kind == METHOD_MEMBER && member_pos->u.method.method_index!=-1) { //if the class is fixed, return
 			return;
 		}
-	}
+	}*/
 	if(class_pos->super_class)
 	{
+		/* //old ways to check if the class if fixed
 		for (super_member = class_pos->super_class->member; super_member;super_member = super_member->next) {         
 			if(super_member->kind==METHOD_MEMBER && super_member->u.method.method_index==-1) //if super method is not fixed
 			{
 				fix_member_id(compiler,class_pos->super_class);
 				break;
 			}
-		}
+		}*/
+		if(!class_pos->super_class->checked)
+			fix_member_id(compiler,class_pos->super_class);
 	}
-
+	for(el=class_pos->extends;el;el=el->next)
+	{
+		if(!el->class_definition->checked)
+			fix_member_id(compiler,el->class_definition);
+	}
     compiler->current_class_definition = class_pos;
 	BcGetCurrentCompilerContext()->curcls=class_pos;
 
@@ -3564,6 +3591,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                             "method_name", abstract_method_name,
                             MESSAGE_ARGUMENT_END);
     }
+	class_pos->checked=1;
     compiler->current_class_definition = oldcls;
 	BcGetCurrentCompilerContext()->curcls=oldcls;
 }

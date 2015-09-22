@@ -137,6 +137,8 @@ ExCheckDownCast(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj, int target_idx,
                 DVM_Boolean *is_same_class,
                 DVM_Boolean *is_interface, int *interface_index)
 {
+	if(obj->data->type!=CLASS_OBJECT)
+		return DVM_ERROR;
     if (obj->v_table->exec_class->class_index == target_idx) {
         *is_same_class = DVM_TRUE;
         return DVM_SUCCESS;
@@ -170,13 +172,18 @@ DVM_ObjectRef ExDownCast(BINT index)
                                          &is_same_class,
                                          &is_interface, &interface_idx);
                 if (status != DVM_SUCCESS) {
+					char* name;
+					if(obj.data->type==CLASS_OBJECT)
+						name=obj.v_table->exec_class->name;
+					else
+						name="BuiltInObject";
                     curthread->current_exception= ExCreateExceptionEx(curdvm,
                                                CLASS_CAST_EXCEPTION_NAME,
 											   &classid,
                                                CLASS_CAST_ERR,
                                                DVM_STRING_MESSAGE_ARGUMENT,
                                                "org",
-                                               obj.v_table->exec_class->name,
+                                               name,
                                                DVM_STRING_MESSAGE_ARGUMENT,
                                                "target",
 											   curdvm->bclass[curthread->current_executable->class_table[index]]->name,
@@ -238,6 +245,44 @@ BINT BKDRHash(char *str,size_t len)
     }
     return hash;  
 }  
+
+
+void ExObjectHash(DVM_Value *args)
+{
+    DVM_Object *barray;
+    barray = args->object.data ;
+    DBG_assert(barray->type == CLASS_OBJECT, ("barray->type..%d", barray->type));
+	curthread->retvar.int_value= BKDRHash((char*)barray->u.class_object.field,barray->u.class_object.field_count * sizeof(barray->u.class_object.field[0]));
+}
+
+void ExObjectEquals(DVM_Value *args)
+{
+    DVM_Object *bobj, *bthis;
+    bobj = args->object.data ;
+	bthis = args[1].object.data ;
+    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));	
+	if(bobj->type != CLASS_OBJECT || args[1].object.v_table->exec_class != args->object.v_table->exec_class)
+	{
+		curthread->retvar.int_value=DVM_FALSE; 
+		return;
+	}
+	
+	curthread->retvar.int_value = memcmp(bthis->u.class_object.field,
+		bobj->u.class_object.field,bthis->u.class_object.field_count * sizeof(bthis->u.class_object.field[0]))?DVM_FALSE:DVM_TRUE;
+}
+
+void ExObjectTostr(DVM_Value *args)
+{
+    DVM_Object  *bthis;
+    bthis = args->object.data ;
+    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));	
+	
+	char buf[LINE_BUF_SIZE];
+    DVM_Char *wc_str;
+    sprintf(buf, "Object@%x", bthis); //fix-me : unsafe
+    wc_str = dvm_mbstowcs_alloc(curthread, buf);
+	curthread->retvar.object =  dvm_create_dvm_string_i(curdvm, wc_str);
+}
 
 void ExStringHash(DVM_Value *args)
 {

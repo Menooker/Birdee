@@ -150,7 +150,8 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 		cd->interface_list=NULL;
 		cd->is_abstract=DVM_TRUE;
 		cd->line_number=0;
-		
+		cd->checked=0;
+
 		mnext=&cd->member;
 		for(j=0;j<src->method_count;j++)
 		{
@@ -162,7 +163,7 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 			md->u.method.function_definition=create_built_in_method(compiler,&src->method[j],1);
 			md->u.method.is_abstract=DVM_TRUE;md->u.method.is_virtual=DVM_TRUE;
 			md->u.method.is_override=DVM_FALSE;md->u.method.is_constructor=DVM_FALSE;
-			md->u.method.method_index=-1;
+			md->u.method.method_index=j;
 			mnext=&md->next;
 		}
 		*mnext=NULL;

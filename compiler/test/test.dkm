@@ -1,4 +1,4 @@
-require Exceptions
+//require Exceptions
 
 class StackEmptyException
 end
@@ -31,21 +31,19 @@ class HString : Object
 		dim in as HString=k::HString:>
 		return in.str==str
 	end
-	public virtual override function tostr() as string
+	public virtual function tostr2() as string
 		return str
 	end
 end
 
-/*
-dim a as Object
+dim a as string="123"
 dim b as HString=new HString("JI")
-println(b.equals(a))
-println(b.equals("KK"))
-*/
-dim b as HString=new HString("JI")
-dim a as string="LL"
-println(a.hash())
-println(a.tostr())
-println(a.equals(b))
+dim c as string
+c=""+123
+println(a.equals(c))
+dim d as Object=a
+dim e as Object=c
+println(d.equals(e))
+println(c.equals(b))
 println(b.tostr())
 
