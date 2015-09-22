@@ -104,6 +104,8 @@ DVM_ObjectRef ExUpCast(BINT index)
 			return ret;
 }
 
+
+
 DVM_Boolean
 ExInstanceofImp(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj,
                    int target_idx,
@@ -1084,6 +1086,42 @@ extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx)
 }
 
 
+DVM_Boolean ExInstanceof2(BINT index,BINT level)//In llvm, the return value is a bit!
+{
+			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
+			DVM_Boolean ret=DVM_FALSE;
+			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+	        if (is_null_pointer(&obj)) {
+                ExNullPointerException();
+            } else {
+				if(obj.data->type==STRING_OBJECT && index==0)
+					return DVM_TRUE;
+				else
+				{
+					if(obj.data->type!=ARRAY_OBJECT)
+						return DVM_FALSE;
+					else //fix-me : should check the level and type of the array
+						return DVM_TRUE;
+				}
+            }
+			return DVM_FALSE;
+}
+
+DVM_Boolean ExInstanceof(BINT index)//In llvm, the return value is a bit!
+{
+			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
+			DVM_Boolean ret=DVM_FALSE;
+			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+	        if (is_null_pointer(&obj)) {
+                ExNullPointerException();
+            } else {
+				if(obj.data->type!=CLASS_OBJECT)
+					ret=DVM_FALSE;
+				else
+					ret = (DVM_Boolean) ExDoInstanceOf(&obj,index);
+            }
+			return ret;
+}
 void ExInvokeDelegate()
 {
 	DVM_ObjectRef del_obj=(curthread->stack.stack_pointer-1)->object;
@@ -1270,6 +1308,12 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!UpCast");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExUpCast);
 	MCJIT->addGlobalMapping("system!UpCast",(void*)ExUpCast);
+	f=m->getFunction("system!Instanceof");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExInstanceof);
+	MCJIT->addGlobalMapping("system!Instanceof",(void*)ExInstanceof);
+	f=m->getFunction("system!Instanceof2");
+	TheExecutionEngine->addGlobalMapping(f,(void*)ExInstanceof2);
+	MCJIT->addGlobalMapping("system!Instanceof2",(void*)ExInstanceof2);	
 	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");

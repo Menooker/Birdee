@@ -8,6 +8,9 @@ abstract class PObject
 	public abstract virtual declare function equals(k as PObject) as boolean
 end
 
+class KObject : Object
+
+end
 
 class HString : Object
 	public str as string
@@ -28,6 +31,9 @@ class HString : Object
 		if k==null then
 			return false
 		end
+		if(! k instanceof HString) then
+			return false
+		end
 		dim in as HString=k::HString:>
 		return in.str==str
 	end
@@ -38,12 +44,12 @@ end
 
 dim a as string="123"
 dim b as HString=new HString("JI")
-dim c as string
-c=""+123
-println(a.equals(c))
-dim d as Object=a
-dim e as Object=c
-println(d.equals(e))
-println(c.equals(b))
+dim c as KObject=new KObject()
+dim d as Object=b
+dim k as int[]=new int[10]
+k[0]=1
+println(k[0])
 println(b.tostr())
-
+println(a instanceof string)
+println(k instanceof int[])
+println(d.equals(a))

@@ -210,10 +210,10 @@ extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx);
 void ExUncaughtException()
 {
 	printf("UncaughtException %d\n",curthread->exception_index);
-	if(curthread->current_exception.data  && ExDoInstanceOf(&curthread->current_exception,DVM_search_class(curdvm,"Exceptions","Exception")))
-	{
-		printf("%s\n",curthread->current_exception.v_table->exec_class->name );
-	}
+	//if(curthread->current_exception.data)//  && ExDoInstanceOf(&curthread->current_exception,DVM_search_class(curdvm,"Exceptions","Exception")))
+	//{
+	printf("%s\n",curdvm->bclass[curthread->current_executable->class_table[curthread->exception_index-1]]->name);
+	//}
 
 	_BreakPoint()
 	//exit(1);

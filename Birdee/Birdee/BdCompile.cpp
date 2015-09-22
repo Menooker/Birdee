@@ -84,6 +84,8 @@ Function *fGetVar;
 Function *fGetOrCreateVar;
 Function *fDownCast;
 Function *fUpCast;
+Function *fInstanceof;
+Function *fInstanceof2;
 
 Function *fArrBdChk;
 Function *fPop;
@@ -807,6 +809,13 @@ extern "C" void* BcNewModule(char* name)
 	fDownCast=Function::Create(FT2, Function::ExternalLinkage,"system!DownCast", module);
 	fUpCast=Function::Create(FT2, Function::ExternalLinkage,"system!UpCast", module);
 	fNewDelegate = Function::Create(FT2, Function::ExternalLinkage,"system!NewDelegate", module);
+
+	FunctionType* FT22 = FunctionType::get(Type::getInt1Ty(context),Args2, false);
+	fInstanceof=Function::Create(FT22, Function::ExternalLinkage,"system!Instanceof", module);
+
+	std::vector<Type*> Argsii(2,Type::getInt32Ty(context));
+	FunctionType* FTbii = FunctionType::get(Type::getInt1Ty(context),Argsii, false);
+	fInstanceof2=Function::Create(FTbii, Function::ExternalLinkage,"system!Instanceof2", module);
 
 	std::vector<Type*> Args3(2,TyObjectRef);//temp : to del
 	FunctionType* FT3 = FunctionType::get(TyObjectRef,Args3, false);//temp : to del
@@ -2091,10 +2100,33 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		return builder.CreateCall(fUpCast,ConstInt(32,expr->u.up_cast.interface_index));
         break;
 
- /*    case INSTANCEOF_EXPRESSION:
-        generate_instanceof_expression(exe, current_block, expr, ob);
+    case INSTANCEOF_EXPRESSION:
+		va=BcGenerateExpression(exe, current_block, expr->u.instanceof.operand);
+		builder.CreateCall(GetPush(2),va);
+		if(expr->u.instanceof.type->basic_type==DVM_CLASS_TYPE)
+			return builder.CreateCall(fInstanceof,ConstInt(32,expr->u.instanceof.type->u.class_ref.class_index));
+		else
+		{
+			if(expr->u.instanceof.type->basic_type==DVM_STRING_TYPE)
+			{
+				return builder.CreateCall2(fInstanceof2,ConstInt(32,0),ConstInt(32,0));
+			}
+			else if(expr->u.instanceof.type->derive)
+			{
+				int level=0;
+				for(TypeDerive* dr=expr->u.instanceof.type->derive;dr;dr=dr->next,level++)
+				{
+					if(dr->tag!=ARRAY_DERIVE)
+						break;
+				}
+				if(level)
+					return builder.CreateCall2(fInstanceof2,ConstInt(32,expr->u.instanceof.type->basic_type-DVM_BOOLEAN_TYPE+1),ConstInt(32,level));
+			}
+			else
+				DBG_assert(0, ("expr->kind..%d", expr->kind));
+		}
         break;
-    case ENUMERATOR_EXPRESSION:
+/*    case ENUMERATOR_EXPRESSION:
         generate_int_expression(exe, expr->line_number,
                                 expr->u.enumerator.enumerator->value,
                                 ob);

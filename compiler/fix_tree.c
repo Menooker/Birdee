@@ -6,6 +6,14 @@
 #include "diksamc.h"
 #include "..\Birdee\Birdee\BirdeeDef.h"
 
+int isClassOfObject(ClassDefinition * cd)
+{
+		return (!strcmp(cd->name,"Object") &&
+			(cd->package_name && !strcmp(cd->package_name->name,"diksam")) &&
+			(cd->package_name->next && !strcmp(cd->package_name->next->name,"lang")) &&
+			(cd->package_name->next->next==NULL) );//fix-me : can be improved by just compare to the pointer of the "Object" class
+}
+
 static int
 reserve_function_index(DKC_Compiler *compiler, FunctionDefinition *src)
 {
@@ -355,17 +363,20 @@ fix_type_specifier(TypeSpecifier *type)
 						|| ( ty_pos->name->u.class_ref.class_definition!=template_pos->super->u.class_ref.class_definition 
 							&& !is_super_class(ty_pos->name->u.class_ref.class_definition,template_pos->super->u.class_ref.class_definition,&dummy1,&dummy2) ))
 					{
-						char* nm=dkc_get_type_name(ty_pos->name);
-						dkc_compile_error(type->line_number,
-										  TEMPLATE_PARAM_PARENT_CLASS_ERR,
-										  STRING_MESSAGE_ARGUMENT, "type_name",
-										  cd->name,
-										  STRING_MESSAGE_ARGUMENT, "sub_type",
-										  nm,
-										  STRING_MESSAGE_ARGUMENT, "super_class_name",
-										  template_pos->super->u.class_ref.class_definition->name,
-										  MESSAGE_ARGUMENT_END);
-						MEM_free(nm);//fix-me : move the line to above(memory leak)
+						if(!(ty_pos->name->basic_type==DVM_STRING_TYPE && isClassOfObject(template_pos->super->u.class_ref.class_definition)))
+						{
+							char* nm=dkc_get_type_name(ty_pos->name);
+							dkc_compile_error(type->line_number,
+											  TEMPLATE_PARAM_PARENT_CLASS_ERR,
+											  STRING_MESSAGE_ARGUMENT, "type_name",
+											  cd->name,
+											  STRING_MESSAGE_ARGUMENT, "sub_type",
+											  nm,
+											  STRING_MESSAGE_ARGUMENT, "super_class_name",
+											  template_pos->super->u.class_ref.class_definition->name,
+											  MESSAGE_ARGUMENT_END);
+							MEM_free(nm);//fix-me : move the line to above(memory leak)
+						}
 					}
 				}
 				template_pos=template_pos->next;
@@ -775,13 +786,7 @@ create_to_string_cast(Expression *src)
 }
 
 
-int isClassOfObject(ClassDefinition * cd)
-{
-		return (!strcmp(cd->name,"Object") &&
-			(cd->package_name && !strcmp(cd->package_name->name,"diksam")) &&
-			(cd->package_name->next && !strcmp(cd->package_name->next->name,"lang")) &&
-			(cd->package_name->next->next==NULL) );//fix-me : can be improved by just compare to the pointer of the "Object" class
-}
+
 
 //added var
 static Expression *
@@ -2283,7 +2288,12 @@ fix_instanceof_expression(Block *current_block, Expression *expr,
                           MESSAGE_ARGUMENT_END);
     }
 
-    if (!dkc_is_class_object(operand->type) || !dkc_is_class_object(target)) {
+    if ( (!dkc_is_class_object(operand->type) || !dkc_is_class_object(target))) {
+		if(dkc_is_string(target)|| dkc_is_array(target)) //allow string and array
+		{
+			expr->type = dkc_alloc_type_specifier(DVM_BOOLEAN_TYPE);
+			return expr;
+		}
         dkc_compile_error(expr->line_number,
                           INSTANCEOF_FOR_NOT_CLASS_ERR,
                           MESSAGE_ARGUMENT_END);
