@@ -766,6 +766,9 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, "diksam.lang","Object#hash",ExObjectHash, 0, DVM_TRUE);
     DVM_add_native_function(dvm, "diksam.lang","Object#equals",ExObjectEquals, 1, DVM_TRUE);
     DVM_add_native_function(dvm, "diksam.lang","Object#tostr",ExObjectTostr, 0, DVM_TRUE);
+	DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"array#hash",ExArrayHash, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"array#equals",ExArrayEquals, 1, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"array#tostr",ExArrayTostr, 0, DVM_TRUE);
 
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);

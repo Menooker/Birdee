@@ -28,6 +28,10 @@ typedef struct {
     int method_count;
 } BuiltInClass;
 
+static BuiltInMethodParameter st_object_equals_arg[] = {
+    {"obj", DVM_UNSPECIFIED_IDENTIFIER_TYPE}
+};
+
 static BuiltInMethodParameter st_array_resize_arg[] = {
     {"new_size", DVM_INT_TYPE}
 };
@@ -43,6 +47,9 @@ static BuiltInMethodParameter st_array_add_arg[] = {
 };
 
 static BuiltInMethod st_array_method[] = {
+	{"hash", DVM_INT_TYPE, NULL, 0},
+	{"equals", DVM_BOOLEAN_TYPE, st_object_equals_arg,ARRAY_SIZE(st_object_equals_arg) },
+	{"tostr", DVM_STRING_TYPE, NULL, 0},
     {ARRAY_METHOD_SIZE, DVM_INT_TYPE, NULL, 0},
     {ARRAY_METHOD_RESIZE, DVM_VOID_TYPE, st_array_resize_arg,
      ARRAY_SIZE(st_array_resize_arg)},
@@ -58,9 +65,7 @@ static BuiltInMethodParameter st_string_substr_arg[] = {
     {"start", DVM_INT_TYPE},
     {"length", DVM_INT_TYPE}
 };
-static BuiltInMethodParameter st_object_equals_arg[] = {
-    {"obj", DVM_UNSPECIFIED_IDENTIFIER_TYPE}
-};
+
 static BuiltInMethod st_string_method[] = {
 	{"hash", DVM_INT_TYPE, NULL, 0},
 	{"equals", DVM_BOOLEAN_TYPE, st_object_equals_arg,ARRAY_SIZE(st_object_equals_arg) },

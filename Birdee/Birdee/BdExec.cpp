@@ -257,7 +257,7 @@ void ExObjectHash(DVM_Value *args)
 	curthread->retvar.int_value= BKDRHash((char*)barray->u.class_object.field,barray->u.class_object.field_count * sizeof(barray->u.class_object.field[0]));
 }
 
-void ExObjectEquals(DVM_Value *args)
+void ExObjectEquals(DVM_Value *args) //fix-me : add null check to all these functions
 {
     DVM_Object *bobj, *bthis;
     bobj = args->object.data ;
@@ -285,6 +285,72 @@ void ExObjectTostr(DVM_Value *args)
     wc_str = dvm_mbstowcs_alloc(curthread, buf);
 	curthread->retvar.object =  dvm_create_dvm_string_i(curdvm, wc_str);
 }
+
+
+BINT ExGetArrayTypeSize(DVM_ArrayType type)
+{
+	BINT size;
+	switch(type)
+	{
+	case INT_ARRAY :
+	case FUNCTION_INDEX_ARRAY:
+		size=sizeof(BINT);
+		break;
+	case DOUBLE_ARRAY:
+		size=sizeof(double);
+		break;
+	case OBJECT_ARRAY:
+	case VARIENT_ARRAY:
+		size=sizeof(DVM_ObjectRef);
+		break;
+	default:
+		size=0;
+	}
+	return size;
+}
+
+void ExArrayHash(DVM_Value *args)
+{
+    DVM_Object *barray;
+    barray = args->object.data ;
+    DBG_assert(barray->type == ARRAY_OBJECT, ("barray->type..%d", barray->type));
+	BINT size=ExGetArrayTypeSize(barray->u.barray.type);
+	curthread->retvar.int_value= BKDRHash((char*)barray->u.barray.u.double_array ,barray->u.barray.size * size);
+}
+
+void ExArrayEquals(DVM_Value *args)
+{
+    DVM_Object *bobj, *bthis;
+    bobj = args->object.data ;
+    if(bobj->type != ARRAY_OBJECT)
+	{
+		curthread->retvar.int_value=DVM_FALSE; 
+		return;
+	}
+    bthis = args[1].object.data ;
+    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));	
+	if(bobj->u.barray.type==bthis->u.barray.type && bobj->u.barray.size==bthis->u.barray.size)
+	{
+		BINT size=ExGetArrayTypeSize(bobj->u.barray.type);
+		curthread->retvar.int_value = memcmp(bobj->u.barray.u.double_array,bthis->u.barray.u.double_array,size*bobj->u.barray.size)?DVM_FALSE:DVM_TRUE;
+	}
+	else
+		curthread->retvar.int_value =DVM_FALSE;
+}
+
+void ExArrayTostr(DVM_Value *args)
+{
+    DVM_Object  *bthis;
+    bthis = args->object.data ;
+    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));	
+
+	char buf[LINE_BUF_SIZE];
+    DVM_Char *wc_str;
+    sprintf(buf, "Array@%x", bthis); //improve-me : print the contents 
+    wc_str = dvm_mbstowcs_alloc(curthread, buf);
+	curthread->retvar.object =  dvm_create_dvm_string_i(curdvm, wc_str);
+}
+
 
 void ExStringHash(DVM_Value *args)
 {
@@ -1100,7 +1166,7 @@ DVM_Boolean ExInstanceof2(BINT index,BINT level)//In llvm, the return value is a
 				{
 					if(obj.data->type!=ARRAY_OBJECT)
 						return DVM_FALSE;
-					else //fix-me : should check the level and type of the array
+					else //fix-me : ergent!! should check the level and type of the array
 						return DVM_TRUE;
 				}
             }

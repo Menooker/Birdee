@@ -896,7 +896,7 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
 			*src->type=*superty;
 		return create_assign_cast(src,dest);
 	}
-	else if (dkc_is_string(src->type) && dkc_is_class_object(dest))//allow strings to cast to "Object"
+	else if ( (dkc_is_string(src->type)||dkc_is_array(src->type)) && dkc_is_class_object(dest))//allow strings to cast to "Object"
 	{
 		ClassDefinition* cd=dest->u.class_ref.class_definition;
 		if(isClassOfObject(cd) ) //fix-me : can be improved by just compare to the pointer of the "Object" class
@@ -1990,6 +1990,8 @@ fix_array_method_expression(Expression *expr,
                           MESSAGE_ARGUMENT_END);
     }
     fd = &compiler->array_method[i];
+
+	expr->u.member_expression.fd=fd; //a bug of original codes
     expr->u.member_expression.method_index = i;
     expr->type = create_function_derive_type(fd);
 

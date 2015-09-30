@@ -70,6 +70,10 @@ void ExStringTostr(DVM_Value *args);
 void ExObjectHash(DVM_Value *args);
 void ExObjectEquals(DVM_Value *args);
 void ExObjectTostr(DVM_Value *args);
+void ExArrayHash(DVM_Value *args);
+void ExArrayEquals(DVM_Value *args);
+void ExArrayTostr(DVM_Value *args);
+
 void ExInitEngine();
 BdThread* ExFreeThread(BdThread* t);
 BdThread* ExCreateThread();

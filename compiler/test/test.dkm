@@ -48,8 +48,11 @@ dim c as KObject=new KObject()
 dim d as Object=b
 dim k as int[]=new int[10]
 k[0]=1
-println(k[0])
-println(b.tostr())
-println(a instanceof string)
-println(k instanceof int[])
-println(d.equals(a))
+dim k2 as int[]=new int[10]
+k2[0]=1
+dim k3 as int[]=new int[11]
+println(k.equals(k2))
+println(k.equals(k3))
+k2[0]=2
+println(k.equals(k2))
+println(k.equals(a))
