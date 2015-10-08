@@ -245,8 +245,9 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   std::string ErrStr;
   EngineBuilder eb(M);
   TargetMachine* tm=eb.selectTarget();
-
-                   //tm->Options.NoFramePointerElim=1;
+  tm->setMCUseDwarfDirectory(true);
+  tm->setMCUseLoc(true);
+                   tm->Options.NoFramePointerElim=1;
 				   //tm->setOptLevel(CodeGenOpt::Level::Less  );
 											eb .setUseMCJIT(this->mUseMC)
                                             .setErrorStr(&ErrStr);

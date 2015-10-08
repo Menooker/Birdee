@@ -1260,7 +1260,9 @@ extern "C" void ExInitThread(BdThread* t,void* mod,void* eng)
 	ExecutionEngine* e=(ExecutionEngine*)eng;
 	void(*RegInit)();
 	RegInit=(void(*)())e->getPointerToFunction(m->getFunction("system!RegInit"));
+
 	RegInit();
+
 }
 
 //Init thread's reg in all modules. Used in threads other than the main thread
@@ -1291,7 +1293,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//	return 0;
 	Module* m=(Module*)mod->mod;
 
-
+	
 	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 
 	std::string ErrStr;
@@ -1304,29 +1306,29 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
+#ifdef BD_MULTITHREAD
 		MCJIT= new MCJITHelper(m,false);
+#else 
+		MCJIT= new MCJITHelper(m,true);
+#endif
 		dvm->exe_engine=MCJIT;
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
 
-/*	GlobalVariable* vglobal=m->getGlobalVariable("bpc");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->bpc));
-	vglobal=m->getGlobalVariable("bei");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->exception_index ));
-	vglobal=m->getGlobalVariable("beo");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->current_exception));
-	vglobal=m->getGlobalVariable("bsp");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack_pointer));
-	vglobal=m->getGlobalVariable("bbp");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.stack));
-	vglobal=m->getGlobalVariable("arr_sp");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->stack.flg_sp));
-	vglobal=m->getGlobalVariable("retvar");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->retvar));
-
-	vglobal=m->getGlobalVariable("pthis");
-	TheExecutionEngine->addGlobalMapping(vglobal,&(dvm->ths));*/
-
+#ifndef BD_MULTITHREAD
+	GlobalVariable* global=m->getGlobalVariable("bpc");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[0]));
+	global=m->getGlobalVariable("bei");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[1]));
+	global=m->getGlobalVariable("beo");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[2]));
+	global=m->getGlobalVariable("bsp");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[3]));
+	global=m->getGlobalVariable("arr_sp");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[4]));
+	global=m->getGlobalVariable("retvar");
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[5]));
+#endif
 	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
 	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
 

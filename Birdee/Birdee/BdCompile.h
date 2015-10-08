@@ -30,10 +30,11 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-extern "C" void* BcNewModule(char* name);
+extern "C" void* BcNewModule(char* name,char* path);
+extern "C" void BcFreeDIBuilder(void* name);
 llvm::Function * BcGenerateFunction(DVM_Executable *exe,  FunctionDefinition * src,char* clsname);
 llvm::Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression *expr);
-llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* block,StatementList* statement_list,int needret,char* clsname,int local_var_cnt);
+llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* block,StatementList* statement_list,int needret,char* clsname,int local_var_cnt,int line);
 extern "C" void BcDumpModule();
 extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *cd, DVM_Class *dvm_class);
 

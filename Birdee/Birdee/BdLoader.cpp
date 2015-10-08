@@ -335,6 +335,7 @@ BdStatus LdConstant(DVM_Constant* con,CPBuffer* pbuf)
 }
 
 
+
 BINT LdExecutable(DVM_Executable* exe,FILE* f)
 {
 	int i;

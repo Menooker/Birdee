@@ -2122,10 +2122,14 @@ static void
 add_top_level(DKC_Compiler *compiler, DVM_Executable *exe)
 {
     OpcodeBuf           ob;
-
+	int line;
     //init_opcode_buf(&ob);
     //generate_statement_list(exe, NULL, compiler->statement_list,&ob);
-    BcGenerateFunctionEx(exe,"system!main",0,compiler->statement_list,1,0,0);
+	if(compiler->statement_list && compiler->statement_list->statement)
+		line=compiler->statement_list->statement->line_number;
+	else
+		line=0;
+	BcGenerateFunctionEx(exe,"system!main",0,compiler->statement_list,1,0,0,line);
     //exe->top_level.code_size = ob.size;
     //exe->top_level.code = fix_opcode_buf(&ob);
     //exe->top_level.line_number_size = ob.line_number_size; //fix-me : should implement
@@ -2186,9 +2190,9 @@ dkc_generate(DKC_Compiler *compiler)
     exe->constant_definition = compiler->dvm_constant;
 	
 	if(compiler->package_name)
-		mod=BcNewModule(strname);
+		mod=BcNewModule(strname,compiler->path);
 	else
-		mod=BcNewModule("");
+		mod=BcNewModule("",compiler->path);
 	MEM_free(strname);
 		
 	exe->module.mod =mod;
@@ -2196,9 +2200,9 @@ dkc_generate(DKC_Compiler *compiler)
     add_classes(compiler, exe);
     add_functions(compiler, exe);
     add_top_level(compiler, exe);
-	BcDumpModule();
     generate_constant_initializer(compiler, exe);
-
+	BcFreeDIBuilder(BcGetCurrentCompilerContext()->dibuilder);
+	BcDumpModule();
     return exe;
 }
 }

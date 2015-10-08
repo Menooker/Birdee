@@ -948,6 +948,7 @@ typedef struct
 	void* inline_module;
 	int FunctionUse[20];
 	ClassDefinition* curcls;
+	void* dibuilder;
 }CompilerContext;
 extern CompilerContext default_context;
 #define BcGetCurrentCompilerContext() (&default_context)

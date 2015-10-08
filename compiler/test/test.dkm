@@ -1,5 +1,5 @@
 //require Exceptions
-
+/*
 class StackEmptyException
 end
 
@@ -55,4 +55,11 @@ println(k.equals(k2))
 println(k.equals(k3))
 k2[0]=2
 println(k.equals(k2))
-println(k.equals(a))
+println(k.equals(a*/
+
+sub aaa()
+	BreakPoint()
+end
+
+aaa()
+aaa()

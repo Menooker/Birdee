@@ -77,6 +77,7 @@ private:
 class MCJITHelper //: public BaseHelper
 {
 public:
+
   MCJITHelper(Module* M,bool useMCJIT) : mUseMC(useMCJIT), CurrentModule(NULL) {
 
   }

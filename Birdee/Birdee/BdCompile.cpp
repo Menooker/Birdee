@@ -17,6 +17,7 @@ extern "C"{
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/DIBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
@@ -24,6 +25,7 @@ extern "C"{
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/DebugInfo.h"
 
 #pragma comment(lib,"D:\\Menooker\\libLLVMlite\\libLLVMlite\\Debug\\libLLVMLite.lib")
 #include <string>
@@ -117,8 +119,18 @@ BasicBlock* finallyblock;
 int isInTry=0;
 
 
+DIBuilder* dibuilder;
+DIFile currentfile;
+DICompileUnit* currentcompileunit;
+DISubprogram currentdifunc;
 
-#define THREAD_MODEL GlobalVariable::LocalDynamicTLSModel
+#ifdef BD_MULTITHREAD
+	#define THREAD_MODEL GlobalVariable::LocalDynamicTLSModel
+	#define LINKAGE_TYPE GlobalVariable::WeakAnyLinkage
+#else
+	#define THREAD_MODEL GlobalVariable::NotThreadLocal
+	#define LINKAGE_TYPE GlobalVariable::ExternalLinkage
+#endif
 
 
 class BcParameter{
@@ -222,7 +234,7 @@ static void do_check_abstract(ClassDefinition *super,ClassDefinition *chk,std::h
 						super->name,
 						MESSAGE_ARGUMENT_END);
 				}
-/*				else if(super==chk) //we only modify the first level 
+/*				else if(super==chk) //we only modify the first level
 				{
 					for (member_m = chk->member; member_m;member_m = member_m->next)//find the missing member
 					{
@@ -231,7 +243,7 @@ static void do_check_abstract(ClassDefinition *super,ClassDefinition *chk,std::h
 
 					}
 				}*/
-				
+
 			}
 		}
 		if(member->kind == METHOD_MEMBER && member->u.method.is_override && member->u.method.function_definition->block) //if is implemented
@@ -239,7 +251,7 @@ static void do_check_abstract(ClassDefinition *super,ClassDefinition *chk,std::h
 			map[member->u.method.function_definition->name]=1;
 		}
 	}
-	
+
 	if (super->super_class) {
         do_check_abstract(super->super_class,chk,map);
     }
@@ -782,9 +794,14 @@ extern "C" void BcBuildInlines(void* mod)
 	}
 }
 
+extern "C" void BcFreeDIBuilder(void* db)
+{
+	DIBuilder* dibuilder=(DIBuilder*)db;
+	dibuilder->finalize();
+	delete dibuilder;
+}
 
-
-extern "C" void* BcNewModule(char* name)
+extern "C" void* BcNewModule(char* name,char* path)
 {
 	if(!name)
 		name="";
@@ -792,6 +809,32 @@ extern "C" void* BcNewModule(char* name)
 		///////////here we go with LLVM
 	module = new Module(name, context); //fix-me : remember to delete it
 
+	dibuilder=new DIBuilder(*module);
+	llvm::StringRef str=path;
+	size_t idx=0;
+	while(idx!=StringRef::npos)
+	{
+		idx=str.find_first_of("\\",idx);
+		char* s=(char*)str.data();
+		s[idx]='/';
+	}
+	idx=str.find_last_of("/");
+	StringRef dir,file;
+	if(idx==StringRef::npos)
+	{
+		dir="";
+		file=path;
+	}
+	else
+	{
+		dir=str.slice(0,idx);
+		file=str.slice(idx+1,StringRef::npos);
+	}
+	if(file.empty())
+		file="$unknown";
+	dibuilder->createCompileUnit(dwarf::DW_LANG_lo_user+1,file,dir,"Birdee",false,"",0);
+	module->addModuleFlag(Module::Warning, "Debug Info Version",DEBUG_METADATA_VERSION);
+	currentfile=dibuilder->createFile(file,dir);
 	fPushi=0;
 	fPushd=0;
 	fPusho=0;
@@ -912,17 +955,17 @@ extern "C" void* BcNewModule(char* name)
 	//arr_is_pointer=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::ExternalLinkage,0,"arr_is_pointer");
 
 	//fix-me : this is an awkward bypass of an LLVM bug on external-linkage TLS variables. Fix me when the llvm bug is fixed (or never).
-	bpc=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
+	bpc=new GlobalVariable(*module,Type::getInt32PtrTy(context),false,LINKAGE_TYPE,
 		ConstPointer(Type::getInt32PtrTy(context)),"bpc",0,THREAD_MODEL,0,true);
-	bei=new GlobalVariable(*module,Type::getInt32PtrTy(context),true,GlobalValue::WeakAnyLinkage,
+	bei=new GlobalVariable(*module,Type::getInt32PtrTy(context),false,LINKAGE_TYPE,
 		ConstPointer(Type::getInt32PtrTy(context)),"bei",0,THREAD_MODEL,0,true);
-	beo=new GlobalVariable(*module,TyObjectRef->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+	beo=new GlobalVariable(*module,TyObjectRef->getPointerTo(),false,LINKAGE_TYPE,
 		ConstPointer((PointerType*)TypStack),"beo",0,THREAD_MODEL,0,true);
-	bsp=new GlobalVariable(*module,TypStack->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+	bsp=new GlobalVariable(*module,TypStack->getPointerTo(),false,LINKAGE_TYPE,
 		ConstPointer(TypStack->getPointerTo()),"bsp",0,THREAD_MODEL,0,true);
-	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context)->getPointerTo(),true,GlobalValue::WeakAnyLinkage,
+	arr_sp=new GlobalVariable(*module,Type::getInt32PtrTy(context)->getPointerTo(),false,LINKAGE_TYPE,
 		ConstPointer(Type::getInt32PtrTy(context)->getPointerTo()),"arr_sp",0,THREAD_MODEL,0,true);
-	bretvar=new GlobalVariable(*module,TypStack,true,GlobalValue::WeakAnyLinkage,
+	bretvar=new GlobalVariable(*module,TypStack,false,LINKAGE_TYPE,
 		ConstPointer((PointerType*)TypStack),"retvar",0,THREAD_MODEL,0,true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
 
@@ -943,7 +986,9 @@ extern "C" void* BcNewModule(char* name)
 		//module->dump();
 
 		BcGetCurrentCompilerContext()->inline_module=module;
+
 	}
+	BcGetCurrentCompilerContext()->dibuilder=dibuilder;
 	return module;
 }
 
@@ -1296,7 +1341,6 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
     member = &fce->function->u.member_expression;
     method_index = get_method_index_Ex(member,&popcnt); //param_cnt => popcnt
 	popcnt=BcGeneratePushArgument(exe, block,fce->argument)-popcnt;
-
     Value* obj= BcGenerateExpression(exe, block,fce->function->u.member_expression.expression);
 	/*Value* _pthis=builder.CreateLoad(pthis);
 	Value* oldthis=builder.CreateLoad(_pthis);
@@ -1306,7 +1350,7 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
 		builder.CreateStore(ConstInt(32,popcnt),builder.CreateLoad(bpc)); //set param_count register //fix-me : no need for bpc?
 	builder.CreateCall(fCall,ConstInt(32,method_index));
 	//builder.CreateStore(oldthis,_pthis);
-	
+
 	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(fce->function->type->basic_type!=DVM_VOID_TYPE) //
 		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypeSwitch[get_opcode_type_offset3(expr->type->basic_type )]));//check-me : get_opcode_type_offset???
@@ -1356,7 +1400,7 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 		builder.CreateCall(fInvokeDelegate);
 	}
 	else
-		builder.CreateCall(fInvoke,fid);//->setMetadata("Dbg",MDNode::get(context,md));//generate_code(ob, expr->line_number, DVM_INVOKE);
+		builder.CreateCall(fInvoke,fid)->setDebugLoc(DebugLoc::get(expr->line_number,0,currentdifunc));//->setMetadata("Dbg",MDNode::get(context,md));//generate_code(ob, expr->line_number, DVM_INVOKE);
 	DBG_assert((popcnt>=0),("Pop count < 0"));
 	if(popcnt)
 	{
@@ -2220,9 +2264,16 @@ void BcGenerateReturnStatement(DVM_Executable *exe, Block *block,Statement *stat
         }
     }
     Value* v=BcGenerateExpression(exe, block, statement->u.return_s.return_value);
+	const DebugLoc& dl= DebugLoc::get(statement->line_number,0,currentdifunc);
+	Instruction* inst=builder.CreateLoad(bretvar);
+	inst->setDebugLoc(dl);
+
 	//printf("%d",v->getType()->getTypeID());
-	builder.CreateStore(v,builder.CreateBitCast(builder.CreateLoad(bretvar),v->getType()->getPointerTo()));
-	builder.CreateRetVoid();
+	inst=builder.CreateStore(v,builder.CreateBitCast(inst,v->getType()->getPointerTo()));
+	//dl=DebugLoc::get(statement->line_number,0,currentfile);
+	inst->setDebugLoc(dl);
+	//dl=&DebugLoc::get(statement->line_number,0,currentfile);
+	builder.CreateRetVoid()->setDebugLoc(dl);
 	//BasicBlock* bcon=BasicBlock::Create(context,"dummy",curfun);
 	//SwitchBlock(bcon);
 	//generate_code(ob, statement->line_number, DVM_RETURN);
@@ -2635,7 +2686,7 @@ llvm::BasicBlock* BcGenerateBlock(DVM_Executable *cf,Block* current_block,Statem
 	return blk;
 }
 
-llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* block,StatementList* statement_list,int needret,char* clsname,int local_var_cnt)
+llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* block,StatementList* statement_list,int needret,char* clsname,int local_var_cnt,int line)
 {
 	bparameters.clear();
 	bparameters.resize(local_var_cnt+1);
@@ -2645,6 +2696,10 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	//block->parent
 	//bparameters.shrink_to_fit();
 	Function *retf = Function::Create(FT, Function::ExternalLinkage,name, module);
+
+	currentdifunc=dibuilder->createFunction(currentfile,name,StringRef(),currentfile,line,//fdsdfsdfasdfadsf
+		dibuilder->createSubroutineType(currentfile,DIArray())
+		,true,true,line,DIDescriptor::FlagPrototyped,false,retf);
 	curfun=retf;
 	BasicBlock *BB = BasicBlock::Create(context, "",retf);
 	SwitchBlock(BB);
@@ -2677,11 +2732,11 @@ llvm::Function* BcGenerateFunction(DVM_Executable *exe, FunctionDefinition * src
 			DBG_panic(("Function name too long"));
 		if(stricmp(src->name,"initialize"))
 			clsname=0;
-		return BcGenerateFunctionEx(exe,buf,src->block,src->block->statement_list,0,clsname,src->local_variable_count);
+		return BcGenerateFunctionEx(exe,buf,src->block,src->block->statement_list,0,clsname,src->local_variable_count,src->end_line_number);
 	}
 	else
 	{
-		return BcGenerateFunctionEx(exe,src->name ,src->block,src->block->statement_list,0,0,src->local_variable_count);
+		return BcGenerateFunctionEx(exe,src->name ,src->block,src->block->statement_list,0,0,src->local_variable_count,src->end_line_number);
 	}
 }
 

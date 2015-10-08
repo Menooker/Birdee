@@ -408,7 +408,6 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 		throw BdDamagedModule;
 	buffer_ostream os(&buf);
 	WriteBitcodeToFile(md,os);
-
 	CpDumpVar(MAGIC_END,&buf);
 
 	BINT* sz=(BINT*)(buf.p);
