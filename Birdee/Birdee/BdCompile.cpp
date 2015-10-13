@@ -27,7 +27,7 @@ extern "C"{
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/DebugInfo.h"
 
-#pragma comment(lib,"D:\\Menooker\\libLLVMlite\\libLLVMlite\\Debug\\libLLVMLite.lib")
+//#pragma comment(lib,"D:\\Menooker\\libLLVMlite\\libLLVMlite\\Debug\\libLLVMLite.lib")
 #include <string>
 #include <stack>
 #include "hash_compatible.h"

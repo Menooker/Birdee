@@ -25,8 +25,8 @@ main(int argc, char* argv[])
         exit(1);
     }*/
 	BcInitLLVMCompiler();
-	//argv[1]="..\\..\\compiler\\test\\test.dkm";
-    argv[1]="D:\\Menooker\\Birdee\\Build0\\diksam_book_0_1\\compiler\\test\\test.dkm";
+	argv[1]="..\\..\\compiler\\test\\test.dkm";
+    //argv[1]="D:\\Menooker\\Birdee\\Build0\\diksam_book_0_1\\compiler\\test\\test.dkm";
 	fp = fopen(argv[1], "r");
     if (fp == NULL) {
         fprintf(stderr, "%s not found.\n", argv[1]);
