@@ -28,32 +28,59 @@ To build LLVM with MinGW, the following steps are to be taken.
  * Put the following lines in the ".bat" file. (Note that "ar.exe" can be found at "path\to\CodeBlocks\MinGW\bin", you should either replace all of the occurence of "ar.exe" with the full path of it or add "path\to\CodeBlocks\MinGW\bin" to the "path" environment variable.)
  ```bat
    ar.exe x libLLVMCore.a
+   
    ar.exe x libLLVMCodeGen.a
+   
    ar.exe x libLLVMExecutionEngine.a
+   
    ar.exe x libLLVMTarget.a
+   
    ar.exe x libLLVMJIT.a
+   
    ar.exe x libLLVMScalarOpts.a
+   
    ar.exe x libLLVMSupport.a
+   
    ar.exe x libLLVMAnalysis.a
+   
    ar.exe x libLLVMMC.a
+   
    ar.exe x libLLVMX86AsmParser.a
+   
    ar.exe x libLLVMX86AsmPrinter.a
+   
    ar.exe x libLLVMX86Desc.a
+   
    ar.exe x libLLVMX86Info.a
+   
    ar.exe x libLLVMX86Utils.a
+   
    ar.exe x libLLVMX86CodeGen.a
+   
    ar.exe x libLLVMSelectionDAG.a
+   
    ar.exe x libLLVMObject.a
+   
    ar.exe x libLLVMTransformUtils.a
+   
    ar.exe x libLLVMBitWriter.a 
+   
    ar.exe x libLLVMBitReader.a
+   
    ar.exe x libLLVMMCJIT.a
+   
    ar.exe x libLLVMRuntimeDyld.a
+   
    ar.exe x libLLVMAsmPrinter.a
+   
    ar.exe x libLLVMAsmParser.a
+   
    ar.exe x libLLVMMCParser.a
+   
    ar.exe rcs libLLVMLite.a *.obj ./CodeGen/CMakeFiles/LLVMCodeGen.dir/Analysis.cpp.obj
+   
    del *.obj
+   
    pause
 ```
  * Execute the ".bat" file, and "libLLVMLite.a" should be ready at "lib" directory.
