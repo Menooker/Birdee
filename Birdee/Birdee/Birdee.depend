@@ -12,23 +12,23 @@
 	"..\include\DVM_code.h"
 	"..\include\share.h"
 
-1407071208 d:\menooker\birdee\build0\diksam_book_0_1\include\mem.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\mem.h
 	<stdio.h>
 	<stdlib.h>
 
-1406175332 d:\menooker\birdee\build0\diksam_book_0_1\include\dkc.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\dkc.h
 	<stdio.h>
 	"..\include\DVM_code.h"
 
-1444137562 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_code.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_code.h
 	<stdio.h>
 	<wchar.h>
 	"..\include\DVM.h"
 
-1430808723 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm.h
 	"../Birdee/Birdee/BirdeeDef.h"
 
-1430808723 d:\menooker\birdee\build0\diksam_book_0_1\include\share.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\share.h
 	<stdio.h>
 	"..\include\DVM_code.h"
 	"..\include\DKC.h"
@@ -40,7 +40,7 @@
 	"..\..\include\DVM.h"
 	"..\..\include\DBG.h"
 
-1425130000 d:\menooker\birdee\build0\diksam_book_0_1\include\dbg.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\dbg.h
 	<stdio.h>
 	<stdarg.h>
 
@@ -51,7 +51,7 @@
 	"diksamc.h"
 	"..\include\DVM_dev.h"
 
-1430808723 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_dev.h
+1444657677 d:\menooker\birdee\build0\diksam_book_0_1\include\dvm_dev.h
 	"..\include\DVM.h"
 	"..\include\DVM_code.h"
 
@@ -89,7 +89,7 @@
 	"..\include\DBG.h"
 	"diksamc.h"
 
-1444133576 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.h
+1445263073 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.h
 	"llvm/IR/DerivedTypes.h"
 	"llvm/IR/IRBuilder.h"
 	"llvm/IR/LLVMContext.h"
@@ -837,7 +837,7 @@
 	"..\include\MEM.h"
 	"dvm_pri.h"
 
-1444225020 source:d:\menooker\birdee\build0\diksam_book_0_1\main\main.c
+1444712072 source:d:\menooker\birdee\build0\diksam_book_0_1\main\main.c
 	<stdio.h>
 	<locale.h>
 	"..\Birdee\Birdee\stdafx.h"
@@ -918,7 +918,7 @@
 	"BirdeeDef.h"
 	"../../include/DVM.h"
 
-1444223017 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.cpp
+1444657776 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.cpp
 	"BirdeeDef.h"
 	"BdCompile.h"
 	"..\..\include\DBG.h"
@@ -1048,7 +1048,7 @@
 1425180433 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\birdee.cpp
 	"stdafx.h"
 
-1430808723 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.cpp
+1445258209 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.cpp
 	"UnportableAPI.h"
 	"BirdeeDef.h"
 	<stdio.h>
@@ -1661,4 +1661,676 @@
 1386623016 d:\menooker\libllvmlite\llvm-3.4.2.src\include\llvm\support\dwarf.h
 	"llvm/Support/Compiler.h"
 	"llvm/Support/DataTypes.h"
+
+1367420408 d:\menooker\birdee\build0\include\llvm\ir\derivedtypes.h
+	"llvm/IR/Type.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+
+1381896606 d:\menooker\birdee\build0\include\llvm\ir\type.h
+	"llvm/ADT/APFloat.h"
+	"llvm/Support/Casting.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm-c/Core.h"
+
+1374961760 d:\menooker\birdee\build0\include\llvm\adt\apfloat.h
+	"llvm/ADT/APInt.h"
+
+1384619142 d:\menooker\birdee\build0\include\llvm\adt\apint.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	<cassert>
+	<climits>
+	<cstring>
+	<string>
+
+1386701172 d:\menooker\birdee\build0\include\llvm\adt\arrayref.h
+	"llvm/ADT/None.h"
+	"llvm/ADT/SmallVector.h"
+	<vector>
+
+1361426902 d:\menooker\birdee\build0\include\llvm\adt\none.h
+
+1379093604 d:\menooker\birdee\build0\include\llvm\adt\smallvector.h
+	"llvm/Support/AlignOf.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<cstddef>
+	<cstdlib>
+	<cstring>
+	<iterator>
+	<memory>
+
+1357727956 d:\menooker\birdee\build0\include\llvm\support\alignof.h
+	"llvm/Support/Compiler.h"
+	<cstddef>
+
+1384146882 d:\menooker\birdee\build0\include\llvm\support\compiler.h
+	"llvm/Config/llvm-config.h"
+	<sanitizer/msan_interface.h>
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\config\llvm-config.h
+
+1384302044 d:\menooker\birdee\build0\include\llvm\support\mathextras.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/SwapByteOrder.h"
+	"llvm/Support/type_traits.h"
+	<cstring>
+	<intrin.h>
+	<limits>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\swapbyteorder.h
+	"llvm/Support/DataTypes.h"
+	<cstddef>
+	<limits>
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\support\datatypes.h
+	<cmath>
+	<math.h>
+	<sys/types.h>
+	<inttypes.h>
+	<stdint.h>
+	"llvm/Support/AIXDataTypesFix.h"
+	<stdint.h>
+	<stdlib.h>
+	<stddef.h>
+	<sys/types.h>
+	<cmath>
+	<math.h>
+
+1291059890 d:\menooker\birdee\build0\include\llvm\support\aixdatatypesfix.h
+
+1364402592 d:\menooker\birdee\build0\include\llvm\support\type_traits.h
+	"llvm/Support/DataTypes.h"
+	<cstddef>
+	<utility>
+
+1374115360 d:\menooker\birdee\build0\include\llvm\support\casting.h
+	"llvm/Support/type_traits.h"
+	<cassert>
+
+1367442066 d:\menooker\birdee\build0\include\llvm\support\cbindingwrapping.h
+	"llvm/Support/Casting.h"
+
+1364408874 d:\menooker\birdee\build0\include\llvm\support\errorhandling.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/Compiler.h"
+	<string>
+
+1383157946 d:\menooker\birdee\build0\include\llvm\adt\stringref.h
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<cstring>
+	<limits>
+	<string>
+	<utility>
+
+1384479300 d:\menooker\birdee\build0\include\llvm-c\core.h
+	"llvm/Support/DataTypes.h"
+
+1384479300 d:\menooker\birdee\build0\include\llvm\ir\irbuilder.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/ADT/Twine.h"
+	"llvm/IR/BasicBlock.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/Instructions.h"
+	"llvm/IR/LLVMContext.h"
+	"llvm/IR/Operator.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/ConstantFolder.h"
+	"llvm/Support/ValueHandle.h"
+
+1366318158 d:\menooker\birdee\build0\include\llvm\adt\twine.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	<cassert>
+	<string>
+
+1367441940 d:\menooker\birdee\build0\include\llvm\ir\basicblock.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/SymbolTableListTraits.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+
+1379093604 d:\menooker\birdee\build0\include\llvm\adt\ilist.h
+	"llvm/Support/Compiler.h"
+	<algorithm>
+	<cassert>
+	<cstddef>
+	<iterator>
+
+1361304130 d:\menooker\birdee\build0\include\llvm\ir\instruction.h
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/User.h"
+	"llvm/Support/DebugLoc.h"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\adt\ilist_node.h
+
+1364402592 d:\menooker\birdee\build0\include\llvm\ir\user.h
+	"llvm/IR/Value.h"
+	"llvm/Support/ErrorHandling.h"
+
+1377170712 d:\menooker\birdee\build0\include\llvm\ir\value.h
+	"llvm/IR/Use.h"
+	"llvm/Support/Casting.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+
+1369055578 d:\menooker\birdee\build0\include\llvm\ir\use.h
+	"llvm/ADT/PointerIntPair.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+	<cstddef>
+	<iterator>
+
+1379978818 d:\menooker\birdee\build0\include\llvm\adt\pointerintpair.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	<cassert>
+
+1291054570 d:\menooker\birdee\build0\include\llvm\support\pointerliketypetraits.h
+	"llvm/Support/DataTypes.h"
+
+1410963881 d:\menooker\birdee\build0\include\llvm\support\debugloc.h
+	"llvm/Support/DataTypes.h"
+
+1384479300 d:\menooker\birdee\build0\include\llvm\ir\instruction.def
+
+1357778720 d:\menooker\birdee\build0\include\llvm\ir\symboltablelisttraits.h
+	"llvm/ADT/ilist.h"
+
+1379371396 d:\menooker\birdee\build0\include\llvm\ir\datalayout.h
+	"llvm/ADT/DenseMap.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Type.h"
+	"llvm/Pass.h"
+	"llvm/Support/DataTypes.h"
+
+1383145854 d:\menooker\birdee\build0\include\llvm\adt\densemap.h
+	"llvm/ADT/DenseMapInfo.h"
+	"llvm/Support/AlignOf.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/MathExtras.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	"llvm/Support/type_traits.h"
+	<algorithm>
+	<cassert>
+	<climits>
+	<cstddef>
+	<cstring>
+	<iterator>
+	<new>
+	<utility>
+
+1345850968 d:\menooker\birdee\build0\include\llvm\adt\densemapinfo.h
+	"llvm/Support/PointerLikeTypeTraits.h"
+	"llvm/Support/type_traits.h"
+
+1354571818 d:\menooker\birdee\build0\include\llvm\pass.h
+	"llvm/Support/Compiler.h"
+	<string>
+	"llvm/PassSupport.h"
+	"llvm/PassAnalysisSupport.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\passsupport.h
+	"Pass.h"
+	"llvm/InitializePasses.h"
+	"llvm/PassRegistry.h"
+	"llvm/Support/Atomic.h"
+	"llvm/Support/Valgrind.h"
+	<vector>
+
+1384646346 d:\menooker\birdee\build0\include\llvm\initializepasses.h
+
+1367441940 d:\menooker\birdee\build0\include\llvm\passregistry.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm-c/Core.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\atomic.h
+	"llvm/Support/DataTypes.h"
+
+1377039122 d:\menooker\birdee\build0\include\llvm\support\valgrind.h
+	"llvm/Config/llvm-config.h"
+	"llvm/Support/Compiler.h"
+	<stddef.h>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\passanalysissupport.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/Pass.h"
+	<vector>
+
+1384479300 d:\menooker\birdee\build0\include\llvm\ir\instructions.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/CallingConv.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/InstrTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	<iterator>
+
+1379978818 d:\menooker\birdee\build0\include\llvm\ir\attributes.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/FoldingSet.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	<bitset>
+	<cassert>
+	<map>
+	<string>
+
+1370866170 d:\menooker\birdee\build0\include\llvm\adt\foldingset.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/DataTypes.h"
+
+1383953296 d:\menooker\birdee\build0\include\llvm\ir\callingconv.h
+
+1375221734 d:\menooker\birdee\build0\include\llvm\ir\instrtypes.h
+	"llvm/ADT/Twine.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/OperandTraits.h"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+	"llvm/IR/Instruction.def"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\ir\operandtraits.h
+	"llvm/IR/User.h"
+
+1369435986 d:\menooker\birdee\build0\include\llvm\ir\llvmcontext.h
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm-c/Core.h"
+
+1378948074 d:\menooker\birdee\build0\include\llvm\ir\operator.h
+	"llvm/IR/Constants.h"
+	"llvm/IR/DataLayout.h"
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/Instruction.h"
+	"llvm/IR/Type.h"
+	"llvm/Support/GetElementPtrTypeIterator.h"
+
+1386462216 d:\menooker\birdee\build0\include\llvm\ir\constants.h
+	"llvm/ADT/APFloat.h"
+	"llvm/ADT/APInt.h"
+	"llvm/ADT/ArrayRef.h"
+	"llvm/IR/Constant.h"
+	"llvm/IR/OperandTraits.h"
+	"llvm/IR/DerivedTypes.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\ir\constant.h
+	"llvm/IR/User.h"
+
+1370866170 d:\menooker\birdee\build0\include\llvm\support\getelementptrtypeiterator.h
+	"llvm/IR/DerivedTypes.h"
+	"llvm/IR/User.h"
+
+1357126570 d:\menooker\birdee\build0\include\llvm\support\constantfolder.h
+	"llvm/IR/Constants.h"
+	"llvm/IR/InstrTypes.h"
+
+1384822676 d:\menooker\birdee\build0\include\llvm\support\valuehandle.h
+	"llvm/ADT/DenseMapInfo.h"
+	"llvm/ADT/PointerIntPair.h"
+	"llvm/IR/Value.h"
+
+1384296440 d:\menooker\birdee\build0\include\llvm\analysis\passes.h
+
+1270748464 d:\menooker\birdee\build0\include\llvm\analysis\verifier.h
+	<string>
+
+1382573954 d:\menooker\birdee\build0\include\llvm\executionengine\executionengine.h
+	"llvm-c/ExecutionEngine.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/ADT/ValueMap.h"
+	"llvm/MC/MCCodeGenInfo.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm/Support/Mutex.h"
+	"llvm/Support/ValueHandle.h"
+	"llvm/Target/TargetMachine.h"
+	"llvm/Target/TargetOptions.h"
+	<map>
+	<string>
+	<vector>
+
+1382550990 d:\menooker\birdee\build0\include\llvm-c\executionengine.h
+	"llvm-c/Core.h"
+	"llvm-c/Target.h"
+	"llvm-c/TargetMachine.h"
+
+1384181222 d:\menooker\birdee\build0\include\llvm-c\target.h
+	"llvm-c/Core.h"
+	"llvm/Config/llvm-config.h"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\config\targets.def
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\config\asmprinters.def
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\config\asmparsers.def
+
+1425126233 d:\menooker\birdee\build0\include3\llvm\config\disassemblers.def
+
+1384483872 d:\menooker\birdee\build0\include\llvm-c\targetmachine.h
+	"llvm-c/Core.h"
+	"llvm-c/Target.h"
+
+1354554132 d:\menooker\birdee\build0\include\llvm\adt\valuemap.h
+	"llvm/ADT/DenseMap.h"
+	"llvm/Support/Mutex.h"
+	"llvm/Support/ValueHandle.h"
+	"llvm/Support/type_traits.h"
+	<iterator>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\mutex.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/Threading.h"
+	<cassert>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\threading.h
+
+1385356910 d:\menooker\birdee\build0\include\llvm\mc\mccodegeninfo.h
+	"llvm/Support/CodeGen.h"
+
+1367449080 d:\menooker\birdee\build0\include\llvm\support\codegen.h
+	"llvm-c/TargetMachine.h"
+	"llvm/Support/ErrorHandling.h"
+
+1385356910 d:\menooker\birdee\build0\include\llvm\target\targetmachine.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Pass.h"
+	"llvm/Support/CodeGen.h"
+	"llvm/Target/TargetOptions.h"
+	<cassert>
+	<string>
+
+1375393326 d:\menooker\birdee\build0\include\llvm\target\targetoptions.h
+	<string>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\executionengine\jit.h
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	<cstdlib>
+
+1382563544 d:\menooker\birdee\build0\include\llvm\ir\module.h
+	"llvm/ADT/OwningPtr.h"
+	"llvm/IR/Function.h"
+	"llvm/IR/GlobalAlias.h"
+	"llvm/IR/GlobalVariable.h"
+	"llvm/IR/Metadata.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/DataTypes.h"
+
+1368603420 d:\menooker\birdee\build0\include\llvm\adt\owningptr.h
+	"llvm/Support/Compiler.h"
+	<cassert>
+	<cstddef>
+
+1379293696 d:\menooker\birdee\build0\include\llvm\ir\function.h
+	"llvm/IR/Argument.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/BasicBlock.h"
+	"llvm/IR/CallingConv.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/Support/Compiler.h"
+
+1373070598 d:\menooker\birdee\build0\include\llvm\ir\argument.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/Attributes.h"
+	"llvm/IR/Value.h"
+
+1383325754 d:\menooker\birdee\build0\include\llvm\ir\globalvalue.h
+	"llvm/IR/Constant.h"
+	"llvm/IR/DerivedTypes.h"
+
+1381334852 d:\menooker\birdee\build0\include\llvm\ir\globalalias.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/IR/OperandTraits.h"
+
+1383054252 d:\menooker\birdee\build0\include\llvm\ir\globalvariable.h
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/GlobalValue.h"
+	"llvm/IR/OperandTraits.h"
+
+1386623016 d:\menooker\birdee\build0\include\llvm\ir\metadata.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/FoldingSet.h"
+	"llvm/ADT/ilist_node.h"
+	"llvm/IR/Value.h"
+
+1384000014 d:\menooker\birdee\build0\include\llvm\passmanager.h
+	"llvm/IR/LegacyPassManager.h"
+
+1384000014 d:\menooker\birdee\build0\include\llvm\ir\legacypassmanager.h
+	"llvm/Pass.h"
+	"llvm/Support/CBindingWrapping.h"
+
+1332799016 d:\menooker\birdee\build0\include\llvm\support\targetselect.h
+	"llvm/Config/llvm-config.h"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/Targets.def"
+	"llvm/Config/AsmPrinters.def"
+	"llvm/Config/AsmParsers.def"
+	"llvm/Config/Disassemblers.def"
+
+1374003858 d:\menooker\birdee\build0\include\llvm\support\raw_ostream.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/FileSystem.h"
+
+1384550522 d:\menooker\birdee\build0\include\llvm\support\filesystem.h
+	"llvm/ADT/IntrusiveRefCntPtr.h"
+	"llvm/ADT/OwningPtr.h"
+	"llvm/ADT/SmallString.h"
+	"llvm/ADT/Twine.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm/Support/TimeValue.h"
+	"llvm/Support/system_error.h"
+	<ctime>
+	<iterator>
+	<stack>
+	<string>
+	<vector>
+	<sys/stat.h>
+
+1364402592 d:\menooker\birdee\build0\include\llvm\adt\intrusiverefcntptr.h
+	"llvm/Support/Casting.h"
+	"llvm/Support/Compiler.h"
+	<memory>
+
+1361907228 d:\menooker\birdee\build0\include\llvm\adt\smallstring.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+
+1373942632 d:\menooker\birdee\build0\include\llvm\support\timevalue.h
+	"llvm/Support/DataTypes.h"
+	<string>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\system_error.h
+	"llvm/Support/Compiler.h"
+	"llvm/Config/llvm-config.h"
+	"llvm/Support/type_traits.h"
+	<cerrno>
+	<string>
+
+1384646346 d:\menooker\birdee\build0\include\llvm\transforms\scalar.h
+	"llvm/ADT/StringRef.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\bitcode\readerwriter.h
+	<string>
+
+1382728012 d:\menooker\birdee\build0\include\llvm\support\memorybuffer.h
+	"llvm/ADT/Twine.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+	"llvm-c/Core.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\executionengine\mcjit.h
+	"llvm/ExecutionEngine/ExecutionEngine.h"
+	<cstdlib>
+
+1384822676 d:\menooker\birdee\build0\include\llvm\executionengine\objectcache.h
+	"llvm/Support/MemoryBuffer.h"
+
+1380675566 d:\menooker\birdee\build0\include\llvm\executionengine\sectionmemorymanager.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ExecutionEngine/RuntimeDyld.h"
+	"llvm/Support/ErrorHandling.h"
+	"llvm/Support/Memory.h"
+
+1381882462 d:\menooker\birdee\build0\include\llvm\executionengine\runtimedyld.h
+	"llvm/ADT/StringRef.h"
+	"llvm/ExecutionEngine/ObjectBuffer.h"
+	"llvm/ExecutionEngine/RTDyldMemoryManager.h"
+	"llvm/Support/Memory.h"
+
+1384822676 d:\menooker\birdee\build0\include\llvm\executionengine\objectbuffer.h
+	"llvm/ADT/OwningPtr.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/Support/MemoryBuffer.h"
+	"llvm/Support/raw_ostream.h"
+
+1381882462 d:\menooker\birdee\build0\include\llvm\executionengine\rtdyldmemorymanager.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/CBindingWrapping.h"
+	"llvm/Support/Memory.h"
+	"llvm-c/ExecutionEngine.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\memory.h
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/system_error.h"
+	<string>
+
+1364264738 d:\menooker\birdee\build0\include\llvm\irreader\irreader.h
+	<string>
+
+1384822676 d:\menooker\birdee\build0\include\llvm\support\commandline.h
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/Twine.h"
+	"llvm/ADT/StringMap.h"
+	"llvm/Support/Compiler.h"
+	"llvm/Support/type_traits.h"
+	<cassert>
+	<climits>
+	<cstdarg>
+	<utility>
+	<vector>
+
+1369520902 d:\menooker\birdee\build0\include\llvm\adt\stringmap.h
+	"llvm/ADT/StringRef.h"
+	"llvm/Support/Allocator.h"
+	<cstring>
+
+1377651742 d:\menooker\birdee\build0\include\llvm\support\allocator.h
+	"llvm/Support/AlignOf.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/MathExtras.h"
+	<algorithm>
+	<cassert>
+	<cstddef>
+	<cstdlib>
+
+1378896322 d:\menooker\birdee\build0\include\llvm\support\path.h
+	"llvm/ADT/SmallString.h"
+	"llvm/ADT/Twine.h"
+	"llvm/Support/DataTypes.h"
+	<iterator>
+
+1380316166 d:\menooker\birdee\build0\include\llvm\support\sourcemgr.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/ADT/Twine.h"
+	"llvm/Support/SMLoc.h"
+	<string>
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\smloc.h
+	<cassert>
+
+1384817612 d:\menooker\birdee\build0\include\llvm\dibuilder.h
+	"llvm/ADT/ArrayRef.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/DebugInfo.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/ValueHandle.h"
+
+1386623248 d:\menooker\birdee\build0\include\llvm\debuginfo.h
+	"llvm/Support/Casting.h"
+	"llvm/ADT/DenseMap.h"
+	"llvm/ADT/SmallPtrSet.h"
+	"llvm/ADT/SmallVector.h"
+	"llvm/ADT/StringRef.h"
+	"llvm/IR/Metadata.h"
+	"llvm/Support/Dwarf.h"
+
+1379093604 d:\menooker\birdee\build0\include\llvm\adt\smallptrset.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+	"llvm/Support/PointerLikeTypeTraits.h"
+	<cassert>
+	<cstddef>
+	<cstring>
+	<iterator>
+
+1386623016 d:\menooker\birdee\build0\include\llvm\support\dwarf.h
+	"llvm/Support/Compiler.h"
+	"llvm/Support/DataTypes.h"
+
+1370423846 d:\menooker\birdee\build0\include\llvm\support\host.h
+	"llvm/ADT/StringMap.h"
+	<endian.h>
+	<machine/endian.h>
+	<string>
+
+1380728544 d:\menooker\birdee\build0\include\llvm\transforms\instrumentation.h
+	"llvm/ADT/StringRef.h"
+
+1357778720 d:\menooker\birdee\build0\include\llvm\support\dynamiclibrary.h
+	<string>
 

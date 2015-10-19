@@ -20,13 +20,13 @@
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_WINDOWS" />
-					<Add directory="D:/Menooker/libLLVMlite/llvm-3.4.2.src/include" />
-					<Add directory="D:/Menooker/libLLVMlite/build_codeblocks0/include" />
+					<Add directory="../../../include" />
+					<Add directory="../../../include3" />
 					<Add directory="$(IncludePath)" />
 					<Add directory="C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Include" />
 				</Compiler>
 				<Linker>
-					<Add library="D:\Menooker\libLLVMlite\build_codeblocks0\lib\libLLVMLite.a" />
+					<Add library="..\..\..\libLLVMLite.a" />
 					<Add library="C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\DbgHelp.Lib" />
 				</Linker>
 			</Target>
