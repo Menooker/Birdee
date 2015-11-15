@@ -140,7 +140,8 @@
      APOSTROPHE = 356,
      LIB = 357,
      UNSAFE = 358,
-     SAFE = 359
+     SAFE = 359,
+     SHARED = 360
    };
 #endif
 /* Tokens.  */
@@ -246,6 +247,7 @@
 #define LIB 357
 #define UNSAFE 358
 #define SAFE 359
+#define SHARED 360
 
 
 
@@ -282,14 +284,14 @@ typedef union YYSTYPE
     FunctionDefinition  *function_definition;
     ExceptionList       *exception_list;
     Enumerator          *enumerator;
-	int					apost;
+	int					intval;
 	TemplateTypes		*template;
 	TemplateDeclare     *template_def;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 293 "y.tab.h"
+#line 295 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

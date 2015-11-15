@@ -181,6 +181,7 @@
     <ClCompile Include="Birdee.cpp" />
     <ClCompile Include="BdDumper.cpp" />
     <ClCompile Include="BdLoader.cpp" />
+    <ClCompile Include="BdSharedObj.cpp" />
     <ClCompile Include="UnportableAPI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

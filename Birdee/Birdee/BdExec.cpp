@@ -309,6 +309,8 @@ BINT ExGetArrayTypeSize(DVM_ArrayType type)
 	return size;
 }
 
+
+
 void ExArrayHash(DVM_Value *args)
 {
     DVM_Object *barray;
@@ -1178,6 +1180,7 @@ DVM_Boolean ExInstanceof(BINT index)//In llvm, the return value is a bit!
 			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
 			DVM_Boolean ret=DVM_FALSE;
 			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+			index=curthread->current_executable->class_table[index];
 	        if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {

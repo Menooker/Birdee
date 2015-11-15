@@ -104,6 +104,14 @@ Function *fInvokeDelegate;
 Function *fSystemRaise;
 Function *fReraise;
 
+Function *fSharedSeti;
+Function *fSharedSetd;
+Function *fSharedSeto;
+
+Function *fSharedGeti;
+Function *fSharedGetd;
+Function *fSharedGeto;
+
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
 GlobalVariable* beo;//exception obj //fix-me : release it!
@@ -167,6 +175,8 @@ extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
+Function* SharedPutSwitch[3];
+Function* SharedGetSwitch[3];
 //Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
@@ -842,7 +852,8 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fPop=0;
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
-
+	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;
+	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
 
@@ -943,6 +954,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	FT4 = FunctionType::get(TyObjectRef,ArgSSB, false);
 	fBoolToStr = Function::Create(FT4, Function::ExternalLinkage,"system!BoolToStr", module);
 
+
 	//FunStoreStaicSwitch[0]=fStoreStaticInt;FunStoreStaicSwitch[1]=fStoreStaticDouble;FunStoreStaicSwitch[2]=fStoreStaticString;
 	/*bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");
@@ -979,6 +991,34 @@ extern "C" void* BcNewModule(char* name,char* path)
 	nft= FunctionType::get(TyObjectRef,ArgPStr, false);
 	fGetVar= Function::Create(nft, Function::ExternalLinkage,"autovar!get", module);
 	fGetOrCreateVar= Function::Create(nft, Function::ExternalLinkage,"autovar!getorcreate", module);
+
+	std::vector<Type*> mArg;	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
+	SharedPutSwitch[0]=fSharedSeti;
+
+	mArg.pop_back(); mArg.push_back(Type::getDoubleTy(context));
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSetd=Function::Create(nft, Function::ExternalLinkage,"shared!setd", module);
+	SharedPutSwitch[1]=fSharedSetd;
+
+	mArg.pop_back(); mArg.push_back(TyObjectRef);
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
+	SharedPutSwitch[2]=fSharedSeto;
+
+	mArg.pop_back();
+	nft=FunctionType::get(Type::getInt32Ty(context),mArg, false);
+	fSharedGeti=Function::Create(nft, Function::ExternalLinkage,"shared!geti", module);
+	SharedGetSwitch[0]=fSharedGeti;
+
+	nft=FunctionType::get(Type::getDoubleTy(context),mArg, false);
+	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
+	SharedGetSwitch[1]=fSharedGetd;
+
+	nft=FunctionType::get(TyObjectRef,mArg, false);
+	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
+	SharedGetSwitch[2]=fSharedGeto;
 
 	if(!strcmp(name,"diksam.lang"))
 	{
@@ -1270,20 +1310,27 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			return p.v;
 		}
     } else {
-		BcParameter& ps=bstatic[decl->variable_index];
-		if(!ps.v)
-		{
-			//if(!psta)
-			psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
-			Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
-			p2=builder.CreateLoad(p2);
-			//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
-			ps.v=p2;
-			return p2;
+		if(decl->is_shared)
+		{//if the variable is a shared var
+			return builder.CreateCall(SharedGetSwitch[get_opcode_type_offset(decl->type)],ConstInt(32,decl->variable_index));
 		}
 		else
 		{
-			return ps.v;
+			BcParameter& ps=bstatic[decl->variable_index];
+			if(!ps.v)
+			{
+				//if(!psta)
+				psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
+				Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
+				p2=builder.CreateLoad(p2);
+				//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
+				ps.v=p2;
+				return p2;
+			}
+			else
+			{
+				return ps.v;
+			}
 		}
     }
 }
@@ -1462,44 +1509,53 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
 		}
         return ;
-    } else {
-		Value* p=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
-		if(vartype==-1)
+    }
+	else
+	{//if it is a static variable
+		if(decl->is_shared)
 		{
-			Value* p2=builder.CreateBitCast(p,TypeSwitch[get_opcode_type_offset(decl->type)]);
-			if(dkc_is_var(decl->type) )
+			builder.CreateCall2(SharedPutSwitch[get_opcode_type_offset(decl->type)],ConstInt(32,decl->variable_index),v);
+		}
+		else
+		{// if it is not shared
+			Value* p=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
+			if(vartype==-1)
 			{
-				builder.CreateCall(GetPush(2),v);
-				builder.CreateCall(GetPush(2),builder.CreateLoad(p2));
-				builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunCopyVar));
+				Value* p2=builder.CreateBitCast(p,TypeSwitch[get_opcode_type_offset(decl->type)]);
+				if(dkc_is_var(decl->type) )
+				{
+					builder.CreateCall(GetPush(2),v);
+					builder.CreateCall(GetPush(2),builder.CreateLoad(p2));
+					builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunCopyVar));
+				}
+				else
+				{
+					//if(get_opcode_type_offset(decl->type)!=2)
+					//{
+					bstatic[decl->variable_index].v=v;
+					bstatic[decl->variable_index].violated=1;
+					//}
+					builder.CreateStore(v,p2);
+					if(dkc_is_array(decl->type)) //Full_arr_chk
+					{
+						if(isArrayAddressSet(decl->variable_index,0))
+						{
+							Value* addr=builder.CreateCall(GetFldAddr(),v);
+							builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
+						}
+						else
+							GetArrayAddress(decl->variable_index,0);
+					}//*/
+				}
 			}
 			else
 			{
-				//if(get_opcode_type_offset(decl->type)!=2)
-				//{
-				bstatic[decl->variable_index].v=v;
-				bstatic[decl->variable_index].violated=1;
-				//}
-				builder.CreateStore(v,p2);
-				if(dkc_is_array(decl->type)) //Full_arr_chk
-				{
-					if(isArrayAddressSet(decl->variable_index,0))
-					{
-						Value* addr=builder.CreateCall(GetFldAddr(),v);
-						builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
-					}
-					else
-						GetArrayAddress(decl->variable_index,0);
-				}//*/
+				builder.CreateCall(GetPush(vartype),v);
+				builder.CreateCall(GetPush(2),builder.CreateLoad(p));
+				builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
 			}
+			return;
 		}
-		else
-		{
-			builder.CreateCall(GetPush(vartype),v);
-			builder.CreateCall(GetPush(2),builder.CreateLoad(p));
-			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
-		}
-		return;
     }
 }
 

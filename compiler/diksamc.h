@@ -161,6 +161,7 @@ typedef enum {
 	TEMPLATE_PARENT_PARAM_NUM_ERR,
 	TEMPLATE_PARAM_PARENT_CLASS_ERR,
 	TEMPLATE_SUBCLASS_PARAM_CLASS_ERR,
+	SHARED_VAR_NOT_PUBLIC_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -391,6 +392,7 @@ typedef struct {
     int variable_index;
     DVM_Boolean is_local;
 	DVM_Boolean is_param;
+	DVM_Boolean is_shared;
 } Declaration;
 
 typedef struct DeclarationList_tag {
@@ -1080,7 +1082,8 @@ Statement *dkc_create_throw_statement(Expression *expression);
 Statement *dkc_create_declaration_statement(DVM_Boolean is_final,
                                             TypeSpecifier *type,
                                             char *identifier,
-                                            Expression *initializer);
+                                            Expression *initializer,
+											DVM_Boolean isShared);
 void
 dkc_start_class_definition(ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,

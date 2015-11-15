@@ -40,7 +40,7 @@ dkc_alloc_declaration(DVM_Boolean is_final, TypeSpecifier *type,
     decl->type = type;
     decl->is_final = is_final;
     decl->variable_index = -1;
-
+	decl->is_shared=DVM_FALSE;
     return decl;
 }
 
@@ -1103,7 +1103,7 @@ dkc_create_throw_statement(Expression *expression)
 Statement *
 dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
                                  char *identifier,
-                                 Expression *initializer)
+                                 Expression *initializer,DVM_Boolean isShared)
 {
     Statement *st;
     Declaration *decl;
@@ -1120,7 +1120,7 @@ dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
     decl = dkc_alloc_declaration(is_final, type, identifier);
 
     decl->initializer = initializer;
-
+	decl->is_shared=isShared;
     st->u.declaration_s = decl;
 
     return st;

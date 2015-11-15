@@ -2834,6 +2834,12 @@ add_declaration(Block *current_block, Declaration *decl,
             = dkc_chain_declaration(current_block->declaration_list, decl);
     }
     if (fd) {
+		if(decl->is_shared)
+		{
+            dkc_compile_error(line_number,
+                              SHARED_VAR_NOT_PUBLIC_ERR,
+                              MESSAGE_ARGUMENT_END);
+		}
         decl->is_local = DVM_TRUE;
         add_local_variable(fd, decl, is_parameter);
     } else {
@@ -3706,7 +3712,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
 {
     FunctionDefinition *func_pos;
     DeclarationList *dl;
-    int var_count = 0,i;
+    int var_count = 0,i,shared_cnt=0;
     ExceptionList *el = NULL;
 	BcGetCurrentCompilerContext()->curcls=NULL;
 
@@ -3730,8 +3736,16 @@ dkc_fix_tree(DKC_Compiler *compiler)
     }
 
     for (dl = compiler->declaration_list; dl; dl = dl->next) {
-        dl->declaration->variable_index = var_count;
-        var_count++;
+		if(dl->declaration->is_shared)
+		{
+			dl->declaration->variable_index = shared_cnt;
+			shared_cnt++;
+		}
+		else
+		{
+			dl->declaration->variable_index = var_count;
+			var_count++;
+		}
     }
 }
 

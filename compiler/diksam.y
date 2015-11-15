@@ -29,7 +29,7 @@
     FunctionDefinition  *function_definition;
     ExceptionList       *exception_list;
     Enumerator          *enumerator;
-	int					apost;
+	int					intval;
 	TemplateTypes		*template;
 	TemplateDeclare     *template_def;
 }
@@ -51,9 +51,10 @@
         CLASS_T INTERFACE_T PUBLIC_T PRIVATE_T VIRTUAL_T OVERRIDE_T
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
         DOWN_CAST_BEGIN DOWN_CAST_END DELEGATE FINAL ENUM CONST
-		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE
-%type   <apost> apostrophe
-%type   <apost> unsafe
+		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE SHARED
+%type   <intval> apostrophe
+%type   <intval> unsafe
+%type   <intval> shared
 %type   <package_name> package_name
 %type   <require_list> require_list require_declaration
 %type   <rename_list> rename_list rename_declaration
@@ -869,21 +870,21 @@ throw_statement
         }
         ;
 declaration_statement
-        : DIM  IDENTIFIER AS type_specifier CR
+        : DIM  IDENTIFIER AS shared type_specifier CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, NULL);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $5, $2, NULL,$4);
         }
-        | DIM  IDENTIFIER AS type_specifier ASSIGN_T expression CR
+        | DIM  IDENTIFIER AS shared type_specifier ASSIGN_T expression CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, $6);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $5, $2, $7,$4);
         }
         |  FINAL IDENTIFIER AS type_specifier CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, NULL);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, NULL,DVM_FALSE);
         }
         | FINAL  IDENTIFIER AS type_specifier ASSIGN_T expression CR
         {
-            $$ = dkc_create_declaration_statement(DVM_TRUE, $4, $2, $6);
+            $$ = dkc_create_declaration_statement(DVM_TRUE, $4, $2, $6,DVM_FALSE);
         }
         ;
 block
@@ -1210,6 +1211,16 @@ const_definition
             dkc_create_const_definition($2, $3, NULL);
         }
         ;
+shared
+		: //empty
+		{
+			$$=0;
+		}
+		| SHARED
+		{
+			$$=1;
+		}
+		;
 unsafe
 		: //empty
 		{
