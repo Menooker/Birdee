@@ -500,6 +500,53 @@ get_opcode_type_offset2(TypeSpecifier *type)
     return 0;
 }
 
+int
+get_opcode_type_offset_shared(TypeSpecifier *type)
+{
+    if (type->derive != NULL) {
+        DBG_assert(type->derive->tag = ARRAY_DERIVE,
+                   ("type->derive->tag..%d", type->derive->tag));
+		DBG_assert(0,("Shared Array Types is not yet implemented"));
+        return -1;
+    }
+
+    switch (type->basic_type) {
+    case DVM_VOID_TYPE:
+        DBG_assert(0, ("basic_type is void"));
+        break;
+    case DVM_BOOLEAN_TYPE: /* FALLTHRU */
+    case DVM_INT_TYPE: /* FALLTHRU */
+    case DVM_ENUM_TYPE:
+        return 0;
+        break;
+    case DVM_DOUBLE_TYPE:
+        return 1;
+        break;
+
+	case DVM_CLASS_TYPE: /* FALLTHRU */
+		return 2;
+		break;
+	case DVM_STRING_TYPE: /* FALLTHRU */
+		return 3;
+		break;
+	case DVM_NULL_TYPE: /* FALLTHRU */
+    case DVM_NATIVE_POINTER_TYPE: /* FALLTHRU */
+	case DVM_VARIENT_TYPE:
+    case DVM_DELEGATE_TYPE: /* FALLTHRU */
+	case DVM_TEMPLATE_TYPE:
+		DBG_assert(0, ("Shared type %d not implemented", type->basic_type));
+        return -1;
+        break;
+
+    case DVM_BASE_TYPE: /* FALLTHRU */
+    case DVM_UNSPECIFIED_IDENTIFIER_TYPE: /* FALLTHRU */
+    default:
+        DBG_assert(0, ("basic_type..%d", type->basic_type));
+    }
+
+    return 0;
+}
+
 
  int
 get_opcode_type_offset(TypeSpecifier *type)

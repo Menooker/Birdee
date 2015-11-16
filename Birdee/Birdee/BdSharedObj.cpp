@@ -5,11 +5,14 @@
 #include "hash_compatible.h"
 extern void ExCall(BINT index);
 
+extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 
 enum SoStatus
 {
 	SoOK,
+	SoUnknown,
 	SoKeyNotFound,
+
 };
 
 enum SoType
@@ -126,6 +129,7 @@ public:
 		default:
 			DBG_assert(0,("Var type is wrong %d\n",type));
 		}
+		return NULL;
 	}
 };
 
@@ -184,20 +188,111 @@ public:
 	};*/
 
 	
-	SoStatus putstr(uint key,wchar_t* s)
+	SoStatus putstr(uint key,DVM_ObjectRef* s)
 	{
-
+		DataNode nd;
+		nd.tag=SoString;
+		if(s->data)
+		{
+			nd.string.len=s->data->u.string.length;
+			nd.string.str=s->data->u.string.string;
+		}
+		else
+		{
+			nd.string.len=0;
+			nd.string.str=NULL;
+		}
+		return backend->put(key,&nd);
 	}
 
 	SoStatus getstr(uint key,DVM_ObjectRef* outstr)
 	{
-
+		DataNode nd=backend->get(key);
+		if(nd.tag!=SoString)
+			return SoUnknown;
+		if(!nd.string.str)
+		{
+			outstr->data=NULL;
+			outstr->v_table=NULL;
+		}
+		else
+			*outstr=dvm_literal_to_dvm_string_i(curdvm,nd.string.str);
+		return SoOK;
 	}
 
 };
 
 
 SharedStorage storage(SoStorageFactory::SoBackendTest);
+
+void SoThrowSetValueError()
+{
+	//fix-me : implement me
+}
+
+void SoThrowGetValueError()
+{
+	//fix-me : implement me
+}
+
+extern "C" BINT SoGeti(uint key)
+{
+	return storage.getvar(key).vi;
+}
+
+extern "C" double SoGetd(uint key)
+{
+	return storage.getvar(key).vd;
+}
+
+extern "C" BINT SoGeto(uint key)
+{
+	return storage.getvar(key).key;
+}
+
+extern "C" DVM_ObjectRef SoGets(uint key)
+{
+	DVM_ObjectRef ret;
+	if(!storage.getstr(key,&ret)==SoOK)
+		SoThrowGetValueError();	
+	return ret;
+}
+
+extern "C" void SoSeti(uint key,BINT v)
+{
+	SoVar var={v};
+	if(storage.putvar(key,SoInt,var)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+
+}
+
+extern "C" void SoSetd(uint key,double v)
+{
+	SoVar var={v};
+	if(storage.putvar(key,SoDouble,var)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+}
+
+extern "C" void SoSeto(uint key,uint v)
+{
+	SoVar var={v};
+	if(storage.putvar(key,SoObject,var)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+}
+
+extern "C" void SoSets(uint key,DVM_ObjectRef v)
+{
+	if(storage.putstr(key,&v)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+}
 
 enum OutBufferMethod
 {

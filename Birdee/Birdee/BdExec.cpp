@@ -60,6 +60,7 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 
 #include "UnportableAPI.h"
 #include "BdThread.h"
+#include "BdSharedObj.h"
 extern "C"  thread_local BdThread* curthread;
 extern "C"
 {
@@ -1466,7 +1467,31 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
 	MCJIT->addGlobalMapping("autovar!getorcreate",(void*)AvGetOrCreateVar);
 
-
+	f=m->getFunction("shared!geti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGeti);
+	MCJIT->addGlobalMapping("shared!geti",(void*)SoGeti);
+	f=m->getFunction("shared!getd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGetd);
+	MCJIT->addGlobalMapping("shared!getd",(void*)SoGetd);
+	f=m->getFunction("shared!geto");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGeto);
+	MCJIT->addGlobalMapping("shared!geto",(void*)SoGeto);
+	f=m->getFunction("shared!gets");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGets);
+	MCJIT->addGlobalMapping("shared!gets",(void*)SoGets);
+	
+	f=m->getFunction("shared!seti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSeti);
+	MCJIT->addGlobalMapping("shared!seti",(void*)SoSeti);
+	f=m->getFunction("shared!setd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSetd);
+	MCJIT->addGlobalMapping("shared!setd",(void*)SoSetd);
+	f=m->getFunction("shared!seto");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSeto);
+	MCJIT->addGlobalMapping("shared!seto",(void*)SoSeto);
+	f=m->getFunction("shared!sets");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSets);
+	MCJIT->addGlobalMapping("shared!sets",(void*)SoSets);
 
 	//m->dump();
 

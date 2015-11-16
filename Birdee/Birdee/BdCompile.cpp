@@ -107,10 +107,12 @@ Function *fReraise;
 Function *fSharedSeti;
 Function *fSharedSetd;
 Function *fSharedSeto;
+Function *fSharedSets;
 
 Function *fSharedGeti;
 Function *fSharedGetd;
 Function *fSharedGeto;
+Function *fSharedGets;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -173,10 +175,11 @@ std::hash_map<int ,Value*> barrays;
 
 extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
+extern "C" int get_opcode_type_offset_shared(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
-Function* SharedPutSwitch[3];
-Function* SharedGetSwitch[3];
+Function* SharedPutSwitch[4];
+Function* SharedGetSwitch[4];
 //Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
@@ -852,8 +855,8 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fPop=0;
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
-	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;
-	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;
+	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;SharedGetSwitch[3]=0;
+	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;SharedGetSwitch[3]=0;
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
 
@@ -996,6 +999,8 @@ extern "C" void* BcNewModule(char* name,char* path)
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
 	SharedPutSwitch[0]=fSharedSeti;
+	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
+	SharedPutSwitch[2]=fSharedSeto;
 
 	mArg.pop_back(); mArg.push_back(Type::getDoubleTy(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
@@ -1004,21 +1009,24 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 	mArg.pop_back(); mArg.push_back(TyObjectRef);
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
-	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
-	SharedPutSwitch[2]=fSharedSeto;
+	fSharedSets=Function::Create(nft, Function::ExternalLinkage,"shared!sets", module);
+	SharedPutSwitch[3]=fSharedSets;
+
 
 	mArg.pop_back();
 	nft=FunctionType::get(Type::getInt32Ty(context),mArg, false);
 	fSharedGeti=Function::Create(nft, Function::ExternalLinkage,"shared!geti", module);
 	SharedGetSwitch[0]=fSharedGeti;
+	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
+	SharedGetSwitch[2]=fSharedGeto;
 
 	nft=FunctionType::get(Type::getDoubleTy(context),mArg, false);
 	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
 	SharedGetSwitch[1]=fSharedGetd;
 
 	nft=FunctionType::get(TyObjectRef,mArg, false);
-	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
-	SharedGetSwitch[2]=fSharedGeto;
+	fSharedGets=Function::Create(nft, Function::ExternalLinkage,"shared!gets", module);
+	SharedGetSwitch[3]=fSharedGets;
 
 	if(!strcmp(name,"diksam.lang"))
 	{
@@ -1312,7 +1320,7 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
     } else {
 		if(decl->is_shared)
 		{//if the variable is a shared var
-			return builder.CreateCall(SharedGetSwitch[get_opcode_type_offset(decl->type)],ConstInt(32,decl->variable_index));
+			return builder.CreateCall(SharedGetSwitch[get_opcode_type_offset_shared(decl->type)],ConstInt(32,decl->variable_index));
 		}
 		else
 		{
@@ -1514,7 +1522,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 	{//if it is a static variable
 		if(decl->is_shared)
 		{
-			builder.CreateCall2(SharedPutSwitch[get_opcode_type_offset(decl->type)],ConstInt(32,decl->variable_index),v);
+			builder.CreateCall2(SharedPutSwitch[get_opcode_type_offset_shared(decl->type)],ConstInt(32,decl->variable_index),v);
 		}
 		else
 		{// if it is not shared

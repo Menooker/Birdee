@@ -1,0 +1,1 @@
+对Shared String的GC的标记！！！（从shared var中得到）

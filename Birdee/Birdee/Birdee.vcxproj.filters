@@ -73,6 +73,7 @@
     <None Include="Exceptions.dkh">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="ToDoList.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -163,6 +164,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdSharedObj.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

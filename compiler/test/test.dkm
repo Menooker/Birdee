@@ -48,7 +48,7 @@ dim c as KObject=new KObject()
 dim d as Object=b
 //b instanceof Object
 d instanceof HString
-dim te as shared int
-te=1
+dim te as shared string
+te="LL"
 println(te)
 
