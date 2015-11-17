@@ -12,7 +12,7 @@ enum SoStatus
 	SoOK,
 	SoUnknown,
 	SoKeyNotFound,
-
+	SoFail,
 };
 
 enum SoType
@@ -47,9 +47,10 @@ struct DataNode
 		}string;
 		struct
 		{
+			//uint clsid;
 			SoVar* fields;
 			size_t field_cnt;
-		}field;
+		}cls;
 
 		struct
 		{
@@ -66,8 +67,25 @@ class SoStorage
 public:
 	virtual SoStatus put(uint key,DataNode* nd)=0;
 	virtual DataNode get(uint key)=0;
+	virtual bool exists(uint key)=0;
+	virtual SoStatus newobj(uint key,DataNode* nd)=0;
 };
 
+
+void SoThrowSetValueError()
+{
+	//fix-me : implement me
+}
+
+void SoThrowGetValueError()
+{
+	//fix-me : implement me
+}
+
+void SoThrowKeyError()
+{
+	//fix-me : implement me
+}
 
 class SoStorageLocalTest : public SoStorage
 {
@@ -90,6 +108,24 @@ public:
 			a.tag=SoInvalid;
 			return a;
 		}
+	}
+
+	bool exists(uint key)
+	{
+		return map.find(key)!=map.end();
+	}
+
+	SoStatus newobj(uint key,DataNode* nd)
+	{
+		DBG_assert(nd->tag==SoObject,("Node type is wrong %d\n",nd->tag));
+		if(map.find(key)==map.end())
+		{
+			nd->cls.fields=(SoVar*)malloc(sizeof(SoVar)* nd->cls.field_cnt);
+			map[key]=*nd;
+			return SoOK;
+		}
+		else
+			return SoFail;
 	}
 };
 
@@ -150,9 +186,9 @@ public:
 	{
 		DataNode node={tag,0};
 
-		node.field.fields=(SoVar*)malloc(sz*sizeof(SoVar));
-		memcpy(node.field.fields,buf,sz*sizeof(SoVar));
-		node.field.field_cnt=sz;
+		node.cls.fields=(SoVar*)malloc(sz*sizeof(SoVar));
+		memcpy(node.cls.fields,buf,sz*sizeof(SoVar));
+		node.cls.field_cnt=sz;
 		
 		return backend->put(key,&node);
 	}
@@ -161,7 +197,7 @@ public:
 	{
 		DataNode pnode=backend->get(key);
 		DBG_assert(pnode.tag==SoObject,("Var type is wrong %d\n",pnode.tag));
-	    return pnode.field.fields[fldid];
+	    return pnode.cls.fields[fldid];
 	}
 
 	SoStatus putvar(uint key,SoType tag,SoVar var)
@@ -179,15 +215,6 @@ public:
 		return pnode.var;
 	};
 
-	/*SoVar newobj(ExecClass* cls)
-	{
-		
-		CPBuffer buf={(char*)malloc(128),128,0}; //improve-me : re-use the buffer
-		SoDoDump(obj,cls,&buf);
-		backend->put(key,SoObject,buf.p,buf.len);
-	};*/
-
-	
 	SoStatus putstr(uint key,DVM_ObjectRef* s)
 	{
 		DataNode nd;
@@ -220,26 +247,43 @@ public:
 		return SoOK;
 	}
 
+	uint allockey(DataNode* nd)
+	{
+		
+		//nd.tag=SoInvalid;
+		uint key=0;
+
+		for(int i=0;i<BD_MAX_SHARED_KEY_TRIES;i++)
+		{
+			key=rand();
+			//uint randk=rand();
+			//nd.var.vi=randk;
+			if(!backend->exists(key))//fix-me : may conflict
+			{
+				backend->newobj(key,nd);
+				break;
+			}
+		}
+		return key;
+	}
+
+	uint newobj(ExecClass* cls)
+	{
+		DataNode nd;
+		nd.tag=SoObject;
+		nd.cls.field_cnt=cls->field_count;
+		uint ret=allockey(&nd);
+		if(!ret)
+			SoThrowKeyError();
+		return ret;
+	};
 };
 
 SharedStorage storage(SoStorageFactory::SoBackendTest);
 
 
 
-void SoThrowSetValueError()
-{
-	//fix-me : implement me
-}
 
-void SoThrowGetValueError()
-{
-	//fix-me : implement me
-}
-
-void SoThrowKeyError()
-{
-	//fix-me : implement me
-}
 
 inline uint TranslateKey(uint key)
 {

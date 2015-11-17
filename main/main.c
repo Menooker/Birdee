@@ -42,13 +42,13 @@ main(int argc, char* argv[])
 	//DVM_execute(dvm);
 
 	DKC_dispose_compiler(compiler);
-	CpSaveCodeToFile("123",list);
+	CpSaveCodeToFile("123.bde",list);
 	DVM_dispose_executable_list(list);
 	//fix-me : free pVoidType by dispose_type_specifier
 	printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 	ExInitEngine();
-	status=LdLoadCode("123",plist);
+	status=LdLoadCode("123.bde",plist);
 	if(status)
 		printf("ERROR Loading Code %d\n",status);
 	else

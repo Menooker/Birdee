@@ -1,1 +1,3 @@
 对Shared String的GC的标记！！！（从shared var中得到）
+allockey 在!exists后还可能有竞争
+同步module index和cls id
