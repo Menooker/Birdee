@@ -222,8 +222,9 @@ public:
 
 };
 
-
 SharedStorage storage(SoStorageFactory::SoBackendTest);
+
+
 
 void SoThrowSetValueError()
 {
@@ -235,25 +236,40 @@ void SoThrowGetValueError()
 	//fix-me : implement me
 }
 
+void SoThrowKeyError()
+{
+	//fix-me : implement me
+}
+
+inline uint TranslateKey(uint key)
+{
+	int id=curthread->current_executable->executable->id;
+	if(key>=BD_MAX_SHARED_STATIC_PER_MODULE || id>=BD_MAX_SHARED_MODULES)
+	{
+		SoThrowKeyError();
+	}
+	return key+id*BD_MAX_SHARED_STATIC_PER_MODULE;
+}
+
 extern "C" BINT SoGeti(uint key)
 {
-	return storage.getvar(key).vi;
+	return storage.getvar(TranslateKey(key)).vi;
 }
 
 extern "C" double SoGetd(uint key)
 {
-	return storage.getvar(key).vd;
+	return storage.getvar(TranslateKey(key)).vd;
 }
 
 extern "C" BINT SoGeto(uint key)
 {
-	return storage.getvar(key).key;
+	return storage.getvar(TranslateKey(key)).key;
 }
 
 extern "C" DVM_ObjectRef SoGets(uint key)
 {
 	DVM_ObjectRef ret;
-	if(!storage.getstr(key,&ret)==SoOK)
+	if(!storage.getstr(TranslateKey(key),&ret)==SoOK)
 		SoThrowGetValueError();	
 	return ret;
 }
@@ -261,7 +277,7 @@ extern "C" DVM_ObjectRef SoGets(uint key)
 extern "C" void SoSeti(uint key,BINT v)
 {
 	SoVar var={v};
-	if(storage.putvar(key,SoInt,var)!=SoOK)
+	if(storage.putvar(TranslateKey(key),SoInt,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
@@ -271,7 +287,7 @@ extern "C" void SoSeti(uint key,BINT v)
 extern "C" void SoSetd(uint key,double v)
 {
 	SoVar var={v};
-	if(storage.putvar(key,SoDouble,var)!=SoOK)
+	if(storage.putvar(TranslateKey(key),SoDouble,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
@@ -280,7 +296,7 @@ extern "C" void SoSetd(uint key,double v)
 extern "C" void SoSeto(uint key,uint v)
 {
 	SoVar var={v};
-	if(storage.putvar(key,SoObject,var)!=SoOK)
+	if(storage.putvar(TranslateKey(key),SoObject,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
@@ -288,7 +304,7 @@ extern "C" void SoSeto(uint key,uint v)
 
 extern "C" void SoSets(uint key,DVM_ObjectRef v)
 {
-	if(storage.putstr(key,&v)!=SoOK)
+	if(storage.putstr(TranslateKey(key),&v)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}

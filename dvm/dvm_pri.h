@@ -308,6 +308,7 @@ struct DVM_VirtualMachine_tag {
     DVME_Constant    **constant;
     int         constant_count;
     DVM_ExecutableList  *executable_list;
+	int			executable_count;
     ExecutableEntry     *executable_entry;
     ExecutableEntry     *top_level;
     DVM_VTable  *array_v_table;

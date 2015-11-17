@@ -42,13 +42,16 @@ class HString : Object
 	end
 end
 
+
 dim a as string="123"
 dim b as HString=new HString("JI")
 dim c as KObject=new KObject()
 dim d as Object=b
 //b instanceof Object
 d instanceof HString
+
 dim te as shared string
+
 te="LL"
 println(te)
 

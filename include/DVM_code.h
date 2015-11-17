@@ -364,6 +364,7 @@ struct DVM_Executable_tag {
 	struct LLVM_Data			inline_module; //modified //it is actually llvm::Module
 	int					isDyn;
 	char*				libname;
+	int					id;
 	
 };
 
