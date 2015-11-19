@@ -208,6 +208,7 @@ add_class(ClassDefinition *src)
     dest->package_name = src_package_name;
     dest->name = MEM_strdup(src->name);
     dest->is_implemented = DVM_FALSE;
+	dest->is_shared=src->is_shared;
 
     for (sup_pos = src->extends; sup_pos; sup_pos = sup_pos->next) {
         int dummy;
@@ -3304,7 +3305,9 @@ fix_extends(ClassDefinition *cd)
     ClassDefinition *super;
     int dummy_class_index;
     ExtendsList *new_el;
+	int shared;
 
+	shared=cd->is_shared;
     if (cd->class_or_interface == DVM_INTERFACE_DEFINITION
         && cd->extends != NULL) {
         dkc_compile_error(cd->line_number,
@@ -3322,7 +3325,12 @@ fix_extends(ClassDefinition *cd)
         new_el = dkc_malloc(sizeof(ExtendsList));
         *new_el = *e_pos;
         new_el->next = NULL;
-
+		if(shared && !super->is_shared  || !shared && super->is_shared)
+                dkc_compile_error(cd->line_number,
+                                  SHARED_CLASS_ERR,
+                                  STRING_MESSAGE_ARGUMENT, "fname", super->name,
+                                  STRING_MESSAGE_ARGUMENT, "sname", cd->name,
+                                  MESSAGE_ARGUMENT_END);
         if (super->class_or_interface == DVM_CLASS_DEFINITION) {
             if (cd->super_class) {
                 dkc_compile_error(cd->line_number,
@@ -3587,6 +3595,13 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                     = create_assign_cast(member_pos->u.field.initializer,
                                             member_pos->u.field.type);
             }
+			if(class_pos->is_shared && member_pos->u.field.type->basic_type==DVM_CLASS_TYPE 
+				&& !member_pos->u.field.type->u.class_ref.class_definition->is_shared)
+			{
+                dkc_compile_error(member_pos->line_number,
+                                    SHARED_CLASS_MEMBER_ERR,
+                                    MESSAGE_ARGUMENT_END);
+			}
             super_member
                 = search_member_in_super(class_pos,
                                             member_pos->u.field.name);
@@ -3747,5 +3762,6 @@ dkc_fix_tree(DKC_Compiler *compiler)
 			var_count++;
 		}
     }
+	compiler->shared_count=shared_cnt;
 }
 

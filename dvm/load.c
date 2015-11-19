@@ -815,8 +815,9 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
         dvm->top_level = new_entry;
     }
 
-	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
 	executable->id=dvm->executable_count;
+	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
+	
 	dvm->executable_count++;
     return new_entry;
 }

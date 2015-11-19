@@ -125,5 +125,7 @@ ErrorDefinition dkc_error_message_format[] = {
 	{"$(type_name)泛型对象类型参数$(sub_type)不是$(super_class_name)的子类。"},
 	{"$(type_name)泛型类型(父类$(super_name))的参数$(sub_type)不是$(super_class_name)的子类。"},
 	{"共享变量应为全局变量"},
+	{"父类$(fname)与子类$(sname)应都为共享类"},
+	{"共享类只能有共享类对象成员"},
     {"dummy"}
 };

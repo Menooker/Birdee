@@ -302,7 +302,7 @@ BdStatus LdClass(DVM_Class* cls,CPBuffer* pbuf)
 	{
 		LdMethod(&cls->method[i],pbuf);
 	}
-
+	LdLoadVar(cls->is_shared,pbuf);
 	if(cls->is_implemented)
 		LdCodeBlock(&cls->field_initializer,pbuf);
 
@@ -368,6 +368,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 	LdLoadVar(exe->is_required,&buf);
 	LdString(&exe->path,&buf);
 	LdString(&exe->libname ,&buf);
+	LdLoadVar(exe->shared_count,&buf);
 	LdArray(exe->constant_pool_count,exe->constant_pool,DVM_ConstantPool,&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{

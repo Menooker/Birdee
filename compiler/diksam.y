@@ -929,35 +929,35 @@ template_list
 		{$$=NULL;}
 		;
 class_definition
-        : class_or_interface IDENTIFIER template_list
+        : shared class_or_interface IDENTIFIER template_list
           extends CR
         {
-            dkc_start_class_definition(NULL, $1, $2,$3, $4);
+            dkc_start_class_definition($1,NULL, $2, $3,$4, $5);
         }
           member_declaration_list END
         {
-            dkc_class_define($7);
-        }
-        | class_or_member_modifier_list class_or_interface IDENTIFIER template_list
-          extends CR
-        {
-            dkc_start_class_definition(&$1, $2, $3,$4, $5);
-        } member_declaration_list END
-        {
             dkc_class_define($8);
         }
-        | class_or_interface IDENTIFIER template_list extends CR
+        | shared class_or_member_modifier_list class_or_interface IDENTIFIER template_list
+          extends CR
         {
-            dkc_start_class_definition(NULL, $1, $2,$3, $4);
+            dkc_start_class_definition($1,&$2, $3, $4,$5, $6);
+        } member_declaration_list END
+        {
+            dkc_class_define($9);
+        }
+        | shared class_or_interface IDENTIFIER template_list extends CR
+        {
+            dkc_start_class_definition($1,NULL, $2, $3,$4, $5);
         }
           END
         {
             dkc_class_define(NULL);
         }
-        | class_or_member_modifier_list class_or_interface IDENTIFIER template_list
+        | shared class_or_member_modifier_list class_or_interface IDENTIFIER template_list
           extends CR
         {
-            dkc_start_class_definition(&$1, $2, $3,$4, $5);
+            dkc_start_class_definition($1,&$2, $3, $4,$5, $6);
         }
           END
         {

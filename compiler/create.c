@@ -1140,7 +1140,8 @@ conv_access_modifier(ClassOrMemberModifierKind src)
 }
 
 void
-dkc_start_class_definition(ClassOrMemberModifierList *modifier,
+dkc_start_class_definition(int is_shared,
+							ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
                            char *identifier,TemplateDeclare* templates,
                            ExtendsList *extends)
@@ -1167,6 +1168,7 @@ dkc_start_class_definition(ClassOrMemberModifierList *modifier,
     cd->member = NULL;
     cd->next = NULL;
     cd->line_number = compiler->current_line_number;
+	cd->is_shared=is_shared;
 
     DBG_assert(compiler->current_class_definition == NULL,
                ("current_class_definition is not NULL."));

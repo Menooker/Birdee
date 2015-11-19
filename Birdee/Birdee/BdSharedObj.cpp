@@ -18,6 +18,7 @@ enum SoStatus
 enum SoType
 {
 	SoInvalid,
+	SoModule,
 	SoInt,
 	SoDouble,
 	SoString,
@@ -65,7 +66,8 @@ struct DataNode
 class SoStorage
 {
 public:
-	virtual SoStatus put(uint key,DataNode* nd)=0;
+	virtual SoStatus putstr(uint key,wchar_t* str,uint len)=0;
+	virtual SoStatus put(uint key,int fldid,SoVar v)=0;
 	virtual DataNode get(uint key)=0;
 	virtual bool exists(uint key)=0;
 	virtual SoStatus newobj(uint key,DataNode* nd)=0;
@@ -74,16 +76,19 @@ public:
 
 void SoThrowSetValueError()
 {
+	_BreakPoint()
 	//fix-me : implement me
 }
 
 void SoThrowGetValueError()
 {
+	_BreakPoint()
 	//fix-me : implement me
 }
 
 void SoThrowKeyError()
 {
+	_BreakPoint()
 	//fix-me : implement me
 }
 
@@ -93,11 +98,22 @@ private:
 
 	std::hash_map<uint,DataNode> map;
 public:
-	SoStatus put(uint key,DataNode* nd)
+	SoStatus putstr(uint key,wchar_t* str,uint len)
 	{
-		map[key]=*nd;
+		DataNode nd;
+		nd.tag=SoString;
+		nd.string.len=len;
+		nd.string.str=str;
+		map[key]=nd;
 		return SoOK;
 	}
+
+	SoStatus put(uint key,int fldid,SoVar v)
+	{
+		map[key].cls.fields[fldid]=v;
+		return SoOK;
+	}
+
 	DataNode get(uint key)
 	{
 		if(map.find(key)!=map.end())
@@ -117,12 +133,21 @@ public:
 
 	SoStatus newobj(uint key,DataNode* nd)
 	{
-		DBG_assert(nd->tag==SoObject,("Node type is wrong %d\n",nd->tag));
 		if(map.find(key)==map.end())
 		{
-			nd->cls.fields=(SoVar*)malloc(sizeof(SoVar)* nd->cls.field_cnt);
-			map[key]=*nd;
-			return SoOK;
+			if(nd->tag==SoObject || nd->tag==SoModule)
+			{
+				nd->cls.fields=(SoVar*)malloc(sizeof(SoVar)* nd->cls.field_cnt);
+				memset(nd->cls.fields,0,sizeof(SoVar)* nd->cls.field_cnt);
+				map[key]=*nd;
+				return SoOK;
+			}
+			else
+			{
+				DBG_assert(nd->tag==SoString ,("Node type is wrong %d\n",nd->tag));
+				map[key]=*nd;
+				return SoOK;
+			}
 		}
 		else
 			return SoFail;
@@ -182,25 +207,19 @@ public:
 	{
 		delete backend;
 	}
-	SoStatus put(uint key,SoType tag,SoVar* buf,size_t sz)
+	SoStatus put(uint key,int fldid,SoVar v)
 	{
-		DataNode node={tag,0};
-
-		node.cls.fields=(SoVar*)malloc(sz*sizeof(SoVar));
-		memcpy(node.cls.fields,buf,sz*sizeof(SoVar));
-		node.cls.field_cnt=sz;
-		
-		return backend->put(key,&node);
+		return backend->put(key,fldid,v);
 	}
 
 	SoVar get(uint key,int fldid)
 	{
 		DataNode pnode=backend->get(key);
-		DBG_assert(pnode.tag==SoObject,("Var type is wrong %d\n",pnode.tag));
+		DBG_assert(pnode.tag==SoObject||pnode.tag==SoModule,("Var type is wrong %d\n",pnode.tag));
 	    return pnode.cls.fields[fldid];
 	}
 
-	SoStatus putvar(uint key,SoType tag,SoVar var)
+/*	SoStatus putvar(uint key,SoType tag,SoVar var)
 	{
 		DataNode node={tag,0};
 		node.var=var;
@@ -214,22 +233,24 @@ public:
 		DBG_assert(isVar(pnode.tag),("Var type is wrong %d\n",pnode.tag));
 		return pnode.var;
 	};
-
+	*/
 	SoStatus putstr(uint key,DVM_ObjectRef* s)
 	{
 		DataNode nd;
 		nd.tag=SoString;
+		wchar_t* str;
+		uint len;
 		if(s->data)
 		{
-			nd.string.len=s->data->u.string.length;
-			nd.string.str=s->data->u.string.string;
+			len=s->data->u.string.length;
+			str=s->data->u.string.string;
 		}
 		else
 		{
-			nd.string.len=0;
-			nd.string.str=NULL;
+			len=0;
+			str=NULL;
 		}
-		return backend->put(key,&nd);
+		return backend->putstr(key,str,len);
 	}
 
 	SoStatus getstr(uint key,DVM_ObjectRef* outstr)
@@ -266,15 +287,37 @@ public:
 		}
 		return key;
 	}
-
+	uint newmodule(uint key,int cnt)
+	{
+		DataNode nd;
+		nd.tag=SoModule;
+		nd.cls.field_cnt=cnt;
+		return backend->newobj(key,&nd);
+	}
 	uint newobj(ExecClass* cls)
 	{
 		DataNode nd;
 		nd.tag=SoObject;
 		nd.cls.field_cnt=cls->field_count;
 		uint ret=allockey(&nd);
-		if(!ret)
-			SoThrowKeyError();
+		return ret;
+	};
+
+	uint newstr(DVM_ObjectRef* s)
+	{
+		DataNode nd;
+		nd.tag=SoString;
+		if(s->data)
+		{
+			nd.string.len=s->data->u.string.length;
+			nd.string.str=s->data->u.string.string;
+		}
+		else
+		{
+			nd.string.len=0;
+			nd.string.str=NULL;
+		}
+		uint ret=allockey(&nd);
 		return ret;
 	};
 };
@@ -295,63 +338,71 @@ inline uint TranslateKey(uint key)
 	return key+id*BD_MAX_SHARED_STATIC_PER_MODULE;
 }
 
-extern "C" BINT SoGeti(uint key)
+extern "C" BINT SoGeti(uint key,uint fldid)
 {
-	return storage.getvar(TranslateKey(key)).vi;
+	return storage.get(key,fldid).vi;
 }
 
-extern "C" double SoGetd(uint key)
+extern "C" double SoGetd(uint key,uint fldid)
 {
-	return storage.getvar(TranslateKey(key)).vd;
+	return storage.get(key,fldid).vd;
 }
 
-extern "C" BINT SoGeto(uint key)
+extern "C" BINT SoGeto(uint key,uint fldid)
 {
-	return storage.getvar(TranslateKey(key)).key;
+	return storage.get(key,fldid).key;
 }
 
-extern "C" DVM_ObjectRef SoGets(uint key)
+extern "C" DVM_ObjectRef SoGets(uint key,uint fldid)
 {
 	DVM_ObjectRef ret;
-	if(!storage.getstr(TranslateKey(key),&ret)==SoOK)
+
+	if(storage.getstr(storage.get(key,fldid).key,&ret)!=SoOK)
 		SoThrowGetValueError();	
 	return ret;
 }
 
-extern "C" void SoSeti(uint key,BINT v)
+extern "C" void SoSeti(uint key,uint fldid,BINT v)
 {
 	SoVar var={v};
-	if(storage.putvar(TranslateKey(key),SoInt,var)!=SoOK)
+	if(storage.put(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
 
 }
 
-extern "C" void SoSetd(uint key,double v)
+extern "C" void SoSetd(uint key,uint fldid,double v)
 {
 	SoVar var={v};
-	if(storage.putvar(TranslateKey(key),SoDouble,var)!=SoOK)
+	if(storage.put(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
 }
 
-extern "C" void SoSeto(uint key,uint v)
+extern "C" void SoSeto(uint key,uint fldid,uint v)
 {
 	SoVar var={v};
-	if(storage.putvar(TranslateKey(key),SoObject,var)!=SoOK)
+	if(storage.put(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
 }
 
-extern "C" void SoSets(uint key,DVM_ObjectRef v)
+extern "C" void SoSets(uint key,uint fldid,DVM_ObjectRef v)
 {
-	if(storage.putstr(TranslateKey(key),&v)!=SoOK)
+	SoVar var={storage.newstr(&v)};
+	if(storage.put(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}
+}
+
+extern "C" void SoNewModule(uint key,int cnt)
+{
+	if(storage.newmodule(key,cnt)!=SoOK)
+		SoThrowKeyError();
 }
 
 enum OutBufferMethod

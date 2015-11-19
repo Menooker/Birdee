@@ -162,6 +162,8 @@ typedef enum {
 	TEMPLATE_PARAM_PARENT_CLASS_ERR,
 	TEMPLATE_SUBCLASS_PARAM_CLASS_ERR,
 	SHARED_VAR_NOT_PUBLIC_ERR,
+	SHARED_CLASS_ERR,
+	SHARED_CLASS_MEMBER_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -827,6 +829,7 @@ struct ClassDefinition_tag {
     MemberDeclaration *member;
     int line_number;
     struct ClassDefinition_tag *next;
+	int is_shared;
 	int  checked; //fix-me : A temporary flag, find a way to remove it!!
 };
 
@@ -926,6 +929,7 @@ struct DKC_Compiler_tag {
     int                 string_method_count;
     FunctionDefinition  *string_method;
     Encoding            source_encoding;
+	int shared_count;
 };
 
 typedef struct {
@@ -1085,7 +1089,7 @@ Statement *dkc_create_declaration_statement(DVM_Boolean is_final,
                                             Expression *initializer,
 											DVM_Boolean isShared);
 void
-dkc_start_class_definition(ClassOrMemberModifierList *modifier,
+dkc_start_class_definition(int is_shared,ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
                            char *identifier,TemplateDeclare* templates,
                            ExtendsList *extends);

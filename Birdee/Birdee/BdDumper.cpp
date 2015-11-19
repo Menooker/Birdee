@@ -305,6 +305,7 @@ BdStatus CpDumpClass(DVM_Class* cls,CPBuffer* pbuf)
 	{
 		CpDumpMethod(&cls->method[i],pbuf);
 	}
+	CpDumpVar(cls->is_shared,pbuf);
 	if(cls->is_implemented)
 		CpDumpCodeBlock(&cls->field_initializer,pbuf);
 
@@ -347,6 +348,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 	CpDumpBuffer(&exe->is_required,sizeof(BINT),&buf);
 	CpDumpString(exe->path,&buf);
 	CpDumpString(exe->libname ,&buf);
+	CpDumpVar(exe->shared_count,&buf);
 	CpDumpBuffer(&exe->constant_pool_count,sizeof(exe->constant_pool_count),&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{

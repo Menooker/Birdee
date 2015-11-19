@@ -1,57 +1,13 @@
-//require Exceptions
-
-class StackEmptyException
+shared class a
 end
 
-abstract class PObject
-	public abstract virtual declare function hash() as int
-	public abstract virtual declare function equals(k as PObject) as boolean
+shared class b
+dim q as a
 end
-
-class KObject : Object
-
-end
-
-class HString : Object
-	public str as string
-	public virtual constructor  initialize(i as string)
-		str=i
-	end
-
-	public virtual override function hash() as int
-		dim i as int
-		dim key as int =0
-		for i=0;i<str.length()-1;i++
-			key = key * (str[i]*2+str[i+1])+ (str[i]+str[i+1]*2)
-		end
-		return key
-	end
-
-	public virtual override function equals(k as Object) as boolean
-		if k==null then
-			return false
-		end
-		if(! k instanceof HString) then
-			return false
-		end
-		dim in as HString=k::HString:>
-		return in.str==str
-	end
-	public virtual function tostr2() as string
-		return str
-	end
-end
-
-
-dim a as string="123"
-dim b as HString=new HString("JI")
-dim c as KObject=new KObject()
-dim d as Object=b
-//b instanceof Object
-d instanceof HString
 
 dim te as shared string
-
+dim t2 as shared int
 te="LL"
-println(te)
+t2=123
+println(te+t2)
 

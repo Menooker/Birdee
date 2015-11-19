@@ -321,6 +321,7 @@ struct DVM_VirtualMachine_tag {
 	BD_LOCK thread_lock;
 	struct _BdThread* mainvm;
 	DVM_Class* classObject;
+	int is_master;
 };
 
 typedef struct RefInNativeFunc_tag {

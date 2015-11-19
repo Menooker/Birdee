@@ -113,6 +113,7 @@ Function *fSharedGeti;
 Function *fSharedGetd;
 Function *fSharedGeto;
 Function *fSharedGets;
+Function *fNewShared;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -122,6 +123,7 @@ GlobalVariable* arr_sp;//arr of object booleans //fix-me : release it!
 //GlobalVariable* arr_is_pointer;//stack_value pointer indecator array //fix-me : release it!
 GlobalVariable* bretvar;//return value//fix-me : release it!
 GlobalVariable* pstatic;//static values//fix-me : release it!
+GlobalVariable* m_id;//module id
 
 BasicBlock* contiblock;
 BasicBlock* loopblock;
@@ -188,6 +190,7 @@ extern "C" int get_method_index_Ex(MemberExpression *member,int* outParamCnt);
 Function* BcBuildPush(char* name,int isptr,Type* ty);
 Function* GetArrAddr();
 Function* GetFldAddr();
+Value* cached_mid;
 
  int
 get_opcode_type_offset3(int type)
@@ -892,6 +895,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
+	fNewShared = Function::Create(FunctionType::get(Type::getInt32Ty(context),Args2Int, false), Function::ExternalLinkage,"object!NewShared", module);
 
 	FunctionType* nft = FunctionType::get(Type::getInt32PtrTy(context), false);
 	fPushException = Function::Create(nft, Function::ExternalLinkage,"system!PushException", module);
@@ -983,6 +987,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	bretvar=new GlobalVariable(*module,TypStack,false,LINKAGE_TYPE,
 		ConstPointer((PointerType*)TypStack),"retvar",0,THREAD_MODEL,0,true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
+	m_id=new GlobalVariable(*module,Type::getInt32Ty(context),true,GlobalValue::ExternalLinkage,0,"mid"); //module is is shared by all threads
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	fInvoke = Function::Create(FTInvoke, Function::ExternalLinkage,"system!Invoke", module);
@@ -995,7 +1000,8 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fGetVar= Function::Create(nft, Function::ExternalLinkage,"autovar!get", module);
 	fGetOrCreateVar= Function::Create(nft, Function::ExternalLinkage,"autovar!getorcreate", module);
 
-	std::vector<Type*> mArg;	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
+	std::vector<Type*> mArg;	
+	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
 	SharedPutSwitch[0]=fSharedSeti;
@@ -1320,7 +1326,10 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
     } else {
 		if(decl->is_shared)
 		{//if the variable is a shared var
-			return builder.CreateCall(SharedGetSwitch[get_opcode_type_offset_shared(decl->type)],ConstInt(32,decl->variable_index));
+			if(!cached_mid)
+				cached_mid=builder.CreateLoad(m_id);
+			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset_shared(decl->type)],
+				cached_mid,ConstInt(32,decl->variable_index));
 		}
 		else
 		{
@@ -1522,7 +1531,10 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 	{//if it is a static variable
 		if(decl->is_shared)
 		{
-			builder.CreateCall2(SharedPutSwitch[get_opcode_type_offset_shared(decl->type)],ConstInt(32,decl->variable_index),v);
+			if(!cached_mid)
+				cached_mid=builder.CreateLoad(m_id);
+			builder.CreateCall3(SharedPutSwitch[get_opcode_type_offset_shared(decl->type)],
+				cached_mid,ConstInt(32,decl->variable_index),v);
 		}
 		else
 		{// if it is not shared
@@ -1994,7 +2006,11 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 	std::vector<Value*> arg;
 	arg.push_back(ConstInt(32,expr->u.new_e.class_index));
 	arg.push_back(ConstInt(32,expr->u.new_e.method_declaration->u.method.method_index));
-	Value* v=builder.CreateCall(fNew,arg);
+	Value* v;
+	if(expr->u.new_e.class_definition->is_shared)
+		v=builder.CreateCall(fNew,arg);
+	else
+		v=builder.CreateCall(fNewShared,arg);
     return v;
     //generate_code(ob, expr->line_number, DVM_DUPLICATE_OFFSET,param_count); // check-me : wtf?
 
@@ -2757,6 +2773,7 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	bstatic.clear();
 	bstatic.resize(100); //fix-me : get the number of static
 	barrays.clear();
+	cached_mid=NULL;
 	//block->parent
 	//bparameters.shrink_to_fit();
 	Function *retf = Function::Create(FT, Function::ExternalLinkage,name, module);
@@ -2782,6 +2799,8 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	BcGenerateBlock(exe,block,statement_list,BB);
 	if(needret)
 		builder.CreateRetVoid();
+
+	cached_mid=NULL;
 	return retf;
 }
 

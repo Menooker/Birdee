@@ -318,6 +318,7 @@ typedef struct {
     int                         method_count;
     DVM_Method                  *method;
     DVM_CodeBlock               field_initializer;
+	int							is_shared;
 } DVM_Class;
 
 typedef struct {
@@ -365,6 +366,7 @@ struct DVM_Executable_tag {
 	int					isDyn;
 	char*				libname;
 	int					id;
+	int					shared_count;
 	
 };
 

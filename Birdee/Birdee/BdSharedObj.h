@@ -7,14 +7,15 @@ extern "C"
 #endif
 #include "BdExec.h"
 
-BINT SoGeti(uint key);
-double SoGetd(uint key);
-BINT SoGeto(uint key);
-DVM_ObjectRef SoGets(uint key);
-void SoSeti(uint key,BINT v);
-void SoSetd(uint key,double v);
-void SoSeto(uint key,uint v);
-void SoSets(uint key,DVM_ObjectRef v);
+BINT SoGeti(uint key,uint fldid);
+double SoGetd(uint key,uint fldid);
+BINT SoGeto(uint key,uint fldid);
+DVM_ObjectRef SoGets(uint key,uint fldid);
+void SoSeti(uint key,uint fldid,BINT v);
+void SoSetd(uint key,uint fldid,double v);
+void SoSeto(uint key,uint fldid,uint v);
+void SoSets(uint key,uint fldid,DVM_ObjectRef v);
+void SoNewModule(uint key,int cnt);
 
 #ifdef __cplusplus
 }

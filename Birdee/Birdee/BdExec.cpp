@@ -1335,6 +1335,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 #endif
 	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
 	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
+	vglobal=m->getGlobalVariable("mid"); //module id are shared
+	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->executable->id));
 
 	Function *f; //fix-me : For MCJIT ,TheExecutionEngine->addGlobalMapping is not needed
 	f=m->getFunction("system!GetReg");
@@ -1494,6 +1496,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	MCJIT->addGlobalMapping("shared!sets",(void*)SoSets);
 
 	//m->dump();
+	if(dvm->is_master)
+		SoNewModule(ee->executable->id,ee->executable->shared_count);
 
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;
