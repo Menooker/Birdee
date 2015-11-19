@@ -895,7 +895,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
-	fNewShared = Function::Create(FunctionType::get(Type::getInt32Ty(context),Args2Int, false), Function::ExternalLinkage,"object!NewShared", module);
+	fNewShared = Function::Create(FunctionType::get(Type::getInt32Ty(context),Args2Int, false), Function::ExternalLinkage,"shared!New", module);
 
 	FunctionType* nft = FunctionType::get(Type::getInt32PtrTy(context), false);
 	fPushException = Function::Create(nft, Function::ExternalLinkage,"system!PushException", module);
@@ -1612,10 +1612,18 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		{
 			builder.CreateCall(GetPush(2),v);
 		}
+		
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetFldAddr(),obj);
-		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
-		builder.CreateStore(v,fld);
+		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
+		{//shared var
+			builder.CreateCall3(SharedPutSwitch[mty],obj,ConstInt(32,member->u.field.field_index),v);
+		}
+		else
+		{
+			Value* fld=builder.CreateCall(GetFldAddr(),obj);
+			fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
+			builder.CreateStore(v,fld);
+		}
 		if(mty==2)
 			builder.CreateCall(GetPop(),ConstInt(32,1));
 
@@ -1982,11 +1990,18 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);*/
-
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetFldAddr(),obj);
-		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
-		return builder.CreateLoad(fld);
+		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
+		{//shared var
+			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset(expr->type)],obj,ConstInt(32,member->u.field.field_index));
+		}
+		else
+		{
+			Value* fld=builder.CreateCall(GetFldAddr(),obj);
+			fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
+			return builder.CreateLoad(fld);
+		}
+
     }
 }
 
@@ -2008,9 +2023,9 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 	arg.push_back(ConstInt(32,expr->u.new_e.method_declaration->u.method.method_index));
 	Value* v;
 	if(expr->u.new_e.class_definition->is_shared)
-		v=builder.CreateCall(fNew,arg);
-	else
 		v=builder.CreateCall(fNewShared,arg);
+	else
+		v=builder.CreateCall(fNew,arg);
     return v;
     //generate_code(ob, expr->line_number, DVM_DUPLICATE_OFFSET,param_count); // check-me : wtf?
 

@@ -572,13 +572,17 @@ get_opcode_type_offset(TypeSpecifier *type)
     case DVM_NULL_TYPE: /* FALLTHRU */
     case DVM_STRING_TYPE: /* FALLTHRU */
     case DVM_NATIVE_POINTER_TYPE: /* FALLTHRU */
-    case DVM_CLASS_TYPE: /* FALLTHRU */
 	case DVM_VARIENT_TYPE:
     case DVM_DELEGATE_TYPE: /* FALLTHRU */
 	case DVM_TEMPLATE_TYPE:
         return 2;
         break;
-
+	case DVM_CLASS_TYPE: 
+		if(type->u.class_ref.class_definition->is_shared)
+			return 0;
+		else
+			return 2;
+		break;
     case DVM_BASE_TYPE: /* FALLTHRU */
     case DVM_UNSPECIFIED_IDENTIFIER_TYPE: /* FALLTHRU */
     default:

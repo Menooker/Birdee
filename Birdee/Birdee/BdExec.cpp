@@ -1494,6 +1494,9 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("shared!sets");
 	TheExecutionEngine->addGlobalMapping(f,(void*)SoSets);
 	MCJIT->addGlobalMapping("shared!sets",(void*)SoSets);
+	f=m->getFunction("shared!New");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoNew);
+	MCJIT->addGlobalMapping("shared!New",(void*)SoNew);
 
 	//m->dump();
 	if(dvm->is_master)

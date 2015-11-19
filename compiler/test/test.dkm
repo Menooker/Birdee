@@ -1,13 +1,14 @@
-shared class a
+shared class clsa
 end
 
-shared class b
-dim q as a
+shared class clsb
+	public q as int
 end
-
+dim k as clsb=new clsb()
+k.q=123
 dim te as shared string
 dim t2 as shared int
 te="LL"
-t2=123
+t2=k.q
 println(te+t2)
 
