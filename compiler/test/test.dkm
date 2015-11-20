@@ -6,6 +6,8 @@ shared class clsb
 end
 dim k as clsb=new clsb()
 k.q=123
+dim p as clsb
+p=k
 dim te as shared string
 dim t2 as shared int
 te="LL"

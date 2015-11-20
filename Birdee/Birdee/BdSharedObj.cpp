@@ -405,17 +405,27 @@ extern "C" void SoNewModule(uint key,int cnt)
 		SoThrowKeyError();
 }
 
-extern "C" uint SoNew(int idx_in_exe,int methodid)
+
+extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
 {
+
+	ExecClass *ec;
+    DVM_ObjectRef obj;
 	int class_index = curthread->current_executable->class_table[idx_in_exe];
 	uint ret=storage.newobj(curdvm->bclass[class_index]);
+	
 	if(ret==0)
-		SoThrowKeyError();   
-	curthread->stack.stack_pointer->int_value=ret;
-	*curthread->stack.flg_sp=DVM_TRUE; //fix-me : add a stack type
+		SoThrowKeyError(); 
+
+	ec = curdvm->bclass[class_index];
+    obj.v_table = ec->class_table;
+	obj.data=(DVM_Object*)ret;
+  
+	curthread->stack.stack_pointer->object=obj;
+	*curthread->stack.flg_sp=DVM_TRUE; 
 	curthread->stack.stack_pointer++; curthread->stack.flg_sp++;
-	//ExCall(methodid);
-	return ret;
+	ExCall(methodid);
+	return obj;
 }
 
 

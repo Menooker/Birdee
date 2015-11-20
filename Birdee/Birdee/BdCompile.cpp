@@ -114,6 +114,7 @@ Function *fSharedGetd;
 Function *fSharedGeto;
 Function *fSharedGets;
 Function *fNewShared;
+Function* fObjectRefPtr;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -531,6 +532,27 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 	return fArrAddr;
 }
 
+Function* BcBuildObjectRefPtrImp()
+{
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	FunctionType* FT8 = FunctionType::get(Type::getInt32Ty(context),Args2, false);
+	Function* fObjectRefPtr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ObjectRefPtrImp", module);
+	fObjectRefPtr->addFnAttr(llvm::Attribute::AlwaysInline);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fObjectRefPtr);
+	SwitchBlock(BB);
+	Value* p=builder.CreateAlloca(TyObjectRef);
+	builder.CreateStore(fObjectRefPtr->arg_begin(),p);
+	Value* pp=builder.CreatePointerCast(builder.CreateStructGEP(p,0),Type::getInt32PtrTy(context));
+	Value* p1=builder.CreateLoad(pp);
+	builder.CreateRet(p1);
+
+	builder.restoreIP(IP);
+	return fObjectRefPtr;
+}
+
+
 Function* BcBuildArrPtrImp(Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
@@ -606,7 +628,15 @@ void BcBuildFldPtr(Type* ty)
 	return ;
 }
 
+void BcBuildObjectRefPtr()
+{
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	FunctionType* FT8 = FunctionType::get(Type::getInt32Ty(context),Args2, false);
+	fObjectRefPtr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ObjectRefPtr", module);
 
+	return ;
+}
 
 void BcBuildArrPtr(Type* ty)
 {
@@ -689,6 +719,16 @@ Function* GetArrAddr()
 		BcBuildArrPtr(TyObjectRef->getPointerTo());
 	}
 	return fArrAddr;
+
+}
+
+Function* GetObjrefPtr()
+{
+	if(!fObjectRefPtr)
+	{
+		BcBuildObjectRefPtr();
+	}
+	return fObjectRefPtr;
 
 }
 
@@ -895,7 +935,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
-	fNewShared = Function::Create(FunctionType::get(Type::getInt32Ty(context),Args2Int, false), Function::ExternalLinkage,"shared!New", module);
+	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
 
 	FunctionType* nft = FunctionType::get(Type::getInt32PtrTy(context), false);
 	fPushException = Function::Create(nft, Function::ExternalLinkage,"system!PushException", module);
@@ -1055,6 +1095,8 @@ extern "C" void BcInitLLVMCompiler()
 	TypInt=Type::getInt32Ty(context)->getPointerTo();
 #ifdef BD_ON_X86
 	std::vector<Type*> types(2,Type::getInt32Ty(context));//TypInt);
+#else
+	_BreakPoint()
 #endif
 	ArrayRef<Type*> typesRef(types);
 	TyObjectRef = StructType::create(context,typesRef,"Stack");
@@ -1616,6 +1658,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
+			obj=builder.CreateCall(GetObjrefPtr(),obj);
 			builder.CreateCall3(SharedPutSwitch[mty],obj,ConstInt(32,member->u.field.field_index),v);
 		}
 		else
@@ -1993,6 +2036,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
+			obj=builder.CreateCall(GetObjrefPtr(),obj);
 			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset(expr->type)],obj,ConstInt(32,member->u.field.field_index));
 		}
 		else

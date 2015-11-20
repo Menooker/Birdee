@@ -37,6 +37,7 @@ llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
 llvm::Function* BcBuildPushImp(char* name,int isptr,Type* ty);
 llvm::Function* BcBuildPopImp();
 llvm::Function* BcBuildRegInit();
+llvm::Function* BcBuildObjectRefPtrImp();
 void BcSwitchContext(Module* M,Type* t);
 
 
@@ -1582,10 +1583,11 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	{
 		replaceAllUsesWith(f,BcBuildFldPtrImp(TyO->getPointerTo()));
 	}
-	f=m->getFunction("systemi!Pop");
+	f=m->getFunction("systemi!ObjectRefPtr");
 	if(f)
 	{
-		replaceAllUsesWith(f,BcBuildPopImp());
+		replaceAllUsesWith(f,BcBuildObjectRefPtrImp());
 	}
+
 	BcBuildRegInit();
 }

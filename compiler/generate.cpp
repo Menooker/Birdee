@@ -579,7 +579,7 @@ get_opcode_type_offset(TypeSpecifier *type)
         break;
 	case DVM_CLASS_TYPE: 
 		if(type->u.class_ref.class_definition->is_shared)
-			return 0;
+			return 2;
 		else
 			return 2;
 		break;
