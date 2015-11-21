@@ -1583,6 +1583,11 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	{
 		replaceAllUsesWith(f,BcBuildFldPtrImp(TyO->getPointerTo()));
 	}
+	f=m->getFunction("systemi!Pop");
+	if(f)
+	{
+		replaceAllUsesWith(f,BcBuildPopImp());
+	}
 	f=m->getFunction("systemi!ObjectRefPtr");
 	if(f)
 	{

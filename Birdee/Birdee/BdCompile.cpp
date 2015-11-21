@@ -899,7 +899,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
 	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;SharedGetSwitch[3]=0;
-	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;SharedGetSwitch[3]=0;
+	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;SharedPutSwitch[3]=0;
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
 
@@ -1659,7 +1659,13 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
 			obj=builder.CreateCall(GetObjrefPtr(),obj);
-			builder.CreateCall3(SharedPutSwitch[mty],obj,ConstInt(32,member->u.field.field_index),v);
+			int ty2=mty;
+			if(mty==2)
+			{
+				if(expr->type->basic_type==DVM_STRING_TYPE)
+					ty2=3;
+			}
+			builder.CreateCall3(SharedPutSwitch[ty2],obj,ConstInt(32,member->u.field.field_index),v);
 		}
 		else
 		{
@@ -2037,7 +2043,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
 			obj=builder.CreateCall(GetObjrefPtr(),obj);
-			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset(expr->type)],obj,ConstInt(32,member->u.field.field_index));
+			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset_shared(expr->type)],obj,ConstInt(32,member->u.field.field_index));
 		}
 		else
 		{

@@ -2,15 +2,17 @@ shared class clsa
 end
 
 shared class clsb
-	public q as int
+	public vint as int
+	public vstr as string
+	public sub func(vi as int, vs as string)
+		vint=vi
+		vstr=vs
+	end
 end
 dim k as clsb=new clsb()
-k.q=123
+k.func(122,"LL")
 dim p as clsb
 p=k
-dim te as shared string
-dim t2 as shared int
-te="LL"
-t2=k.q
-println(te+t2)
+
+println(p.vstr+p.vint)
 
