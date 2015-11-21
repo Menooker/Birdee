@@ -1063,8 +1063,6 @@ extern "C" void* BcNewModule(char* name,char* path)
 	nft=FunctionType::get(Type::getInt32Ty(context),mArg, false);
 	fSharedGeti=Function::Create(nft, Function::ExternalLinkage,"shared!geti", module);
 	SharedGetSwitch[0]=fSharedGeti;
-	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
-	SharedGetSwitch[2]=fSharedGeto;
 
 	nft=FunctionType::get(Type::getDoubleTy(context),mArg, false);
 	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
@@ -1073,6 +1071,11 @@ extern "C" void* BcNewModule(char* name,char* path)
 	nft=FunctionType::get(TyObjectRef,mArg, false);
 	fSharedGets=Function::Create(nft, Function::ExternalLinkage,"shared!gets", module);
 	SharedGetSwitch[3]=fSharedGets;
+
+	mArg.push_back(Type::getInt32Ty(context));
+	nft=FunctionType::get(TyObjectRef,mArg, false);
+	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
+	SharedGetSwitch[2]=fSharedGeto;
 
 	if(!strcmp(name,"diksam.lang"))
 	{
@@ -1370,8 +1373,13 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 		{//if the variable is a shared var
 			if(!cached_mid)
 				cached_mid=builder.CreateLoad(m_id);
-			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset_shared(decl->type)],
-				cached_mid,ConstInt(32,decl->variable_index));
+			int ty=get_opcode_type_offset_shared(decl->type);
+			if(ty==2)
+				return builder.CreateCall3(SharedGetSwitch[ty],
+					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,decl->type->u.class_ref.class_index));
+			else
+				return builder.CreateCall2(SharedGetSwitch[ty],
+					cached_mid,ConstInt(32,decl->variable_index));
 		}
 		else
 		{
@@ -1575,7 +1583,12 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 		{
 			if(!cached_mid)
 				cached_mid=builder.CreateLoad(m_id);
-			builder.CreateCall3(SharedPutSwitch[get_opcode_type_offset_shared(decl->type)],
+			int ty=get_opcode_type_offset_shared(decl->type);
+			if(ty==2)
+			{
+				v=builder.CreateCall(GetObjrefPtr(),v);
+			}
+			builder.CreateCall3(SharedPutSwitch[ty],
 				cached_mid,ConstInt(32,decl->variable_index),v);
 		}
 		else
@@ -1664,6 +1677,8 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 			{
 				if(expr->type->basic_type==DVM_STRING_TYPE)
 					ty2=3;
+				else
+					v=builder.CreateCall(GetObjrefPtr(),v);
 			}
 			builder.CreateCall3(SharedPutSwitch[ty2],obj,ConstInt(32,member->u.field.field_index),v);
 		}
@@ -2043,7 +2058,12 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
 			obj=builder.CreateCall(GetObjrefPtr(),obj);
-			return builder.CreateCall2(SharedGetSwitch[get_opcode_type_offset_shared(expr->type)],obj,ConstInt(32,member->u.field.field_index));
+			int ty=get_opcode_type_offset_shared(expr->type);
+			if(ty==2)
+				return builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
+					ConstInt(32,expr->u.member_expression.expression->type->u.class_ref.class_index));
+			else
+				return builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
 		}
 		else
 		{

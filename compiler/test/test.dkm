@@ -9,7 +9,7 @@ shared class clsb
 		vstr=vs
 	end
 end
-dim k as clsb=new clsb()
+dim k as shared clsb=new clsb()
 k.func(122,"LL")
 dim p as clsb
 p=k

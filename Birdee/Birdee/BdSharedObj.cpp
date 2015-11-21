@@ -348,9 +348,14 @@ extern "C" double SoGetd(uint key,uint fldid)
 	return storage.get(key,fldid).vd;
 }
 
-extern "C" BINT SoGeto(uint key,uint fldid)
+extern "C" DVM_ObjectRef SoGeto(uint key,uint fldid,int idx_in_exe)
 {
-	return storage.get(key,fldid).key;
+	DVM_ObjectRef obj;
+	int ret= storage.get(key,fldid).key;
+	int class_index = curthread->current_executable->class_table[idx_in_exe];
+    obj.v_table = curdvm->bclass[class_index]->class_table;
+	obj.data=(DVM_Object*)ret;
+	return obj;
 }
 
 extern "C" DVM_ObjectRef SoGets(uint key,uint fldid)
