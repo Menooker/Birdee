@@ -76,19 +76,19 @@ public:
 
 void SoThrowSetValueError()
 {
-	_BreakPoint()
+	_BreakPoint
 	//fix-me : implement me
 }
 
 void SoThrowGetValueError()
 {
-	_BreakPoint()
+	_BreakPoint
 	//fix-me : implement me
 }
 
 void SoThrowKeyError()
 {
-	_BreakPoint()
+	_BreakPoint
 	//fix-me : implement me
 }
 

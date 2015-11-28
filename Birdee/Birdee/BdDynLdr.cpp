@@ -194,7 +194,7 @@ DVM_ExecutableItem* LdLoadDynamicLibrary(DVM_VirtualMachine *dvm,char* path,char
 	if(status)
 	{
 		printf("ERROR Loading Code %d\n",status);
-		_BreakPoint()
+		_BreakPoint
 		return 0;
 	}
 	LoadedLibs[libname]=list;

@@ -44,7 +44,7 @@ DVM_array_get_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 
     *value = barray.data->u.barray.u.int_array[index];
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
     return DVM_SUCCESS;
 }
@@ -64,7 +64,7 @@ DVM_array_get_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray,
 
     *value = barray.data->u.barray.u.double_array[index];
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
     return DVM_SUCCESS;
 }
@@ -84,7 +84,7 @@ DVM_array_get_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 
     *value = barray.data->u.barray.u.object[index];
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
     return DVM_SUCCESS;
 }
@@ -104,7 +104,7 @@ DVM_array_set_int(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 
     barray.data->u.barray.u.int_array[index] = value;
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
     return DVM_SUCCESS;
 }
@@ -124,7 +124,7 @@ DVM_array_set_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
 
     barray.data->u.barray.u.double_array[index] = value;
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
     return DVM_SUCCESS;
 }
@@ -472,7 +472,7 @@ DVM_set_exception(DVM_VirtualMachine *dvm, DVM_Context *context,
 
     dvm->current_exception = obj;
 	*/
-	_BreakPoint()
+	_BreakPoint
 	//abandoned
 }
 

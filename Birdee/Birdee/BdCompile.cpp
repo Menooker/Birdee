@@ -1099,7 +1099,7 @@ extern "C" void BcInitLLVMCompiler()
 #ifdef BD_ON_X86
 	std::vector<Type*> types(2,Type::getInt32Ty(context));//TypInt);
 #else
-	_BreakPoint()
+	_BreakPoint
 #endif
 	ArrayRef<Type*> typesRef(types);
 	TyObjectRef = StructType::create(context,typesRef,"Stack");
@@ -1418,7 +1418,7 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
                       + get_opcode_type_offset(expr->u.identifier.u.constant
                                                .constant_definition->type),
                       expr->u.identifier.u.constant.constant_index);*/
-		_BreakPoint()           //fix-me : not implemented
+		_BreakPoint           //fix-me : not implemented
         break;
     default:
         DBG_panic(("bad default. kind..%d", expr->u.identifier.kind));
@@ -1788,7 +1788,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			builder.CreateCall(GetPush(ty),v);
 			builder.CreateCall(GetPush(2),to);
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));*/
-			_BreakPoint()
+			_BreakPoint
 		}
 
     } else {
@@ -1884,7 +1884,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
             return builder.CreateCall(fNewDelegate,ConstInt(32,expr->u.cast.operand->u.identifier.u.function.function_index));
         } else {
              //Method's delegate is generated in generate_member_expression().
-            _BreakPoint()
+            _BreakPoint
             DBG_assert(expr->u.cast.operand->kind == MEMBER_EXPRESSION,
                        ("kind..%d", expr->u.cast.operand->kind));
             //generate_expression(exe, block, expr->u.cast.operand, ob);
@@ -1923,7 +1923,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypStack));
 		break;
     case ENUM_TO_STRING_CAST:
-		_BreakPoint() //fix-me : not implemented
+		_BreakPoint //fix-me : not implemented
         break;
 
     default:
@@ -2046,7 +2046,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
         Value* obj=BcGenerateExpression(exe, block,expr->u.member_expression.expression);
 		builder.CreateCall(fPusho,obj);
         return ConstInt(32,method_index);*/
-		_BreakPoint() //delegate for member//fix-me
+		_BreakPoint //delegate for member//fix-me
     } else {
         DBG_assert(member->kind == FIELD_MEMBER,
                    ("member->u.kind..%d", member->kind));
@@ -2233,7 +2233,7 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		else if (i==1)
 			return builder.CreateFNeg(lv);
 		else
-		{	_BreakPoint()
+		{	_BreakPoint
 			return 0;
 		}
         break;
@@ -2562,7 +2562,7 @@ void BcGenerateThrowStatement(DVM_Executable *exe, Block *block,Statement *state
         //generate_identifier(statement->u.throw_s.variable_declaration, ob,
         //                    statement->line_number);
         //generate_code(ob, statement->line_number, DVM_RETHROW);
-		_BreakPoint()
+		_BreakPoint
     }
 }
 

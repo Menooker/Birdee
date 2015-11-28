@@ -48,7 +48,7 @@ void ExCheckArray(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index)
         return ;
     }
 */
-	_BreakPoint()
+	_BreakPoint
 }
 
 forceinline BINT*  AcGetPtri(DVM_VirtualMachine *dvm,DVM_ObjectRef barray,BINT index)

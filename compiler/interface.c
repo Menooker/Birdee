@@ -780,7 +780,7 @@ dkc_dynamic_compile(DKC_Compiler *compiler, char *package_name,
     SourceInput source_input;
     char found_path[FILENAME_MAX];
 
-	_BreakPoint()
+	_BreakPoint
     status = get_dynamic_load_input(package_name, found_path,
                                     search_file, &source_input);
     if (status != SEARCH_FILE_SUCCESS) {

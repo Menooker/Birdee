@@ -129,9 +129,9 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	void UaBreakPoint()
 	{
 #if  defined(BD_ON_VC) & defined(BD_ON_X86)
-		_BreakPoint() //only X86 version of MSVC compiler support inline asm
+		_BreakPoint //only X86 version of MSVC compiler support inline asm
 #else
-        _BreakPoint()
+        _BreakPoint
 		//DbgBreakPoint may spoil the stack trace....try to avoid it
 		//_DbgBreakPoint();//assume _DbgBreakPoint!=null, if it does equals null, it's still a 'break point' ^_^
 #endif //BD_ON_VC & BD_ON_X86

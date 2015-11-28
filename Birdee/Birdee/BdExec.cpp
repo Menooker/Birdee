@@ -579,7 +579,7 @@ extern "C" void  ExDoInvoke(BINT transindex)
 
 	if (!bf->is_implemented) {
 
-		_BreakPoint()
+		_BreakPoint
 
     }
 	//dvm_expand_stack(curdvm,bf->local_cnt);
@@ -877,7 +877,7 @@ extern "C" void ExGoMain()
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curthread->stack.stack);
 	ThStopAllThreads();
-    //_BreakPoint()
+    //_BreakPoint
 
 
 }
@@ -904,7 +904,7 @@ void  ExArrPuti(BINT index,int value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 #endif
 #endif
@@ -920,7 +920,7 @@ void ExArrPutd(BINT index,double value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 }
 
@@ -935,7 +935,7 @@ void ExArrPuto(BINT index)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 }
 
@@ -952,7 +952,7 @@ BINT ExArrGetCh(BINT index)
             if (status == DVM_SUCCESS) {
                 return ch;
             } else {
-                 _BreakPoint() //fix-me
+                 _BreakPoint //fix-me
             }
 
             return 0;
@@ -970,7 +970,7 @@ DVM_ObjectRef ExArrGeto(BINT index)
             if (status == DVM_SUCCESS) {
                 return object;
             } else {
-                 _BreakPoint() //fix-me
+                 _BreakPoint //fix-me
             }
 
 			return object;
@@ -989,7 +989,7 @@ double ExArrGetd(BINT index)
             if (status == DVM_SUCCESS) {
                 return double_value;
             } else {
-               _BreakPoint() //fix-me
+               _BreakPoint //fix-me
             }
 
 			return 0;
@@ -1018,7 +1018,7 @@ BINT ExArrGeti(BINT index)
             if (status == DVM_SUCCESS) {
                 return int_value;
             } else {
-               _BreakPoint() //fix-me
+               _BreakPoint //fix-me
             }
 			return 0;
 #endif
@@ -1125,7 +1125,7 @@ DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
 void ExFailure()
 {
 	printf("UncaughtException %d\n",curthread->exception_index);
-	_BreakPoint()
+	_BreakPoint
 }
 
 
@@ -1285,7 +1285,7 @@ extern "C" void ExInitThreadInAllModules()
 		}
 		else
 		{
-			_BreakPoint()
+			_BreakPoint
 		}
 	}
 }

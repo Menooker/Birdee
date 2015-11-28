@@ -6,8 +6,12 @@
 #include "..\include\MEM.h"
 
 
+
 #include "..\Birdee\Birdee\Dumper.h"
 #include "..\Birdee\Birdee\Loader.h"
+#include "..\Birdee\Birdee\BdParameters.h"
+
+struct BdParameters parameters;
 void ExInitEngine();
 void BcInitLLVMCompiler();
 int

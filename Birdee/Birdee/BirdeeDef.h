@@ -3,6 +3,8 @@
 #define _H_BIRDEE_DEF
 typedef void (*BdVMFunction)(void *args, ...);
 #ifdef BD_ON_X86
+	typedef int int32;
+	typedef unsigned int uint32;
 	#ifdef BD_ON_VC
 		typedef int BINT ;
 		typedef unsigned long BdIntPtr; // vc + x86
@@ -28,6 +30,10 @@ typedef void (*BdVMFunction)(void *args, ...);
 #else
 	#define forceinline
 #endif
+
+
+typedef void* BD_SOCKET;
+
 
 #define _CRT_SECURE_NO_WARNINGS
 #define BD_STACK_DEEPTH 2048
@@ -81,9 +87,9 @@ BdNFunGetFunction,
 };
 
 #ifdef BD_ON_VC
-#define _BreakPoint() __asm int 3
+#define _BreakPoint __asm int 3
 #else
-#define _BreakPoint() __asm__("int $3");
+#define _BreakPoint __asm__("int $3");
 #endif
 
 #endif

@@ -126,6 +126,8 @@
     <ClInclude Include="BdException.h" />
     <ClInclude Include="BdExec.h" />
     <ClInclude Include="BdHashMap.h" />
+    <ClInclude Include="BdParameters.h" />
+    <ClInclude Include="BdRemoteControl.h" />
     <ClInclude Include="BdSharedObj.h" />
     <ClInclude Include="BdThread.h" />
     <ClInclude Include="BirdeeDef.h" />
@@ -178,6 +180,7 @@
     <ClCompile Include="BdException.cpp" />
     <ClCompile Include="BdExec.cpp" />
     <ClCompile Include="BdHashMap.cpp" />
+    <ClCompile Include="BdRemoteControl.cpp" />
     <ClCompile Include="BdThread.cpp" />
     <ClCompile Include="BdVarients.cpp" />
     <ClCompile Include="Birdee.cpp" />

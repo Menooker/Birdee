@@ -169,6 +169,12 @@
     <ClInclude Include="BdSharedObj.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BdRemoteControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdParameters.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
@@ -307,6 +313,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BdSharedObj.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdRemoteControl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
