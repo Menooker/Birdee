@@ -1596,3 +1596,33 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 
 	BcBuildRegInit();
 }
+
+
+int ExExec(char* path)
+{
+    DVM_ExecutableList *list;
+    DVM_VirtualMachine *dvm;
+	BdStatus status;
+	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
+	plist->list=0;plist->top_level=0;
+
+	dvm = DVM_create_virtual_machine();
+	ExInitEngine();
+	status=LdLoadCode(path,plist);
+	if(status)
+	{
+		printf("ERROR Loading Code %d\n",status);
+		goto ERR;
+	}
+	else
+	{
+		DVM_set_executable(dvm, plist); //modified
+		DVM_execute(dvm);
+		MEM_check_all_blocks();
+		MEM_dump_blocks(stdout);
+	}
+ERR:
+	DVM_dispose_virtual_machine(dvm);
+	DVM_dispose_executable_list(plist); //*/
+	return status;
+}

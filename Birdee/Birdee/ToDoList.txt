@@ -5,3 +5,4 @@ string可以重用，不必每次都new
 exe中的master位
 curthread->stack.flg_sp add a stack type
 shared obj用int？obj ref？如何call？
+send libs

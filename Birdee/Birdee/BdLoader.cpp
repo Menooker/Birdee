@@ -1,6 +1,5 @@
 #include "Loader.h"
 
-
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
@@ -10,6 +9,7 @@
 #include "../../include/MEM.h"
 #include <string.h>
 #include <string>
+#include <vector>
 using namespace llvm;
 
 extern int isPackageInBuiltIn(char* packagename);
@@ -28,6 +28,8 @@ extern void dvm_dispose_executable(DVM_Executable *exe);
 void* bmalloc( size_t size);
 //static DVM_Executable *alloc_executable(PackageName *package_name);
 void CpDisplayBuffer(CPBuffer* p,int s);
+
+std::vector<std::string> LoadedModFiles;
 
 BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 {
@@ -89,6 +91,7 @@ BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 		pCur->executable->inline_module.mod=inline_module;
 	}
 	fclose(f);
+	LoadedModFiles.push_back(path);
 	return BdSuccess;
 }
 
