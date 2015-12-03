@@ -9,6 +9,7 @@
 #include "..\Birdee\Birdee\BdVarients.h"
 #include "..\Birdee\Birdee\BdExec.h"
 #include "..\Birdee\Birdee\BdThread.h"
+#include "..\Birdee\Birdee\BdRemoteControl.h"
 
 //extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
@@ -779,8 +780,8 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 3,DVM_FALSE);
-
-
+	DVM_add_native_function(dvm, "diksam.lang", "ConnectNode", RcConnectNode, 2,DVM_FALSE);
+	DVM_add_native_function(dvm, "diksam.lang", "RemoteNode#CreateThread", RcCreateThread, 1,DVM_TRUE);
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
                             DVM_FALSE, DVM_TRUE);

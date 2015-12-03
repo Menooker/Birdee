@@ -7,6 +7,8 @@
 #include "Loader.h"
 #include "../../debug/debug.h"
 #include <vector>
+#include <time.h>
+#include "BdThread.h"
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
 	#pragma comment(lib, "WS2_32") 
@@ -38,10 +40,41 @@ struct SlaveInfo
 	int magic;
 };
 
+enum RcCommand
+{
+	RcCmdClose=1,
+	RcCmdCreateThread,
+	RcCmdSuspendThread,
+	RcCmdStopThread,
+};
+struct RcCommandPack
+{
+	RcCommand cmd;
+	int param;
+};
 //fix-me : close all sockets when closing the dvm
 //fix-me : close the sockets when GC
+#ifdef BD_ON_WINDOWS
+int RcWinsockStartup()
+{
+    WORD sockVersion = MAKEWORD(2,2);
+    WSADATA wsaData;
+    if(WSAStartup(sockVersion, &wsaData)!=0)
+    {
+        return 1;
+    }
+	return 0;
+}
+//called when initialized
+int RcStartipRet=RcWinsockStartup();
+#endif
 
 void RcThrowSocketError()
+{
+	_BreakPoint
+}
+
+void RcThrowSocketError(int err)
 {
 	_BreakPoint
 }
@@ -71,7 +104,7 @@ BD_SOCKET RcListen(int port)
     SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //fix-me : need to close slisten?
     if(slisten == INVALID_SOCKET)
     {
-        printf("socket error !");
+        printf("socket error ! \n");
         return 0;
     }
 
@@ -107,31 +140,6 @@ BD_SOCKET RcListen(int port)
 	return (BD_SOCKET)sClient;
 }
 
-int node_class_index=-1;
-void RcConnectNode(DVM_Value *args)
-{
-    DVM_Object  *ip;
-    ip = args[0].object.data ;
-    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));	
-	char* buf=(char*)malloc(ip->u.string.length+1);
-	wcstombs(buf,ip->u.string.string,ip->u.string.length+1);
-	SOCKET s=(SOCKET)RcConnect(buf,args[1].int_value);
-
-	free(buf);
-	if(s==0)
-	{
-		RcThrowSocketError();
-	}
-	if(node_class_index==-1)
-		node_class_index=DVM_search_class(curdvm,"diksam.lang", "RemoteNode");
-	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
-	obj.data->u.class_object.field[0].object=args[0].object;
-	obj.data->u.class_object.field[1].int_value=args[1].int_value;
-	obj.data->u.class_object.field[2].int_value=(int)s; //fix-me : 64 bit?
-	curthread->retvar.object = obj; 
-	
-}
-
 
 inline int RcSend(BD_SOCKET s,void* data,size_t len)
 {
@@ -146,6 +154,73 @@ inline int RcRecv(BD_SOCKET s,void* data,size_t len)
 inline int RcCloseSocket(BD_SOCKET s)
 {
 	return closesocket((SOCKET)s);
+}
+
+int node_class_index=-1;
+void RcConnectNode(DVM_Value *args)
+{
+    DVM_Object  *ip;
+    ip = args[1].object.data ;
+    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));	
+	char* buf=(char*)malloc(ip->u.string.length+1);
+	wcstombs(buf,ip->u.string.string,ip->u.string.length+1);
+	SOCKET s=(SOCKET)RcConnect(buf,args[0].int_value);
+	free(buf);
+	RcMasterHello((BD_SOCKET)s);
+	if(s==0)
+	{
+		RcThrowSocketError();
+	}
+	if(node_class_index==-1)
+		node_class_index=DVM_search_class(curdvm,"diksam.lang", "RemoteNode");
+	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
+	obj.data->u.class_object.field[0].object=args[1].object;
+	obj.data->u.class_object.field[1].int_value=args[0].int_value;
+	obj.data->u.class_object.field[2].int_value=(int)s; //fix-me : 64 bit?
+	obj.data->u.class_object.field[3].int_value=DVM_FALSE; //closed
+	obj.data->u.class_object.field[4].int_value=DVM_TRUE; //connected
+	curthread->retvar.object = obj; 
+	
+}
+
+
+int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd)
+{
+	int ret=RcSend(s,cmd,sizeof(RcCommandPack));
+	if(ret==SOCKET_ERROR)
+	{
+#ifdef BD_ON_WINDOWS
+		return WSAGetLastError();
+#else
+		int a[-1];
+#endif
+	}
+	return 0;
+}
+
+void RcCloseNode(DVM_Value *args)
+{
+	DVM_ObjectRef obj=args->object;
+	RcCommandPack cmd={RcCmdClose,0};
+	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	if(ret)
+		RcThrowSocketError(ret);
+	obj.data->u.class_object.field[3].int_value=DVM_TRUE; //closed
+	obj.data->u.class_object.field[4].int_value=DVM_FALSE; //connected
+}
+
+
+
+void RcCreateThread(DVM_Value *args)
+{
+	int idx= args[0].object.data->u.delegate.index;
+	RcCommandPack cmd={RcCmdCreateThread,idx};
+	DVM_ObjectRef obj=args[1].object;
+	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	if(ret)
+		RcThrowSocketError(ret);
+	obj.data->u.class_object.field[3].int_value=DVM_TRUE; //closed
+	obj.data->u.class_object.field[4].int_value=DVM_FALSE; //connected
 }
 
 
@@ -178,7 +253,7 @@ int RcSendModule(BD_SOCKET s,char* path)
 	while(len>0)
 	{
 		expect_s=(sizeof(buf)>len)? len : sizeof(buf);
-		if(fread(buf,expect_s,1,f)!=expect_s)
+		if(fread(buf,expect_s,1,f)!=1)
 		{
 			fclose(f);
 			return 2;
@@ -197,6 +272,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	char buf[1024];
 
 	size_t lenp=strlen(parameters.RemoteModulePath)+strlen(name);
+	printf("Receiving %s size=%d\n",name,len);
 	if(lenp>255)
 		return 2;
 	strcpy(path,parameters.RemoteModulePath);
@@ -214,7 +290,68 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 		fwrite(buf,buflen,1,f);
 		remaining-=buflen;
 	}
+	printf("Received %s\n",name);
 	fclose(f);
+}
+
+void RcSlaveMainLoop(char* path,BD_SOCKET s)
+{
+	DVM_ExecutableList *list;
+	DVM_VirtualMachine *dvm;
+	BdStatus status;
+	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
+	plist->list=0;plist->top_level=0;
+
+	dvm = DVM_create_virtual_machine();
+	ExInitEngine();
+	status=LdLoadCode(path,plist);
+	if(status)
+	{
+		printf("ERROR Loading Code %d\n",status);
+		goto ERR;
+	}
+	else
+	{
+		DVM_set_executable(dvm, plist); //modified
+		dvm->mainvm->current_executable = dvm->top_level;
+		ExSetCurrentDVM(dvm);
+	
+		srand((unsigned)time(NULL));
+		DVM_Executable* exe=curdvm->top_level->executable;
+		curthread->current_executable =curdvm->top_level;
+		for(;;)
+		{
+			RcCommandPack cmd;
+			int ret = RcRecv(s,&cmd,sizeof(cmd));
+			if(ret!=sizeof(cmd))
+			{
+				printf("Socket error!\n");
+				break;
+			}
+			switch(cmd.cmd)
+			{
+			case RcCmdClose:
+				printf("Closing!\n");
+				break;
+			case RcCmdCreateThread:
+				curthread->stack.stack_pointer->int_value=0;
+				curthread->stack.stack_pointer++;
+				*curthread->stack.flg_sp=DVM_TRUE;
+				curthread->stack.flg_sp++;
+				ExDoInvoke(cmd.param);
+				break;
+			default:
+				printf("Unknown command %d\n",cmd.cmd);
+			}
+		}
+		MEM_check_all_blocks();
+		MEM_dump_blocks(stdout);
+	}
+	ThStopAllThreads();
+ERR:
+	DVM_dispose_virtual_machine(dvm);
+	DVM_dispose_executable_list(plist); //*/
+	return;
 }
 
 void RcSlave(int port)
@@ -226,7 +363,7 @@ void RcSlave(int port)
 	si.magic=RC_MAGIC_SLAVE;
 	RcSend(s,&si,sizeof(si));
 	int cnt=RcRecv(s,&mi,sizeof(mi));
-	if(cnt==sizeof(mi) && mi.magic!=RC_MAGIC_MASTER)
+	if(cnt==sizeof(mi) && mi.magic==RC_MAGIC_MASTER)
 	{
 		char path[255];
 		char mainmod[255];
@@ -253,7 +390,10 @@ void RcSlave(int port)
 			}
 			if(i==0)
 				strncpy(mainmod,path,255);
+			
 		}
+		printf("All modules received, waiting for command");
+		RcSlaveMainLoop(mainmod,s);
 	}
 	else
 	{

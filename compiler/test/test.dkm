@@ -1,18 +1,9 @@
-shared class clsa
+function myproc ( par as var) as int
+	println("KKKK")
 end
-
-shared class clsb
-	public vint as int
-	public vstr as string
-	public sub func(vi as int, vs as string)
-		vint=vi
-		vstr=vs
-	end
-end
-dim k as shared clsb=new clsb()
-k.func(122,"LL")
-dim p as clsb
-p=k
-
-println(p.vstr+p.vint)
+gets()
+dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
+node.CreateThread(myproc)
+println(node.host+","+node.port)
+gets()
 

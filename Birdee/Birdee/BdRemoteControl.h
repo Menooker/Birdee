@@ -9,6 +9,7 @@ extern "C"
 BD_SOCKET RcConnect(char* ip,int port);
 BD_SOCKET RcListen(int port);
 void RcConnectNode(DVM_Value *args);
+void RcCreateThread(DVM_Value *args);
 int RcSendModule(BD_SOCKET s,char* path);
 int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path);
 void RcSlave(int port);
