@@ -21,6 +21,7 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"	dim closed as int\n",
 	"	dim connected as int\n",
 	"	public declare function CreateThread(del as thread_proc) as int\n",
+	"	public declare sub Close()\n",
 	"end\n",
 	"declare function ConnectNode(host as String,port as int) as RemoteNode\n",
     /*"class StackTrace \n",

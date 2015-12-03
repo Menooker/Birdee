@@ -4,6 +4,7 @@ end
 gets()
 dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
 node.CreateThread(myproc)
+node.Close()
 println(node.host+","+node.port)
 gets()
 

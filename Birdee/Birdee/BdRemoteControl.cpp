@@ -219,10 +219,7 @@ void RcCreateThread(DVM_Value *args)
 	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(ret)
 		RcThrowSocketError(ret);
-	obj.data->u.class_object.field[3].int_value=DVM_TRUE; //closed
-	obj.data->u.class_object.field[4].int_value=DVM_FALSE; //connected
 }
-
 
 
 int RcSendModule(BD_SOCKET s,char* path)
@@ -332,6 +329,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 			{
 			case RcCmdClose:
 				printf("Closing!\n");
+				goto CLOSE;
 				break;
 			case RcCmdCreateThread:
 				curthread->stack.stack_pointer->int_value=0;
@@ -344,6 +342,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 				printf("Unknown command %d\n",cmd.cmd);
 			}
 		}
+CLOSE:
 		MEM_check_all_blocks();
 		MEM_dump_blocks(stdout);
 	}
