@@ -3,75 +3,17 @@
 #include "BdException.h"
 #include "../../debug/debug.h"
 #include "hash_compatible.h"
+#include "BdSharedObj.h"
 extern void ExCall(BINT index);
 
 extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 
-enum SoStatus
-{
-	SoOK,
-	SoUnknown,
-	SoKeyNotFound,
-	SoFail,
-};
-
-enum SoType
-{
-	SoInvalid,
-	SoModule,
-	SoInt,
-	SoDouble,
-	SoString,
-	SoObject,
-	SoArray
-};
 
 
 
 
-union SoVar 
-{
-	BINT vi;
-	double vd;
-	uint key;
-};
-struct DataNode
-{
-	SoType tag;
-	union
-	{
-		SoVar var;
-		struct 
-		{
-			wchar_t* str;
-			size_t len;
-		}string;
-		struct
-		{
-			//uint clsid;
-			SoVar* fields;
-			size_t field_cnt;
-		}cls;
 
-		struct
-		{
-			SoType ty;
-			SoVar* arr;
-			size_t arr_cnt;
-		}barray;
-	};
-		
 
-};
-class SoStorage
-{
-public:
-	virtual SoStatus putstr(uint key,wchar_t* str,uint len)=0;
-	virtual SoStatus put(uint key,int fldid,SoVar v)=0;
-	virtual DataNode get(uint key)=0;
-	virtual bool exists(uint key)=0;
-	virtual SoStatus newobj(uint key,DataNode* nd)=0;
-};
 
 
 void SoThrowSetValueError()
@@ -96,61 +38,76 @@ class SoStorageLocalTest : public SoStorage
 {
 private:
 
-	std::hash_map<uint,DataNode> map;
+	std::hash_map<long long,DataNode> map;
 public:
 	SoStatus putstr(uint key,wchar_t* str,uint len)
 	{
+		long long k=MAKE64(key,1);
 		DataNode nd;
-		nd.tag=SoString;
-		nd.string.len=len;
+		DataNode nd2;
+
+		nd2.tag=SoString;
+		nd2.string.len=len;
 		nd.string.str=str;
-		map[key]=nd;
+
+		map[MAKE64(key,1)]=nd;
+		map[MAKE64(key,0)]=nd2;
 		return SoOK;
+	}
+
+	SoStatus getstr(uint key,wchar_t** str,uint* len)
+	{
+		long long k1,k2;
+		k1=MAKE64(key,0);
+		k2=MAKE64(key,1);
+		if(map.find(k1)!=map.end())
+		{
+			if(map[k1].tag==SoString)
+				*len=map[k1].string.len;
+			else
+				return SoFail; 
+
+			if(map.find(k2)!=map.end())
+			{
+				*str=map[k2].string.str;
+			}
+			else
+				return SoKeyNotFound;
+		}
+		else
+			return SoKeyNotFound;
 	}
 
 	SoStatus put(uint key,int fldid,SoVar v)
 	{
-		map[key].cls.fields[fldid]=v;
+		map[MAKE64(key,fldid)].var=v;
 		return SoOK;
 	}
 
-	DataNode get(uint key)
+	SoVar get(uint key,int fldid)
 	{
-		if(map.find(key)!=map.end())
-			return map[key];
-		else
-		{
-			DataNode a;
-			a.tag=SoInvalid;
-			return a;
-		}
+		if(map.find(MAKE64(key,fldid))!=map.end())
+			return map[MAKE64(key,fldid)].var;
+		throw SO_KEY_NOT_FOUND;
 	}
 
 	bool exists(uint key)
 	{
-		return map.find(key)!=map.end();
+		return map.find(MAKE64(key,0))!=map.end();
 	}
 
-	SoStatus newobj(uint key,DataNode* nd)
+	SoStatus newobj(uint key,SoType tag,int fld_cnt)
 	{
-		if(map.find(key)==map.end())
-		{
-			if(nd->tag==SoObject || nd->tag==SoModule)
-			{
-				nd->cls.fields=(SoVar*)malloc(sizeof(SoVar)* nd->cls.field_cnt);
-				memset(nd->cls.fields,0,sizeof(SoVar)* nd->cls.field_cnt);
-				map[key]=*nd;
-				return SoOK;
-			}
-			else
-			{
-				DBG_assert(nd->tag==SoString ,("Node type is wrong %d\n",nd->tag));
-				map[key]=*nd;
-				return SoOK;
-			}
-		}
-		else
-			return SoFail;
+		//if(map.find(MAKE64(key,0))==map.end())
+		//{
+			DataNode nd;
+			nd.tag=tag;
+			nd.cls.field_cnt=fld_cnt;
+			map[MAKE64(key,0)]=nd;
+			return SoOK;
+		//}
+		//else
+		//	return SoFail;
 	}
 };
 
@@ -166,7 +123,7 @@ public:
 	enum BackendType
 	{
 		SoBackendTest,
-		SoBackendDHT,
+		SoBackendMemcached,
 	};
 private:
 	BackendType type;
@@ -214,9 +171,20 @@ public:
 
 	SoVar get(uint key,int fldid)
 	{
-		DataNode pnode=backend->get(key);
-		DBG_assert(pnode.tag==SoObject||pnode.tag==SoModule,("Var type is wrong %d\n",pnode.tag));
-	    return pnode.cls.fields[fldid];
+		SoVar ret;
+		try
+		{
+			ret=backend->get(key,fldid);
+			
+		}
+		catch (int &a)
+		{
+			if(a==SO_KEY_NOT_FOUND)
+			{
+				SoThrowKeyError();
+			}
+		}
+		return ret;
 	}
 
 /*	SoStatus putvar(uint key,SoType tag,SoVar var)
@@ -255,20 +223,22 @@ public:
 
 	SoStatus getstr(uint key,DVM_ObjectRef* outstr)
 	{
-		DataNode nd=backend->get(key);
-		if(nd.tag!=SoString)
-			return SoUnknown;
-		if(!nd.string.str)
+		wchar_t* pstr;
+		uint len=0;
+		SoStatus ret=backend->getstr(key,&pstr,&len);
+		if(ret!=SoOK)
+			return ret;
+		if(len==0) //fix-me : specical for null
 		{
 			outstr->data=NULL;
 			outstr->v_table=NULL;
 		}
 		else
-			*outstr=dvm_literal_to_dvm_string_i(curdvm,nd.string.str);
+			*outstr=dvm_literal_to_dvm_string_i(curdvm,pstr);
 		return SoOK;
 	}
 
-	uint allockey(DataNode* nd)
+	uint allockey(SoType tag,int fld_cnt)
 	{
 		
 		//nd.tag=SoInvalid;
@@ -281,43 +251,28 @@ public:
 			//nd.var.vi=randk;
 			if(!backend->exists(key))//fix-me : may conflict
 			{
-				backend->newobj(key,nd);
+				backend->newobj(key,tag,fld_cnt);
 				break;
 			}
 		}
+		if(key==0)
+			throw SO_KEY_NOT_FOUND;
 		return key;
 	}
 	uint newmodule(uint key,int cnt)
 	{
-		DataNode nd;
-		nd.tag=SoModule;
-		nd.cls.field_cnt=cnt;
-		return backend->newobj(key,&nd);
+		return backend->newobj(key,SoModule,cnt);
 	}
 	uint newobj(ExecClass* cls)
 	{
-		DataNode nd;
-		nd.tag=SoObject;
-		nd.cls.field_cnt=cls->field_count;
-		uint ret=allockey(&nd);
+		uint ret=allockey(SoObject,cls->field_count);
 		return ret;
 	};
 
 	uint newstr(DVM_ObjectRef* s)
 	{
-		DataNode nd;
-		nd.tag=SoString;
-		if(s->data)
-		{
-			nd.string.len=s->data->u.string.length;
-			nd.string.str=s->data->u.string.string;
-		}
-		else
-		{
-			nd.string.len=0;
-			nd.string.str=NULL;
-		}
-		uint ret=allockey(&nd);
+		uint ret=allockey(SoString,1);
+		putstr(ret,s);
 		return ret;
 	};
 };

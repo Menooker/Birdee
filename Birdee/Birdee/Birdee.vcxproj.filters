@@ -318,5 +318,8 @@
     <ClCompile Include="BdRemoteControl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="BcMemcachedStorage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
