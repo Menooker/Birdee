@@ -1,10 +1,36 @@
-function myproc ( par as var) as int
-	println("KKKK")
+
+shared class clsa
+	public ca as int
+	public cb as string
 end
+
+function myproc ( par as var) as int
+	println(c.cb+c.ca)
+	c.ca++
+end
+
+
+dim a as shared int=1
+dim b as shared string
+a++
+println(a==2)
+
+
+b="KKKK"
+println(b)
+
+dim c as shared clsa=new clsa()
+c.ca=1
+c.cb="l"
+println(c.cb+c.ca)
+
+
 gets()
 dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
 node.CreateThread(myproc)
 node.Close()
 println(node.host+","+node.port)
 gets()
+println(c.ca)
+
 

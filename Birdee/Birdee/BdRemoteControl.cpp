@@ -312,7 +312,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 		DVM_set_executable(dvm, plist); //modified
 		dvm->mainvm->current_executable = dvm->top_level;
 		ExSetCurrentDVM(dvm);
-	
+		dvm->is_master=0;
 		srand((unsigned)time(NULL));
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;

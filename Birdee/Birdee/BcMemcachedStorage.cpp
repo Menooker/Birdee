@@ -1,6 +1,7 @@
 #include "BdSharedObj.h"
+#include "BdMemcachedStorage.h"
 #include <memcached.h>
-/*
+
 
 struct NodeValue
 {
@@ -13,11 +14,9 @@ struct NodeValue
 			size_t len;
 			wchar_t str[0];
 		}string;
-		struct
-		{
-			size_t field_cnt;
-			SoVar fields[0];
-		}cls;
+		
+		size_t field_cnt;
+		
 
 		struct
 		{
@@ -28,96 +27,144 @@ struct NodeValue
 	};
 };
 
-class SoStorageMemcached : public SoStorage
+memcached_return memcached_put(memcached_st* memc,unsigned long long k,void* v,size_t len)
 {
-private:
+	char ch[17];
+	sprintf(ch,"%016llx",k);
+	memcached_return rc = memcached_set(memc, ch, 17, (char*)v,len,(time_t)0, (uint32_t)0); 
+	return rc;
+}
 
-	memcached_st *memc;
-    
-public:
-	SoStorageMemcached(char* host)
+
+SoStorageMemcached::~SoStorageMemcached()
+{
+		memcached_free(memc);
+}
+
+
+SoStatus SoStorageMemcached::putstr(uint key,wchar_t* str,uint len)
+{
+	size_t sz=sizeof(NodeValue)+(len+1)*sizeof(wchar_t);
+	NodeValue* nd=(NodeValue*)malloc(sz);
+		
+	nd->string.len=len;
+	wcsncpy(nd->string.str,str,len+1);
+
+	SoType ty=SoString;
+	if(memcached_put(memc,MAKE64(key,0),&ty,sizeof(SoType))==MEMCACHED_SUCCESS)
 	{
-		memcached_return rc;
-		memcached_server_st *servers;
-		memc = memcached_create(NULL);
-		servers = memcached_server_list_append(NULL, host,11211, &rc);
-		rc = memcached_server_push(memc, servers);
-		memcached_server_free(servers);
-	}
-
-	SoStatus putstr(uint key,wchar_t* str,uint len)
-	{
-		DataNode nd;
-		nd.tag=SoString;
-		nd.string.len=len;
-		nd.string.str=str;
-		map[key]=nd;
-		return SoOK;
-	}
-
-	SoStatus put(uint key,int fldid,SoVar v)
-	{
-		map[key].cls.fields[fldid]=v;
-		return SoOK;
-	}
-
-	DataNode get(uint key,int fldid)
-	{
-		uint64_t k=key<<32 & fldid;
-		char *keys[]= {(char*)&k};
-		size_t key_length[]= {64};
-		memcached_return rc;
-		rc = memcached_mget(memc, (char**)keys, key_length, 1);
-
-		char return_key[MEMCACHED_MAX_KEY];
-		size_t return_key_length;
-		char *return_value;
-		size_t return_value_length;
-		uint32_t flags;
-
-		return_value = memcached_fetch(memc, return_key,
-			&return_key_length, &return_value_length, &flags, &rc); //fix-me : need free return_value?
-		if (rc == MEMCACHED_SUCCESS) {
-			NodeValue* node=(NodeValue*)return_value;
-			DataNode nd;
-			nd.tag=node->tag;
-			switch(nd.tag)
-			{
-				case 
-			}
-		}
-		else
+		if(memcached_put(memc,MAKE64(key,1),nd,sz)==MEMCACHED_SUCCESS)
 		{
-			DataNode a;
-			a.tag=SoInvalid;
-			return a;
+			free(nd);
+			return SoOK;
 		}
 	}
+	free(nd);
+	return SoFail;
+}
 
-	bool exists(uint key)
-	{
-		return map.find(key)!=map.end();
-	}
+SoStatus SoStorageMemcached::getstr(uint key,wchar_t** str,uint* len)
+{
+	long long k1,k2;
+	k1=MAKE64(key,0);
+	k2=MAKE64(key,1);
+	char ch1[17],ch2[17];
+	sprintf(ch1,"%016llx",k1);
+	sprintf(ch2,"%016llx",k2);
+	char *keys[]= {ch1,ch2};
+	size_t key_length[]= {17,17};
+	memcached_return rc;
 
-	SoStatus newobj(uint key,DataNode* nd)
+	size_t return_key_length=17;
+	size_t return_value_length;
+	uint32_t flags;
+	char* return_value = memcached_get(memc, ch1,return_key_length, &return_value_length, &flags, &rc); 
+	NodeValue* node;
+	if(rc==MEMCACHED_SUCCESS)
 	{
-		if(map.find(key)==map.end())
+		SoType ty=*(SoType*) return_value;
+		free(return_value);
+		if(ty!=SoString)
+			return SoFail; 
+
+		return_value = memcached_get(memc, ch2,return_key_length, &return_value_length, &flags, &rc); 
+		if(rc==MEMCACHED_SUCCESS)
 		{
-			if(nd->tag==SoObject || nd->tag==SoModule)
+			node=(NodeValue*) return_value;
+			if(node->string.len)
 			{
-				nd->cls.fields=(SoVar*)malloc(sizeof(SoVar)* nd->cls.field_cnt);
-				memset(nd->cls.fields,0,sizeof(SoVar)* nd->cls.field_cnt);
-				map[key]=*nd;
-				return SoOK;
+				*str=wcsdup(node->string.str);
 			}
 			else
 			{
-				DBG_assert(nd->tag==SoString ,("Node type is wrong %d\n",nd->tag));
-				map[key]=*nd;
-				return SoOK;
+				*str=NULL;
 			}
+			free(return_value);
+			*len=node->string.len;
+			return SoOK;
 		}
 		else
-			return SoFail;
+			return SoKeyNotFound;
 	}
-};*/
+	else
+		return SoKeyNotFound;
+}
+
+SoStatus SoStorageMemcached::put(uint key,int fldid,SoVar v)
+{
+	if(memcached_put(memc,MAKE64(key,fldid),&v,sizeof(v))==MEMCACHED_SUCCESS)
+		return SoOK;
+	return SoFail;
+}
+
+SoVar SoStorageMemcached::get(uint key,int fldid)
+{
+	SoVar ret;
+	unsigned long long k=MAKE64(key,fldid);
+	char* mret;
+	size_t len;
+	size_t flg;
+	memcached_return rc;
+	char ch[17];
+	sprintf(ch,"%016llx",k);
+	mret=memcached_get(memc,ch,17,&len,&flg,&rc);
+	if (rc == MEMCACHED_SUCCESS) {
+		ret=*(SoVar*)mret;
+		free(mret);
+		return ret;
+	}
+	else
+	{
+		throw SO_KEY_NOT_FOUND;
+	}
+	return ret;
+		
+}
+
+bool SoStorageMemcached::exists(uint key)//fix-me : improve
+{
+	size_t outlen;
+	size_t flg;
+	memcached_return rc;
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,0));
+	char* r= memcached_get(memc,ch,17,&outlen,&flg,&rc);
+	if(rc==MEMCACHED_SUCCESS)
+	{
+		free(r);
+		return true;
+	}
+	return false;
+}
+
+SoStatus SoStorageMemcached::newobj(uint key,SoType tag,int fld_cnt)
+{
+	NodeValue nd;
+	nd.tag=tag;
+	nd.field_cnt=fld_cnt;
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,0));
+	if(memcached_add(memc,ch,17,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
+		return SoOK;
+	return SoFail;
+}

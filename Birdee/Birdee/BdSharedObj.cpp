@@ -4,6 +4,8 @@
 #include "../../debug/debug.h"
 #include "hash_compatible.h"
 #include "BdSharedObj.h"
+#include "BdMemcachedStorage.h"
+
 extern void ExCall(BINT index);
 
 extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
@@ -40,6 +42,8 @@ private:
 
 	std::hash_map<long long,DataNode> map;
 public:
+	SoStorageLocalTest(char*){};
+	SoStorageLocalTest(){};
 	SoStatus putstr(uint key,wchar_t* str,uint len)
 	{
 		long long k=MAKE64(key,1);
@@ -47,7 +51,7 @@ public:
 		DataNode nd2;
 
 		nd2.tag=SoString;
-		nd2.string.len=len;
+		nd.string.len=len;
 		nd.string.str=str;
 
 		map[MAKE64(key,1)]=nd;
@@ -62,14 +66,14 @@ public:
 		k2=MAKE64(key,1);
 		if(map.find(k1)!=map.end())
 		{
-			if(map[k1].tag==SoString)
-				*len=map[k1].string.len;
-			else
+			if(map[k1].tag!=SoString)
 				return SoFail; 
 
 			if(map.find(k2)!=map.end())
 			{
+				*len=map[k2].string.len;
 				*str=map[k2].string.str;
+				return SoOK;
 			}
 			else
 				return SoKeyNotFound;
@@ -98,16 +102,16 @@ public:
 
 	SoStatus newobj(uint key,SoType tag,int fld_cnt)
 	{
-		//if(map.find(MAKE64(key,0))==map.end())
-		//{
+		if(map.find(MAKE64(key,0))==map.end())
+		{
 			DataNode nd;
 			nd.tag=tag;
 			nd.cls.field_cnt=fld_cnt;
 			map[MAKE64(key,0)]=nd;
 			return SoOK;
-		//}
-		//else
-		//	return SoFail;
+		}
+		else
+			return SoFail;
 	}
 };
 
@@ -143,7 +147,10 @@ public:
 		switch(type)
 		{
 		case SoBackendTest:
-			return new SoStorageLocalTest();
+			return new SoStorageLocalTest("127.0.0.1");
+			break;
+		case SoBackendMemcached:
+			return new SoStorageMemcached("127.0.0.1");
 		default:
 			DBG_assert(0,("Var type is wrong %d\n",type));
 		}
@@ -249,9 +256,8 @@ public:
 			key=rand();
 			//uint randk=rand();
 			//nd.var.vi=randk;
-			if(!backend->exists(key))//fix-me : may conflict
+			if(backend->newobj(key,tag,fld_cnt)==SoOK)
 			{
-				backend->newobj(key,tag,fld_cnt);
 				break;
 			}
 		}
@@ -266,18 +272,22 @@ public:
 	uint newobj(ExecClass* cls)
 	{
 		uint ret=allockey(SoObject,cls->field_count);
+		if(ret==0)
+			SoThrowKeyError();
 		return ret;
 	};
 
 	uint newstr(DVM_ObjectRef* s)
 	{
 		uint ret=allockey(SoString,1);
+		if(ret==0)
+			SoThrowKeyError();
 		putstr(ret,s);
 		return ret;
 	};
 };
 
-SharedStorage storage(SoStorageFactory::SoBackendTest);
+SharedStorage storage(SoStorageFactory::SoBackendMemcached);
 
 
 
@@ -362,7 +372,9 @@ extern "C" void SoSets(uint key,uint fldid,DVM_ObjectRef v)
 extern "C" void SoNewModule(uint key,int cnt)
 {
 	if(storage.newmodule(key,cnt)!=SoOK)
-		SoThrowKeyError();
+	{
+		//SoThrowKeyError();
+	}
 }
 
 

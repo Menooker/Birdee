@@ -62,7 +62,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(SolutionDir)..\..\libLLVMLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\..\libLLVMLite.lib;$(SolutionDir)..\..\libmemcached.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,6 +126,7 @@
     <ClInclude Include="BdException.h" />
     <ClInclude Include="BdExec.h" />
     <ClInclude Include="BdHashMap.h" />
+    <ClInclude Include="BdMemcachedStorage.h" />
     <ClInclude Include="BdParameters.h" />
     <ClInclude Include="BdRemoteControl.h" />
     <ClInclude Include="BdSharedObj.h" />

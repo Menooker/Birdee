@@ -1,5 +1,5 @@
-#ifndef _H_BIRDEE_DYNLDR
-#define _H_BIRDEE_DYNLDR
+#ifndef _H_BIRDEE_SHARED_OBJ
+#define _H_BIRDEE_SHARED_OBJ
 
 #ifdef __cplusplus
 extern "C"
@@ -75,7 +75,7 @@ void SoSets(uint key,uint fldid,DVM_ObjectRef v);
 void SoNewModule(uint key,int cnt);
 DVM_ObjectRef SoNew(int idx_in_exe,int methodid);
 
-#define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 & b)
+#define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
 #ifdef __cplusplus
@@ -87,6 +87,9 @@ DVM_ObjectRef SoNew(int idx_in_exe,int methodid);
 class SoStorage
 {
 public:
+	SoStorage(){};
+	SoStorage(char*){};
+	virtual inline ~SoStorage(){};
 	virtual SoStatus putstr(uint key,wchar_t* str,uint len)=0;
 	virtual SoStatus put(uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(uint key,int fldid)=0;

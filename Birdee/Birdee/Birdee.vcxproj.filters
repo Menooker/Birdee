@@ -175,6 +175,9 @@
     <ClInclude Include="BdParameters.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BdMemcachedStorage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
