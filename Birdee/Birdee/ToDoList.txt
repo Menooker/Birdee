@@ -1,0 +1,8 @@
+对Shared String的GC的标记！！！（从shared var中得到）
+allockey 在!exists后还可能有竞争
+同步module index和cls id
+string可以重用，不必每次都new
+exe中的master位
+curthread->stack.flg_sp add a stack type
+shared obj用int？obj ref？如何call？
+send libs

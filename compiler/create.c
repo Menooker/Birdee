@@ -40,7 +40,7 @@ dkc_alloc_declaration(DVM_Boolean is_final, TypeSpecifier *type,
     decl->type = type;
     decl->is_final = is_final;
     decl->variable_index = -1;
-
+	decl->is_shared=DVM_FALSE;
     return decl;
 }
 
@@ -1103,7 +1103,7 @@ dkc_create_throw_statement(Expression *expression)
 Statement *
 dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
                                  char *identifier,
-                                 Expression *initializer)
+                                 Expression *initializer,DVM_Boolean isShared)
 {
     Statement *st;
     Declaration *decl;
@@ -1120,7 +1120,7 @@ dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
     decl = dkc_alloc_declaration(is_final, type, identifier);
 
     decl->initializer = initializer;
-
+	decl->is_shared=isShared;
     st->u.declaration_s = decl;
 
     return st;
@@ -1140,7 +1140,8 @@ conv_access_modifier(ClassOrMemberModifierKind src)
 }
 
 void
-dkc_start_class_definition(ClassOrMemberModifierList *modifier,
+dkc_start_class_definition(int is_shared,
+							ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,
                            char *identifier,TemplateDeclare* templates,
                            ExtendsList *extends)
@@ -1167,6 +1168,7 @@ dkc_start_class_definition(ClassOrMemberModifierList *modifier,
     cd->member = NULL;
     cd->next = NULL;
     cd->line_number = compiler->current_line_number;
+	cd->is_shared=is_shared;
 
     DBG_assert(compiler->current_class_definition == NULL,
                ("current_class_definition is not NULL."));
@@ -1403,7 +1405,7 @@ dkc_create_method_member(ClassOrMemberModifierList *modifier,
                               MESSAGE_ARGUMENT_END);
         }
     } else {
-        if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0) { // modified
+		if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0 && compiler->path[0]!=0) { // compiler->path[0]!=0 means this is not basic module
             dkc_compile_error(compiler->current_line_number,
                               CONCRETE_METHOD_HAS_NO_BODY_ERR,
                               MESSAGE_ARGUMENT_END);

@@ -39,7 +39,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\..\include2;$(SolutionDir)..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\include2;$(SolutionDir)..\..\include;$(SolutionDir)..\..\memcached_include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -62,7 +62,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(SolutionDir)..\..\libLLVMLite.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\..\libLLVMLite.lib;$(SolutionDir)..\..\libmemcached.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -102,6 +102,7 @@
     <None Include="template_test.txt" />
     <None Include="test_delegate.txt" />
     <None Include="thread.txt" />
+    <None Include="ToDoList.txt" />
     <None Include="vartest.dkm" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +126,10 @@
     <ClInclude Include="BdException.h" />
     <ClInclude Include="BdExec.h" />
     <ClInclude Include="BdHashMap.h" />
+    <ClInclude Include="BdMemcachedStorage.h" />
+    <ClInclude Include="BdParameters.h" />
+    <ClInclude Include="BdRemoteControl.h" />
+    <ClInclude Include="BdSharedObj.h" />
     <ClInclude Include="BdThread.h" />
     <ClInclude Include="BirdeeDef.h" />
     <ClInclude Include="Conf.h" />
@@ -170,17 +175,20 @@
     <ClCompile Include="..\..\share\util.c" />
     <ClCompile Include="..\..\share\wchar_share.c" />
     <ClCompile Include="BcMCJIT.cpp" />
+    <ClCompile Include="BcMemcachedStorage.cpp" />
     <ClCompile Include="BdArrayCache.cpp" />
     <ClCompile Include="BdCompile.cpp" />
     <ClCompile Include="BdDynLdr.cpp" />
     <ClCompile Include="BdException.cpp" />
     <ClCompile Include="BdExec.cpp" />
     <ClCompile Include="BdHashMap.cpp" />
+    <ClCompile Include="BdRemoteControl.cpp" />
     <ClCompile Include="BdThread.cpp" />
     <ClCompile Include="BdVarients.cpp" />
     <ClCompile Include="Birdee.cpp" />
     <ClCompile Include="BdDumper.cpp" />
     <ClCompile Include="BdLoader.cpp" />
+    <ClCompile Include="BdSharedObj.cpp" />
     <ClCompile Include="UnportableAPI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

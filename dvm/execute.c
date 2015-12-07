@@ -223,7 +223,7 @@ invoke_diksam_function(DVM_VirtualMachine *dvm,
 
     if (!callee->is_implemented) {
 		//printf("DL:%s\n",callee->name);
-		_BreakPoint()
+		_BreakPoint
         //dvm_dynamic_load(dvm, *exe_p, *caller_p, *pc_p, callee);
     }
     *ee_p = callee->u.diksam_f.executable;

@@ -81,7 +81,7 @@ void* brealloc(void* p, size_t size)
 	{
 
 			printf("Error! Error realloc\n");
-			_BreakPoint()
+			_BreakPoint
 	}
 	return ret;
 }
@@ -91,7 +91,7 @@ void* bmalloc( size_t size)
 	if(!ret)
 	{
 			printf("Error! Error realloc\n");
-			_BreakPoint()
+			_BreakPoint
 	}
 	return ret;
 }
@@ -231,7 +231,7 @@ int CpFindTypeIndex(DVM_Executable* exe,DVM_TypeSpecifier* type)
 	if(i>exe->type_specifier_count || i<0)
 	{
 		printf("Invalid DVM_TypeSpecifier");
-		_BreakPoint()
+		_BreakPoint
 		exit(1);
 	}
 	return i;
@@ -305,6 +305,7 @@ BdStatus CpDumpClass(DVM_Class* cls,CPBuffer* pbuf)
 	{
 		CpDumpMethod(&cls->method[i],pbuf);
 	}
+	CpDumpVar(cls->is_shared,pbuf);
 	if(cls->is_implemented)
 		CpDumpCodeBlock(&cls->field_initializer,pbuf);
 
@@ -347,6 +348,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 	CpDumpBuffer(&exe->is_required,sizeof(BINT),&buf);
 	CpDumpString(exe->path,&buf);
 	CpDumpString(exe->libname ,&buf);
+	CpDumpVar(exe->shared_count,&buf);
 	CpDumpBuffer(&exe->constant_pool_count,sizeof(exe->constant_pool_count),&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{
@@ -418,7 +420,7 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 	if(ret!=1)
 	{
 		printf("%d",ret);
-		_BreakPoint()
+		_BreakPoint
 	}
 	free(buf.p);
 	return i;

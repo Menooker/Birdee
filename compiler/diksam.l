@@ -177,6 +177,7 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"..."          return APOSTROPHE;
 <INITIAL>"unsafe"          return UNSAFE;
 <INITIAL>"safe"          return SAFE;
+<INITIAL>"shared"        return SHARED;
 
 <INITIAL>"{"          {return LC;}
 <INITIAL>"}"          {return RC;}

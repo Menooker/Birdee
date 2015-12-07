@@ -1,67 +1,36 @@
-//require Exceptions
-/*
-class StackEmptyException
+
+shared class clsa
+	public ca as int
+	public cb as string
 end
 
-abstract class PObject
-	public abstract virtual declare function hash() as int
-	public abstract virtual declare function equals(k as PObject) as boolean
+function myproc ( par as var) as int
+	println(c.cb+c.ca)
+	c.ca++
 end
 
-class KObject : Object
 
-end
+dim a as shared int=1
+dim b as shared string
+a++
+println(a==2)
 
-class HString : Object
-	public str as string
-	public virtual constructor  initialize(i as string)
-		str=i
-	end
 
-	public virtual override function hash() as int
-		dim i as int
-		dim key as int =0
-		for i=0;i<str.length()-1;i++
-			key = key * (str[i]*2+str[i+1])+ (str[i]+str[i+1]*2)
-		end
-		return key
-	end
+b="KKKK"
+println(b)
 
-	public virtual override function equals(k as Object) as boolean
-		if k==null then
-			return false
-		end
-		if(! k instanceof HString) then
-			return false
-		end
-		dim in as HString=k::HString:>
-		return in.str==str
-	end
-	public virtual function tostr2() as string
-		return str
-	end
-end
+dim c as shared clsa=new clsa()
+c.ca=1
+c.cb="l"
+println(c.cb+c.ca)
 
-dim a as string="123"
-dim b as HString=new HString("JI")
-dim c as KObject=new KObject()
-dim d as Object=b
-dim k as int[]=new int[10]
-k[0]=1
-dim k2 as int[]=new int[10]
-k2[0]=1
-dim k3 as int[]=new int[11]
-println(k.equals(k2))
-println(k.equals(k3))
-k2[0]=2
-println(k.equals(k2))
-println(k.equals(a*/
 
-sub aaa()
-	BreakPoint()
-end
+gets()
+dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
+node.CreateThread(myproc)
+node.Close()
+println(node.host+","+node.port)
+gets()
+println(c.ca)
 
-println("!!!")
-aaa()
-aaa()
 

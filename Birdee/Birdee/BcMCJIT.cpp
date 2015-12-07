@@ -199,7 +199,7 @@ Function *MCJITHelper::getFunction(const std::string FnName)
       Function *PF = CurrentModule->getFunction(FnName);
       if (PF && !PF->empty()) {
         //Error("redefinition of function across modules");
-        _BreakPoint()
+        _BreakPoint
 		  return 0;
       }
 

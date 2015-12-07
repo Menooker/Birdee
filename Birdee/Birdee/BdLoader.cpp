@@ -1,6 +1,5 @@
 #include "Loader.h"
 
-
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
@@ -10,6 +9,7 @@
 #include "../../include/MEM.h"
 #include <string.h>
 #include <string>
+#include <vector>
 using namespace llvm;
 
 extern int isPackageInBuiltIn(char* packagename);
@@ -28,6 +28,8 @@ extern void dvm_dispose_executable(DVM_Executable *exe);
 void* bmalloc( size_t size);
 //static DVM_Executable *alloc_executable(PackageName *package_name);
 void CpDisplayBuffer(CPBuffer* p,int s);
+
+std::vector<std::string> LoadedModFiles;
 
 BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 {
@@ -89,6 +91,7 @@ BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 		pCur->executable->inline_module.mod=inline_module;
 	}
 	fclose(f);
+	LoadedModFiles.push_back(path);
 	return BdSuccess;
 }
 
@@ -227,7 +230,7 @@ BdStatus LdFunction(DVM_Function* func,CPBuffer* pbuf)
 	LdLoadVar(i,pbuf);
 	if(i!=FUN_MAGIC)
 	{
-		_BreakPoint()
+		_BreakPoint
 		throw BdBadMagicNum;
 	}
 	return BdSuccess;
@@ -302,7 +305,7 @@ BdStatus LdClass(DVM_Class* cls,CPBuffer* pbuf)
 	{
 		LdMethod(&cls->method[i],pbuf);
 	}
-
+	LdLoadVar(cls->is_shared,pbuf);
 	if(cls->is_implemented)
 		LdCodeBlock(&cls->field_initializer,pbuf);
 
@@ -368,6 +371,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 	LdLoadVar(exe->is_required,&buf);
 	LdString(&exe->path,&buf);
 	LdString(&exe->libname ,&buf);
+	LdLoadVar(exe->shared_count,&buf);
 	LdArray(exe->constant_pool_count,exe->constant_pool,DVM_ConstantPool,&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{
@@ -437,7 +441,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 	if(magic_chk!=MAGIC_END)
 	{
 		dvm_dispose_executable(exe);
-		_BreakPoint()
+		_BreakPoint
 		return BdBadMagicNum;
 	}
 	printf("sz:%d\n",sz);

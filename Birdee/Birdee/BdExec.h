@@ -80,6 +80,7 @@ BdThread* ExCreateThread();
 void ExInitRegArray(BdThread* t);
 void ExInitThreadInAllModules();
 void  ExDoInvoke(BINT transindex);
+int ExExec(char* path);
 #ifdef __cplusplus
 }
 #endif

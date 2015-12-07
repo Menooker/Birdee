@@ -104,6 +104,18 @@ Function *fInvokeDelegate;
 Function *fSystemRaise;
 Function *fReraise;
 
+Function *fSharedSeti;
+Function *fSharedSetd;
+Function *fSharedSeto;
+Function *fSharedSets;
+
+Function *fSharedGeti;
+Function *fSharedGetd;
+Function *fSharedGeto;
+Function *fSharedGets;
+Function *fNewShared;
+Function* fObjectRefPtr;
+
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
 GlobalVariable* beo;//exception obj //fix-me : release it!
@@ -112,6 +124,7 @@ GlobalVariable* arr_sp;//arr of object booleans //fix-me : release it!
 //GlobalVariable* arr_is_pointer;//stack_value pointer indecator array //fix-me : release it!
 GlobalVariable* bretvar;//return value//fix-me : release it!
 GlobalVariable* pstatic;//static values//fix-me : release it!
+GlobalVariable* m_id;//module id
 
 BasicBlock* contiblock;
 BasicBlock* loopblock;
@@ -165,8 +178,11 @@ std::hash_map<int ,Value*> barrays;
 
 extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
+extern "C" int get_opcode_type_offset_shared(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
+Function* SharedPutSwitch[4];
+Function* SharedGetSwitch[4];
 //Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
@@ -175,6 +191,7 @@ extern "C" int get_method_index_Ex(MemberExpression *member,int* outParamCnt);
 Function* BcBuildPush(char* name,int isptr,Type* ty);
 Function* GetArrAddr();
 Function* GetFldAddr();
+Value* cached_mid;
 
  int
 get_opcode_type_offset3(int type)
@@ -515,6 +532,27 @@ Function* BcBuildArrPtrSafeImp(Type* ty)
 	return fArrAddr;
 }
 
+Function* BcBuildObjectRefPtrImp()
+{
+	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	FunctionType* FT8 = FunctionType::get(Type::getInt32Ty(context),Args2, false);
+	Function* fObjectRefPtr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ObjectRefPtrImp", module);
+	fObjectRefPtr->addFnAttr(llvm::Attribute::AlwaysInline);
+	BasicBlock *BB = BasicBlock::Create(context, "entry",fObjectRefPtr);
+	SwitchBlock(BB);
+	Value* p=builder.CreateAlloca(TyObjectRef);
+	builder.CreateStore(fObjectRefPtr->arg_begin(),p);
+	Value* pp=builder.CreatePointerCast(builder.CreateStructGEP(p,0),Type::getInt32PtrTy(context));
+	Value* p1=builder.CreateLoad(pp);
+	builder.CreateRet(p1);
+
+	builder.restoreIP(IP);
+	return fObjectRefPtr;
+}
+
+
 Function* BcBuildArrPtrImp(Type* ty)
 {
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
@@ -590,7 +628,15 @@ void BcBuildFldPtr(Type* ty)
 	return ;
 }
 
+void BcBuildObjectRefPtr()
+{
+	std::vector<Type*> Args2;
+	Args2.push_back(TyObjectRef);
+	FunctionType* FT8 = FunctionType::get(Type::getInt32Ty(context),Args2, false);
+	fObjectRefPtr=Function::Create(FT8, Function::ExternalLinkage  ,"systemi!ObjectRefPtr", module);
 
+	return ;
+}
 
 void BcBuildArrPtr(Type* ty)
 {
@@ -673,6 +719,16 @@ Function* GetArrAddr()
 		BcBuildArrPtr(TyObjectRef->getPointerTo());
 	}
 	return fArrAddr;
+
+}
+
+Function* GetObjrefPtr()
+{
+	if(!fObjectRefPtr)
+	{
+		BcBuildObjectRefPtr();
+	}
+	return fObjectRefPtr;
 
 }
 
@@ -842,7 +898,8 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fPop=0;
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
-
+	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;SharedGetSwitch[3]=0;
+	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;SharedPutSwitch[3]=0;
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
 
@@ -878,6 +935,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
+	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
 
 	FunctionType* nft = FunctionType::get(Type::getInt32PtrTy(context), false);
 	fPushException = Function::Create(nft, Function::ExternalLinkage,"system!PushException", module);
@@ -943,6 +1001,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	FT4 = FunctionType::get(TyObjectRef,ArgSSB, false);
 	fBoolToStr = Function::Create(FT4, Function::ExternalLinkage,"system!BoolToStr", module);
 
+
 	//FunStoreStaicSwitch[0]=fStoreStaticInt;FunStoreStaicSwitch[1]=fStoreStaticDouble;FunStoreStaicSwitch[2]=fStoreStaticString;
 	/*bpc=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bpc");
 	bei=new GlobalVariable(*module,Type::getInt32Ty(context),false,GlobalValue::ExternalLinkage,0,"bei");
@@ -968,6 +1027,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	bretvar=new GlobalVariable(*module,TypStack,false,LINKAGE_TYPE,
 		ConstPointer((PointerType*)TypStack),"retvar",0,THREAD_MODEL,0,true);
 	pstatic=new GlobalVariable(*module,TypStack,true,GlobalValue::ExternalLinkage,0,"pstatic"); //static variable is shared by all threads
+	m_id=new GlobalVariable(*module,Type::getInt32Ty(context),true,GlobalValue::ExternalLinkage,0,"mid"); //module is is shared by all threads
 
 	FunctionType* FTInvoke = FunctionType::get(Type::getVoidTy(context),Args2, false);
 	fInvoke = Function::Create(FTInvoke, Function::ExternalLinkage,"system!Invoke", module);
@@ -979,6 +1039,43 @@ extern "C" void* BcNewModule(char* name,char* path)
 	nft= FunctionType::get(TyObjectRef,ArgPStr, false);
 	fGetVar= Function::Create(nft, Function::ExternalLinkage,"autovar!get", module);
 	fGetOrCreateVar= Function::Create(nft, Function::ExternalLinkage,"autovar!getorcreate", module);
+
+	std::vector<Type*> mArg;	
+	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
+	SharedPutSwitch[0]=fSharedSeti;
+	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
+	SharedPutSwitch[2]=fSharedSeto;
+
+	mArg.pop_back(); mArg.push_back(Type::getDoubleTy(context));
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSetd=Function::Create(nft, Function::ExternalLinkage,"shared!setd", module);
+	SharedPutSwitch[1]=fSharedSetd;
+
+	mArg.pop_back(); mArg.push_back(TyObjectRef);
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
+	fSharedSets=Function::Create(nft, Function::ExternalLinkage,"shared!sets", module);
+	SharedPutSwitch[3]=fSharedSets;
+
+
+	mArg.pop_back();
+	nft=FunctionType::get(Type::getInt32Ty(context),mArg, false);
+	fSharedGeti=Function::Create(nft, Function::ExternalLinkage,"shared!geti", module);
+	SharedGetSwitch[0]=fSharedGeti;
+
+	nft=FunctionType::get(Type::getDoubleTy(context),mArg, false);
+	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
+	SharedGetSwitch[1]=fSharedGetd;
+
+	nft=FunctionType::get(TyObjectRef,mArg, false);
+	fSharedGets=Function::Create(nft, Function::ExternalLinkage,"shared!gets", module);
+	SharedGetSwitch[3]=fSharedGets;
+
+	mArg.push_back(Type::getInt32Ty(context));
+	nft=FunctionType::get(TyObjectRef,mArg, false);
+	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
+	SharedGetSwitch[2]=fSharedGeto;
 
 	if(!strcmp(name,"diksam.lang"))
 	{
@@ -1001,6 +1098,8 @@ extern "C" void BcInitLLVMCompiler()
 	TypInt=Type::getInt32Ty(context)->getPointerTo();
 #ifdef BD_ON_X86
 	std::vector<Type*> types(2,Type::getInt32Ty(context));//TypInt);
+#else
+	_BreakPoint
 #endif
 	ArrayRef<Type*> typesRef(types);
 	TyObjectRef = StructType::create(context,typesRef,"Stack");
@@ -1270,20 +1369,35 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			return p.v;
 		}
     } else {
-		BcParameter& ps=bstatic[decl->variable_index];
-		if(!ps.v)
-		{
-			//if(!psta)
-			psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
-			Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
-			p2=builder.CreateLoad(p2);
-			//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
-			ps.v=p2;
-			return p2;
+		if(decl->is_shared)
+		{//if the variable is a shared var
+			if(!cached_mid)
+				cached_mid=builder.CreateLoad(m_id);
+			int ty=get_opcode_type_offset_shared(decl->type);
+			if(ty==2)
+				return builder.CreateCall3(SharedGetSwitch[ty],
+					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,decl->type->u.class_ref.class_index));
+			else
+				return builder.CreateCall2(SharedGetSwitch[ty],
+					cached_mid,ConstInt(32,decl->variable_index));
 		}
 		else
 		{
-			return ps.v;
+			BcParameter& ps=bstatic[decl->variable_index];
+			if(!ps.v)
+			{
+				//if(!psta)
+				psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
+				Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
+				p2=builder.CreateLoad(p2);
+				//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
+				ps.v=p2;
+				return p2;
+			}
+			else
+			{
+				return ps.v;
+			}
 		}
     }
 }
@@ -1304,7 +1418,7 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
                       + get_opcode_type_offset(expr->u.identifier.u.constant
                                                .constant_definition->type),
                       expr->u.identifier.u.constant.constant_index);*/
-		_BreakPoint()           //fix-me : not implemented
+		_BreakPoint           //fix-me : not implemented
         break;
     default:
         DBG_panic(("bad default. kind..%d", expr->u.identifier.kind));
@@ -1462,44 +1576,61 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
 		}
         return ;
-    } else {
-		Value* p=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
-		if(vartype==-1)
+    }
+	else
+	{//if it is a static variable
+		if(decl->is_shared)
 		{
-			Value* p2=builder.CreateBitCast(p,TypeSwitch[get_opcode_type_offset(decl->type)]);
-			if(dkc_is_var(decl->type) )
+			if(!cached_mid)
+				cached_mid=builder.CreateLoad(m_id);
+			int ty=get_opcode_type_offset_shared(decl->type);
+			if(ty==2)
 			{
-				builder.CreateCall(GetPush(2),v);
-				builder.CreateCall(GetPush(2),builder.CreateLoad(p2));
-				builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunCopyVar));
+				v=builder.CreateCall(GetObjrefPtr(),v);
+			}
+			builder.CreateCall3(SharedPutSwitch[ty],
+				cached_mid,ConstInt(32,decl->variable_index),v);
+		}
+		else
+		{// if it is not shared
+			Value* p=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
+			if(vartype==-1)
+			{
+				Value* p2=builder.CreateBitCast(p,TypeSwitch[get_opcode_type_offset(decl->type)]);
+				if(dkc_is_var(decl->type) )
+				{
+					builder.CreateCall(GetPush(2),v);
+					builder.CreateCall(GetPush(2),builder.CreateLoad(p2));
+					builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunCopyVar));
+				}
+				else
+				{
+					//if(get_opcode_type_offset(decl->type)!=2)
+					//{
+					bstatic[decl->variable_index].v=v;
+					bstatic[decl->variable_index].violated=1;
+					//}
+					builder.CreateStore(v,p2);
+					if(dkc_is_array(decl->type)) //Full_arr_chk
+					{
+						if(isArrayAddressSet(decl->variable_index,0))
+						{
+							Value* addr=builder.CreateCall(GetFldAddr(),v);
+							builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
+						}
+						else
+							GetArrayAddress(decl->variable_index,0);
+					}//*/
+				}
 			}
 			else
 			{
-				//if(get_opcode_type_offset(decl->type)!=2)
-				//{
-				bstatic[decl->variable_index].v=v;
-				bstatic[decl->variable_index].violated=1;
-				//}
-				builder.CreateStore(v,p2);
-				if(dkc_is_array(decl->type)) //Full_arr_chk
-				{
-					if(isArrayAddressSet(decl->variable_index,0))
-					{
-						Value* addr=builder.CreateCall(GetFldAddr(),v);
-						builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
-					}
-					else
-						GetArrayAddress(decl->variable_index,0);
-				}//*/
+				builder.CreateCall(GetPush(vartype),v);
+				builder.CreateCall(GetPush(2),builder.CreateLoad(p));
+				builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
 			}
+			return;
 		}
-		else
-		{
-			builder.CreateCall(GetPush(vartype),v);
-			builder.CreateCall(GetPush(2),builder.CreateLoad(p));
-			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+vartype));
-		}
-		return;
     }
 }
 
@@ -1536,10 +1667,27 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		{
 			builder.CreateCall(GetPush(2),v);
 		}
+		
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetFldAddr(),obj);
-		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
-		builder.CreateStore(v,fld);
+		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
+		{//shared var
+			obj=builder.CreateCall(GetObjrefPtr(),obj);
+			int ty2=mty;
+			if(mty==2)
+			{
+				if(expr->type->basic_type==DVM_STRING_TYPE)
+					ty2=3;
+				else
+					v=builder.CreateCall(GetObjrefPtr(),v);
+			}
+			builder.CreateCall3(SharedPutSwitch[ty2],obj,ConstInt(32,member->u.field.field_index),v);
+		}
+		else
+		{
+			Value* fld=builder.CreateCall(GetFldAddr(),obj);
+			fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[mty]);
+			builder.CreateStore(v,fld);
+		}
 		if(mty==2)
 			builder.CreateCall(GetPop(),ConstInt(32,1));
 
@@ -1640,7 +1788,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			builder.CreateCall(GetPush(ty),v);
 			builder.CreateCall(GetPush(2),to);
 			builder.CreateCall(fDoInvoke,ConstInt(32,BdNFunIntVar+ty));*/
-			_BreakPoint()
+			_BreakPoint
 		}
 
     } else {
@@ -1736,7 +1884,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
             return builder.CreateCall(fNewDelegate,ConstInt(32,expr->u.cast.operand->u.identifier.u.function.function_index));
         } else {
              //Method's delegate is generated in generate_member_expression().
-            _BreakPoint()
+            _BreakPoint
             DBG_assert(expr->u.cast.operand->kind == MEMBER_EXPRESSION,
                        ("kind..%d", expr->u.cast.operand->kind));
             //generate_expression(exe, block, expr->u.cast.operand, ob);
@@ -1775,7 +1923,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 		return builder.CreateLoad(builder.CreateBitCast(builder.CreateLoad(bretvar),TypStack));
 		break;
     case ENUM_TO_STRING_CAST:
-		_BreakPoint() //fix-me : not implemented
+		_BreakPoint //fix-me : not implemented
         break;
 
     default:
@@ -1898,7 +2046,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
         Value* obj=BcGenerateExpression(exe, block,expr->u.member_expression.expression);
 		builder.CreateCall(fPusho,obj);
         return ConstInt(32,method_index);*/
-		_BreakPoint() //delegate for member//fix-me
+		_BreakPoint //delegate for member//fix-me
     } else {
         DBG_assert(member->kind == FIELD_MEMBER,
                    ("member->u.kind..%d", member->kind));
@@ -1906,11 +2054,24 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		return builder.CreateCall(FldGet[get_opcode_type_offset(expr->type)],arg);*/
-
 		Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
-		Value* fld=builder.CreateCall(GetFldAddr(),obj);
-		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
-		return builder.CreateLoad(fld);
+		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
+		{//shared var
+			obj=builder.CreateCall(GetObjrefPtr(),obj);
+			int ty=get_opcode_type_offset_shared(expr->type);
+			if(ty==2)
+				return builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
+					ConstInt(32,expr->u.member_expression.expression->type->u.class_ref.class_index));
+			else
+				return builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
+		}
+		else
+		{
+			Value* fld=builder.CreateCall(GetFldAddr(),obj);
+			fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
+			return builder.CreateLoad(fld);
+		}
+
     }
 }
 
@@ -1930,7 +2091,11 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 	std::vector<Value*> arg;
 	arg.push_back(ConstInt(32,expr->u.new_e.class_index));
 	arg.push_back(ConstInt(32,expr->u.new_e.method_declaration->u.method.method_index));
-	Value* v=builder.CreateCall(fNew,arg);
+	Value* v;
+	if(expr->u.new_e.class_definition->is_shared)
+		v=builder.CreateCall(fNewShared,arg);
+	else
+		v=builder.CreateCall(fNew,arg);
     return v;
     //generate_code(ob, expr->line_number, DVM_DUPLICATE_OFFSET,param_count); // check-me : wtf?
 
@@ -2068,7 +2233,7 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
 		else if (i==1)
 			return builder.CreateFNeg(lv);
 		else
-		{	_BreakPoint()
+		{	_BreakPoint
 			return 0;
 		}
         break;
@@ -2397,7 +2562,7 @@ void BcGenerateThrowStatement(DVM_Executable *exe, Block *block,Statement *state
         //generate_identifier(statement->u.throw_s.variable_declaration, ob,
         //                    statement->line_number);
         //generate_code(ob, statement->line_number, DVM_RETHROW);
-		_BreakPoint()
+		_BreakPoint
     }
 }
 
@@ -2693,6 +2858,7 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	bstatic.clear();
 	bstatic.resize(100); //fix-me : get the number of static
 	barrays.clear();
+	cached_mid=NULL;
 	//block->parent
 	//bparameters.shrink_to_fit();
 	Function *retf = Function::Create(FT, Function::ExternalLinkage,name, module);
@@ -2718,6 +2884,8 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	BcGenerateBlock(exe,block,statement_list,BB);
 	if(needret)
 		builder.CreateRetVoid();
+
+	cached_mid=NULL;
 	return retf;
 }
 

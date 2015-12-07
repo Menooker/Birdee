@@ -208,6 +208,7 @@ add_class(ClassDefinition *src)
     dest->package_name = src_package_name;
     dest->name = MEM_strdup(src->name);
     dest->is_implemented = DVM_FALSE;
+	dest->is_shared=src->is_shared;
 
     for (sup_pos = src->extends; sup_pos; sup_pos = sup_pos->next) {
         int dummy;
@@ -729,7 +730,7 @@ create_var_to_cast(Expression *src,TypeSpecifier* ty)
 
     if (dkc_is_boolean(ty)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		_BreakPoint() // fix-me 
+		_BreakPoint // fix-me 
     } else if (dkc_is_int(ty)) {
         cast = alloc_cast_expression(VAR_TO_INT_CAST, src);
 
@@ -750,7 +751,7 @@ create_to_var_cast(Expression *src)
 
     if (dkc_is_boolean(src->type)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		_BreakPoint() // fix-me 
+		_BreakPoint // fix-me 
     } else if (dkc_is_int(src->type)) {
         cast = alloc_cast_expression(INT_TO_VAR_CAST, src);
 
@@ -2834,6 +2835,12 @@ add_declaration(Block *current_block, Declaration *decl,
             = dkc_chain_declaration(current_block->declaration_list, decl);
     }
     if (fd) {
+		if(decl->is_shared)
+		{
+            dkc_compile_error(line_number,
+                              SHARED_VAR_NOT_PUBLIC_ERR,
+                              MESSAGE_ARGUMENT_END);
+		}
         decl->is_local = DVM_TRUE;
         add_local_variable(fd, decl, is_parameter);
     } else {
@@ -3298,7 +3305,9 @@ fix_extends(ClassDefinition *cd)
     ClassDefinition *super;
     int dummy_class_index;
     ExtendsList *new_el;
+	int shared;
 
+	shared=cd->is_shared;
     if (cd->class_or_interface == DVM_INTERFACE_DEFINITION
         && cd->extends != NULL) {
         dkc_compile_error(cd->line_number,
@@ -3316,7 +3325,12 @@ fix_extends(ClassDefinition *cd)
         new_el = dkc_malloc(sizeof(ExtendsList));
         *new_el = *e_pos;
         new_el->next = NULL;
-
+		if(shared && !super->is_shared  || !shared && super->is_shared)
+                dkc_compile_error(cd->line_number,
+                                  SHARED_CLASS_ERR,
+                                  STRING_MESSAGE_ARGUMENT, "fname", super->name,
+                                  STRING_MESSAGE_ARGUMENT, "sname", cd->name,
+                                  MESSAGE_ARGUMENT_END);
         if (super->class_or_interface == DVM_CLASS_DEFINITION) {
             if (cd->super_class) {
                 dkc_compile_error(cd->line_number,
@@ -3581,6 +3595,13 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                     = create_assign_cast(member_pos->u.field.initializer,
                                             member_pos->u.field.type);
             }
+			if(class_pos->is_shared && member_pos->u.field.type->basic_type==DVM_CLASS_TYPE 
+				&& !member_pos->u.field.type->u.class_ref.class_definition->is_shared)
+			{
+                dkc_compile_error(member_pos->line_number,
+                                    SHARED_CLASS_MEMBER_ERR,
+                                    MESSAGE_ARGUMENT_END);
+			}
             super_member
                 = search_member_in_super(class_pos,
                                             member_pos->u.field.name);
@@ -3706,7 +3727,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
 {
     FunctionDefinition *func_pos;
     DeclarationList *dl;
-    int var_count = 0,i;
+    int var_count = 0,i,shared_cnt=0;
     ExceptionList *el = NULL;
 	BcGetCurrentCompilerContext()->curcls=NULL;
 
@@ -3730,8 +3751,17 @@ dkc_fix_tree(DKC_Compiler *compiler)
     }
 
     for (dl = compiler->declaration_list; dl; dl = dl->next) {
-        dl->declaration->variable_index = var_count;
-        var_count++;
+		if(dl->declaration->is_shared)
+		{
+			dl->declaration->variable_index = shared_cnt;
+			shared_cnt++;
+		}
+		else
+		{
+			dl->declaration->variable_index = var_count;
+			var_count++;
+		}
     }
+	compiler->shared_count=shared_cnt;
 }
 

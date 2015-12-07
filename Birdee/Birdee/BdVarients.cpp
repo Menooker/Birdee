@@ -75,7 +75,7 @@ BdStatus AvDoGeti(ExVarient* va,BINT* ret)
 		return  s? BdSuccess:BdStringNotNumber;
 		break;
 	case AV_OBJECT:
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 }
 
@@ -108,7 +108,7 @@ BdStatus AvDoGetd(ExVarient* va,double* ret)
 		return  s? BdSuccess:BdStringNotNumber;
 		break;
 	case AV_OBJECT:
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 }
 
@@ -152,7 +152,7 @@ DVM_ObjectRef AvDoGets(ExVarient* va)
 		return  (va->v.object);
 		break;
 	case AV_OBJECT:
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 }
 
@@ -236,7 +236,7 @@ DVM_ObjectRef AvDoAdd(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -296,7 +296,7 @@ DVM_ObjectRef AvDoSub(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -352,7 +352,7 @@ DVM_ObjectRef AvDoMul(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -408,7 +408,7 @@ DVM_ObjectRef AvDoDiv(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -464,7 +464,7 @@ DVM_ObjectRef AvDoMod(ExVarient* a,ExVarient* b)
 	ExVarient* r=ret.data->u.var.pobj ;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{
@@ -529,7 +529,7 @@ BINT AvDoCmp(ExVarient* a,ExVarient* b)
 	BINT ret=0;
 	if( a->type == AV_OBJECT || b->type == AV_OBJECT)
 	{
-		_BreakPoint() //fix-me
+		_BreakPoint //fix-me
 	}
 	if(a->type == AV_INT )
 	{

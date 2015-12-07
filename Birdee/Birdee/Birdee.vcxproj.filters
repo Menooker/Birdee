@@ -73,6 +73,7 @@
     <None Include="Exceptions.dkh">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="ToDoList.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -163,6 +164,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdSharedObj.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdRemoteControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdParameters.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdMemcachedStorage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -300,6 +313,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BdThread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdSharedObj.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdRemoteControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BcMemcachedStorage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

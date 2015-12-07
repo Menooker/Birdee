@@ -37,6 +37,7 @@ llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
 llvm::Function* BcBuildPushImp(char* name,int isptr,Type* ty);
 llvm::Function* BcBuildPopImp();
 llvm::Function* BcBuildRegInit();
+llvm::Function* BcBuildObjectRefPtrImp();
 void BcSwitchContext(Module* M,Type* t);
 
 
@@ -60,6 +61,7 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 
 #include "UnportableAPI.h"
 #include "BdThread.h"
+#include "BdSharedObj.h"
 extern "C"  thread_local BdThread* curthread;
 extern "C"
 {
@@ -308,6 +310,8 @@ BINT ExGetArrayTypeSize(DVM_ArrayType type)
 	}
 	return size;
 }
+
+
 
 void ExArrayHash(DVM_Value *args)
 {
@@ -575,7 +579,7 @@ extern "C" void  ExDoInvoke(BINT transindex)
 
 	if (!bf->is_implemented) {
 
-		_BreakPoint()
+		_BreakPoint
 
     }
 	//dvm_expand_stack(curdvm,bf->local_cnt);
@@ -873,7 +877,7 @@ extern "C" void ExGoMain()
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));
 	FPtr(curthread->stack.stack);
 	ThStopAllThreads();
-    //_BreakPoint()
+    //_BreakPoint
 
 
 }
@@ -900,7 +904,7 @@ void  ExArrPuti(BINT index,int value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 #endif
 #endif
@@ -916,7 +920,7 @@ void ExArrPutd(BINT index,double value)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 }
 
@@ -931,7 +935,7 @@ void ExArrPuto(BINT index)
             if (status == DVM_SUCCESS) {
                 return;
             } else {
-                _BreakPoint() //fix-me
+                _BreakPoint //fix-me
             }
 }
 
@@ -948,7 +952,7 @@ BINT ExArrGetCh(BINT index)
             if (status == DVM_SUCCESS) {
                 return ch;
             } else {
-                 _BreakPoint() //fix-me
+                 _BreakPoint //fix-me
             }
 
             return 0;
@@ -966,7 +970,7 @@ DVM_ObjectRef ExArrGeto(BINT index)
             if (status == DVM_SUCCESS) {
                 return object;
             } else {
-                 _BreakPoint() //fix-me
+                 _BreakPoint //fix-me
             }
 
 			return object;
@@ -985,7 +989,7 @@ double ExArrGetd(BINT index)
             if (status == DVM_SUCCESS) {
                 return double_value;
             } else {
-               _BreakPoint() //fix-me
+               _BreakPoint //fix-me
             }
 
 			return 0;
@@ -1014,7 +1018,7 @@ BINT ExArrGeti(BINT index)
             if (status == DVM_SUCCESS) {
                 return int_value;
             } else {
-               _BreakPoint() //fix-me
+               _BreakPoint //fix-me
             }
 			return 0;
 #endif
@@ -1121,7 +1125,7 @@ DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
 void ExFailure()
 {
 	printf("UncaughtException %d\n",curthread->exception_index);
-	_BreakPoint()
+	_BreakPoint
 }
 
 
@@ -1178,6 +1182,7 @@ DVM_Boolean ExInstanceof(BINT index)//In llvm, the return value is a bit!
 			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
 			DVM_Boolean ret=DVM_FALSE;
 			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
+			index=curthread->current_executable->class_table[index];
 	        if (is_null_pointer(&obj)) {
                 ExNullPointerException();
             } else {
@@ -1280,7 +1285,7 @@ extern "C" void ExInitThreadInAllModules()
 		}
 		else
 		{
-			_BreakPoint()
+			_BreakPoint
 		}
 	}
 }
@@ -1331,6 +1336,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 #endif
 	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
 	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
+	vglobal=m->getGlobalVariable("mid"); //module id are shared
+	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->executable->id));
 
 	Function *f; //fix-me : For MCJIT ,TheExecutionEngine->addGlobalMapping is not needed
 	f=m->getFunction("system!GetReg");
@@ -1463,9 +1470,38 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,(void*)AvGetOrCreateVar);
 	MCJIT->addGlobalMapping("autovar!getorcreate",(void*)AvGetOrCreateVar);
 
-
+	f=m->getFunction("shared!geti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGeti);
+	MCJIT->addGlobalMapping("shared!geti",(void*)SoGeti);
+	f=m->getFunction("shared!getd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGetd);
+	MCJIT->addGlobalMapping("shared!getd",(void*)SoGetd);
+	f=m->getFunction("shared!geto");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGeto);
+	MCJIT->addGlobalMapping("shared!geto",(void*)SoGeto);
+	f=m->getFunction("shared!gets");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGets);
+	MCJIT->addGlobalMapping("shared!gets",(void*)SoGets);
+	
+	f=m->getFunction("shared!seti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSeti);
+	MCJIT->addGlobalMapping("shared!seti",(void*)SoSeti);
+	f=m->getFunction("shared!setd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSetd);
+	MCJIT->addGlobalMapping("shared!setd",(void*)SoSetd);
+	f=m->getFunction("shared!seto");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSeto);
+	MCJIT->addGlobalMapping("shared!seto",(void*)SoSeto);
+	f=m->getFunction("shared!sets");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoSets);
+	MCJIT->addGlobalMapping("shared!sets",(void*)SoSets);
+	f=m->getFunction("shared!New");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoNew);
+	MCJIT->addGlobalMapping("shared!New",(void*)SoNew);
 
 	//m->dump();
+	if(dvm->is_master)
+		SoNewModule(ee->executable->id,ee->executable->shared_count);
 
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;
@@ -1552,5 +1588,41 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 	{
 		replaceAllUsesWith(f,BcBuildPopImp());
 	}
+	f=m->getFunction("systemi!ObjectRefPtr");
+	if(f)
+	{
+		replaceAllUsesWith(f,BcBuildObjectRefPtrImp());
+	}
+
 	BcBuildRegInit();
+}
+
+
+int ExExec(char* path)
+{
+    DVM_ExecutableList *list;
+    DVM_VirtualMachine *dvm;
+	BdStatus status;
+	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
+	plist->list=0;plist->top_level=0;
+
+	dvm = DVM_create_virtual_machine();
+	ExInitEngine();
+	status=LdLoadCode(path,plist);
+	if(status)
+	{
+		printf("ERROR Loading Code %d\n",status);
+		goto ERR;
+	}
+	else
+	{
+		DVM_set_executable(dvm, plist); //modified
+		DVM_execute(dvm);
+		MEM_check_all_blocks();
+		MEM_dump_blocks(stdout);
+	}
+ERR:
+	DVM_dispose_virtual_machine(dvm);
+	DVM_dispose_executable_list(plist); //*/
+	return status;
 }

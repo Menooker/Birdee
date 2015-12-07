@@ -162,7 +162,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
-		_BreakPoint();
+		_BreakPoint;
 	}
 	ExecutableEntry * exe=(ExecutableEntry *)ExTopJumpBuffer()->exe ;
     class_index = DVM_search_class(curdvm  , "Exceptions",
@@ -185,7 +185,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
 	if(message_index==FIELD_NOT_FOUND)
 	{
 		printf("exception field not found in : %s",class_name);
-		_BreakPoint();
+		_BreakPoint;
 	}
     obj.data->u.class_object.field[message_index].object
         = dvm_create_dvm_string_i(dvm, message.string);
@@ -215,7 +215,7 @@ void ExUncaughtException()
 	printf("%s\n",curdvm->bclass[curthread->current_executable->class_table[curthread->exception_index-1]]->name);
 	//}
 
-	_BreakPoint()
+	_BreakPoint
 	//exit(1);
 }
 
@@ -227,7 +227,7 @@ void ExReraiseException()
 	if(pit->asp>curthread->asp)
 	{
 		//bad asp
-		_BreakPoint()
+		_BreakPoint
 	}
 	while(pit->asp<curthread->asp)
 	{
@@ -247,7 +247,7 @@ void ExRaiseException(BINT eindex)
 	if(pit->asp>curthread->asp)
 	{
 		//bad asp
-		_BreakPoint()
+		_BreakPoint
 	}
 	while(pit->asp<curthread->asp)
 	{
@@ -284,7 +284,7 @@ void ExSystemRaise(ExExceptions e)
 			break;
 		}
 	}
-	_BreakPoint()
+	_BreakPoint
 }
 
 extern DVM_ErrorDefinition dvm_native_error_message_format[];
@@ -302,7 +302,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
 	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
-		_BreakPoint();
+		_BreakPoint;
 	}
 	ExecutableEntry * exe=(ExecutableEntry *)ExTopJumpBuffer()->exe ;
     class_index = DVM_search_class(curdvm  , "Exceptions",
@@ -324,7 +324,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
 	if(message_index==FIELD_NOT_FOUND)
 	{
 		printf("exception field not found in : %s",class_name);
-		_BreakPoint();
+		_BreakPoint;
 	}
     obj.data->u.class_object.field[message_index].object
         = dvm_create_dvm_string_i(dvm, message.string);

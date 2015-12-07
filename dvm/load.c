@@ -815,8 +815,10 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
         dvm->top_level = new_entry;
     }
 
+	executable->id=dvm->executable_count;
 	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
-
+	
+	dvm->executable_count++;
     return new_entry;
 }
 
@@ -945,6 +947,7 @@ DVM_create_virtual_machine(void)
 	dvm->exe_engine=0;
 	dvm->mainvm=ExCreateThread();
 	dvm->classObject=NULL;
+	dvm->executable_count=0;
 	UaInitLock(&dvm->thread_lock); 
 	UaInitLock(&dvm->heap.lock);
 	ExInitRegArray(dvm->mainvm);

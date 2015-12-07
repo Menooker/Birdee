@@ -528,7 +528,7 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
             MEM_free(obj->u.barray.u.object);
             break;
 		case VARIENT_ARRAY:
-			_BreakPoint()//fix-me
+			_BreakPoint//fix-me
 			break;
         case FUNCTION_INDEX_ARRAY:
             dvm->heap.current_heap_size
