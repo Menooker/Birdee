@@ -6,6 +6,13 @@ To build or browse Birdee's source code, Visual Studio or Code::Blocks are recom
 # How to compile
 Birdee can be compiled by two different IDEs, while both ways differ slightly.
 
+##First thing first
+ * The distributed memory system of Birdee is based on libmemcached. You should first build the libmemcached library. In windows, a ready-to-compile Visual Studio libmemcached project file is available (FIX-ME : add URL). After compiling the project, you can have the files "libmemcached.lib","libmemcached.dll" and "libmemcached.def".
+ * Collect all the header files of libmemcached. Create a folder called libmemcached at the parent folder of the root folder of Birdee project. Copy all ".h" files to the newly created folder. Create a folder called "memcached" in folder "libmemcached", put "protocol_binary.h" into it.
+ * Link/Copy the file "inttypes.h" (which you can find in the libmemcached VS project) into the parent folder of the root folder of Birdee project.
+ * Link/Copy the files "libmemcached.lib","libmemcached.dll" and "libmemcached.def" at the folder above.
+ * (If you are going to compile Birdee with mingw/Codeblocks) You can find "dlltool" at "mingw/bin". Use the tool by the command "dlltool --dllname libmemcached.dll --def libmemcached.def --output-lib libmemcached.a" at the folder above to create gcc style static lib.
+
 ## Build Birdee with Visual Studio
 You should first fetch and compile LLVM (version 3.4.2). Here is a tutorial for compiling a static LLVM library which is needed by Birdee. 
 [a tutorial for compiling LLVM into a  static lib(Chinese)](http://blog.csdn.net/myjisgreat/article/details/46486723)

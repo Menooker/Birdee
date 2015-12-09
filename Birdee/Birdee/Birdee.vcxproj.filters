@@ -74,6 +74,7 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="ToDoList.txt" />
+    <None Include="..\..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

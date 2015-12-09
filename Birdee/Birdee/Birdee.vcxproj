@@ -87,6 +87,7 @@
     <None Include="..\..\compiler\diksam.l" />
     <None Include="..\..\compiler\diksam.y" />
     <None Include="..\..\compiler\test\test.dkm" />
+    <None Include="..\..\README.md" />
     <None Include="8Queens.txt" />
     <None Include="ab.dkh" />
     <None Include="ab.dkm" />
