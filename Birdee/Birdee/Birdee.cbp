@@ -24,10 +24,13 @@
 					<Add directory="../../../include3" />
 					<Add directory="$(IncludePath)" />
 					<Add directory="C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Include" />
+					<Add directory="../../../" />
 				</Compiler>
 				<Linker>
 					<Add library="..\..\..\libLLVMLite.a" />
 					<Add library="C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\DbgHelp.Lib" />
+					<Add library="..\..\..\libmemcached.a" />
+					<Add library="C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\WS2_32.lib" />
 				</Linker>
 			</Target>
 			<Target title="Release Win32">
@@ -160,6 +163,7 @@
 		<Unit filename="ArrayCacheTest.txt" />
 		<Unit filename="ArrayCacheTest_Reg.txt" />
 		<Unit filename="BcMCJIT.cpp" />
+		<Unit filename="BcMemcachedStorage.cpp" />
 		<Unit filename="BdArrayCache.cpp" />
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
@@ -174,6 +178,9 @@
 		<Unit filename="BdHashMap.cpp" />
 		<Unit filename="BdHashMap.h" />
 		<Unit filename="BdLoader.cpp" />
+		<Unit filename="BdMemcachedStorage.h" />
+		<Unit filename="BdRemoteControl.cpp" />
+		<Unit filename="BdSharedObj.cpp" />
 		<Unit filename="BdThread.cpp" />
 		<Unit filename="BdThread.h" />
 		<Unit filename="BdVarients.cpp" />
