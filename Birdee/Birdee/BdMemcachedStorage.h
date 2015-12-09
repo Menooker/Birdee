@@ -1,7 +1,7 @@
 #ifndef _H_BIRDEE_MEMCACHED
 #define _H_BIRDEE_MEMCACHED
 #include "BdSharedObj.h"
-#include <memcached.h>
+#include <libmemcached/memcached.h>
 
 class SoStorageMemcached : public SoStorage
 {

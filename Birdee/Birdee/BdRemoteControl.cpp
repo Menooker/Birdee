@@ -9,9 +9,10 @@
 #include <vector>
 #include <time.h>
 #include "BdThread.h"
+#include <string>
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
-	#pragma comment(lib, "WS2_32") 
+	#pragma comment(lib, "WS2_32")
 #else
 	int a[-1];
 #endif
@@ -24,7 +25,7 @@ extern "C" std::vector<std::string> LoadedModFiles; //@BdLoader.cpp
 
 struct MasterInfo
 {
-	int32 magic; 
+	int32 magic;
 	uint32 mod_cnt;
 };
 
@@ -90,7 +91,7 @@ BD_SOCKET RcConnect(char* ip,int port)
 	sockaddr_in serAddr;
 	serAddr.sin_family = AF_INET;
 	serAddr.sin_port = htons(port);
-	serAddr.sin_addr.S_un.S_addr = inet_addr(ip); 
+	serAddr.sin_addr.S_un.S_addr = inet_addr(ip);
 	if (connect(sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
 	{
 		closesocket(sclient);
@@ -112,7 +113,7 @@ BD_SOCKET RcListen(int port)
     sockaddr_in sin;
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
-    sin.sin_addr.S_un.S_addr = INADDR_ANY; 
+    sin.sin_addr.S_un.S_addr = INADDR_ANY;
     if(bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
     {
         printf("bind error !");
@@ -148,7 +149,7 @@ inline int RcSend(BD_SOCKET s,void* data,size_t len)
 
 inline int RcRecv(BD_SOCKET s,void* data,size_t len)
 {
-	return recv((SOCKET)s,(char*)data,len, 0);  
+	return recv((SOCKET)s,(char*)data,len, 0);
 }
 
 inline int RcCloseSocket(BD_SOCKET s)
@@ -161,7 +162,7 @@ void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip;
     ip = args[1].object.data ;
-    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));	
+    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));
 	char* buf=(char*)malloc(ip->u.string.length+1);
 	wcstombs(buf,ip->u.string.string,ip->u.string.length+1);
 	SOCKET s=(SOCKET)RcConnect(buf,args[0].int_value);
@@ -179,8 +180,8 @@ void RcConnectNode(DVM_Value *args)
 	obj.data->u.class_object.field[2].int_value=(int)s; //fix-me : 64 bit?
 	obj.data->u.class_object.field[3].int_value=DVM_FALSE; //closed
 	obj.data->u.class_object.field[4].int_value=DVM_TRUE; //connected
-	curthread->retvar.object = obj; 
-	
+	curthread->retvar.object = obj;
+
 }
 
 
@@ -230,7 +231,7 @@ int RcSendModule(BD_SOCKET s,char* path)
 	fseek(f,0L,SEEK_END);
 	long len=ftell(f);
 	fseek(f,0L,SEEK_SET);
-	
+
 	char* finda=strrchr(path,'/');
 	char* findb=strrchr(path,'\\');
 	char* found;
@@ -389,7 +390,7 @@ void RcSlave(int port)
 			}
 			if(i==0)
 				strncpy(mainmod,path,255);
-			
+
 		}
 		printf("All modules received, waiting for command");
 		RcSlaveMainLoop(mainmod,s);
