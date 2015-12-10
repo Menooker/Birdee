@@ -294,6 +294,7 @@ struct _BdThread {
 	BINT				asp;
 	THREAD_ID				tid;
 	BINT				main;
+	unsigned int		thread_obj_id;
 	struct _BdThread* next;
 	struct _BdThread* prv;
 };

@@ -81,6 +81,7 @@ void ExInitRegArray(BdThread* t);
 void ExInitThreadInAllModules();
 void  ExDoInvoke(BINT transindex);
 int ExExec(char* path);
+int ExGetMethodIndex(ExecClass *ec, char *method_name);
 #ifdef __cplusplus
 }
 #endif

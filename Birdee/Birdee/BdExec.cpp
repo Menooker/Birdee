@@ -843,6 +843,7 @@ extern "C" BdThread* ExCreateThread()
 	th->next=NULL;
 	th->tid=NULL;
 	th->prv=NULL;
+	th->thread_obj_id=0;
 	return th;
 }
 
@@ -1625,4 +1626,33 @@ ERR:
 	DVM_dispose_virtual_machine(dvm);
 	DVM_dispose_executable_list(plist); //*/
 	return status;
+}
+
+
+static int ExDoGetMethodIndex(ExecClass *ec, char *method_name, int *super_count)
+{
+    int i;
+    int index;
+
+    if (ec->super_class) {
+        index = ExDoGetMethodIndex(ec->super_class, method_name, super_count);
+        if (index != FIELD_NOT_FOUND) {
+            return index;
+        }
+    }
+    for (i = 0; i < ec->dvm_class->method_count; i++) {
+		if (!strcmp(ec->dvm_class->method[i].name, method_name)) {
+            return i + *super_count;
+        }
+    }
+    *super_count += ec->dvm_class->method_count;
+
+    return FIELD_NOT_FOUND;
+}
+
+
+int ExGetMethodIndex(ExecClass *ec, char *method_name)
+{
+	int tmp=0;
+	return ExDoGetMethodIndex(ec,method_name,&tmp);
 }

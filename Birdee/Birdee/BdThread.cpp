@@ -1,5 +1,5 @@
 #include "BdThread.h"
-
+#include "BdSharedObj.h"
 extern "C"
 {
 	void ThPauseTheWorld()
@@ -75,7 +75,19 @@ extern "C"
 		ExDoInvoke(param->main);
 		printf("Thread exits. Stack check: %d\n",curthread->stack.stack_pointer-curthread->stack.stack);
 		ThRemoveThreadFromList(param);
+		if(param->thread_obj_id)
+			SoSeti(param->thread_obj_id,1,RC_THREAD_DEAD);
 		ExFreeThread(param);
+	}
+
+	int ThDoCreateThread(int func,DVM_ObjectRef arg,unsigned int thread_object_id)
+	{
+		BdThread* th=ExCreateThread();
+		th->main=func;
+		th->thread_obj_id=thread_object_id;
+		ThAddThreadToList(th);
+		th->tid=UaCreateThread(th,1,arg);
+		return (int)th->tid;
 	}
 
 	void ThCreateThread(DVM_Value* args)
@@ -96,13 +108,8 @@ extern "C"
 			func_idx = del_obj.data->u.delegate.index;
 		} else {
 			ExSystemRaise(ExBadFunctionIndex);
-		}
-
-		BdThread* th=ExCreateThread();
-		th->main=func_idx;
-		ThAddThreadToList(th);
-		th->tid=UaCreateThread(th,1,arg);
-		curthread->retvar.int_value=(BINT)th->tid;
+		}		
+		curthread->retvar.int_value=ThDoCreateThread(func_idx,arg,0);
 	}
 
 

@@ -10,6 +10,7 @@
 #include <time.h>
 #include "BdThread.h"
 #include <string>
+#include "BdSharedObj.h"
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
 	#pragma comment(lib, "WS2_32")
@@ -52,6 +53,16 @@ struct RcCommandPack
 {
 	RcCommand cmd;
 	int param;
+	int param2;
+	union
+	{
+		struct
+		{
+			int param3;
+			int param4;
+		};
+		long long param34;
+	};
 };
 //fix-me : close all sockets when closing the dvm
 //fix-me : close the sockets when GC
@@ -211,15 +222,26 @@ void RcCloseNode(DVM_Value *args)
 }
 
 
-
-void RcCreateThread(DVM_Value *args)
+int idx_remote_thread=-1;
+int method_remote_thread=-1;
+DVM_ObjectRef RcCreateThread(DVM_Value *args)
 {
-	int idx= args[0].object.data->u.delegate.index;
-	RcCommandPack cmd={RcCmdCreateThread,idx};
-	DVM_ObjectRef obj=args[1].object;
-	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
-	if(ret)
-		RcThrowSocketError(ret);
+	int idx= args[1].object.data->u.delegate.index;
+
+	if(idx_remote_thread==-1)
+		idx_remote_thread  = DVM_search_class(curdvm,"diksam.lang","RemoteThread");
+	if(method_remote_thread==-1)
+		method_remote_thread = ExGetMethodIndex(curdvm->bclass[idx_remote_thread],"init");
+
+	DVM_ObjectRef ret=SoDoNew(idx_remote_thread,method_remote_thread);
+	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
+	cmd.param3=(int)ret.data;
+	SoSeti((uint)ret.data,1,RC_THREAD_CREATING);//set the state
+	DVM_ObjectRef obj=args[2].object;
+	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	if(sret)
+		RcThrowSocketError(sret);
+	return ret;
 }
 
 
@@ -297,6 +319,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
 	BdStatus status;
+	DVM_ObjectRef paramvar;
 	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
 	plist->list=0;plist->top_level=0;
 
@@ -333,11 +356,20 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 				goto CLOSE;
 				break;
 			case RcCmdCreateThread:
-				curthread->stack.stack_pointer->int_value=0;
+				SoSeti(cmd.param3,1,RC_THREAD_RUNNING);//set the state
+				paramvar=ExCreateVar(curdvm,NULL);
+				paramvar.data->u.var.pobj->type=AV_INT;
+				paramvar.data->u.var.pobj->v.int_value=cmd.param2;
+#ifdef BD_ON_VC
+				curthread->stack.stack_pointer->object=paramvar;
 				curthread->stack.stack_pointer++;
 				*curthread->stack.flg_sp=DVM_TRUE;
 				curthread->stack.flg_sp++;
 				ExDoInvoke(cmd.param);
+				SoSeti(cmd.param3,1,RC_THREAD_DEAD);//set the state
+#else
+				ThDoCreateThread(cmd.param,paramvar,cmd.param3);
+#endif
 				break;
 			default:
 				printf("Unknown command %d\n",cmd.cmd);

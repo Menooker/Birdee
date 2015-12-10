@@ -377,13 +377,11 @@ extern "C" void SoNewModule(uint key,int cnt)
 	}
 }
 
-
-extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
+extern "C" DVM_ObjectRef SoDoNew(int class_index,int methodid)
 {
-
 	ExecClass *ec;
     DVM_ObjectRef obj;
-	int class_index = curthread->current_executable->class_table[idx_in_exe];
+	
 	uint ret=storage.newobj(curdvm->bclass[class_index]);
 	
 	if(ret==0)
@@ -398,6 +396,12 @@ extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
 	curthread->stack.stack_pointer++; curthread->stack.flg_sp++;
 	ExCall(methodid);
 	return obj;
+}
+
+extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
+{
+	int class_index = curthread->current_executable->class_table[idx_in_exe];
+	return SoDoNew(class_index,methodid);
 }
 
 

@@ -7,6 +7,11 @@ extern "C"
 #endif
 #include "BdExec.h"
 
+#define RC_THREAD_CREATING 0
+#define RC_THREAD_RUNNING 1
+#define RC_THREAD_PAUSED 2
+#define RC_THREAD_DEAD 3
+
 enum SoStatus
 {
 	SoOK,
@@ -73,6 +78,7 @@ void SoSetd(uint key,uint fldid,double v);
 void SoSeto(uint key,uint fldid,uint v);
 void SoSets(uint key,uint fldid,DVM_ObjectRef v);
 void SoNewModule(uint key,int cnt);
+DVM_ObjectRef SoDoNew(int class_index,int methodid);
 DVM_ObjectRef SoNew(int idx_in_exe,int methodid);
 
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
