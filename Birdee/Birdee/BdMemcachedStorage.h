@@ -23,6 +23,9 @@ public:
 		memcached_return rc;
 		memcached_server_st *servers;
 		memc = memcached_create(NULL);
+		memc->call_malloc=(memcached_malloc_function)malloc;
+		memc->call_free=(memcached_free_function)free;
+		memc->call_realloc=(memcached_realloc_function)realloc;
 		servers = memcached_server_list_append(NULL, host,11211, &rc);
 		rc = memcached_server_push(memc, servers);
 		memcached_server_free(servers);

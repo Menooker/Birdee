@@ -11,6 +11,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
+				<Option parameters="-e ..\..\compiler\test\test.dkm" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DWIN32" />

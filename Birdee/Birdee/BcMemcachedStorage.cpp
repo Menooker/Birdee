@@ -83,7 +83,7 @@ SoStatus SoStorageMemcached::getstr(uint key,wchar_t** str,uint* len)
 	if(rc==MEMCACHED_SUCCESS)
 	{
 		SoType ty=*(SoType*) return_value;
-		free(return_value);
+		memcached_free2(return_value);
 		if(ty!=SoString)
 			return SoFail;
 
@@ -99,7 +99,7 @@ SoStatus SoStorageMemcached::getstr(uint key,wchar_t** str,uint* len)
 			{
 				*str=NULL;
 			}
-			free(return_value);
+			memcached_free2(return_value);
 			*len=node->string.len;
 			return SoOK;
 		}
@@ -130,7 +130,7 @@ SoVar SoStorageMemcached::get(uint key,int fldid)
 	mret=memcached_get(memc,ch,17,&len,&flg,&rc);
 	if (rc == MEMCACHED_SUCCESS) {
 		ret=*(SoVar*)mret;
-		free(mret);
+		memcached_free2(mret);
 		return ret;
 	}
 	else
@@ -151,7 +151,7 @@ bool SoStorageMemcached::exists(uint key)//fix-me : improve
 	char* r= memcached_get(memc,ch,17,&outlen,&flg,&rc);
 	if(rc==MEMCACHED_SUCCESS)
 	{
-		free(r);
+		memcached_free2(r);
 		return true;
 	}
 	return false;

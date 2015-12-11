@@ -6,3 +6,4 @@ exe中的master位
 curthread->stack.flg_sp add a stack type
 shared obj用int？obj ref？如何call？
 send libs
+Need a patch on libmemcached

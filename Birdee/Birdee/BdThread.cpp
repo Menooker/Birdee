@@ -70,6 +70,12 @@ extern "C"
 		curthread=param;
 		param->stack.stack_pointer->object=param->new_obj;  *param->stack.flg_sp = DVM_TRUE;
 		param->stack.stack_pointer ++; param->stack.flg_sp++;
+	
+		if(param->thread_obj_id)
+		{
+			param->stack.stack_pointer->int_value=param->thread_obj_id;  *param->stack.flg_sp = DVM_TRUE;
+			param->stack.stack_pointer ++; param->stack.flg_sp++;
+		}
 		//param->tid=(void*)UaGetCurrentThread();
 		ExInitThreadInAllModules();
 		ExDoInvoke(param->main);
