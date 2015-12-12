@@ -678,8 +678,6 @@ add_classes(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
     DVM_Boolean *new_class_flags;
     int old_class_count;
     DVM_Executable *exe = ee->executable;
-	if(exe->isDyn==DVM_TRUE)
-		return;
     new_class_flags = MEM_malloc(sizeof(DVM_Boolean)
                                  * exe->class_count);
 
@@ -766,6 +764,19 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
     ExecutableEntry *ee_pos;
     ExecutableEntry *new_entry;
 
+	if(executable->libname)
+	{
+		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
+		{
+
+				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
+							LOAD_FILE_NOT_FOUND_ERR,
+							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
+							DVM_MESSAGE_ARGUMENT_END);
+		}
+		return LdGetLoadedModule(executable->package_name);
+	}
+
     new_entry = MEM_malloc(sizeof(ExecutableEntry));
     new_entry->executable = executable;
     new_entry->next = NULL;
@@ -778,17 +789,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
             ;
         ee_pos->next = new_entry;
     }
-    if(executable->libname)
-	{
-		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
-		{
 
-				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
-							LOAD_FILE_NOT_FOUND_ERR,
-							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
-							DVM_MESSAGE_ARGUMENT_END);
-		}
-	}
     add_functions(dvm, new_entry);
     add_enums(dvm, new_entry);
     add_constants(dvm, new_entry);

@@ -184,7 +184,7 @@ void RcConnectNode(DVM_Value *args)
 		RcThrowSocketError();
 	}
 	if(node_class_index==-1)
-		node_class_index=DVM_search_class(curdvm,"diksam.lang", "RemoteNode");
+		node_class_index=DVM_search_class(curdvm,"Remote", "RemoteNode");
 	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
 	obj.data->u.class_object.field[0].object=args[1].object;
 	obj.data->u.class_object.field[1].int_value=args[0].int_value;
@@ -229,7 +229,7 @@ void RcCreateThread(DVM_Value *args)
 	int idx= args[1].object.data->u.delegate.index;
 
 	if(idx_remote_thread==-1)
-		idx_remote_thread  = DVM_search_class(curdvm,"diksam.lang","RemoteThread");
+		idx_remote_thread  = DVM_search_class(curdvm,"Remote","RemoteThread");
 	if(method_remote_thread==-1)
 		method_remote_thread = ExGetMethodIndex(curdvm->bclass[idx_remote_thread],"initialize");
 
@@ -264,7 +264,9 @@ int RcSendModule(BD_SOCKET s,char* path)
 		found=findb;
 	if(!found)
 		found=path;
-	size_t nlen=strlen(path)+1;
+	else
+		found++;
+	size_t nlen=strlen(found)+1;
 	FileHeader fh={RC_MAGIC_FILE_HEADER,len,nlen};
 	RcSend(s,&fh,sizeof(fh));
 	RcSend(s,found,nlen);
@@ -405,6 +407,7 @@ void RcSlave(int port)
 		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
+		printf("Module file count %d\n",mi.mod_cnt);
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
@@ -454,7 +457,7 @@ int RcMasterHello(BD_SOCKET s)
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,1};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size()};
 	RcSend(s,&mi,sizeof(mi));
 	std::vector<std::string>::iterator itr;
 	for(itr=LoadedModFiles.begin();itr!=LoadedModFiles.end();itr++)

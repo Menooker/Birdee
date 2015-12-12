@@ -7,6 +7,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Analysis/Verifier.h"
+#include "BdParameters.h"
+
 using namespace llvm;
 
 #define CpDumpVar(a,p) CpDumpBuffer((&a),sizeof((a)),(p))
@@ -59,6 +61,8 @@ BdStatus CpSaveCodeToFile(char* path,DVM_ExecutableList* exelist )
 			index=sz;
 		sz++;
 	}
+	if(parameters.isLib)
+		sz--;
 
 	fwrite(ValidCheckStr,sizeof(ValidCheckStr),1,f);
 	fwrite(&sz,sizeof(sz),1,f);
@@ -67,6 +71,8 @@ BdStatus CpSaveCodeToFile(char* path,DVM_ExecutableList* exelist )
 	for(pCur=exelist->list;pCur;pCur=pCur->next)//modified
 	{
 		//printf("INCLUDE:%s\n",pCur->executable->path);
+		if(parameters.isLib && pCur->executable->package_name && !strcmp(pCur->executable->package_name,"diksam.lang"))
+			continue;
 		sz=CpDumpExecutable(pCur->executable,f);
 		printf("sz: %d\n",sz);
 	}

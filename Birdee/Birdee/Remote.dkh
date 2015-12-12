@@ -1,0 +1,24 @@
+lib Remote
+
+	public class RemoteNode
+		public host as string
+		public port as int
+		dim socket as int
+		dim closed as int
+		dim connected as int
+		public declare function CreateThread(del as thread_proc,param as int) as RemoteThread
+		public declare sub Close()
+	end
+
+	shared public class RemoteThread
+		public final tid as int
+		dim state as int
+		public declare function getState() as int
+		public declare function Join(timeout as int,maxinterval as int) as boolean
+		//public declare sub Pause()
+		//public declare sub Stop()
+	end
+	
+	declare function ConnectNode(host as String,port as int) as RemoteNode
+
+end

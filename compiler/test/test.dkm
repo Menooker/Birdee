@@ -1,3 +1,4 @@
+require Remote
 
 shared class clsa
 	public ca as int
@@ -30,17 +31,9 @@ println(c.cb+c.ca)
 gets()
 dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
 dim t as RemoteThread=node.CreateThread(myproc,2)
-for #i=0; #i<100 ; #i++
-	#j=t.getState()
-	println(#j)
-	if #j==3 then
-		break
-	end
-	Sleep(100)
-end
+t.Join(-1,1000)
 node.Close()
 println(node.host+","+node.port)
 gets()
 println(c.ca)
-
 

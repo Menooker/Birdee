@@ -19,7 +19,7 @@ void BcInitLLVMCompiler();
 int ExExec(char* path);
 void RcSlave(int port);
 
-int compile(char* path)
+int compile(char* path,char* outpath)
 {
 	DKC_Compiler *compiler;
     FILE *fp;
@@ -35,7 +35,7 @@ int compile(char* path)
     list = DKC_compile(compiler, fp, path);
 
 	DKC_dispose_compiler(compiler);
-	CpSaveCodeToFile("123.bde",list);
+	CpSaveCodeToFile(outpath,list);
 	DVM_dispose_executable_list(list);
 	return 0;
 }
@@ -49,6 +49,10 @@ main(int argc, char* argv[])
         exit(1);
     }*/
 	unsigned int len;
+
+	parameters.isLib=0;
+	parameters.isSyslib=0;
+
 	setlocale(LC_CTYPE, "");
 	if(argc<2)
 		goto BAD_PARAM;
@@ -56,10 +60,22 @@ main(int argc, char* argv[])
 	{
 		switch (argv[1][1])
 		{
+		case 'l':
+			parameters.isLib=1;
+			if(argv[1][2]=='s')
+				parameters.isSyslib=1;
+			if(argc<4)
+				goto BAD_PARAM;
+			if(compile(argv[2],argv[3]))
+			{
+				printf("Error when opening input file\n");
+				return 1;
+			}
+			break;
 		case 'c':
 			if(argc<3)
 				goto BAD_PARAM;
-			if(compile(argv[2]))
+			if(compile(argv[2],"123.bde"))
 			{
 				printf("Error when opening input file\n");
 				return 1;
@@ -68,7 +84,7 @@ main(int argc, char* argv[])
 		case 'e':
 			if(argc<3)
 				goto BAD_PARAM;
-			if(compile(argv[2]))
+			if(compile(argv[2],"123.bde"))
 			{
 				printf("Error when opening input file\n");
 				return 1;

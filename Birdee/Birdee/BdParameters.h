@@ -4,6 +4,8 @@
 struct BdParameters
 {
 	char RemoteModulePath[255];
+	int isLib;
+	int isSyslib;
 };
 #ifdef __cplusplus
 extern "C"

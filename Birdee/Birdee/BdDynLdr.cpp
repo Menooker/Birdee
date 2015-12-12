@@ -211,7 +211,7 @@ DVM_ExecutableItem* LdLoadDynamicLibrary(DVM_VirtualMachine *dvm,char* path,char
 	}
     for (pos = list.list; pos; pos = pos->next) {
 		pos->executable->isDyn=DVM_TRUE;
-		pos->executable->class_count=0; //fix-me : may lead to memory leak
+		//pos->executable->class_count=0; //fix-me : may lead to memory leak
 
 		if(lastitm)
 			lastitm->next=pos;

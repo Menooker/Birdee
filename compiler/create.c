@@ -3,7 +3,7 @@
 #include "..\include\DBG.h"
 #include "diksamc.h"
 #include "..\include\DVM_dev.h"
-
+#include "..\Birdee\Birdee\BdParameters.h"
 
 
 CompilerContext default_context={0};
@@ -200,7 +200,7 @@ dkc_set_require_and_rename_list(RequireList *require_list,
         = dkc_package_name_to_string(compiler->package_name);
 
     if (!dvm_compare_string(current_package_name,
-                            DVM_DIKSAM_DEFAULT_PACKAGE)) {
+		DVM_DIKSAM_DEFAULT_PACKAGE)) {
         require_list = add_default_package(require_list);
     }
     MEM_free(current_package_name);
@@ -1405,7 +1405,7 @@ dkc_create_method_member(ClassOrMemberModifierList *modifier,
                               MESSAGE_ARGUMENT_END);
         }
     } else {
-		if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0 && compiler->path[0]!=0) { // compiler->path[0]!=0 means this is not basic module
+		if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0 && compiler->path[0]!=0 && parameters.isSyslib==0) { // compiler->path[0]!=0 means this is not basic module
             dkc_compile_error(compiler->current_line_number,
                               CONCRETE_METHOD_HAS_NO_BODY_ERR,
                               MESSAGE_ARGUMENT_END);
