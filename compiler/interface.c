@@ -27,6 +27,7 @@ typedef struct {
     char *name;
     BuiltInMethod *method;
     int method_count;
+	int is_shared;
 } BuiltInClass;
 
 static BuiltInMethodParameter st_object_equals_arg[] = {
@@ -84,7 +85,7 @@ static BuiltInMethod st_object_method[] = {
 
 
 static BuiltInClass st_builtin_class[]={
-	{"Object",st_object_method,ARRAY_SIZE(st_object_method)},
+	{"Object",st_object_method,ARRAY_SIZE(st_object_method),0},
 };
 
 static FunctionDefinition *
@@ -157,6 +158,7 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 		cd->is_abstract=DVM_TRUE;
 		cd->line_number=0;
 		cd->checked=0;
+		cd->is_shared=src[i].is_shared;
 
 		mnext=&cd->member;
 		for(j=0;j<src->method_count;j++)

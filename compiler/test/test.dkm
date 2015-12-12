@@ -1,5 +1,9 @@
 require Remote
 
+
+class bbb : Object
+end
+
 shared class clsa
 	public ca as int
 	public cb as string
