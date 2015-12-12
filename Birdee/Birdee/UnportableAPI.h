@@ -39,6 +39,7 @@ extern "C"
 	void UaLeaveLock(BD_LOCK* lc);
 	void UaSuspendThread(THREAD_ID id);
 	void UaResumeThread(THREAD_ID id);
+	void UaSleep(int ms);
 #ifdef __cplusplus
 }
 #endif

@@ -38,7 +38,7 @@ memcached_return memcached_put(memcached_st* memc,unsigned long long k,void* v,s
 
 SoStorageMemcached::~SoStorageMemcached()
 {
-		memcached_free(memc);
+		//memcached_free(memc); //fix-me : unknown error at here
 }
 
 

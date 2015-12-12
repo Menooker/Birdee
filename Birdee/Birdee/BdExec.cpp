@@ -737,7 +737,10 @@ void  ExGetFunction(DVM_Value* v)
 	}
 }
 
-
+void  ExSleep(DVM_Value* v)
+{
+	UaSleep(v->int_value);
+}
 void  ExRand(DVM_Value* v)
 {
 	curthread->retvar.int_value=rand() % v->int_value ;

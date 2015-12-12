@@ -59,6 +59,7 @@ void  ExGetFunction(DVM_Value* v);
 void  ExRand(DVM_Value* v);
 void ExGetClock(DVM_Value* v);
 void ExGets();
+void  ExSleep(DVM_Value* v);
 void ExArraySize(DVM_Value *args);
 void ExStringLength(DVM_Value *args);
 DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);

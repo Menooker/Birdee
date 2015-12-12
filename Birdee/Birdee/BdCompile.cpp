@@ -896,6 +896,18 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fPusho=0;
 	fArrAddr=0;
 	fPop=0;
+
+	fSharedSeti=0;
+	fSharedSetd=0;
+	fSharedSeto=0;
+	fSharedSets=0;
+
+	fSharedGeti=0;
+	fSharedGetd=0;
+	fSharedGeto=0;
+	fSharedGets=0;
+	fNewShared=0;
+	fObjectRefPtr=0;
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
 	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;SharedGetSwitch[3]=0;

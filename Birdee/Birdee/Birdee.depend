@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1449838099 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\builtin\builtin.c
+1449891286 source:d:\menooker\birdee\build0\diksam_book_0_1\compiler\builtin\builtin.c
 	<stdio.h>
 	"../diksamc.h"
 
@@ -763,12 +763,12 @@
 	"..\Birdee\Birdee\UnportableAPI.h"
 	"dvm_pri.h"
 
-1449755413 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.h
+1449888841 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.h
 	"..\..\include\DVM.h"
 	"..\..\include\MEM.h"
 	"..\..\dvm\dvm_pri.h"
 
-1448164253 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.h
+1449888732 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.h
 	"Conf.h"
 	<Windows.h>
 	<stdio.h>
@@ -783,7 +783,7 @@
 	"..\Birdee\Birdee\BdHashMap.h"
 	"..\Birdee\Birdee\UnportableAPI.h"
 
-1449647345 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\load.c
+1449895907 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\load.c
 	<stdio.h>
 	<string.h>
 	"..\include\DKC.h"
@@ -797,7 +797,7 @@
 1423821139 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bddynldr.h
 	"../../dvm/dvm_pri.h"
 
-1449647345 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\native.c
+1449891349 source:d:\menooker\birdee\build0\diksam_book_0_1\dvm\native.c
 	<string.h>
 	<math.h>
 	<stdlib.h>
@@ -921,7 +921,7 @@
 	"BirdeeDef.h"
 	"../../include/DVM.h"
 
-1449647343 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.cpp
+1449889670 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdcompile.cpp
 	"BirdeeDef.h"
 	"BdCompile.h"
 	"..\..\include\DBG.h"
@@ -979,7 +979,7 @@
 	<string.h>
 	"..\..\dvm\dvm_pri.h"
 
-1449756883 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.cpp
+1449888822 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdexec.cpp
 	"BirdeeDef.h"
 	"BdExec.h"
 	"BdException.h"
@@ -1053,7 +1053,7 @@
 1425180433 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\birdee.cpp
 	"stdafx.h"
 
-1449756845 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.cpp
+1449888714 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\unportableapi.cpp
 	"UnportableAPI.h"
 	"BirdeeDef.h"
 	<stdio.h>
@@ -2347,12 +2347,12 @@
 
 1245860489 d:\menooker\birdee\build0\memcached_include\unistd.h
 
-1449756128 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdremotecontrol.h
+1449892789 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdremotecontrol.h
 	"BdExec.h"
 
 1449647344 d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdparameters.h
 
-1449839115 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bcmemcachedstorage.cpp
+1449895526 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bcmemcachedstorage.cpp
 	"BdSharedObj.h"
 	"BdMemcachedStorage.h"
 	<libmemcached/memcached.h>
@@ -2399,7 +2399,7 @@
 
 1245860489 d:\menooker\birdee\build0\\libmemcached\memcached_storage.h
 
-1449759319 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdremotecontrol.cpp
+1449895749 source:d:\menooker\birdee\build0\diksam_book_0_1\birdee\birdee\bdremotecontrol.cpp
 	"BdRemoteControl.h"
 	<stdio.h>
 	"BirdeeDef.h"

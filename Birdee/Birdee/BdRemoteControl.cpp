@@ -224,14 +224,14 @@ void RcCloseNode(DVM_Value *args)
 
 int idx_remote_thread=-1;
 int method_remote_thread=-1;
-DVM_ObjectRef RcCreateThread(DVM_Value *args)
+void RcCreateThread(DVM_Value *args)
 {
 	int idx= args[1].object.data->u.delegate.index;
 
 	if(idx_remote_thread==-1)
 		idx_remote_thread  = DVM_search_class(curdvm,"diksam.lang","RemoteThread");
 	if(method_remote_thread==-1)
-		method_remote_thread = ExGetMethodIndex(curdvm->bclass[idx_remote_thread],"init");
+		method_remote_thread = ExGetMethodIndex(curdvm->bclass[idx_remote_thread],"initialize");
 
 	DVM_ObjectRef ret=SoDoNew(idx_remote_thread,method_remote_thread);
 	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
@@ -241,7 +241,8 @@ DVM_ObjectRef RcCreateThread(DVM_Value *args)
 	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)
 		RcThrowSocketError(sret);
-	return ret;
+	curthread->retvar.object=ret;
+	return ;
 }
 
 
@@ -312,6 +313,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	}
 	printf("Received %s\n",name);
 	fclose(f);
+	return 0;
 }
 
 void RcSlaveMainLoop(char* path,BD_SOCKET s)
@@ -395,28 +397,34 @@ void RcSlave(int port)
 	si.magic=RC_MAGIC_SLAVE;
 	RcSend(s,&si,sizeof(si));
 	int cnt=RcRecv(s,&mi,sizeof(mi));
+	int err=0,err2=0;
 	if(cnt==sizeof(mi) && mi.magic==RC_MAGIC_MASTER)
 	{
 		char path[255];
 		char mainmod[255];
+		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
 			cnt=RcRecv(s,&fh,sizeof(fh));
+			err=2;
 			if(cnt!=sizeof(fh) || fh.magic!=RC_MAGIC_FILE_HEADER)
 				goto ERR;
 			char* name =(char*)malloc(fh.name_len);
 			cnt=RcRecv(s,name,fh.name_len);
 			if(cnt!=fh.name_len)
 			{
+			    err=3;
 				free(name);
 				goto ERR;
 			}
 			name[fh.name_len-1]=0;
-			if(RcRecvModule(s,name,fh.size,path)!=0)
+			err2=RcRecvModule(s,name,fh.size,path);
+			if(err2!=0)
 			{
+			    err=4;
 				free(name);
 				goto ERR;
 			}
@@ -430,7 +438,7 @@ void RcSlave(int port)
 	else
 	{
 ERR:
-		printf("Hand shaking error!\n");
+		printf("Hand shaking error! %d %d\n",err,err2);
 		RcCloseSocket(s);
 	}
 }

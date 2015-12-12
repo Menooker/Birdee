@@ -137,7 +137,10 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 #endif //BD_ON_VC & BD_ON_X86
 	}
 
-
+	void UaSleep(int ms)
+	{
+		Sleep(ms);
+	}
 	void* UaGuardAlloc(size_t sz)
 	{
 

@@ -799,14 +799,14 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
                  executable->top_level.code, executable->top_level.code_size,
                  NULL);*/ //check-me : check the stack operations
 
-    for (i = 0; i < executable->function_count; i++) {
+/*    for (i = 0; i < executable->function_count; i++) {
         if (executable->function[i].is_implemented) {
             convert_code(dvm, executable,
                          executable->function[i].code_block.code,
                          executable->function[i].code_block.code_size,
                          &executable->function[i]);
         }
-    }
+    }*/
     add_reference_table(dvm, new_entry, executable);
 
     add_static_variables(dvm,new_entry, executable);
@@ -948,6 +948,7 @@ DVM_create_virtual_machine(void)
 	dvm->mainvm=ExCreateThread();
 	dvm->classObject=NULL;
 	dvm->executable_count=0;
+	dvm->is_master=1;
 	UaInitLock(&dvm->thread_lock); 
 	UaInitLock(&dvm->heap.lock);
 	ExInitRegArray(dvm->mainvm);
