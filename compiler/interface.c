@@ -701,28 +701,28 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 				&& !isPackageInBuiltIn(pCur->executable->function[i].package_name) && parameters.isSyslib==0)
 			{
 
-				newcomp=DKC_create_compiler();
+				/*newcomp=DKC_create_compiler();
 				status=dkc_dynamic_compile2(newcomp,pCur->executable->function[i].package_name,list,search_file);
 				if (status != SEARCH_FILE_SUCCESS) {
 						printf("ERROR %d\n",status);
-				}
-				//printf("CP %s\n",search_file);
+				}*/
+				printf("Warning : Function %s.%s not implemented.\n",pCur->executable->function[i].package_name,pCur->executable->function[i].name);
 			}
 		}
 		fcnt=pCur->executable->function_count;
 		if(pCur->executable->function && pCur->executable->class_definition)
 		{
-			for(i=0;i<fcnt;i++)
+			for(i=0;i<pCur->executable->class_count;i++)
 			{
-				if(!pCur->executable->isDyn &&  pCur->executable->function[i].package_name && !pCur->executable->class_definition[i].is_implemented  && !isPackageInBuiltIn(pCur->executable->function[i].package_name))
+				if(pCur->executable->class_definition[i].package_name && !pCur->executable->class_definition[i].is_implemented  && !isPackageInBuiltIn(pCur->executable->class_definition[i].package_name))
 				{
-					//fix-me : check cls.superclass & interface ?
+					/*//fix-me : check cls.superclass & interface ?
 					newcomp=DKC_create_compiler();
 					status=dkc_dynamic_compile2(newcomp,pCur->executable->function[i].package_name,list,search_file);
 					if (status != SEARCH_FILE_SUCCESS) {
 							printf("ERROR %d\n",status);
-					}
-					//printf("CP %s\n",search_file);
+					}*/
+					printf("Warning : Class %s.%s not implemented.\n",pCur->executable->class_definition[i].package_name,pCur->executable->class_definition[i].name);
 				}
 			}
 		}
