@@ -23,10 +23,8 @@ dim b as shared string
 dim cnt as AtomicCounter=new AtomicCounter()
 cnt.Set(2)
 println("Set2 "+cnt.Get())
-cnt.Inc(2)
-println("Inc2 "+cnt.Get())
-cnt.Dec(100)
-println("Dec100 "+cnt.Get())
+println("Inc2 "+cnt.Inc(2))
+println("Dec100 "+cnt.Dec(100))
 
 dim static as int
 static@+=1

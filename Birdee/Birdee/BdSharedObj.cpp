@@ -498,7 +498,7 @@ extern "C" void SoSetCounter(DVM_Value* args)
 
 extern "C" void SoGetCounter(DVM_Value* args)
 {
-	storage.getcounter((uint)args[1].object.data,32);
+	curthread->retvar.int_value = storage.getcounter((uint)args[1].object.data,32);
 }
 
 enum OutBufferMethod
