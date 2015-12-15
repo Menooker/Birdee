@@ -20,7 +20,8 @@ end
 
 dim a as shared int=1
 dim b as shared string
-dim cnt as AtomicCounter=new AtomicCounter()
+dim cnt as AtomicCounter=new AtomicCounter(0)
+cnt.Get()
 cnt.Set(2)
 println("Set2 "+cnt.Get())
 println("Inc2 "+cnt.Inc(2))

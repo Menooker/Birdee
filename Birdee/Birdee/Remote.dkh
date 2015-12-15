@@ -26,8 +26,12 @@ lib Remote
 		public declare function Get() as int
 		public declare function Inc(inc as int) as int
 		public declare function Dec(dec as int) as int
-		public constructor initialize()
-			this.Set(0)
-		end
+		public declare constructor initialize(n as int)
+	end
+
+	shared public class RemoteMutex
+		public declare constructor initialize()
+		public declare sub leave()
+		public declare function enter(timeout as int,maxinterval as int) as boolean
 	end
 end

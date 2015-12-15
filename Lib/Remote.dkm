@@ -40,9 +40,45 @@ shared public class AtomicCounter
 		public declare function Get() as int
 		public declare function Inc(inc as int) as int
 		public declare function Dec(dec as int) as int
-		constructor initialize()
-			this.Set(0)
+		constructor initialize(n as int)
+			this.Set(n)
 		end
+end
+
+shared public class RemoteMutex
+	dim cnt as AtomicCounter
+	constructor initialize()
+		cnt=new AtomicCounter(0)
+	end
+	
+	public sub leave()
+		cnt.Dec(1)
+	end
+
+	public function enter(timeout as int,maxinterval as int) as boolean
+		dim t as int=0
+		dim itv as int=8
+		for  ;  ;
+			if cnt.Get()==0 then
+				if cnt.Inc(1)==1 then
+					return true
+				else
+					cnt.Dec(1)
+				end
+			end
+			if  timeout!=-1 && t>timeout then
+				return false
+			end
+			itv=itv*2
+			if itv>maxinterval then
+				itv=16
+			end
+			t+=itv
+			Sleep(itv)
+		end
+		println("@"+ t +"-"+ itv)
+		return true
+	end
 end
 
 declare function ConnectNode(host as String,port as int) as RemoteNode

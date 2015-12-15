@@ -27,11 +27,12 @@ public:
 		memcached_return rc;
 		memcached_server_st *servers;
 		memc = memcached_create(NULL);
+		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
+		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
 		memc->call_malloc=(memcached_malloc_function)malloc;
 		memc->call_free=(memcached_free_function)free;
 		memc->call_realloc=(memcached_realloc_function)realloc;
 		servers = memcached_server_list_append(NULL, host,11211, &rc);
-		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 0);
 		rc = memcached_server_push(memc, servers);
 		memcached_server_free(servers);
 	}
