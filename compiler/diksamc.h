@@ -437,6 +437,8 @@ typedef enum {
     NORMAL_ASSIGN = 1,
     ADD_ASSIGN,
     SUB_ASSIGN,
+    ATM_ADD_ASSIGN,
+    ATM_SUB_ASSIGN,
     MUL_ASSIGN,
     DIV_ASSIGN,
     MOD_ASSIGN

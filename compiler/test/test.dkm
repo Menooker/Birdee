@@ -2,6 +2,7 @@ require Remote
 
 
 class bbb : Object
+	public ba as int
 end
 
 shared class clsa
@@ -22,6 +23,12 @@ dim b as shared string
 a++
 println(a==2)
 
+dim static as int
+static@+=1
+println(static)
+dim k as bbb=new bbb()
+k.ba@+=2
+println(k.ba)
 
 b="KKKK"
 println(b)

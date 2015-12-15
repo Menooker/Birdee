@@ -52,6 +52,7 @@
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
         DOWN_CAST_BEGIN DOWN_CAST_END DELEGATE FINAL ENUM CONST
 		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE SHARED
+		ATM_ADD_ASSIGN_T ATM_SUB_ASSIGN_T 
 %type   <intval> apostrophe
 %type   <intval> unsafe
 %type   <intval> shared
@@ -380,6 +381,14 @@ assignment_operator
         | SUB_ASSIGN_T
         {
             $$ = SUB_ASSIGN;
+        }
+		| ATM_ADD_ASSIGN_T
+        {
+            $$ = ATM_ADD_ASSIGN;
+        }
+        | ATM_SUB_ASSIGN_T
+        {
+            $$ = ATM_SUB_ASSIGN;
         }
         | MUL_ASSIGN_T
         {

@@ -141,7 +141,9 @@
      LIB = 357,
      UNSAFE = 358,
      SAFE = 359,
-     SHARED = 360
+     SHARED = 360,
+     ATM_ADD_ASSIGN_T = 361,
+     ATM_SUB_ASSIGN_T = 362
    };
 #endif
 /* Tokens.  */
@@ -248,6 +250,8 @@
 #define UNSAFE 358
 #define SAFE 359
 #define SHARED 360
+#define ATM_ADD_ASSIGN_T 361
+#define ATM_SUB_ASSIGN_T 362
 
 
 
@@ -291,7 +295,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 295 "y.tab.h"
+#line 299 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

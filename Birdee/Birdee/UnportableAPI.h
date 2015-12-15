@@ -40,6 +40,8 @@ extern "C"
 	void UaSuspendThread(THREAD_ID id);
 	void UaResumeThread(THREAD_ID id);
 	void UaSleep(int ms);
+	void UaAtomicInc(long* ptr,long inc);
+	void UaAtomicDec(long* ptr,long dec);
 #ifdef __cplusplus
 }
 #endif
