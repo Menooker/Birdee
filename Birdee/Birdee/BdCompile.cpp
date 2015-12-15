@@ -118,9 +118,9 @@ Function* fObjectRefPtr;
 
 Function *fAtmInc;
 Function *fAtmDec;
+Function *fSharedInc;
+Function *fSharedDec;
 
-//Function *fAtmInc;
-//Function *fAtmDec;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -1069,6 +1069,9 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
 	SharedPutSwitch[2]=fSharedSeto;
 
+	//fSharedInc=Function::Create(nft, Function::ExternalLinkage,"shared!inc", module);
+	//fSharedDec=Function::Create(nft, Function::ExternalLinkage,"shared!dec", module);
+
 	mArg.pop_back(); mArg.push_back(Type::getDoubleTy(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSetd=Function::Create(nft, Function::ExternalLinkage,"shared!setd", module);
@@ -1860,10 +1863,23 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 							  MESSAGE_ARGUMENT_END);
 		}
 		Value* obj=BcGenerateExpression(exe, block, left->u.member_expression.expression);
+
+		ExpressionKind kind=left->u.member_expression.expression->kind;
+		bool needpush=false;
+		if(kind!=IDENTIFIER_EXPRESSION && kind!=MEMBER_EXPRESSION && kind!=INDEX_EXPRESSION && kind!=THIS_EXPRESSION)
+		{
+			needpush=true;
+			builder.CreateCall(GetPush(2),obj);
+		}
+
 		if(left->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{
-			__asm int 3
-			//////////////////////
+/*			Value* id=builder.CreateCall(GetObjrefPtr(),obj);
+			if(isInc)
+				builder.CreateCall3(fSharedInc,id,ConstInt(32,member->u.field.field_index),r);
+			else
+				builder.CreateCall3(fSharedDec,id,ConstInt(32,member->u.field.field_index),r);*/
+			dkc_compile_error(left->line_number,MATH_TYPE_MISMATCH_ERR,MESSAGE_ARGUMENT_END);
 		}
 		else
 		{
@@ -1874,7 +1890,8 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 			else
 				builder.CreateCall2(fAtmDec,ptr,r);
 		}
-
+		if(needpush)
+			builder.CreateCall(GetPop(),ConstInt(32,1));
 
 	}
 	else if(left->kind==IDENTIFIER_EXPRESSION)
@@ -1899,8 +1916,13 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 		{
 			if(decl->is_shared)
 			{
-				//////////////////////////
-				__asm int 3
+/*				if(!cached_mid)
+					cached_mid=builder.CreateLoad(m_id);
+				if(isInc)
+					builder.CreateCall3(fSharedInc,cached_mid,ConstInt(32,decl->variable_index),r);
+				else
+					builder.CreateCall3(fSharedDec,cached_mid,ConstInt(32,decl->variable_index),r);*/
+				dkc_compile_error(left->line_number,MATH_TYPE_MISMATCH_ERR,MESSAGE_ARGUMENT_END);
 			}
 			else
 			{

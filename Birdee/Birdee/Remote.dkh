@@ -21,4 +21,13 @@ lib Remote
 	
 	declare function ConnectNode(host as String,port as int) as RemoteNode
 
+	shared public class AtomicCounter
+		public declare sub Set(n as int)
+		public declare function Get() as int
+		public declare function Inc(inc as int) as int
+		public declare function Dec(dec as int) as int
+		public constructor initialize()
+			this.Set(0)
+		end
+	end
 end

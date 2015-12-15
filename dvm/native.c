@@ -10,6 +10,7 @@
 #include "..\Birdee\Birdee\BdExec.h"
 #include "..\Birdee\Birdee\BdThread.h"
 #include "..\Birdee\Birdee\BdRemoteControl.h"
+//#include "..\Birdee\Birdee\BdSharedObj.h"
 
 //extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
@@ -735,7 +736,10 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 
 
-
+void SoInc(DVM_Value* args);
+void SoDec(DVM_Value* args);
+void SoSetCounter(DVM_Value* args);
+void SoGetCounter(DVM_Value* args);
 	extern void UaBreakPoint(); //in UnportableAPI.cpp
 void
 dvm_add_native_functions(DVM_VirtualMachine *dvm)
@@ -784,6 +788,11 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 2,DVM_FALSE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#CreateThread", RcCreateThread, 2,DVM_TRUE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#Close", RcCloseNode, 0,DVM_TRUE);
+
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Inc", SoInc, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Dec", SoDec, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Set", SoSetCounter, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Get", SoGetCounter, 0,DVM_TRUE);
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
                             DVM_FALSE, DVM_TRUE);

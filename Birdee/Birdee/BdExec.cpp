@@ -1511,6 +1511,13 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)UaAtomicDec);
 	MCJIT->addGlobalMapping("system!AtmDec",(void*)UaAtomicDec);}
 
+/*	f=m->getFunction("shared!inc");
+	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoInc);
+	MCJIT->addGlobalMapping("shared!inc",(void*)SoInc);}
+
+	f=m->getFunction("shared!dec");
+	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoDec);
+	MCJIT->addGlobalMapping("shared!dec",(void*)SoDec);}*/
 	//m->dump();
 	if(dvm->is_master)
 		SoNewModule(ee->executable->id,ee->executable->shared_count);

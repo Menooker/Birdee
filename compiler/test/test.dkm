@@ -20,8 +20,13 @@ end
 
 dim a as shared int=1
 dim b as shared string
-a++
-println(a==2)
+dim cnt as AtomicCounter=new AtomicCounter()
+cnt.Set(2)
+println("Set2 "+cnt.Get())
+cnt.Inc(2)
+println("Inc2 "+cnt.Get())
+cnt.Dec(100)
+println("Dec100 "+cnt.Get())
 
 dim static as int
 static@+=1

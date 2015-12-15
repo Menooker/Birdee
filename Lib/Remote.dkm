@@ -35,3 +35,14 @@ shared public class RemoteThread
 	//public declare sub Stop()
 end
 
+shared public class AtomicCounter
+		public declare sub Set(n as int)
+		public declare function Get() as int
+		public declare function Inc(inc as int) as int
+		public declare function Dec(dec as int) as int
+		constructor initialize()
+			this.Set(0)
+		end
+end
+
+declare function ConnectNode(host as String,port as int) as RemoteNode

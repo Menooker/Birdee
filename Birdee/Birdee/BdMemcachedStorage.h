@@ -6,7 +6,7 @@
 class SoStorageMemcached : public SoStorage
 {
 private:
-
+	int offset;
 	memcached_st *memc;
 public:
 
@@ -16,10 +16,14 @@ public:
 	SoStatus getstr(uint key,wchar_t** str,uint* len);
 	bool exists(uint key);
 	SoStatus newobj(uint key,SoType tag,int fld_cnt);
-
+	int inc(uint key,int fldid,int inc);
+	int dec(uint key,int fldid,int dec);
+	int getcounter(uint key,int fldid);
+	void setcounter(uint key,int fldid,int n);
 	~SoStorageMemcached();
 	SoStorageMemcached(char* host)
 	{
+		offset=2147483647;
 		memcached_return rc;
 		memcached_server_st *servers;
 		memc = memcached_create(NULL);
@@ -27,6 +31,7 @@ public:
 		memc->call_free=(memcached_free_function)free;
 		memc->call_realloc=(memcached_realloc_function)realloc;
 		servers = memcached_server_list_append(NULL, host,11211, &rc);
+		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 0);
 		rc = memcached_server_push(memc, servers);
 		memcached_server_free(servers);
 	}

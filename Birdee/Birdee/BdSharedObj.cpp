@@ -5,6 +5,7 @@
 #include "hash_compatible.h"
 #include "BdSharedObj.h"
 #include "BdMemcachedStorage.h"
+#include "UnportableAPI.h"
 
 extern void ExCall(BINT index);
 
@@ -44,6 +45,31 @@ private:
 public:
 	SoStorageLocalTest(char*){};
 	SoStorageLocalTest(){};
+
+	int inc(uint key,int fldid,int inc)
+	{
+		return UaAtomicInc((long*)&map[MAKE64(key,fldid)].var.vi,inc);
+	}
+
+	int dec(uint key,int fldid,int dec)
+	{
+		return UaAtomicDec((long*)&map[MAKE64(key,fldid)].var.vi,dec);
+	}
+
+	int getcounter(uint key,int fldid)
+	{
+		return atoi((char*)map[MAKE64(key,fldid)].string.str);
+	}
+	void setcounter(uint key,int fldid,int n)
+	{
+		char* buf=(char*)malloc(65);
+		sprintf(buf,"%d",n);
+		DataNode nd;
+		nd.tag=SoCounter;
+		nd.string.str=(wchar_t*)buf;
+		map[MAKE64(key,fldid)]=nd;
+	}
+
 	SoStatus putstr(uint key,wchar_t* str,uint len)
 	{
 		long long k=MAKE64(key,1);
@@ -285,6 +311,57 @@ public:
 		putstr(ret,s);
 		return ret;
 	};
+
+	int inc(uint key,int fldid,int inc)
+	{
+		try
+		{
+			return backend->inc(key,fldid,inc);
+		}
+		catch (int &a)
+		{
+			SoThrowSetValueError();
+			return 0;
+		}
+	}
+
+	int dec(uint key,int fldid,int dec)
+	{
+		try
+		{
+			return backend->dec(key,fldid,dec);
+		}
+		catch (int &a)
+		{
+			SoThrowSetValueError();
+			return 0;
+		}
+	}
+
+	void setcounter(uint key,int fldid,int n)
+	{
+		try
+		{
+			backend->setcounter(key,fldid,n);
+		}
+		catch (int &a)
+		{
+			SoThrowSetValueError();
+		}
+	}
+
+	int getcounter(uint key,int fldid)
+	{
+		try
+		{
+			return backend->getcounter(key,fldid);
+		}
+		catch (int &a)
+		{
+			SoThrowSetValueError();
+			return 0;
+		}
+	}
 };
 
 SharedStorage storage(SoStorageFactory::SoBackendMemcached);
@@ -404,6 +481,25 @@ extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
 	return SoDoNew(class_index,methodid);
 }
 
+extern "C" void SoInc(DVM_Value* args)
+{
+	curthread->retvar.int_value = storage.inc((uint)args[1].object.data,32,args[0].int_value);
+}
+
+extern "C" void SoDec(DVM_Value* args)
+{
+	curthread->retvar.int_value = storage.dec((uint)args[1].object.data,32,args[0].int_value);
+}
+
+extern "C" void SoSetCounter(DVM_Value* args)
+{
+	storage.setcounter((uint)args[1].object.data,32,args[0].int_value);
+}
+
+extern "C" void SoGetCounter(DVM_Value* args)
+{
+	storage.getcounter((uint)args[1].object.data,32);
+}
 
 enum OutBufferMethod
 {

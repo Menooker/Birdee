@@ -137,14 +137,14 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 #endif //BD_ON_VC & BD_ON_X86
 	}
 
-	void UaAtomicInc(long* ptr,long inc)
+	int UaAtomicInc(long* ptr,long inc)
 	{
-		InterlockedExchangeAdd(ptr,inc);
+		return InterlockedExchangeAdd(ptr,inc);
 	}
 
-	void UaAtomicDec(long* ptr,long dec)
+	int UaAtomicDec(long* ptr,long dec)
 	{
-		InterlockedExchangeAdd(ptr,-dec);
+		return InterlockedExchangeAdd(ptr,-dec);
 	}
 
 	void UaSleep(int ms)

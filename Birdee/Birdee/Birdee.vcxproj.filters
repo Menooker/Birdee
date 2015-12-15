@@ -75,10 +75,10 @@
     </None>
     <None Include="ToDoList.txt" />
     <None Include="..\..\README.md" />
-    <None Include="Remote.dkm">
+    <None Include="Remote.dkh">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="Remote.dkh">
+    <None Include="..\..\Lib\Remote.dkm">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

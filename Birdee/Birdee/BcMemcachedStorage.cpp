@@ -1,8 +1,11 @@
 #include "BdSharedObj.h"
 #include "BdMemcachedStorage.h"
 #include <libmemcached/memcached.h>
+#include <stdlib.h>
 
-
+#ifdef BD_ON_WINDOWS
+	#define atoll _atoi64
+#endif
 struct NodeValue
 {
 	SoType tag;
@@ -31,7 +34,7 @@ memcached_return memcached_put(memcached_st* memc,unsigned long long k,void* v,s
 {
 	char ch[17];
 	sprintf(ch,"%016llx",k);
-	memcached_return rc = memcached_set(memc, ch, 17, (char*)v,len,(time_t)0, (uint32_t)0);
+	memcached_return rc = memcached_set(memc, ch, 17, (char*)v,len,(time_t)0, (uint32_t)4096);
 	return rc;
 }
 
@@ -41,7 +44,55 @@ SoStorageMemcached::~SoStorageMemcached()
 		//memcached_free(memc); //fix-me : unknown error at here
 }
 
+int SoStorageMemcached::getcounter(uint key,int fldid)
+{
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,fldid));
+	size_t return_key_length=17;
+	size_t return_value_length;
+	uint32_t flags;
+	memcached_return rc;
+	char* return_value = memcached_get(memc, ch,return_key_length, &return_value_length, &flags, &rc);
+	if(rc!=MEMCACHED_SUCCESS)
+		throw 1;
+	long long ret=atoll(return_value);
+	return ret-offset;
+}
+void SoStorageMemcached::setcounter(uint key,int fldid,int n)
+{
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,fldid));
+	size_t return_key_length=17;
+	size_t return_value_length;
+	uint32_t flags;
+	memcached_return rc;
 
+	char ch2[65];
+	sprintf(ch2,"%lld",(long long)n+offset);
+	rc = memcached_set(memc, ch,return_key_length,ch2,strlen(ch2),0, 0);
+	if(rc!=MEMCACHED_SUCCESS)
+		throw 1;
+}
+
+int SoStorageMemcached::inc(uint key,int fldid,int inc)
+{
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,fldid));
+	uint64_t ret;
+	memcached_return rc;
+	if(inc>0)
+		rc=memcached_increment(memc,ch,17,inc,&ret);
+	else
+		rc=memcached_decrement(memc,ch,17,-inc,&ret);
+	if(rc!=MEMCACHED_SUCCESS)
+		throw 1;
+	return ret-offset;
+
+}
+int SoStorageMemcached::dec(uint key,int fldid,int dec)
+{
+	return inc(key,fldid,-dec);
+}
 SoStatus SoStorageMemcached::putstr(uint key,wchar_t* str,uint len)
 {
 	size_t sz=sizeof(NodeValue)+(len+1)*sizeof(wchar_t);
