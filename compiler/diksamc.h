@@ -164,6 +164,7 @@ typedef enum {
 	SHARED_VAR_NOT_PUBLIC_ERR,
 	SHARED_CLASS_ERR,
 	SHARED_CLASS_MEMBER_ERR,
+	GLOBAL_ARRAY_TYPE_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -339,7 +340,7 @@ typedef struct {
 } FunctionDerive;
 
 typedef struct {
-    int dummy; /* make compiler happy */
+    int is_global; /* make compiler happy */
 } ArrayDerive;
 
 typedef struct TypeDerive_tag {
@@ -1001,7 +1002,7 @@ StatementList *dkc_chain_statement_list(StatementList *list,
 TypeSpecifier *dkc_create_type_specifier(DVM_BasicType basic_type);
 TypeSpecifier *dkc_create_identifier_type_specifier(char *identifier);
 TypeSpecifier *dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist);
-TypeSpecifier *dkc_create_array_type_specifier(TypeSpecifier *base);
+TypeSpecifier *dkc_create_array_type_specifier(TypeSpecifier *base,int is_shared);
 Expression *dkc_alloc_expression(ExpressionKind type);
 Expression *dkc_create_comma_expression(Expression *left, Expression *right);
 Expression *dkc_create_assign_expression(Expression *left,

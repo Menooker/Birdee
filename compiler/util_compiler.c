@@ -165,6 +165,11 @@ dkc_compare_type(TypeSpecifier *type1, TypeSpecifier *type2)
                 return DVM_FALSE;
             }
         }
+		else
+		{
+			if(d1->u.array_d.is_global!=d2->u.array_d.is_global)
+				return DVM_FALSE;
+		}
     }
     if (d1 || d2) {
         return DVM_FALSE;
@@ -754,6 +759,9 @@ dkc_get_type_name(TypeSpecifier *type)
 		}
 		dkc_vstr_append_string(&vstr,">");
 	}
+	if(type->derive &&  type->derive->tag==ARRAY_DERIVE 
+		&& type->derive->u.array_d.is_global)
+		dkc_vstr_append_string(&vstr, "shared");
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
         switch (derive_pos->tag) {

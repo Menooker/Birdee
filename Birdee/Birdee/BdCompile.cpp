@@ -66,6 +66,7 @@ Function *fDoInvoke;
 
 Function *fArrayLiteral; // (type,cnt)
 Function *fNewArray; // (type,cnt)
+Function *fNewGlobalArray;
 Function *fArrGeti; //obj,idx,(v)
 Function *fArrGetd;
 Function *fArrGeto;
@@ -952,6 +953,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	FunctionType* FTArr = FunctionType::get(TyObjectRef,Args2Int, false);
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
+	fNewGlobalArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewGlobalArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
 	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
 
@@ -2142,7 +2144,10 @@ Value* BcGenerateArrayCreationExpression(DVM_Executable *exe, Block *block,Expre
     std::vector<Value*> arg;
 	arg.push_back(ConstInt(32,index));
 	arg.push_back(ConstInt(32,dim_count));
-    return builder.CreateCall(fNewArray,arg);
+	if(expr->type->derive->u.array_d.is_global)
+		return builder.CreateCall(fNewGlobalArray,arg);
+	else
+		return builder.CreateCall(fNewArray,arg);
     //generate_code(ob, expr->line_number, DVM_NEW_ARRAY, dim_count, index);
 }
 

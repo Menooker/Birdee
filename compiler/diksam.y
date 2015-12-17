@@ -52,6 +52,7 @@
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
         DOWN_CAST_BEGIN DOWN_CAST_END DELEGATE FINAL ENUM CONST
 		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE SHARED
+		GLOBAL
 		ATM_ADD_ASSIGN_T ATM_SUB_ASSIGN_T 
 %type   <intval> apostrophe
 %type   <intval> unsafe
@@ -82,7 +83,7 @@
 %type   <assignment_operator> assignment_operator
 %type   <identifier> identifier_opt label_opt
 %type   <type_specifier> type_specifier identifier_type_specifier template_type_specifier
-        array_type_specifier
+        array_type_specifier array_type_specifier_sub
 %type   <basic_type_specifier> basic_type_specifier
 %type   <array_dimension> dimension_expression dimension_expression_list
         dimension_list
@@ -216,28 +217,42 @@ identifier_type_specifier
             $$ = dkc_create_identifier_type_specifier($1);
         }
         ;
-array_type_specifier
+array_type_specifier_sub
         : basic_type_specifier LB RB
         {
             TypeSpecifier *basic_type
-                = dkc_create_type_specifier($1);
+                = dkc_create_type_specifier($1,0);
             $$ = dkc_create_array_type_specifier(basic_type);
         }
         | IDENTIFIER LB RB
         {
             TypeSpecifier *identifier_type
-                = dkc_create_identifier_type_specifier($1);
+                = dkc_create_identifier_type_specifier($1,0);
             $$ = dkc_create_array_type_specifier(identifier_type);
         }
         | array_type_specifier LB RB
         {
-            $$ = dkc_create_array_type_specifier($1);
+            $$ = dkc_create_array_type_specifier($1,0);
         }
 		| template_type_specifier LB RB
 		{
-			$$ = dkc_create_array_type_specifier($1);
+			$$ = dkc_create_array_type_specifier($1,0);
 		}
         ;
+array_type_specifier
+		: GLOBAL array_type_specifier_sub
+		{
+			if($1==1)
+			{
+				TypeDerive *derive_p;
+				for (derive_p = $2->derive; derive_p->next != NULL;
+					derive_p = derive_p->next)
+				{
+					derive_p->u.array_d.is_global=1;
+				}
+			}
+			$$=$2
+		}
 template_type_specifier
 		: IDENTIFIER LT type_list GT
 		{//fix-me : shift/reduce
@@ -1226,6 +1241,16 @@ shared
 			$$=0;
 		}
 		| SHARED
+		{
+			$$=1;
+		}
+		;
+global
+		: //empty
+		{
+			$$=0;
+		}
+		| GLOBAL
 		{
 			$$=1;
 		}

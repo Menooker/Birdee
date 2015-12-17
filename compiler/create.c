@@ -440,12 +440,12 @@ dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist)
 }
 
 TypeSpecifier *
-dkc_create_array_type_specifier(TypeSpecifier *base)
+dkc_create_array_type_specifier(TypeSpecifier *base,int is_global)
 {
     TypeDerive *new_derive;
     
     new_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
-
+	new_derive->u.array_d.is_global=is_global;
     if (base->derive == NULL) {
         base->derive = new_derive;
     } else {

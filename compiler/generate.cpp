@@ -506,8 +506,7 @@ get_opcode_type_offset_shared(TypeSpecifier *type)
     if (type->derive != NULL) {
         DBG_assert(type->derive->tag = ARRAY_DERIVE,
                    ("type->derive->tag..%d", type->derive->tag));
-		DBG_assert(0,("Shared Array Types is not yet implemented"));
-        return -1;
+		return 4;
     }
 
     switch (type->basic_type) {

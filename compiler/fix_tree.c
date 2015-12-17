@@ -311,6 +311,27 @@ fix_throws(ExceptionList *throws)
     }
 }
 
+
+static void check_global_array_type(TypeSpecifier *type)
+{
+	if (type->derive->tag == ARRAY_DERIVE &&  type->derive->u.array_d.is_global) {
+		switch(type->basic_type)
+		{
+		case DVM_INT_TYPE:
+		case DVM_DOUBLE_TYPE:
+		case DVM_STRING_TYPE:
+			break;
+		case DVM_CLASS_TYPE:
+			if(!type->u.class_ref.class_definition->is_shared)
+				goto err;
+		default:
+			err:
+                dkc_compile_error(type->line_number,
+                                  GLOBAL_ARRAY_TYPE_ERR,
+                                  MESSAGE_ARGUMENT_END);			    
+		}
+	}
+}
 static void
 fix_type_specifier(TypeSpecifier *type)
 {
@@ -321,7 +342,6 @@ fix_type_specifier(TypeSpecifier *type)
 	TemplateDeclare* template_pos; int id;
 	TemplateTypes* tys;TemplateTypes* ty_pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
-
 
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
@@ -392,12 +412,14 @@ fix_type_specifier(TypeSpecifier *type)
             type->u.class_ref.class_definition = cd;
             type->u.class_ref.class_index = add_class(cd);
 			type->u.class_ref.tylist=tys;
+			check_global_array_type(type);
             return;
         }
         dd = dkc_search_delegate(type->identifier);
         if (dd) {
             type->basic_type = DVM_DELEGATE_TYPE;
             type->u.delegate_ref.delegate_definition = dd;
+			check_global_array_type(type);
             return;
         }
         ed = dkc_search_enum(type->identifier);
@@ -406,6 +428,7 @@ fix_type_specifier(TypeSpecifier *type)
             type->u.enum_ref.enum_definition = ed;
             type->u.enum_ref.enum_index
                 = reserve_enum_index(compiler, ed, DVM_FALSE);
+			check_global_array_type(type);
             return;
         }
 		
@@ -419,6 +442,7 @@ fix_type_specifier(TypeSpecifier *type)
 				{
 					type->basic_type = DVM_TEMPLATE_TYPE;
 					type->u.template_id=id;
+					check_global_array_type(type);
 					return;
 				}
 				id++;
@@ -429,6 +453,7 @@ fix_type_specifier(TypeSpecifier *type)
                           STRING_MESSAGE_ARGUMENT, "name", type->identifier,
                           MESSAGE_ARGUMENT_END);
     }
+	check_global_array_type(type);
 }
 
 static TypeSpecifier *
