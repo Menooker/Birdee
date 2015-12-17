@@ -1,6 +1,5 @@
 require Remote
 
-
 class bbb : Object
 	public ba as int
 end
@@ -11,28 +10,20 @@ shared class clsa
 end
 
 function myproc ( par as var) as int
+	println("entering")
+	lock.enter(-1,1000)
 	println(c.cb+c.ca)
 	println(par)
 	c.ca++
+	println("thread sleep")
 	Sleep(1000)
+	lock.leave()
 end
 
 
 dim a as shared int=1
 dim b as shared string
-dim cnt as AtomicCounter=new AtomicCounter(0)
-cnt.Get()
-cnt.Set(2)
-println("Set2 "+cnt.Get())
-println("Inc2 "+cnt.Inc(2))
-println("Dec100 "+cnt.Dec(100))
-
-dim static as int
-static@+=1
-println(static)
-dim k as bbb=new bbb()
-k.ba@+=2
-println(k.ba)
+dim lock as shared RemoteSpinLock=new RemoteSpinLock()
 
 b="KKKK"
 println(b)
@@ -46,6 +37,10 @@ println(c.cb+c.ca)
 gets()
 dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
 dim t as RemoteThread=node.CreateThread(myproc,2)
+lock.enter(-1,1000)
+println("main sleep")
+Sleep(1000)
+lock.leave()
 t.Join(-1,1000)
 node.Close()
 println(node.host+","+node.port)

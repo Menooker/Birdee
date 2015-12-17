@@ -35,6 +35,8 @@ shared public class RemoteThread
 	//public declare sub Stop()
 end
 
+declare function ConnectNode(host as String,port as int) as RemoteNode
+
 shared public class AtomicCounter
 		public declare sub Set(n as int)
 		public declare function Get() as int
@@ -45,14 +47,14 @@ shared public class AtomicCounter
 		end
 end
 
-shared public class RemoteMutex
+shared public class RemoteSpinLock
 	dim cnt as AtomicCounter
 	constructor initialize()
 		cnt=new AtomicCounter(0)
 	end
 	
 	public sub leave()
-		cnt.Dec(1)
+		cnt.Set(0)
 	end
 
 	public function enter(timeout as int,maxinterval as int) as boolean
@@ -62,8 +64,6 @@ shared public class RemoteMutex
 			if cnt.Get()==0 then
 				if cnt.Inc(1)==1 then
 					return true
-				else
-					cnt.Dec(1)
 				end
 			end
 			if  timeout!=-1 && t>timeout then
@@ -81,4 +81,5 @@ shared public class RemoteMutex
 	end
 end
 
-declare function ConnectNode(host as String,port as int) as RemoteNode
+
+

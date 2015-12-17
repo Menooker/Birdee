@@ -29,7 +29,7 @@ lib Remote
 		public declare constructor initialize(n as int)
 	end
 
-	shared public class RemoteMutex
+	shared public class RemoteSpinLock
 		public declare constructor initialize()
 		public declare sub leave()
 		public declare function enter(timeout as int,maxinterval as int) as boolean

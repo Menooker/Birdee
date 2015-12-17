@@ -2230,7 +2230,7 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 			int ty=get_opcode_type_offset_shared(expr->type);
 			if(ty==2)
 				ret= builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
-					ConstInt(32,expr->u.member_expression.expression->type->u.class_ref.class_index));
+					ConstInt(32,expr->type->u.class_ref.class_index));
 			else
 				ret= builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
 		}
