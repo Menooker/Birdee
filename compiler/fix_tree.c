@@ -314,7 +314,7 @@ fix_throws(ExceptionList *throws)
 
 static void check_global_array_type(TypeSpecifier *type)
 {
-	if (type->derive->tag == ARRAY_DERIVE &&  type->derive->u.array_d.is_global) {
+	if (type->derive && type->derive->tag == ARRAY_DERIVE &&  type->derive->u.array_d.is_global) {
 		switch(type->basic_type)
 		{
 		case DVM_INT_TYPE:
@@ -2490,7 +2490,7 @@ fix_array_creation_expression(Block *current_block, Expression *expr,
 	}
 	else
 	{
-
+		_BreakPoint;
 	}
 
     for (dim_pos = expr->u.array_creation.dimension; dim_pos;
@@ -2507,6 +2507,7 @@ fix_array_creation_expression(Block *current_block, Expression *expr,
         }
         tmp_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
         tmp_derive->next = derive;
+		tmp_derive->u.array_d.is_global=expr->u.array_creation.is_global;
         derive = tmp_derive;
     }
 
@@ -2873,6 +2874,14 @@ add_declaration(Block *current_block, Declaration *decl,
         decl->is_local = DVM_FALSE;
         compiler->declaration_list
             = dkc_chain_declaration(compiler->declaration_list, decl);
+		fix_type_specifier(decl->type);
+		if(decl->is_shared && decl->type->derive && decl->type->derive->tag==ARRAY_DERIVE
+			&& !decl->type->derive->u.array_d.is_global)
+		{
+            dkc_compile_error(line_number,
+                              SHARED_ARRAY_NOT_GLOBAL_ERR,
+                              MESSAGE_ARGUMENT_END);
+		}
     }
 }
 

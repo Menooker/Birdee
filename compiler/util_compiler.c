@@ -761,7 +761,7 @@ dkc_get_type_name(TypeSpecifier *type)
 	}
 	if(type->derive &&  type->derive->tag==ARRAY_DERIVE 
 		&& type->derive->u.array_d.is_global)
-		dkc_vstr_append_string(&vstr, "shared");
+		dkc_vstr_append_string(&vstr, " global");
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
         switch (derive_pos->tag) {

@@ -716,13 +716,13 @@ dkc_create_array_literal_expression(ExpressionList *list)
 Expression *
 dkc_create_basic_array_creation(DVM_BasicType basic_type,
                                 ArrayDimension *dim_expr_list,
-                                ArrayDimension *dim_list)
+                                ArrayDimension *dim_list,int is_global)
 {
     Expression  *exp;
     TypeSpecifier *type;
 
     type = dkc_create_type_specifier(basic_type);
-    exp = dkc_create_class_array_creation(type, dim_expr_list, dim_list);
+    exp = dkc_create_class_array_creation(type, dim_expr_list, dim_list,is_global);
 
     return exp;
 }
@@ -730,7 +730,7 @@ dkc_create_basic_array_creation(DVM_BasicType basic_type,
 Expression *
 dkc_create_class_array_creation(TypeSpecifier *type,
                                 ArrayDimension *dim_expr_list,
-                                ArrayDimension *dim_list)
+                                ArrayDimension *dim_list,int is_global)
 {
     Expression  *exp;
 
@@ -738,7 +738,7 @@ dkc_create_class_array_creation(TypeSpecifier *type,
     exp->u.array_creation.type = type;
     exp->u.array_creation.dimension
         = dkc_chain_array_dimension(dim_expr_list, dim_list);
-
+	exp->u.array_creation.is_global=is_global;
     return exp;
 }
 

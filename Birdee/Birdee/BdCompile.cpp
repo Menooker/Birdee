@@ -1400,12 +1400,20 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			if(!cached_mid)
 				cached_mid=builder.CreateLoad(m_id);
 			int ty=get_opcode_type_offset_shared(decl->type);
-			if(ty==2)
+			switch(ty)
+			{
+			case 2: //object
 				return builder.CreateCall3(SharedGetSwitch[ty],
 					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,decl->type->u.class_ref.class_index));
-			else
+				break;
+			case 4: //array
+				return builder.CreateCall3(SharedGetSwitch[2],
+					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,-1));
+				break;
+			default:
 				return builder.CreateCall2(SharedGetSwitch[ty],
 					cached_mid,ConstInt(32,decl->variable_index));
+			}
 		}
 		else
 		{
@@ -1610,9 +1618,10 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 			if(!cached_mid)
 				cached_mid=builder.CreateLoad(m_id);
 			int ty=get_opcode_type_offset_shared(decl->type);
-			if(ty==2)
+			if(ty==2 || ty==4)
 			{
 				v=builder.CreateCall(GetObjrefPtr(),v);
+				ty=2;
 			}
 			builder.CreateCall3(SharedPutSwitch[ty],
 				cached_mid,ConstInt(32,decl->variable_index),v);
@@ -1798,21 +1807,35 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 			builder.CreateCall(ArrPut[get_opcode_type_offset(expr->type)],arg);//*/
 			//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 			//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
-			Value* p;
-			if(block && block->unsafe)
+			if(expr->u.index_expression.barray->type->derive->u.array_d.is_global)
 			{
-				if(decl) ////Full_arr_chk
+				int vty=get_opcode_type_offset_shared(expr->type);
+				if(vty==2 || vty==4)
 				{
-					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-						TypeSwitch[myty]);
+					v=builder.CreateCall(GetObjrefPtr(),v);
+					vty=2;
 				}
-				else
-					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
+				builder.CreateCall3(SharedPutSwitch[vty],
+					builder.CreateCall(GetObjrefPtr(),arr),idx,v);
 			}
 			else
-				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
-			//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
-			builder.CreateStore(v,builder.CreateGEP(p,idx));
+			{
+				Value* p;
+				if(block && block->unsafe)
+				{
+					if(decl) ////Full_arr_chk
+					{
+						p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+							TypeSwitch[myty]);
+					}
+					else
+						p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
+				}
+				else
+					p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
+				//p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
+				builder.CreateStore(v,builder.CreateGEP(p,idx));
+			}
 			if(myty==2)
 				builder.CreateCall(GetPop(),ConstInt(32,1+(needpush?1:0)));
 			else
@@ -2170,25 +2193,50 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
+		
 		Value* p;
-		if(block && block->unsafe)
+		if(expr->u.index_expression.barray->type->derive->u.array_d.is_global)
 		{
-			Declaration* decl=0;///Full_arr_chk
-			if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
-					decl=expr->u.index_expression.barray->u.identifier.u.declaration;
-			if(decl)
-			{
-				p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
-					TypeSwitch[myty]);
+			Value* obj=builder.CreateCall(GetObjrefPtr(),arr);
+			int ty=get_opcode_type_offset_shared(expr->type);
 
-			}
-			else
-				p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
+			switch(ty)
+			{
+			case 2: //object
+				p= builder.CreateCall3(SharedGetSwitch[ty],obj,idx,
+					ConstInt(32,expr->type->u.class_ref.class_index));
+				break;
+			case 4: //array
+				p= builder.CreateCall3(SharedGetSwitch[2],obj,idx,
+					ConstInt(32,-1));
+				break;
+			default:
+				p= builder.CreateCall2(SharedGetSwitch[ty],obj,idx);
+			}	
 		}
 		else
-			p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
+		{
+			if(block && block->unsafe)
+			{
+				Declaration* decl=0;///Full_arr_chk
+				if(	expr->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
+						decl=expr->u.index_expression.barray->u.identifier.u.declaration;
+				if(decl)
+				{
+					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+						TypeSwitch[myty]);
+
+				}
+				else
+					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[myty]);//*/
+			}
+			else
+				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[myty]);
+		}
 		if(expr->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION)
 			builder.CreateCall(GetPop(),ConstInt(32,1));
+		if(expr->u.index_expression.barray->type->derive->u.array_d.is_global)
+			return p;
 		return builder.CreateLoad(builder.CreateInBoundsGEP(p,idx));
         //return builder.CreateCall(ArrGet[get_opcode_type_offset(expr->type)],arg);
     }
@@ -2233,11 +2281,20 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 		{//shared var
 			obj=builder.CreateCall(GetObjrefPtr(),obj);
 			int ty=get_opcode_type_offset_shared(expr->type);
-			if(ty==2)
+
+			switch(ty)
+			{
+			case 2: //object
 				ret= builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
 					ConstInt(32,expr->type->u.class_ref.class_index));
-			else
+				break;
+			case 4: //array
+				ret= builder.CreateCall3(SharedGetSwitch[2],obj,ConstInt(32,member->u.field.field_index),
+					ConstInt(32,-1));
+				break;
+			default:
 				ret= builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
+			}				
 		}
 		else
 		{

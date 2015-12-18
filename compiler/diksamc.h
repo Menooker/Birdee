@@ -165,6 +165,7 @@ typedef enum {
 	SHARED_CLASS_ERR,
 	SHARED_CLASS_MEMBER_ERR,
 	GLOBAL_ARRAY_TYPE_ERR,
+	SHARED_ARRAY_NOT_GLOBAL_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -543,6 +544,7 @@ typedef struct ArrayDimension_tag {
 typedef struct {
     TypeSpecifier       *type;
     ArrayDimension      *dimension;
+	int is_global;
 } ArrayCreation;
 
 typedef struct Enumerator_tag {
@@ -1035,10 +1037,10 @@ Expression *dkc_create_new_delegate_expression();
 Expression *dkc_create_array_literal_expression(ExpressionList *list);
 Expression *dkc_create_basic_array_creation(DVM_BasicType basic_type,
                                             ArrayDimension *dim_expr_list,
-                                            ArrayDimension *dim_ilst);
+                                            ArrayDimension *dim_ilst,int is_global);
 Expression *dkc_create_class_array_creation(TypeSpecifier *type,
                                             ArrayDimension *dim_expr_list,
-                                            ArrayDimension *dim_ilst);
+                                            ArrayDimension *dim_ilst,int is_global);
 Expression *dkc_create_this_expression(void);
 Expression *dkc_create_super_expression(void);
 ArrayDimension *dkc_create_array_dimension(Expression *expr);

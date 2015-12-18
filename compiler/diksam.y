@@ -57,6 +57,7 @@
 %type   <intval> apostrophe
 %type   <intval> unsafe
 %type   <intval> shared
+%type   <intval> global
 %type   <package_name> package_name
 %type   <require_list> require_list require_declaration
 %type   <rename_list> rename_list rename_declaration
@@ -82,8 +83,7 @@
 %type   <catch_clause> catch_clause catch_list
 %type   <assignment_operator> assignment_operator
 %type   <identifier> identifier_opt label_opt
-%type   <type_specifier> type_specifier identifier_type_specifier template_type_specifier
-        array_type_specifier array_type_specifier_sub
+%type   <type_specifier> type_specifier identifier_type_specifier template_type_specifier array_type_specifier array_type_specifier_sub
 %type   <basic_type_specifier> basic_type_specifier
 %type   <array_dimension> dimension_expression dimension_expression_list
         dimension_list
@@ -221,14 +221,14 @@ array_type_specifier_sub
         : basic_type_specifier LB RB
         {
             TypeSpecifier *basic_type
-                = dkc_create_type_specifier($1,0);
-            $$ = dkc_create_array_type_specifier(basic_type);
+                = dkc_create_type_specifier($1);
+            $$ = dkc_create_array_type_specifier(basic_type,0);
         }
         | IDENTIFIER LB RB
         {
             TypeSpecifier *identifier_type
-                = dkc_create_identifier_type_specifier($1,0);
-            $$ = dkc_create_array_type_specifier(identifier_type);
+                = dkc_create_identifier_type_specifier($1);
+            $$ = dkc_create_array_type_specifier(identifier_type,0);
         }
         | array_type_specifier LB RB
         {
@@ -240,18 +240,18 @@ array_type_specifier_sub
 		}
         ;
 array_type_specifier
-		: GLOBAL array_type_specifier_sub
+		: array_type_specifier_sub global
 		{
-			if($1==1)
+			if($2==1)
 			{
 				TypeDerive *derive_p;
-				for (derive_p = $2->derive; derive_p->next != NULL;
+				for (derive_p = $1->derive; derive_p != NULL;
 					derive_p = derive_p->next)
 				{
 					derive_p->u.array_d.is_global=1;
 				}
 			}
-			$$=$2
+			$$=$1;
 		}
 template_type_specifier
 		: IDENTIFIER LT type_list GT
@@ -629,30 +629,30 @@ array_literal
         }
         ;
 array_creation
-        : NEW basic_type_specifier dimension_expression_list
+        : NEW basic_type_specifier dimension_expression_list global
         {
-            $$ = dkc_create_basic_array_creation($2, $3, NULL);
+            $$ = dkc_create_basic_array_creation($2, $3, NULL,$4);
         }
-        | NEW basic_type_specifier dimension_expression_list dimension_list
+        | NEW basic_type_specifier dimension_expression_list dimension_list global
         {
-            $$ = dkc_create_basic_array_creation($2, $3, $4);
+            $$ = dkc_create_basic_array_creation($2, $3, $4,$5);
+        }
+        | NEW identifier_type_specifier dimension_expression_list global
+        {
+            $$ = dkc_create_class_array_creation($2, $3, NULL,$4);
         }
         | NEW identifier_type_specifier dimension_expression_list
+            dimension_list global
         {
-            $$ = dkc_create_class_array_creation($2, $3, NULL);
+            $$ = dkc_create_class_array_creation($2, $3, $4,$5);
         }
-        | NEW identifier_type_specifier dimension_expression_list
-            dimension_list
+		| NEW template_type_specifier dimension_expression_list global
         {
-            $$ = dkc_create_class_array_creation($2, $3, $4);
+            $$ = dkc_create_class_array_creation($2, $3, NULL,$4);
         }
-		| NEW template_type_specifier dimension_expression_list
+		| NEW template_type_specifier dimension_expression_list dimension_list global
         {
-            $$ = dkc_create_class_array_creation($2, $3, NULL);
-        }
-		| NEW template_type_specifier dimension_expression_list dimension_list
-        {
-            $$ = dkc_create_class_array_creation($2, $3, $4);
+            $$ = dkc_create_class_array_creation($2, $3, $4,$5);
         }
         ;
 dimension_expression_list

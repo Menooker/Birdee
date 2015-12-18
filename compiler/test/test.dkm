@@ -28,10 +28,13 @@ dim lock as shared RemoteSpinLock=new RemoteSpinLock()
 
 
 
-dim d as shared global int[]=new global int[10]
+dim d as shared int[] global=new int[10] global
+dim p as int[] global=d
+d[1]=1
+println(d[1])
 //dim k as int[]=d
-//dim p as global int[]=d
-//dim ll as global bbb[]
+//dim ll as  bbb[] global
+//dim ll as shared int[]
 
 
 
