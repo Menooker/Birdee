@@ -9,6 +9,7 @@
 struct NodeValue
 {
 	SoType tag;
+	int flag;
 	union
 	{
 		SoVar var;
@@ -208,11 +209,12 @@ bool SoStorageMemcached::exists(uint key)//fix-me : improve
 	return false;
 }
 
-SoStatus SoStorageMemcached::newobj(uint key,SoType tag,int fld_cnt)
+SoStatus SoStorageMemcached::newobj(uint key,SoType tag,int fld_cnt,int flag)
 {
 	NodeValue nd;
 	nd.tag=tag;
 	nd.field_cnt=fld_cnt;
+	nd.flag=flag;
 	char ch[17];
 	sprintf(ch,"%016llx",MAKE64(key,0));
 	if(memcached_add(memc,ch,17,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)

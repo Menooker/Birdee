@@ -81,6 +81,9 @@
     <None Include="..\..\Lib\Remote.dkm">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="SharedObjTests.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

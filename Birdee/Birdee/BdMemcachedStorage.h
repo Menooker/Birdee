@@ -15,7 +15,7 @@ public:
 	SoVar get(uint key,int fldid);
 	SoStatus getstr(uint key,wchar_t** str,uint* len);
 	bool exists(uint key);
-	SoStatus newobj(uint key,SoType tag,int fld_cnt);
+	SoStatus newobj(uint key,SoType tag,int fld_cnt,int flag);
 	int inc(uint key,int fldid,int inc);
 	int dec(uint key,int fldid,int dec);
 	int getcounter(uint key,int fldid);

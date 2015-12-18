@@ -1,63 +1,7 @@
-require Remote
-
-class bbb : Object
-	public ba as int
-end
-
-shared class clsa
-	public ca as int
-	public cb as string
-end
-
-function myproc ( par as var) as int
-
-	println("entering")
-	lock.enter(-1,1000)
-	println(c.cb+c.ca)
-	println(par)
-	c.ca++
-	println("thread sleep")
-	Sleep(1000)
-	lock.leave()
-end
-
-
-dim a as shared int=1
-dim b as shared string
-dim lock as shared RemoteSpinLock=new RemoteSpinLock()
-
-
-
-dim d as shared int[] global=new int[10] global
-dim p as int[] global=d
-d[1]=1
-println(d[1])
+dim d as shared int[][] global=new int[10][10] global
+dim p as int[][] global=d
+p[1][1]=1
+println(p[1][1])
 //dim k as int[]=d
 //dim ll as  bbb[] global
 //dim ll as shared int[]
-
-
-
-b="KKKK"
-println(b)
-
-dim c as shared clsa=new clsa()
-c.ca=1
-c.cb="l"
-println(c.cb+c.ca)
-
-
-
-gets()
-dim node as RemoteNode=ConnectNode("127.0.0.1",3020)
-dim t as RemoteThread=node.CreateThread(myproc,2)
-lock.enter(-1,1000)
-println("main sleep")
-Sleep(1000)
-lock.leave()
-t.Join(-1,1000)
-node.Close()
-println(node.host+","+node.port)
-gets()
-println(c.ca)
-

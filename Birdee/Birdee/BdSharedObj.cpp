@@ -126,12 +126,13 @@ public:
 		return map.find(MAKE64(key,0))!=map.end();
 	}
 
-	SoStatus newobj(uint key,SoType tag,int fld_cnt)
+	SoStatus newobj(uint key,SoType tag,int fld_cnt,int flag)
 	{
 		if(map.find(MAKE64(key,0))==map.end())
 		{
 			DataNode nd;
 			nd.tag=tag;
+			nd.flag=flag;
 			nd.cls.field_cnt=fld_cnt;
 			map[MAKE64(key,0)]=nd;
 			return SoOK;
@@ -273,7 +274,10 @@ public:
 
 	uint allockey(SoType tag,int fld_cnt)
 	{
-		
+		return allockey(tag,fld_cnt,0);
+	}
+	uint allockey(SoType tag,int fld_cnt,int flag)
+	{		
 		//nd.tag=SoInvalid;
 		uint key=0;
 
@@ -282,7 +286,7 @@ public:
 			key=rand();
 			//uint randk=rand();
 			//nd.var.vi=randk;
-			if(backend->newobj(key,tag,fld_cnt)==SoOK)
+			if(backend->newobj(key,tag,fld_cnt,0)==SoOK)
 			{
 				break;
 			}
@@ -293,7 +297,7 @@ public:
 	}
 	uint newmodule(uint key,int cnt)
 	{
-		return backend->newobj(key,SoModule,cnt);
+		return backend->newobj(key,SoModule,cnt,0);
 	}
 	uint newobj(ExecClass* cls)
 	{
@@ -302,7 +306,13 @@ public:
 			SoThrowKeyError();
 		return ret;
 	};
-
+	uint newarray(int size, int isobj)
+	{
+		uint ret=allockey(SoArray,size,isobj);
+		if(ret==0)
+			SoThrowKeyError();
+		return ret;
+	};
 	uint newstr(DVM_ObjectRef* s)
 	{
 		uint ret=allockey(SoString,1);
@@ -394,8 +404,13 @@ extern "C" DVM_ObjectRef SoGeto(uint key,uint fldid,int idx_in_exe)
 {
 	DVM_ObjectRef obj;
 	int ret= storage.get(key,fldid).key;
-	int class_index = curthread->current_executable->class_table[idx_in_exe];
-    obj.v_table = curdvm->bclass[class_index]->class_table;
+	if(idx_in_exe!=-1)
+	{
+		int class_index = curthread->current_executable->class_table[idx_in_exe];
+		obj.v_table = curdvm->bclass[class_index]->class_table;
+	}
+	else
+		obj.v_table=curdvm->array_v_table;
 	obj.data=(DVM_Object*)ret;
 	return obj;
 }
@@ -479,6 +494,80 @@ extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
 {
 	int class_index = curthread->current_executable->class_table[idx_in_exe];
 	return SoDoNew(class_index,methodid);
+}
+
+
+int SoDoCreateArray(DVM_VirtualMachine *dvm, int dim, int dim_index,
+                 DVM_TypeSpecifier *type)
+{
+    int ret;
+    int size;
+    int i;
+    DVM_ObjectRef exception_dummy;
+	//fix-me : should use curthread?
+	size = (curthread->stack.stack_pointer-dim)->int_value;
+
+    if (dim_index == type->derive_count-1) {
+        switch (type->basic_type) {
+        case DVM_VOID_TYPE:
+            DBG_panic(("creating void barray"));
+            break;
+        case DVM_BOOLEAN_TYPE: /* FALLTHRU */
+        case DVM_INT_TYPE:
+        case DVM_ENUM_TYPE:
+        case DVM_DOUBLE_TYPE:
+			ret = storage.newarray(size,0);
+            break;
+		case DVM_CLASS_TYPE:
+        case DVM_STRING_TYPE: /* FALLTHRU */
+            ret = storage.newarray(size,1);
+            break;
+		case DVM_VARIENT_TYPE:
+		case DVM_NATIVE_POINTER_TYPE:
+        case DVM_DELEGATE_TYPE:
+        case DVM_NULL_TYPE: /* FALLTHRU */
+        case DVM_BASE_TYPE: /* FALLTHRU */
+        case DVM_UNSPECIFIED_IDENTIFIER_TYPE: /* FALLTHRU */
+        default:
+            DBG_assert(0, ("type->basic_type..%d\n", type->basic_type));
+            break;
+        }
+    } else if (type->derive[dim_index].tag == DVM_FUNCTION_DERIVE) {
+        DBG_panic(("BFunction type in barray literal.\n"));
+    } else {
+        ret = storage.newarray(size,1);
+        if (dim_index < dim - 1) {
+			curthread->stack.stack_pointer->object.data=(DVM_Object*)ret;
+			curthread->stack.stack_pointer->object.v_table=dvm->array_v_table; //fix-me
+			*curthread->stack.flg_sp=DVM_TRUE;
+            curthread->stack.stack_pointer++;curthread->stack.flg_sp++;
+            for (i = 0; i < size; i++) {
+                int child;
+                child = SoDoCreateArray(dvm, dim, dim_index+1, type);
+                SoSeto( ret, i, child);
+            }
+            curthread->stack.stack_pointer--;curthread->stack.flg_sp--;
+        }
+    }
+    return ret;
+}
+
+DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier *type)
+{
+    DVM_ObjectRef ret;
+	ret.data= (DVM_Object*)SoDoCreateArray(dvm, dim, 0, type);
+	ret.v_table = dvm->array_v_table;//fix-me : 
+    curthread->stack.stack_pointer -= dim; curthread->stack.flg_sp -=dim;
+	return ret;
+}
+
+extern "C" DVM_ObjectRef SoNewArray(BINT ty,BINT dim)
+{
+        DVM_TypeSpecifier *type
+			= &curthread->current_executable->executable->type_specifier[ty];
+        DVM_ObjectRef barray;
+        barray = SoCreateArray(curdvm, dim, type);
+        return barray;
 }
 
 extern "C" void SoInc(DVM_Value* args)

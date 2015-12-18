@@ -953,7 +953,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	FunctionType* FTArr = FunctionType::get(TyObjectRef,Args2Int, false);
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
-	fNewGlobalArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewGlobalArray", module);
+	fNewGlobalArray = Function::Create(FTArr, Function::ExternalLinkage,"shared!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
 	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
 
@@ -1646,7 +1646,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 					bstatic[decl->variable_index].violated=1;
 					//}
 					builder.CreateStore(v,p2);
-					if(dkc_is_array(decl->type)) //Full_arr_chk
+					if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global) //Full_arr_chk
 					{
 						if(isArrayAddressSet(decl->variable_index,0))
 						{

@@ -1503,6 +1503,10 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,(void*)SoNew);
 	MCJIT->addGlobalMapping("shared!New",(void*)SoNew);
 
+	f=m->getFunction("shared!NewArray");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoNewArray);
+	MCJIT->addGlobalMapping("shared!NewArray",(void*)SoNewArray);
+
 	f=m->getFunction("system!AtmInc");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)UaAtomicInc);
 	MCJIT->addGlobalMapping("system!AtmInc",(void*)UaAtomicInc);}
