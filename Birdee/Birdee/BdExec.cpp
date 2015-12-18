@@ -1507,6 +1507,10 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,(void*)SoNewArray);
 	MCJIT->addGlobalMapping("shared!NewArray",(void*)SoNewArray);
 
+	f=m->getFunction("shared!GlobalArrBoundaryCheck");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SoGlobalArrBoundaryCheck);
+	MCJIT->addGlobalMapping("shared!GlobalArrBoundaryCheck",(void*)SoGlobalArrBoundaryCheck);
+
 	f=m->getFunction("system!AtmInc");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)UaAtomicInc);
 	MCJIT->addGlobalMapping("system!AtmInc",(void*)UaAtomicInc);}

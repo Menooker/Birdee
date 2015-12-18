@@ -121,7 +121,7 @@ Function *fAtmInc;
 Function *fAtmDec;
 Function *fSharedInc;
 Function *fSharedDec;
-
+Function *fGlobalArrBoundaryCheck;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -956,6 +956,10 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fNewGlobalArray = Function::Create(FTArr, Function::ExternalLinkage,"shared!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
 	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
+
+	 
+	fGlobalArrBoundaryCheck=Function::Create(FunctionType::get(Type::getVoidTy(context),Args2Int, false)
+		, Function::ExternalLinkage,"shared!GlobalArrBoundaryCheck", module);
 
 	FunctionType* nft = FunctionType::get(Type::getInt32PtrTy(context), false);
 	fPushException = Function::Create(nft, Function::ExternalLinkage,"system!PushException", module);
@@ -1815,8 +1819,12 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 					v=builder.CreateCall(GetObjrefPtr(),v);
 					vty=2;
 				}
-				builder.CreateCall3(SharedPutSwitch[vty],
-					builder.CreateCall(GetObjrefPtr(),arr),idx,v);
+				Value* id=builder.CreateCall(GetObjrefPtr(),arr);
+				if(block && block->unsafe)
+				{}
+				else
+					builder.CreateCall2(fGlobalArrBoundaryCheck,id,idx);
+				builder.CreateCall3(SharedPutSwitch[vty],id,idx,v);
 			}
 			else
 			{
@@ -2199,7 +2207,10 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		{
 			Value* obj=builder.CreateCall(GetObjrefPtr(),arr);
 			int ty=get_opcode_type_offset_shared(expr->type);
-
+			if(block && block->unsafe)
+			{}
+			else
+				builder.CreateCall2(fGlobalArrBoundaryCheck,obj,idx);
 			switch(ty)
 			{
 			case 2: //object

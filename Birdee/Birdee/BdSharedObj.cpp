@@ -46,6 +46,11 @@ public:
 	SoStorageLocalTest(char*){};
 	SoStorageLocalTest(){};
 
+	int getsize(uint key)
+	{
+		return map[key].cls.field_cnt;
+	}
+
 	int inc(uint key,int fldid,int inc)
 	{
 		return UaAtomicInc((long*)&map[MAKE64(key,fldid)].var.vi,inc);
@@ -322,6 +327,20 @@ public:
 		return ret;
 	};
 
+
+	uint getsize(uint id)
+	{
+		try
+		{
+			return backend->getsize(id);
+		}
+		catch (int &a)
+		{
+			SoThrowKeyError();
+			return 0;
+		}
+	};
+
 	int inc(uint key,int fldid,int inc)
 	{
 		try
@@ -563,12 +582,21 @@ DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier 
 
 extern "C" DVM_ObjectRef SoNewArray(BINT ty,BINT dim)
 {
-        DVM_TypeSpecifier *type
-			= &curthread->current_executable->executable->type_specifier[ty];
-        DVM_ObjectRef barray;
-        barray = SoCreateArray(curdvm, dim, type);
-        return barray;
+    DVM_TypeSpecifier *type
+		= &curthread->current_executable->executable->type_specifier[ty];
+    DVM_ObjectRef barray;
+    barray = SoCreateArray(curdvm, dim, type);
+    return barray;
 }
+
+extern "C" void SoGlobalArrBoundaryCheck(BINT arr,BINT idx)
+{
+	if(idx>=storage.getsize(arr))
+	{
+		ExSystemRaise(ExArrayIndexOutOfBoundErr);
+	}
+}
+
 
 extern "C" void SoInc(DVM_Value* args)
 {

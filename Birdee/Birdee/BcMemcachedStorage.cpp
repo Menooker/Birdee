@@ -45,6 +45,22 @@ SoStorageMemcached::~SoStorageMemcached()
 		//memcached_free(memc); //fix-me : unknown error at here
 }
 
+
+int SoStorageMemcached::getsize(uint key)
+{
+	char ch[17];
+	sprintf(ch,"%016llx",MAKE64(key,0));
+	size_t return_key_length=17;
+	size_t return_value_length;
+	uint32_t flags;
+	memcached_return rc;
+	char* return_value = memcached_get(memc, ch,return_key_length, &return_value_length, &flags, &rc);
+	if(rc!=MEMCACHED_SUCCESS)
+		throw 1;
+	NodeValue* node=(NodeValue*) return_value;
+	return node->field_cnt;
+}
+
 int SoStorageMemcached::getcounter(uint key,int fldid)
 {
 	char ch[17];

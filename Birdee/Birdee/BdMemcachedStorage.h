@@ -20,6 +20,7 @@ public:
 	int dec(uint key,int fldid,int dec);
 	int getcounter(uint key,int fldid);
 	void setcounter(uint key,int fldid,int n);
+	int getsize(uint key);
 	~SoStorageMemcached();
 	SoStorageMemcached(char* host)
 	{

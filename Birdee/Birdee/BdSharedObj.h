@@ -87,6 +87,7 @@ void SoDec(DVM_Value* args);
 void SoSetCounter(DVM_Value* args);
 void SoGetCounter(DVM_Value* args);
 DVM_ObjectRef SoNewArray(BINT ty,BINT dim);
+void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
@@ -112,6 +113,7 @@ public:
 	virtual SoStatus getstr(uint key,wchar_t** str,uint* len)=0;
 	virtual bool exists(uint key)=0;
 	virtual SoStatus newobj(uint key,SoType tag,int fld_cnt,int flag)=0;
+	virtual int getsize(uint key)=0;
 };
 #endif
 
