@@ -313,6 +313,7 @@ struct DVM_VirtualMachine_tag {
     ExecutableEntry     *executable_entry;
     ExecutableEntry     *top_level;
     DVM_VTable  *array_v_table;
+	DVM_VTable  *global_array_v_table;
     DVM_VTable  *string_v_table;
     DVM_Context *current_context;
     DVM_Context *free_context;

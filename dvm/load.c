@@ -894,6 +894,7 @@ static void
 set_built_in_methods(DVM_VirtualMachine *dvm)
 {
     DVM_VTable *array_v_table;
+	DVM_VTable *global_array_v_table;
     DVM_VTable *string_v_table;
     int i;
 
@@ -908,6 +909,18 @@ set_built_in_methods(DVM_VirtualMachine *dvm)
                                   array_v_table->table[i].name);
     }
     dvm->array_v_table = array_v_table;
+
+	global_array_v_table= alloc_v_table(NULL);
+    array_v_table->table_size = ARRAY_SIZE(st_array_method_v_table);
+    array_v_table->table = MEM_malloc(sizeof(VTableItem)
+                                      * array_v_table->table_size);
+    for (i = 0; i < array_v_table->table_size; i++) {
+        array_v_table->table[i] = st_array_method_v_table[i];
+        array_v_table->table[i].index
+            = dvm_search_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,
+                                  array_v_table->table[i].name);
+    }
+	dvm->global_array_v_table = global_array_v_table;
 
     string_v_table = alloc_v_table(NULL);
     string_v_table->table_size = ARRAY_SIZE(st_string_method_v_table);

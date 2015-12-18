@@ -5,3 +5,4 @@ curthread->stack.flg_sp add a stack type
 Need a patch on libmemcached
 global array 's v_table 
 find a fast way from int key to string key
+global array built-in functions

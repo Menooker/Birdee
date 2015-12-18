@@ -2100,6 +2100,8 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
 
     MEM_free(dvm->array_v_table->table);
     MEM_free(dvm->array_v_table);
+	MEM_free(dvm->global_array_v_table->table);
+    MEM_free(dvm->global_array_v_table);
     MEM_free(dvm->string_v_table->table);
     MEM_free(dvm->string_v_table);
     MEM_free(dvm->bclass);
