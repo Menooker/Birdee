@@ -84,6 +84,10 @@ To build LLVM with MinGW, the following steps are to be taken.
    
    ar.exe x libLLVMMCParser.a
    
+   ar x libLLVMBitReader.a
+
+   ar x libLLVMBitWriter.a
+
    ar.exe rcs libLLVMLite.a *.obj ./CodeGen/CMakeFiles/LLVMCodeGen.dir/Analysis.cpp.obj
    
    del *.obj
