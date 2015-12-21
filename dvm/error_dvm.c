@@ -2,9 +2,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\include\DVM_dev.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "DVM_dev.h"
 #include "dvm_pri.h"
 
 typedef struct {

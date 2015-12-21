@@ -39,7 +39,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\..\include2;$(SolutionDir)..\..\include;$(SolutionDir)..\..\memcached_include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Birdee;$(SolutionDir)..\..\include2;$(SolutionDir)..\..\include;$(SolutionDir)..\..\;$(SolutionDir)..\share;$(SolutionDir)..\memory;$(SolutionDir)..\debug;$(SolutionDir)..\compiler;$(SolutionDir)..\include;$(SolutionDir)..\dvm;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -52,7 +52,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>BD_ON_VC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BD_ON_WINDOWS;BD_ON_VC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
@@ -87,6 +87,7 @@
     <None Include="..\..\compiler\diksam.l" />
     <None Include="..\..\compiler\diksam.y" />
     <None Include="..\..\compiler\test\test.dkm" />
+    <None Include="..\..\Lib\Remote.dkm" />
     <None Include="..\..\README.md" />
     <None Include="8Queens.txt" />
     <None Include="ab.dkh" />
@@ -99,7 +100,9 @@
     <None Include="Exceptions2.dkh" />
     <None Include="list.txt" />
     <None Include="ReadMe.txt" />
+    <None Include="Remote.dkh" />
     <None Include="req2.dkh" />
+    <None Include="SharedObjTests.txt" />
     <None Include="template_test.txt" />
     <None Include="test_delegate.txt" />
     <None Include="thread.txt" />
@@ -118,7 +121,7 @@
     <ClInclude Include="..\..\include\DVM_code.h" />
     <ClInclude Include="..\..\include\DVM_dev.h" />
     <ClInclude Include="..\..\include\MEM.h" />
-    <ClInclude Include="..\..\include\share.h" />
+    <ClInclude Include="..\..\include\share_dvm.h" />
     <ClInclude Include="..\..\memory\memory.h" />
     <ClInclude Include="BcMCJIT.h" />
     <ClInclude Include="BdArrayCache.h" />

@@ -1,8 +1,9 @@
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
-#include "..\Birdee\Birdee\BirdeeDef.h"
+#include "BirdeeDef.h"
+#include "BdParameters.h"
 
 #define UTF_8_SOURCE
 
@@ -26,6 +27,7 @@ typedef struct {
     char *name;
     BuiltInMethod *method;
     int method_count;
+	int is_shared;
 } BuiltInClass;
 
 static BuiltInMethodParameter st_object_equals_arg[] = {
@@ -83,7 +85,7 @@ static BuiltInMethod st_object_method[] = {
 
 
 static BuiltInClass st_builtin_class[]={
-	{"Object",st_object_method,ARRAY_SIZE(st_object_method)},
+	{"Object",st_object_method,ARRAY_SIZE(st_object_method),0},
 };
 
 static FunctionDefinition *
@@ -93,7 +95,7 @@ create_built_in_method(DKC_Compiler* compiler,BuiltInMethod *src, int method_cou
     int param_idx;
     ParameterList *param_list;
     FunctionDefinition *fd_array;
-	
+
     fd_array = dkc_malloc(sizeof(FunctionDefinition) * method_count);
 	memset(fd_array,0,sizeof(FunctionDefinition) * method_count);
     for (i = 0; i < method_count; i++) {
@@ -144,7 +146,7 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 	pn->next->name="lang";
 	pn->next->next=NULL;
 
-	
+
 	for(i=0;i<cls_count;i++)
 	{
 		cd=(ClassDefinition*)dkc_malloc(sizeof(ClassDefinition));
@@ -156,6 +158,7 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 		cd->is_abstract=DVM_TRUE;
 		cd->line_number=0;
 		cd->checked=0;
+		cd->is_shared=src[i].is_shared;
 
 		mnext=&cd->member;
 		for(j=0;j<src->method_count;j++)
@@ -222,7 +225,6 @@ DKC_create_compiler(void)
     compiler->input_mode = FILE_INPUT_MODE;
     compiler->required_list = NULL;
 
-	
 
     compiler->array_method_count = ARRAY_SIZE(st_array_method);
     compiler->array_method
@@ -232,8 +234,8 @@ DKC_create_compiler(void)
     compiler->string_method
         = create_built_in_method(compiler,st_string_method,
                                  ARRAY_SIZE(st_string_method));
-	
-	
+
+
 #ifdef EUC_SOURCE
     compiler->source_encoding = EUC_ENCODING;
 #else
@@ -454,12 +456,52 @@ add_exe_to_list(DVM_Executable *exe, DVM_ExecutableList *list) //modified : "sta
     return DVM_TRUE;
 }
 
+static char* findfilename(DKC_Compiler *compiler,char* path)
+{
+	char* finda;
+	char* findb;
+	char* found;
+	char* dot;
+	char* ret;
+	finda=strrchr(path,'/');
+	findb=strrchr(path,'\\');
+	if(finda>findb)
+		found=finda;
+	else
+		found=findb;
+	if(!found)
+		found=path;
+	else
+		found++;
+	dot=found;
+	while(*dot)
+	{
+		if(*dot=='.')
+			break;
+		dot++;
+	}
+	ret=MEM_storage_malloc(compiler->compile_storage,dot-found+1);
+	strncpy(ret,found,dot-found);
+	ret[dot-found]=0;
+	return ret;
+
+}
+
 static void
 set_path_to_compiler(DKC_Compiler *compiler, char *path)
 {
+	PackageName *nm;
     compiler->path = MEM_storage_malloc(compiler->compile_storage,
                                         strlen(path) + 1);
     strcpy(compiler->path, path);
+	if(path && path[0]!=0)
+	{
+		nm=MEM_storage_malloc(compiler->compile_storage,sizeof(PackageName));
+		nm->name=findfilename(compiler,path);
+		nm->next=NULL;
+		compiler->package_name=nm;
+	}
+
 }
 
 static DVM_Executable *
@@ -492,7 +534,12 @@ do_compile(DKC_Compiler *compiler, DVM_ExecutableList *list,
             continue;
         }
         req_comp = DKC_create_compiler();
-
+		if(req_pos->package_name && !strcmp(req_pos->package_name->name,"diksam")
+			&& req_pos->package_name->next && !strcmp(req_pos->package_name->next->name,"lang")
+			&& req_pos->package_name->next->next==NULL)
+		{
+			create_built_in_class(req_comp,st_builtin_class,ARRAY_SIZE(st_builtin_class),&req_comp->class_definition_list);
+		}
         // BUGBUG req_comp references parent compiler's MEM_storage
         req_comp->package_name = req_pos->package_name;
         req_comp->source_suffix = DKH_SOURCE;
@@ -609,6 +656,8 @@ dkc_dynamic_compile2(DKC_Compiler *compiler, char *package_name,
 
     return SEARCH_FILE_SUCCESS;
 }
+
+
 extern void BcBuildInlines(void* mod);
 DVM_ExecutableList *
 DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
@@ -620,10 +669,10 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 	int fcnt,i;
 	DVM_ExecutableItem* pCur;PackageName packagename={0,0};DKC_Compiler* newcomp;char search_file[260];SearchFileStatus status;//modified
 	DKC_Compiler* back_compiler;
+	char* tmp;
 
 	back_compiler = dkc_get_current_compiler();
 	dkc_set_current_compiler(compiler);
-	create_built_in_class(compiler,st_builtin_class,ARRAY_SIZE(st_builtin_class),&compiler->class_definition_list);
 	dkc_set_current_compiler(back_compiler);
 
     DBG_assert(st_compiler_list == NULL,
@@ -635,6 +684,7 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 
     list = MEM_malloc(sizeof(DVM_ExecutableList));
     list->list = NULL;
+
 
     exe = do_compile(compiler, list, NULL, DVM_FALSE);
     exe->path = MEM_strdup(path);
@@ -648,31 +698,31 @@ DKC_compile(DKC_Compiler *compiler, FILE *fp, char *path)
 		for(i=0;i<fcnt;i++)
 		{
 			if(!pCur->executable->function[i].isLib  && !pCur->executable->function[i].is_implemented
-				&& !isPackageInBuiltIn(pCur->executable->function[i].package_name))
+				&& !isPackageInBuiltIn(pCur->executable->function[i].package_name) && parameters.isSyslib==0)
 			{
 
-				newcomp=DKC_create_compiler();
+				/*newcomp=DKC_create_compiler();
 				status=dkc_dynamic_compile2(newcomp,pCur->executable->function[i].package_name,list,search_file);
 				if (status != SEARCH_FILE_SUCCESS) {
 						printf("ERROR %d\n",status);
-				}
-				//printf("CP %s\n",search_file);
+				}*/
+				printf("Warning : Function %s.%s not implemented.\n",pCur->executable->function[i].package_name,pCur->executable->function[i].name);
 			}
 		}
 		fcnt=pCur->executable->function_count;
 		if(pCur->executable->function && pCur->executable->class_definition)
 		{
-			for(i=0;i<fcnt;i++)
+			for(i=0;i<pCur->executable->class_count;i++)
 			{
-				if(  pCur->executable->function[i].package_name && !pCur->executable->class_definition[i].is_implemented  && !isPackageInBuiltIn(pCur->executable->function[i].package_name))
+				if(pCur->executable->class_definition[i].package_name && !pCur->executable->class_definition[i].is_implemented  && !isPackageInBuiltIn(pCur->executable->class_definition[i].package_name))
 				{
-					//fix-me : check cls.superclass & interface ?
+					/*//fix-me : check cls.superclass & interface ?
 					newcomp=DKC_create_compiler();
 					status=dkc_dynamic_compile2(newcomp,pCur->executable->function[i].package_name,list,search_file);
 					if (status != SEARCH_FILE_SUCCESS) {
 							printf("ERROR %d\n",status);
-					}
-					//printf("CP %s\n",search_file);
+					}*/
+					printf("Warning : Class %s.%s not implemented.\n",pCur->executable->class_definition[i].package_name,pCur->executable->class_definition[i].name);
 				}
 			}
 		}

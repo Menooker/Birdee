@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "..\..\include\DVM.h"
-#include "..\..\include\DBG.h"
+#include "DVM.h"
+#include "DBG.h"
 
 #define ROOT_DIR ("../../require/")
 #define LINE_BUF_SIZE (1024)
@@ -117,7 +117,7 @@ main(int argc, char **argv)
         exit(1);
     }
     dump_file("head.txt", out_fp);
-    
+
     for (i = 0; i < sizeof(st_target_package) / sizeof(TargetPackage); i++) {
         do_conv(&st_target_package[i], out_fp);
     }

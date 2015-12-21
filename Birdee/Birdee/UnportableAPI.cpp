@@ -2,12 +2,19 @@
 #include "BirdeeDef.h"
 #include <stdio.h>
 #ifdef BD_ON_WINDOWS
-#include <Windows.h>
+    #include <Windows.h>
+#else
+    #include <sys/mman.h>
+    #include <signal.h>
 #endif
-
+#include <stdlib.h>
 extern "C"
 {
 thread_local BdThread* curthread;
+
+#ifndef BD_ON_WINDOWS
+int PAGE_SIZE=getpagesize();
+#endif
 
 #ifdef BD_ON_VC
 #ifdef BD_ON_X86
@@ -98,7 +105,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		SuspendThread(id);
 	}
 
-	void UaResumeThread(THREAD_ID id)
+	void UaResumeThread(THREAD_ID id,BdThread* th)
 	{
 		ResumeThread(id);
 	}
@@ -137,7 +144,20 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 #endif //BD_ON_VC & BD_ON_X86
 	}
 
+	int UaAtomicInc(long* ptr,long inc)
+	{
+		return InterlockedExchangeAdd(ptr,inc);
+	}
 
+	int UaAtomicDec(long* ptr,long dec)
+	{
+		return InterlockedExchangeAdd(ptr,-dec);
+	}
+
+	void UaSleep(int ms)
+	{
+		Sleep(ms);
+	}
 	void* UaGuardAlloc(size_t sz)
 	{
 
@@ -158,7 +178,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	}
 
 
-	void UaGuardFree(void* p)
+	void UaGuardFree(void* p,size_t sz)
 	{
 
 		VirtualFree(p,0,MEM_RELEASE);
@@ -182,6 +202,135 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		VirtualProtect(buf,sz,st,&dold);
 		return ;
 
+	}
+#else
+    //for linux
+
+    void thread1_suspend(int dummy)
+    {
+        pthread_mutex_lock(&curthread->suspend_lock);
+        pthread_mutex_lock(&curthread->suspend_lock);
+    }
+
+
+	extern void ThThreadStub(BdThread*);
+	void* UaThreadStub(void* p)
+	{
+        signal(SIGUSR1, thread1_suspend);
+		ThThreadStub((BdThread*)p);
+		return 0;
+	}
+
+	THREAD_ID UaGetCurrentThread()
+	{
+		return pthread_self();
+	}
+
+	void UaStopThread(THREAD_ID t)
+	{
+        pthread_cancel(t);//fix-me : check if it is suspended?
+	}
+
+	void UaSetCurVM(DVM_VirtualMachine_tag* vm)
+	{
+		curdvm=vm;
+		//TlsSetValue(dwTlsIndex,vm);
+	}
+
+	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
+	{
+		vm->new_obj=arg;
+		THREAD_ID id;
+        pthread_create(&id,NULL,UaThreadStub,vm);
+        return id;
+	}
+
+	void UaSuspendThread(THREAD_ID id)
+	{
+		pthread_kill(id, SIGUSR1);
+	}
+
+	void UaResumeThread(THREAD_ID id,BdThread* th)
+	{
+		pthread_mutex_unlock(&th->suspend_lock);
+		pthread_mutex_unlock(&th->suspend_lock);
+	}
+	void UaInitLock(BD_LOCK* lc)
+	{
+		pthread_spin_init(lc,PTHREAD_PROCESS_PRIVATE);
+	}
+
+	void UaKillLock(BD_LOCK* lc)
+	{
+		pthread_spin_destroy(lc);
+	}
+
+	void UaEnterLock(BD_LOCK* lc)
+	{
+		pthread_spin_lock(lc);
+	}
+
+	void UaLeaveLock(BD_LOCK* lc)
+	{
+		pthread_spin_unlock(lc);
+	}
+
+	void UaBreakPoint()
+	{
+        _BreakPoint
+	}
+
+	int UaAtomicInc(long* ptr,long inc)
+	{
+		return __sync_add_and_fetch(ptr,inc);
+	}
+
+	int UaAtomicDec(long* ptr,long dec)
+	{
+		return __sync_add_and_fetch(ptr,-dec);
+	}
+
+	void UaSleep(int ms)
+	{
+		usleep(ms*1000);
+	}
+	void* UaGuardAlloc(size_t sz)
+	{
+
+		size_t pages=sz/PAGE_SIZE;
+		if(sz%PAGE_SIZE!=0)
+			pages++;
+        void* p=mmap(NULL, (pages+1)*PAGE_SIZE,PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, 0,0);
+        if(p==(void *)-1)
+        {
+            printf("Error when alloc!");
+			exit(1);
+        }
+		UaSetBufferUnreadable((char*)p + pages*PAGE_SIZE,PAGE_SIZE);
+		return p;
+
+	}
+
+
+	void UaGuardFree(void* p,size_t sz)
+	{
+
+		munmap(p,TRIM_TO_PAGE(sz)+PAGE_SIZE);
+		return ;
+
+	}
+
+	long UaSetBufferUnreadable(void* buf,size_t sz)
+	{
+
+		mprotect(buf,sz,PROT_NONE);
+		return 0;
+
+	}
+
+	void UaRestoreBufferStatus(void* buf,size_t sz,long st)
+	{
+		return ;
 	}
 #endif //BD_ON_WINDOWS
 }

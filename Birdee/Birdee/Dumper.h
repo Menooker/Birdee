@@ -2,7 +2,7 @@
 #ifndef _H_DUMPER
 #define _HDUMPER
 
-#include "../../include/DKC.h"
+#include "DKC.h"
 #ifdef __cplusplus
 extern "C"
 {

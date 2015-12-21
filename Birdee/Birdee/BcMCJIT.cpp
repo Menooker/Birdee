@@ -248,6 +248,7 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   tm->setMCUseDwarfDirectory(true);
   tm->setMCUseLoc(true);
                    tm->Options.NoFramePointerElim=1;
+
 				   //tm->setOptLevel(CodeGenOpt::Level::Less  );
 											eb .setUseMCJIT(this->mUseMC)
                                             .setErrorStr(&ErrStr);

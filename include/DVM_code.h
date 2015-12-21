@@ -2,7 +2,7 @@
 #define PUBLIC_DVM_CODE_H_INCLUDED
 #include <stdio.h>
 #include <wchar.h>
-#include "..\include\DVM.h"
+#include "DVM.h"
 
 
 #ifdef __cplusplus
@@ -276,7 +276,7 @@ typedef struct {
 typedef enum {
     DVM_FILE_ACCESS,
     DVM_PUBLIC_ACCESS,
-    DVM_PRIVATE_ACCESS
+    dvm_priVATE_ACCESS
 } DVM_AccessModifier;
 
 typedef struct {
@@ -367,7 +367,7 @@ struct DVM_Executable_tag {
 	char*				libname;
 	int					id;
 	int					shared_count;
-	
+
 };
 
 typedef struct DVM_ExecutableItem_tag {

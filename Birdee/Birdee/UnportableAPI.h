@@ -6,8 +6,13 @@
 		#include <Windows.h>
 		typedef void* THREAD_ID;
 		#define BD_LOCK CRITICAL_SECTION
-
+    #else
+        #include <unistd.h>
+        #include <pthread.h>
+        #define BD_LOCK pthread_spinlock_t
+        typedef pthread_t THREAD_ID;
 	#endif
+
 	#undef min
 	#undef max
 
@@ -17,16 +22,15 @@
 extern "C"
 {
 #endif
-	#include "../../dvm/dvm_pri.h"
-
+	#include "dvm_pri.h"
+    #define TRIM_TO_PAGE(a) ((a/PAGE_SIZE + (a % PAGE_SIZE == 0 ? 0:1) )* PAGE_SIZE)
 	extern  thread_local BdThread* curthread;
 	extern 	DVM_VirtualMachine* curdvm;
-	extern DWORD dwTlsIndex; 
 	typedef void (*UaTraceCallBack)(void* param,void* ebp,void* retaddr,void* calladdr);
 	long UaSetBufferUnreadable(void* buf,size_t sz);
 	void UaRestoreBufferStatus(void* buf,size_t sz,long st);
 	void* UaGuardAlloc(size_t sz);
-	void UaGuardFree(void* p);
+	void UaGuardFree(void* p,size_t sz);
 	void  UaStackTrace(UaTraceCallBack cb,void* param);
 	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg);
 	THREAD_ID UaGetCurrentThread();
@@ -38,7 +42,10 @@ extern "C"
 	void UaEnterLock(BD_LOCK* lc);
 	void UaLeaveLock(BD_LOCK* lc);
 	void UaSuspendThread(THREAD_ID id);
-	void UaResumeThread(THREAD_ID id);
+	void UaResumeThread(THREAD_ID id,BdThread* th);
+	void UaSleep(int ms);
+	int UaAtomicInc(long* ptr,long inc);
+	int UaAtomicDec(long* ptr,long dec);
 #ifdef __cplusplus
 }
 #endif

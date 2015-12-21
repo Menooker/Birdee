@@ -178,6 +178,7 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"unsafe"          return UNSAFE;
 <INITIAL>"safe"          return SAFE;
 <INITIAL>"shared"        return SHARED;
+<INITIAL>"global"        return GLOBAL;
 
 <INITIAL>"{"          {return LC;}
 <INITIAL>"}"          {return RC;}
@@ -207,6 +208,8 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"~"            return BIT_NOT;
 <INITIAL>"+="           return ADD_ASSIGN_T;
 <INITIAL>"-="           return SUB_ASSIGN_T;
+<INITIAL>"@+="          return ATM_ADD_ASSIGN_T;
+<INITIAL>"@-="          return ATM_SUB_ASSIGN_T;
 <INITIAL>"*="           return MUL_ASSIGN_T;
 <INITIAL>"/="           return DIV_ASSIGN_T;
 <INITIAL>"%="           return MOD_ASSIGN_T;

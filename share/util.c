@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
-#include "..\include\DBG.h"
-#include "..\include\MEM.h"
-#include "..\include\share.h"
+#include "DBG.h"
+#include "MEM.h"
+#include "share_dvm.h"
 
 /*
  * found_path size is FILENAME_MAX.

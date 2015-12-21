@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
 
 static DKC_Compiler *st_current_compiler;
@@ -165,6 +165,11 @@ dkc_compare_type(TypeSpecifier *type1, TypeSpecifier *type2)
                 return DVM_FALSE;
             }
         }
+		else
+		{
+			if(d1->u.array_d.is_global!=d2->u.array_d.is_global)
+				return DVM_FALSE;
+		}
     }
     if (d1 || d2) {
         return DVM_FALSE;
@@ -279,7 +284,7 @@ dkc_search_declaration(char *identifier, Block *block)
             return d_pos->declaration;
         }
     }
-	
+
     return NULL;
 }
 
@@ -530,7 +535,7 @@ dkc_search_member(ClassDefinition *class_def,
 {
     MemberDeclaration *member;
     ExtendsList *extends_p;
-    
+
     for (member = class_def->member; member;
          member = member->next) {
         if (member->kind == METHOD_MEMBER) {
@@ -598,7 +603,7 @@ void
 dkc_vstr_append_character(VString *v, int ch)
 {
     int current_len;
-    
+
     current_len = my_strlen(v->string);
     v->string = MEM_realloc(v->string, current_len + 2);
     v->string[current_len] = ch;
@@ -636,7 +641,7 @@ void
 dkc_vwstr_append_character(VWString *v, int ch)
 {
     int current_len;
-    
+
     current_len = my_wcslen(v->string);
     v->string = MEM_realloc(v->string,sizeof(DVM_Char) * (current_len + 2));
     v->string[current_len] = ch;
@@ -732,7 +737,7 @@ dkc_get_type_name(TypeSpecifier *type)
 	{
 		sprintf(tmp,"template(%d)",type->u.template_id);
 		dkc_vstr_append_string(&vstr,tmp);
-	} 
+	}
 	else {
         dkc_vstr_append_string(&vstr,
                                dkc_get_basic_type_name(type->basic_type));
@@ -746,7 +751,7 @@ dkc_get_type_name(TypeSpecifier *type)
 		MEM_free(tempty);
 		tys= tys->next;
 		for(;tys;tys=tys->next)
-		{	
+		{
 			tempty=dkc_get_type_name(tys->name);
 			dkc_vstr_append_string(&vstr,",");
 			dkc_vstr_append_string(&vstr,tempty);
@@ -754,6 +759,9 @@ dkc_get_type_name(TypeSpecifier *type)
 		}
 		dkc_vstr_append_string(&vstr,">");
 	}
+	if(type->derive &&  type->derive->tag==ARRAY_DERIVE
+		&& type->derive->u.array_d.is_global)
+		dkc_vstr_append_string(&vstr, " global");
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
         switch (derive_pos->tag) {

@@ -2,8 +2,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
 
 extern char *yytext;
@@ -26,7 +26,7 @@ create_message_argument(MessageArgument *arg, va_list ap)
 {
     int index = 0;
     MessageArgumentType type;
-    
+
     while ((type = va_arg(ap, MessageArgumentType))
            != MESSAGE_ARGUMENT_END) {
         arg[index].type = type;
@@ -90,7 +90,7 @@ format_message(int line_number, ErrorDefinition *format, VWString *v,
 
     wc_format = dkc_mbstowcs_alloc(line_number, format->format);
     DBG_assert(wc_format != NULL, ("wc_format is null.\n"));
-    
+
     for (i = 0; wc_format[i] != L'\0'; i++) {
         if (wc_format[i] != L'$') {
             dkc_vwstr_append_character(v, wc_format[i]);

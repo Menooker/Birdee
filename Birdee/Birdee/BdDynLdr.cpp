@@ -1,9 +1,9 @@
 #include "BdDynLdr.h"
 extern "C"{
-#include "..\..\include\DBG.h"
-//#include "..\..\include\DVM.h"
-#include "..\..\DVM\DVM_pri.h"
-#include "../../include/MEM.h"
+#include "DBG.h"
+//#include "DVM.h"
+#include "dvm_pri.h"
+#include "MEM.h"
 }
 
 #include "Loader.h"
@@ -14,7 +14,14 @@ extern "C"{
 
 #include <string>
 #include <stdio.h>
+
+#ifdef BD_ON_WINDOWS
 #include <io.h>
+#else
+#include<unistd.h>
+#define _access access
+#endif
+
 #include <string.h>
 
 std::hash_map<std::string,DVM_ExecutableList> LoadedLibs;
@@ -211,7 +218,7 @@ DVM_ExecutableItem* LdLoadDynamicLibrary(DVM_VirtualMachine *dvm,char* path,char
 	}
     for (pos = list.list; pos; pos = pos->next) {
 		pos->executable->isDyn=DVM_TRUE;
-		pos->executable->class_count=0; //fix-me : may lead to memory leak
+		//pos->executable->class_count=0; //fix-me : may lead to memory leak
 
 		if(lastitm)
 			lastitm->next=pos;

@@ -42,10 +42,10 @@ typedef enum {
 extern "C"
 {
 #endif
-#include "..\..\include\DVM.h"
-#include "..\..\include\MEM.h"
-#include "..\..\dvm\dvm_pri.h"
-//#include "..\..\compiler\diksamc.h"
+#include "DVM.h"
+#include "MEM.h"
+#include "dvm_pri.h"
+//#include "diksamc.h"
 typedef struct ExecutableEntry_tag sExecutableEntry;
 typedef struct ExecutableEntry_tag sExecutableEntry;
 void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,sExecutableEntry* ee);
@@ -59,6 +59,7 @@ void  ExGetFunction(DVM_Value* v);
 void  ExRand(DVM_Value* v);
 void ExGetClock(DVM_Value* v);
 void ExGets();
+void  ExSleep(DVM_Value* v);
 void ExArraySize(DVM_Value *args);
 void ExStringLength(DVM_Value *args);
 DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);
@@ -81,6 +82,7 @@ void ExInitRegArray(BdThread* t);
 void ExInitThreadInAllModules();
 void  ExDoInvoke(BINT transindex);
 int ExExec(char* path);
+int ExGetMethodIndex(ExecClass *ec, char *method_name);
 #ifdef __cplusplus
 }
 #endif

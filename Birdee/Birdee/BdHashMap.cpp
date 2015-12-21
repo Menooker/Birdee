@@ -7,7 +7,7 @@ using namespace std;
 extern "C"
 {
 
-#include "../../include/MEM.h"
+#include "MEM.h"
 
 }
 

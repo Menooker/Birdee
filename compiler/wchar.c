@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-#include "..\include\DBG.h"
+#include "DBG.h"
 #include "diksamc.h"
 
 wchar_t *

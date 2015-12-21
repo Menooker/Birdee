@@ -2,9 +2,9 @@
 #include <string.h>
 #include <wchar.h>
 #include <limits.h>
-#include "..\include\DBG.h"
-#include "..\include\MEM.h"
-#include "..\include\DVM.h"
+#include "DBG.h"
+#include "MEM.h"
+#include "DVM.h"
 
 size_t
 dvm_wcslen(wchar_t *str)

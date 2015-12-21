@@ -1,6 +1,6 @@
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\include\DVM_code.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "DVM_code.h"
 
 static void dispose_local_variable(int local_variable_count,
                                    DVM_LocalVariable *local_variable_list);
@@ -137,7 +137,7 @@ dvm_dispose_executable_Ex(DVM_Executable *exe,int shouldFreeExe)
         }
     }
     MEM_free(exe->constant_pool);
-    
+
     for (i = 0; i < exe->global_variable_count; i++) {
         MEM_free(exe->global_variable[i].name);
         dispose_type_specifier(exe->global_variable[i].type);

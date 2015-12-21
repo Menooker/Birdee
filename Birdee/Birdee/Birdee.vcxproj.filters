@@ -75,6 +75,15 @@
     </None>
     <None Include="ToDoList.txt" />
     <None Include="..\..\README.md" />
+    <None Include="Remote.dkh">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\Lib\Remote.dkm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="SharedObjTests.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -111,9 +120,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\memory\memory.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\share.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\compiler\y.tab.h">
@@ -177,6 +183,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdMemcachedStorage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\share_dvm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

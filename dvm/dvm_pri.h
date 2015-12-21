@@ -1,19 +1,19 @@
-#ifndef DVM_PRI_H_INCLUDED
-#define DVM_PRI_H_INCLUDED
+#ifndef dvm_pri_H_INCLUDED
+#define dvm_pri_H_INCLUDED
 
-#include "..\include\DVM_code.h"
-#include "..\include\DVM_dev.h"
-#include "..\include\share.h"
-#include "..\Birdee\Birdee\BdException.h"
-#include "..\Birdee\Birdee\BirdeeDef.h"
-#include "..\Birdee\Birdee\BdHashMap.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
+#include "DVM_code.h"
+#include "DVM_dev.h"
+#include "share_dvm.h"
+#include "BdException.h"
+#include "BirdeeDef.h"
+#include "BdHashMap.h"
+#include "UnportableAPI.h"
 
 #include <stdarg.h>
 
 #define ExHeapFreedType 0xfeeeaeee
 typedef struct _RtlHashMap mRtlHashMap ;
-#define STACK_ALLOC_SIZE (4096)
+#define STACK_ALLOC_SIZE (PAGE_SIZE)
 #define HEAP_THRESHOLD_SIZE     (1024 * 256)
 #define ARRAY_ALLOC_SIZE (256)
 #define NULL_STRING (L"null")
@@ -146,7 +146,7 @@ struct DVM_String_tag {
     DVM_Char    *string;
 };
 
-typedef enum 
+typedef enum
 {
 	AV_INT=1,
 	AV_DOUBLE,
@@ -180,7 +180,7 @@ struct DVM_Array_tag {
 	int         size;
 	BINT* truebuffer;
     DVM_ArrayType   type;
-    
+
     int         alloc_size;
 
 };
@@ -290,10 +290,16 @@ struct _BdThread {
 	BINT				bpc;
 	PExExceptionItem	estack;
 	BINT				esp;
+	unsigned int     e_alloc_size;
 	PAutoVarContext     avstack;
 	BINT				asp;
+	unsigned int     av_alloc_size;
 	THREAD_ID				tid;
 	BINT				main;
+	unsigned int		thread_obj_id;
+#ifdef BD_ON_LINUX
+    pthread_mutex_t   suspend_lock;
+#endif
 	struct _BdThread* next;
 	struct _BdThread* prv;
 };
@@ -312,6 +318,7 @@ struct DVM_VirtualMachine_tag {
     ExecutableEntry     *executable_entry;
     ExecutableEntry     *top_level;
     DVM_VTable  *array_v_table;
+	DVM_VTable  *global_array_v_table;
     DVM_VTable  *string_v_table;
     DVM_Context *current_context;
     DVM_Context *free_context;
@@ -390,4 +397,4 @@ extern OpcodeInfo dvm_opcode_info[];
 extern DVM_ObjectRef dvm_null_object_ref;
 extern DVM_ErrorDefinition dvm_error_message_format[];
 
-#endif /* DVM_PRI_H_INCLUDED */
+#endif /* dvm_pri_H_INCLUDED */

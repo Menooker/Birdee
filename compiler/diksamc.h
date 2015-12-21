@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <wchar.h>
-#include "..\include\MEM.h"
-#include "..\include\DKC.h"
-#include "..\include\DVM_code.h"
-#include "..\include\share.h"
+#include "MEM.h"
+#include "DKC.h"
+#include "DVM_code.h"
+#include "share_dvm.h"
 
 #ifdef __cplusplus
 
@@ -164,6 +164,8 @@ typedef enum {
 	SHARED_VAR_NOT_PUBLIC_ERR,
 	SHARED_CLASS_ERR,
 	SHARED_CLASS_MEMBER_ERR,
+	GLOBAL_ARRAY_TYPE_ERR,
+	SHARED_ARRAY_NOT_GLOBAL_ERR,
     COMPILE_ERROR_COUNT_PLUS_1
 } CompileError;
 
@@ -339,7 +341,7 @@ typedef struct {
 } FunctionDerive;
 
 typedef struct {
-    int dummy; /* make compiler happy */
+    int is_global; /* make compiler happy */
 } ArrayDerive;
 
 typedef struct TypeDerive_tag {
@@ -437,6 +439,8 @@ typedef enum {
     NORMAL_ASSIGN = 1,
     ADD_ASSIGN,
     SUB_ASSIGN,
+    ATM_ADD_ASSIGN,
+    ATM_SUB_ASSIGN,
     MUL_ASSIGN,
     DIV_ASSIGN,
     MOD_ASSIGN
@@ -540,6 +544,7 @@ typedef struct ArrayDimension_tag {
 typedef struct {
     TypeSpecifier       *type;
     ArrayDimension      *dimension;
+	int is_global;
 } ArrayCreation;
 
 typedef struct Enumerator_tag {
@@ -947,7 +952,7 @@ typedef struct {
 } BuiltinScript;
 
 
-typedef struct 
+typedef struct
 {
 	char* libname;
 	int isLib;
@@ -999,7 +1004,7 @@ StatementList *dkc_chain_statement_list(StatementList *list,
 TypeSpecifier *dkc_create_type_specifier(DVM_BasicType basic_type);
 TypeSpecifier *dkc_create_identifier_type_specifier(char *identifier);
 TypeSpecifier *dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist);
-TypeSpecifier *dkc_create_array_type_specifier(TypeSpecifier *base);
+TypeSpecifier *dkc_create_array_type_specifier(TypeSpecifier *base,int is_shared);
 Expression *dkc_alloc_expression(ExpressionKind type);
 Expression *dkc_create_comma_expression(Expression *left, Expression *right);
 Expression *dkc_create_assign_expression(Expression *left,
@@ -1032,10 +1037,10 @@ Expression *dkc_create_new_delegate_expression();
 Expression *dkc_create_array_literal_expression(ExpressionList *list);
 Expression *dkc_create_basic_array_creation(DVM_BasicType basic_type,
                                             ArrayDimension *dim_expr_list,
-                                            ArrayDimension *dim_ilst);
+                                            ArrayDimension *dim_ilst,int is_global);
 Expression *dkc_create_class_array_creation(TypeSpecifier *type,
                                             ArrayDimension *dim_expr_list,
-                                            ArrayDimension *dim_ilst);
+                                            ArrayDimension *dim_ilst,int is_global);
 Expression *dkc_create_this_expression(void);
 Expression *dkc_create_super_expression(void);
 ArrayDimension *dkc_create_array_dimension(Expression *expr);

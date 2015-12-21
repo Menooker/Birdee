@@ -1,10 +1,10 @@
 
 #include <math.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
-#include "..\Birdee\Birdee\BirdeeDef.h"
+#include "BirdeeDef.h"
 
 int isClassOfObject(ClassDefinition * cd)
 {
@@ -311,6 +311,27 @@ fix_throws(ExceptionList *throws)
     }
 }
 
+
+static void check_global_array_type(TypeSpecifier *type)
+{
+	if (type->derive && type->derive->tag == ARRAY_DERIVE &&  type->derive->u.array_d.is_global) {
+		switch(type->basic_type)
+		{
+		case DVM_INT_TYPE:
+		case DVM_DOUBLE_TYPE:
+		case DVM_STRING_TYPE:
+			break;
+		case DVM_CLASS_TYPE:
+			if(!type->u.class_ref.class_definition->is_shared)
+				goto err;
+		default:
+			err:
+                dkc_compile_error(type->line_number,
+                                  GLOBAL_ARRAY_TYPE_ERR,
+                                  MESSAGE_ARGUMENT_END);
+		}
+	}
+}
 static void
 fix_type_specifier(TypeSpecifier *type)
 {
@@ -321,7 +342,6 @@ fix_type_specifier(TypeSpecifier *type)
 	TemplateDeclare* template_pos; int id;
 	TemplateTypes* tys;TemplateTypes* ty_pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
-
 
     for (derive_pos = type->derive; derive_pos;
          derive_pos = derive_pos->next) {
@@ -360,8 +380,8 @@ fix_type_specifier(TypeSpecifier *type)
 				{
 					DVM_Boolean dummy1;int dummy2;
 					fix_type_specifier(template_pos->super);
-					if(ty_pos->name->basic_type!=DVM_CLASS_TYPE 
-						|| ( ty_pos->name->u.class_ref.class_definition!=template_pos->super->u.class_ref.class_definition 
+					if(ty_pos->name->basic_type!=DVM_CLASS_TYPE
+						|| ( ty_pos->name->u.class_ref.class_definition!=template_pos->super->u.class_ref.class_definition
 							&& !is_super_class(ty_pos->name->u.class_ref.class_definition,template_pos->super->u.class_ref.class_definition,&dummy1,&dummy2) ))
 					{
 						if(!(ty_pos->name->basic_type==DVM_STRING_TYPE && isClassOfObject(template_pos->super->u.class_ref.class_definition)))
@@ -392,12 +412,14 @@ fix_type_specifier(TypeSpecifier *type)
             type->u.class_ref.class_definition = cd;
             type->u.class_ref.class_index = add_class(cd);
 			type->u.class_ref.tylist=tys;
+			check_global_array_type(type);
             return;
         }
         dd = dkc_search_delegate(type->identifier);
         if (dd) {
             type->basic_type = DVM_DELEGATE_TYPE;
             type->u.delegate_ref.delegate_definition = dd;
+			check_global_array_type(type);
             return;
         }
         ed = dkc_search_enum(type->identifier);
@@ -406,10 +428,11 @@ fix_type_specifier(TypeSpecifier *type)
             type->u.enum_ref.enum_definition = ed;
             type->u.enum_ref.enum_index
                 = reserve_enum_index(compiler, ed, DVM_FALSE);
+			check_global_array_type(type);
             return;
         }
-		
-		
+
+
 		if(BcGetCurrentCompilerContext()->curcls  ) //search in templates
 		{
 			id=0;
@@ -419,6 +442,7 @@ fix_type_specifier(TypeSpecifier *type)
 				{
 					type->basic_type = DVM_TEMPLATE_TYPE;
 					type->u.template_id=id;
+					check_global_array_type(type);
 					return;
 				}
 				id++;
@@ -429,6 +453,7 @@ fix_type_specifier(TypeSpecifier *type)
                           STRING_MESSAGE_ARGUMENT, "name", type->identifier,
                           MESSAGE_ARGUMENT_END);
     }
+	check_global_array_type(type);
 }
 
 static TypeSpecifier *
@@ -568,7 +593,7 @@ alloc_cast_expression(CastType cast_type, Expression *operand)
     } else if (cast_type == BOOLEAN_TO_STRING_CAST
                || cast_type == INT_TO_STRING_CAST
                || cast_type == DOUBLE_TO_STRING_CAST
-               || cast_type == ENUM_TO_STRING_CAST 
+               || cast_type == ENUM_TO_STRING_CAST
 			   || cast_type == VAR_TO_STRING_CAST ) {
         cast_expr->type = dkc_alloc_type_specifier(DVM_STRING_TYPE);
 	}
@@ -592,7 +617,7 @@ create_up_cast(Expression *src,
 {
     TypeSpecifier *type;
     Expression *cast_expr;
-    
+
     type = dkc_alloc_type_specifier(DVM_CLASS_TYPE);
     type->identifier = dest_interface->name;
     type->u.class_ref.class_definition = dest_interface;
@@ -730,7 +755,7 @@ create_var_to_cast(Expression *src,TypeSpecifier* ty)
 
     if (dkc_is_boolean(ty)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		_BreakPoint // fix-me 
+		_BreakPoint // fix-me
     } else if (dkc_is_int(ty)) {
         cast = alloc_cast_expression(VAR_TO_INT_CAST, src);
 
@@ -751,7 +776,7 @@ create_to_var_cast(Expression *src)
 
     if (dkc_is_boolean(src->type)) {
         //cast = alloc_cast_expression(BOOLEAN_TO_STRING_CAST, src);
-		_BreakPoint // fix-me 
+		_BreakPoint // fix-me
     } else if (dkc_is_int(src->type)) {
         cast = alloc_cast_expression(INT_TO_VAR_CAST, src);
 
@@ -819,7 +844,7 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
             }
             return src;
         }
-		else if(src->type->u.class_ref.tylist==NULL && dest->u.class_ref.tylist) // allow uninstantiated template objects to 
+		else if(src->type->u.class_ref.tylist==NULL && dest->u.class_ref.tylist) // allow uninstantiated template objects to
 																					// initialize instantiated template objects
 																					// but we don't allow the opposite way
 		{
@@ -931,7 +956,7 @@ fix_assign_expression(Block *current_block, Expression *expr,
                               left->u.identifier.name,
                               MESSAGE_ARGUMENT_END);
         }
-    } 
+    }
 	else if (left->kind ==AUTOVAR_EXPRESSION)
 	{
 	}
@@ -1020,7 +1045,7 @@ chain_string(Expression *expr)
     if (!right_str) {
         return expr;
     }
-    
+
     len = dvm_wcslen(left_str) + dvm_wcslen(right_str);
     new_str = MEM_malloc(sizeof(DVM_Char) * (len + 1));
     dvm_wcscpy(new_str, left_str);
@@ -1085,14 +1110,14 @@ cast_binary_expression(Expression *expr)
     if (dkc_is_int(expr->u.binary_expression.left->type)
         && dkc_is_double(expr->u.binary_expression.right->type)) {
         cast_expression
-            = alloc_cast_expression(INT_TO_DOUBLE_CAST, 
+            = alloc_cast_expression(INT_TO_DOUBLE_CAST,
                                     expr->u.binary_expression.left);
         expr->u.binary_expression.left = cast_expression;
 
     } else if (dkc_is_double(expr->u.binary_expression.left->type)
                && dkc_is_int(expr->u.binary_expression.right->type)) {
         cast_expression
-            = alloc_cast_expression(INT_TO_DOUBLE_CAST, 
+            = alloc_cast_expression(INT_TO_DOUBLE_CAST,
                                     expr->u.binary_expression.right);
         expr->u.binary_expression.right = cast_expression;
     }
@@ -1102,7 +1127,7 @@ cast_binary_expression(Expression *expr)
 
 	///////////left is var
     if (dkc_is_var(expr->u.binary_expression.left->type)
-        &&  ( dkc_is_int(expr->u.binary_expression.right->type) || dkc_is_double(expr->u.binary_expression.right->type)  
+        &&  ( dkc_is_int(expr->u.binary_expression.right->type) || dkc_is_double(expr->u.binary_expression.right->type)
 		|| dkc_is_string(expr->u.binary_expression.right->type) )  ) {
         cast_expression
             = create_var_to_cast(expr->u.binary_expression.left,expr->u.binary_expression.right->type);
@@ -1112,7 +1137,7 @@ cast_binary_expression(Expression *expr)
     }
 	///////////right is var
     if (dkc_is_var(expr->u.binary_expression.right->type)
-        &&  ( dkc_is_int(expr->u.binary_expression.left->type) || dkc_is_double(expr->u.binary_expression.left->type)  
+        &&  ( dkc_is_int(expr->u.binary_expression.left->type) || dkc_is_double(expr->u.binary_expression.left->type)
 		|| dkc_is_string(expr->u.binary_expression.left->type) )  ) {
         cast_expression
             = create_var_to_cast(expr->u.binary_expression.right,expr->u.binary_expression.left->type);
@@ -1120,7 +1145,7 @@ cast_binary_expression(Expression *expr)
             expr->u.binary_expression.right = cast_expression;
         }
     }
-	
+
 	if (cast_expression) {
         return expr;
     }
@@ -1300,7 +1325,7 @@ eval_compare_expression_double(Expression *expr, int left, int right)
         expr->u.boolean_value = (left <= right);
     } else {
         DBG_assert(0, ("expr->kind..%d\n", expr->kind));
-    } 
+    }
 
     expr->kind = BOOLEAN_EXPRESSION;
     expr->type = dkc_alloc_type_specifier(DVM_BOOLEAN_TYPE);
@@ -1330,7 +1355,7 @@ eval_compare_expression_string(Expression *expr,
         expr->u.boolean_value = (cmp <= 0);
     } else {
         DBG_assert(0, ("expr->kind..%d\n", expr->kind));
-    } 
+    }
 
     MEM_free(left);
     MEM_free(right);
@@ -1443,7 +1468,7 @@ fix_logical_and_or_expression(Block *current_block, Expression *expr,
     expr->u.binary_expression.right
         = fix_expression(current_block, expr->u.binary_expression.right, expr,
                          el_p);
-    
+
     if (dkc_is_boolean(expr->u.binary_expression.left->type)
         && dkc_is_boolean(expr->u.binary_expression.right->type)) {
         expr->type = dkc_alloc_type_specifier(DVM_BOOLEAN_TYPE);
@@ -1591,7 +1616,7 @@ check_argument(Block *current_block, int line_number,
                              el_p);
 	}
 	//parameter-length-variable function
-	
+
 
 }
 
@@ -1739,11 +1764,11 @@ fix_function_call_expression(Block *current_block, Expression *expr,
                                   func_expr->u.member_expression.declaration
                                   ->u.field.name,
                                   MESSAGE_ARGUMENT_END);
-            } 
+            }
 			obj = func_expr->u.member_expression.expression;
             if (func_expr->u.member_expression.declaration
                 ->u.method.is_constructor) {
-                
+
                 if (obj->kind != SUPER_EXPRESSION
                     && obj->kind != THIS_EXPRESSION) {
                     dkc_compile_error(expr->line_number,
@@ -1754,7 +1779,7 @@ fix_function_call_expression(Block *current_block, Expression *expr,
                                       MESSAGE_ARGUMENT_END);
                 }
             }
-			
+
 			//obj->type->u.class_ref.tylist
             fd = func_expr->u.member_expression.declaration
                 ->u.method.function_definition;
@@ -1794,7 +1819,7 @@ fix_function_call_expression(Block *current_block, Expression *expr,
         expr->type->identifier = func_type->identifier;
         fix_type_specifier(expr->type);
     }
-	else if (func_type->basic_type == DVM_TEMPLATE_TYPE) 
+	else if (func_type->basic_type == DVM_TEMPLATE_TYPE)
 	{
 		*expr->type= *BcGetTemplateType(temptys,func_type->u.template_id );
 	}
@@ -1810,7 +1835,7 @@ is_interface_method(ClassDefinition *cd, MemberDeclaration *member,
     ExtendsList *e_pos;
     MemberDeclaration *m_pos;
     int interface_index;
-    
+
     for (e_pos = cd->interface_list, interface_index = 0;
          e_pos; e_pos = e_pos->next, interface_index++) {
         for (m_pos = e_pos->class_definition->member; m_pos;
@@ -1839,7 +1864,7 @@ check_member_accessibility(int line_number,
 
     if (compiler->current_class_definition == NULL
         || compiler->current_class_definition != target_class) {
-        if (member->access_modifier == DVM_PRIVATE_ACCESS) {
+        if (member->access_modifier == dvm_priVATE_ACCESS) {
             dkc_compile_error(line_number,
                               PRIVATE_MEMBER_ACCESS_ERR,
                               STRING_MESSAGE_ARGUMENT, "member_name",
@@ -1889,7 +1914,7 @@ fix_class_member_expression(Expression *expr,
 	if( (member->kind == FIELD_MEMBER && member->u.field.type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE)
 		|| (member->kind == METHOD_MEMBER && member->u.method.function_definition->type->basic_type==DVM_UNSPECIFIED_IDENTIFIER_TYPE))
 	{
-		TypeSpecifier* ty;	
+		TypeSpecifier* ty;
 		if(member->kind == FIELD_MEMBER)
 		{
 			ty=member->u.field.type;
@@ -1900,7 +1925,7 @@ fix_class_member_expression(Expression *expr,
 			ty=member->u.method.function_definition->type;
 		}
 		BcGetCurrentCompilerContext()->curcls=class_pos;
-		fix_type_specifier(ty); 
+		fix_type_specifier(ty);
 		BcGetCurrentCompilerContext()->curcls=oldcls;
 	}
     expr->u.member_expression.declaration = member;
@@ -1918,7 +1943,7 @@ fix_class_member_expression(Expression *expr,
                 = create_up_cast(obj, target_interface, interface_index);
         }
 
-		
+
 		BcGetCurrentCompilerContext()->curcls=class_pos;
 		for(lst=expr->type->derive->u.function_d.parameter_list;lst;lst=lst->next )
 		{
@@ -1928,7 +1953,7 @@ fix_class_member_expression(Expression *expr,
 			}
 		}
 		BcGetCurrentCompilerContext()->curcls=oldcls;
-		
+
     } else if (member->kind == FIELD_MEMBER) {
         if (obj->kind == SUPER_EXPRESSION) {
             dkc_compile_error(expr->line_number,
@@ -1943,7 +1968,7 @@ fix_class_member_expression(Expression *expr,
 			expr->type = (TypeSpecifier*) dkc_malloc(sizeof(TypeSpecifier));
 			*expr->type=*member->u.field.type;
 			expr->type->u.class_ref.tylist=NULL;
-			
+
 			for( tyfrom=member->u.field.type->u.class_ref.tylist;tyfrom;tyfrom=tyfrom->next) //copy the template list, and instantiate it
 			{
 				ty=(TemplateTypes*) dkc_malloc(sizeof(TemplateTypes));
@@ -1979,7 +2004,7 @@ fix_array_method_expression(Expression *expr,
     DKC_Compiler *compiler = dkc_get_current_compiler();
     FunctionDefinition *fd;
     int i;
-    
+
     for (i = 0; i < compiler->array_method_count; i++) {
         if (!strcmp(compiler->array_method[i].name, member_name))
             break;
@@ -2006,7 +2031,7 @@ fix_string_method_expression(Expression *expr,
     DKC_Compiler *compiler = dkc_get_current_compiler();
     FunctionDefinition *fd;
     int i;
-    
+
     for (i = 0; i < compiler->string_method_count; i++) {
         if (!strcmp(compiler->string_method[i].name, member_name))
             break;
@@ -2019,7 +2044,7 @@ fix_string_method_expression(Expression *expr,
     }
     fd = &compiler->string_method[i];
     expr->u.member_expression.method_index = i;
-	
+
 	expr->u.member_expression.fd=fd;
     expr->type = create_function_derive_type(fd);
     return expr;
@@ -2211,7 +2236,7 @@ fix_index_expression(Block *current_block, Expression *expr,
                      ExceptionList **el_p)
 {
     IndexExpression *ie = &expr->u.index_expression;
-	
+
     ie->barray = fix_expression(current_block, ie->barray, expr, el_p);
     ie->index = fix_expression(current_block, ie->index, expr, el_p);
 
@@ -2227,7 +2252,7 @@ fix_index_expression(Block *current_block, Expression *expr,
                           INDEX_LEFT_OPERAND_NOT_ARRAY_ERR,
                           MESSAGE_ARGUMENT_END);
     }
-	
+
     if (!dkc_is_int(ie->index->type)) {
 		if(dkc_is_var(ie->index->type))
 		{
@@ -2371,7 +2396,7 @@ fix_down_cast_expression(Block *current_block, Expression *expr,
                           DOWN_CAST_TO_BAD_CLASS_ERR,
                           MESSAGE_ARGUMENT_END);
     }
-    
+
     expr->type = target_type;
 
     return expr;
@@ -2465,7 +2490,7 @@ fix_array_creation_expression(Block *current_block, Expression *expr,
 	}
 	else
 	{
-
+		_BreakPoint;
 	}
 
     for (dim_pos = expr->u.array_creation.dimension; dim_pos;
@@ -2482,6 +2507,7 @@ fix_array_creation_expression(Block *current_block, Expression *expr,
         }
         tmp_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
         tmp_derive->next = derive;
+		tmp_derive->u.array_d.is_global=expr->u.array_creation.is_global;
         derive = tmp_derive;
     }
 
@@ -2605,7 +2631,7 @@ fix_expression(Block *current_block, Expression *expr, Expression *parent,
     }
 
 	fix_type_specifier(expr->type);
-	
+
     return expr;
 }
 
@@ -2848,6 +2874,14 @@ add_declaration(Block *current_block, Declaration *decl,
         decl->is_local = DVM_FALSE;
         compiler->declaration_list
             = dkc_chain_declaration(compiler->declaration_list, decl);
+		fix_type_specifier(decl->type);
+		if(decl->is_shared && decl->type->derive && decl->type->derive->tag==ARRAY_DERIVE
+			&& !decl->type->derive->u.array_d.is_global)
+		{
+            dkc_compile_error(line_number,
+                              SHARED_ARRAY_NOT_GLOBAL_ERR,
+                              MESSAGE_ARGUMENT_END);
+		}
     }
 }
 
@@ -3236,7 +3270,7 @@ static void fix_template_def(ClassDefinition *cd)
 					{
 						fix_type_specifier(lst->super);
 						name=lst->super->u.class_ref.class_definition->name;
-					} 
+					}
 		}
         if (super && super->class_or_interface == DVM_CLASS_DEFINITION) {
 			if(super->templates)
@@ -3338,7 +3372,7 @@ fix_extends(ClassDefinition *cd)
                                   STRING_MESSAGE_ARGUMENT, "name", super->name,
                                   MESSAGE_ARGUMENT_END);
             }
-			
+
             /*if (!super->is_abstract) {
                 dkc_compile_error(cd->line_number,
                                   INHERIT_CONCRETE_CLASS_ERR,
@@ -3420,7 +3454,7 @@ get_super_field_method_count(ClassDefinition *cd,
     int method_index = -1;
     ClassDefinition *cd_pos;
     MemberDeclaration *member_pos;
-    
+
     for (cd_pos = cd->super_class; cd_pos; cd_pos = cd_pos->super_class) {
         for (member_pos = cd_pos->member; member_pos;
              member_pos = member_pos->next) {
@@ -3473,7 +3507,7 @@ check_method_override(MemberDeclaration *super_method,
     if ((super_method->access_modifier == DVM_PUBLIC_ACCESS
          && sub_method->access_modifier != DVM_PUBLIC_ACCESS)
         || (super_method->access_modifier == DVM_FILE_ACCESS
-            && sub_method->access_modifier == DVM_PRIVATE_ACCESS)) {
+            && sub_method->access_modifier == dvm_priVATE_ACCESS)) {
         dkc_compile_error(sub_method->line_number,
                           OVERRIDE_METHOD_ACCESSIBILITY_ERR,
                           STRING_MESSAGE_ARGUMENT, "name",
@@ -3499,7 +3533,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
 	if(class_pos->checked)
 		return;
 /* //old ways to check if the class if fixed
-   for (member_pos = class_pos->member; member_pos; 
+   for (member_pos = class_pos->member; member_pos;
             member_pos = member_pos->next) {         //fix-me : improve here!! find an efficient way to check if the class's methodid is OK
         if (member_pos->kind == METHOD_MEMBER && member_pos->u.method.method_index!=-1) { //if the class is fixed, return
 			return;
@@ -3508,7 +3542,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
 	if(class_pos->super_class)
 	{
 		/* //old ways to check if the class if fixed
-		for (super_member = class_pos->super_class->member; super_member;super_member = super_member->next) {         
+		for (super_member = class_pos->super_class->member; super_member;super_member = super_member->next) {
 			if(super_member->kind==METHOD_MEMBER && super_member->u.method.method_index==-1) //if super method is not fixed
 			{
 				fix_member_id(compiler,class_pos->super_class);
@@ -3561,7 +3595,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                                         .function_definition->name,
                                         MESSAGE_ARGUMENT_END);
                 }
-				
+
                 check_method_override(super_member, member_pos);
                 member_pos->u.method.method_index
                     = super_member->u.method.method_index;
@@ -3595,7 +3629,7 @@ static void fix_member_id(DKC_Compiler *compiler,ClassDefinition* class_pos)// t
                     = create_assign_cast(member_pos->u.field.initializer,
                                             member_pos->u.field.type);
             }
-			if(class_pos->is_shared && member_pos->u.field.type->basic_type==DVM_CLASS_TYPE 
+			if(class_pos->is_shared && member_pos->u.field.type->basic_type==DVM_CLASS_TYPE
 				&& !member_pos->u.field.type->u.class_ref.class_definition->is_shared)
 			{
                 dkc_compile_error(member_pos->line_number,
@@ -3670,7 +3704,7 @@ fix_class_list(DKC_Compiler *compiler)
 		check_all_abstract_is_implemented(class_pos);
 		fix_member_id(compiler,class_pos);
     }
-	
+
 }
 
 void
@@ -3742,7 +3776,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
     }
 
     fix_statement_list(NULL, compiler->statement_list, 0, &el);
-    
+
     for (func_pos = compiler->function_list; func_pos;
          func_pos = func_pos->next) {
         if (func_pos->class_definition == NULL) {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
-#include "..\include\MEM.h"
+#include "MEM.h"
 #include "debug.h"
 
 static DBG_Controller   st_current_controller;

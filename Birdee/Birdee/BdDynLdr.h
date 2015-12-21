@@ -7,7 +7,7 @@
 extern "C"
 {
 #endif
-#include "../../dvm/dvm_pri.h"
+#include "dvm_pri.h"
 
 DVM_ExecutableItem* LdLoadPackage(DVM_VirtualMachine *dvm,char* libname,char* packagename);
 ExecutableEntry* LdGetLoadedModule(char* name);

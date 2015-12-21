@@ -2,14 +2,15 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\include\DVM_dev.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "DVM_dev.h"
 #include "dvm_pri.h"
-#include "..\Birdee\Birdee\BdVarients.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\BdThread.h"
-#include "..\Birdee\Birdee\BdRemoteControl.h"
+#include "BdVarients.h"
+#include "BdExec.h"
+#include "BdThread.h"
+#include "BdRemoteControl.h"
+//#include "BdSharedObj.h"
 
 //extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
@@ -707,7 +708,7 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
                ("str->type..%d", str->type));
 
     org_len = DVM_string_length(dvm, str);
-    
+
     if (pos < 0 || pos >= org_len) {
         DVM_set_exception(dvm, context, &st_lib_info,
                           DVM_DIKSAM_DEFAULT_PACKAGE,
@@ -735,7 +736,10 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
 
 
 
-
+void SoInc(DVM_Value* args);
+void SoDec(DVM_Value* args);
+void SoSetCounter(DVM_Value* args);
+void SoGetCounter(DVM_Value* args);
 	extern void UaBreakPoint(); //in UnportableAPI.cpp
 void
 dvm_add_native_functions(DVM_VirtualMachine *dvm)
@@ -779,10 +783,16 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "BreakPoint", UaBreakPoint, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "print", nv_print_proc, 1,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
+    DVM_add_native_function(dvm, "diksam.lang", "Sleep", ExSleep, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 3,DVM_FALSE);
-	DVM_add_native_function(dvm, "diksam.lang", "ConnectNode", RcConnectNode, 2,DVM_FALSE);
-	DVM_add_native_function(dvm, "diksam.lang", "RemoteNode#CreateThread", RcCreateThread, 1,DVM_TRUE);
-	DVM_add_native_function(dvm, "diksam.lang", "RemoteNode#Close", RcCloseNode, 0,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 2,DVM_FALSE);
+	DVM_add_native_function(dvm, "Remote", "RemoteNode#CreateThread", RcCreateThread, 2,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "RemoteNode#Close", RcCloseNode, 0,DVM_TRUE);
+
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Inc", SoInc, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Dec", SoDec, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Set", SoSetCounter, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Get", SoGetCounter, 0,DVM_TRUE);
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
                             DVM_FALSE, DVM_TRUE);
@@ -803,7 +813,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
                             1, DVM_FALSE, DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "parse_double",
                             nv_parse_double_proc, 1, DVM_FALSE, DVM_FALSE);
-    
+
     //math.dkh
     DVM_add_native_function(dvm, "math", "fabs", nv_fabs_proc, 1,
                             DVM_FALSE, DVM_FALSE);
