@@ -1,6 +1,6 @@
 #include "Dumper.h"
-#include "../../include/DVM.h"
-#include "../../include/MEM.h"
+#include "DVM.h"
+#include "MEM.h"
 #include <string.h>
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"

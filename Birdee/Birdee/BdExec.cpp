@@ -42,9 +42,9 @@ void BcSwitchContext(Module* M,Type* t);
 
 
 extern "C"{
-#include "..\..\include\DBG.h"
-//#include "..\..\include\DVM.h"
-#include "..\..\DVM\DVM_pri.h"
+#include "DBG.h"
+//#include "DVM.h"
+#include "dvm_pri.h"
 }
 
 #define _is_pointer_type(type) \
@@ -157,7 +157,7 @@ ExCheckDownCast(DVM_VirtualMachine *dvm, DVM_ObjectRef *obj, int target_idx,
     return DVM_SUCCESS;
 }
 
-DVM_ObjectRef ExDownCast(BINT index)
+void ExDownCast(BINT index)
 {
 			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
 			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
@@ -204,12 +204,12 @@ DVM_ObjectRef ExDownCast(BINT index)
                         obj.v_table = obj.v_table->exec_class->class_table;
                     }
                 }
-                
+
             } while (0);
-			return obj;
+			curthread->retvar.object= obj;
 }
 
-DVM_ObjectRef ExGetSuper()
+void ExGetSuper()
 {
 			DVM_ObjectRef obj=(curthread->stack.stack_pointer-1)->object;
 			curthread->stack.stack_pointer-- ;curthread->stack.flg_sp--;
@@ -218,7 +218,7 @@ DVM_ObjectRef ExGetSuper()
             this_class = obj.v_table->exec_class;
 			ret.data=obj.data;
             ret.v_table = this_class->super_class->class_table;
-			return ret;
+			curthread->retvar.object= ret;
 }
 
 void ExArraySize(DVM_Value *args)
@@ -239,16 +239,16 @@ void ExStringLength(DVM_Value *args)
 
 }
 
-BINT BKDRHash(char *str,size_t len)  
-{  
-    size_t hash = 0; 
-	for(int i=0;i<len; i++,str++)  
-    {   
+BINT BKDRHash(char *str,size_t len)
+{
+    size_t hash = 0;
+	for(int i=0;i<len; i++,str++)
+    {
 		size_t ch=*str;
-        hash = hash * 131 + ch; 
+        hash = hash * 131 + ch;
     }
-    return hash;  
-}  
+    return hash;
+}
 
 
 void ExObjectHash(DVM_Value *args)
@@ -264,13 +264,13 @@ void ExObjectEquals(DVM_Value *args) //fix-me : add null check to all these func
     DVM_Object *bobj, *bthis;
     bobj = args->object.data ;
 	bthis = args[1].object.data ;
-    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));	
+    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));
 	if(bobj->type != CLASS_OBJECT || args[1].object.v_table->exec_class != args->object.v_table->exec_class)
 	{
-		curthread->retvar.int_value=DVM_FALSE; 
+		curthread->retvar.int_value=DVM_FALSE;
 		return;
 	}
-	
+
 	curthread->retvar.int_value = memcmp(bthis->u.class_object.field,
 		bobj->u.class_object.field,bthis->u.class_object.field_count * sizeof(bthis->u.class_object.field[0]))?DVM_FALSE:DVM_TRUE;
 }
@@ -279,8 +279,8 @@ void ExObjectTostr(DVM_Value *args)
 {
     DVM_Object  *bthis;
     bthis = args->object.data ;
-    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));	
-	
+    DBG_assert(bthis->type == CLASS_OBJECT, ("bthis->type..%d", bthis->type));
+
 	char buf[LINE_BUF_SIZE];
     DVM_Char *wc_str;
     sprintf(buf, "Object@%x", bthis); //fix-me : unsafe
@@ -328,11 +328,11 @@ void ExArrayEquals(DVM_Value *args)
     bobj = args->object.data ;
     if(bobj->type != ARRAY_OBJECT)
 	{
-		curthread->retvar.int_value=DVM_FALSE; 
+		curthread->retvar.int_value=DVM_FALSE;
 		return;
 	}
     bthis = args[1].object.data ;
-    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));	
+    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));
 	if(bobj->u.barray.type==bthis->u.barray.type && bobj->u.barray.size==bthis->u.barray.size)
 	{
 		BINT size=ExGetArrayTypeSize(bobj->u.barray.type);
@@ -346,11 +346,11 @@ void ExArrayTostr(DVM_Value *args)
 {
     DVM_Object  *bthis;
     bthis = args->object.data ;
-    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));	
+    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));
 
 	char buf[LINE_BUF_SIZE];
     DVM_Char *wc_str;
-    sprintf(buf, "Array@%x", bthis); //improve-me : print the contents 
+    sprintf(buf, "Array@%x", bthis); //improve-me : print the contents
     wc_str = dvm_mbstowcs_alloc(curthread, buf);
 	curthread->retvar.object =  dvm_create_dvm_string_i(curdvm, wc_str);
 }
@@ -370,11 +370,11 @@ void ExStringEquals(DVM_Value *args)
     bobj = args->object.data ;
     if(bobj->type != STRING_OBJECT)
 	{
-		curthread->retvar.int_value=DVM_FALSE; 
+		curthread->retvar.int_value=DVM_FALSE;
 		return;
 	}
     bthis = args[1].object.data ;
-    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));	
+    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));
 	curthread->retvar.int_value = dvm_wcscmp(bthis->u.string.string,bobj->u.string.string)?DVM_FALSE:DVM_TRUE;
 }
 
@@ -382,8 +382,8 @@ void ExStringTostr(DVM_Value *args)
 {
     DVM_Object  *bthis;
     bthis = args->object.data ;
-    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));	
-	curthread->retvar = *args; 
+    DBG_assert(bthis->type == STRING_OBJECT, ("bthis->type..%d", bthis->type));
+	curthread->retvar = *args;
 }
 
 void ExStringSubstr(DVM_Value *args)
@@ -435,20 +435,21 @@ void ExGets()
 	curthread->retvar.object= dvm_create_dvm_string_i(curdvm,buf);
 }
 
-
-DVM_ObjectRef ExLoadStringFromPool(BINT index)
+void ExLoadStringFromPool(BINT index)
 {
 	DVM_Executable* exe=curthread->current_executable->executable;
 	DVM_ObjectRef ret;
     ret= dvm_literal_to_dvm_string_i(curdvm,exe->constant_pool[index].u.c_string);
-	return ret;
+    curthread->retvar.object=ret;
+	return ;
 }
-DVM_ObjectRef ExChainString()
+void ExChainString()
 {
 	DVM_Value* sp=curthread->stack.stack_pointer-1;
 	DVM_ObjectRef ret= chain_string(curdvm,(sp-1)->object,sp->object);
 	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
-	return ret;
+	curthread->retvar.object=ret;
+	return ;
 }
 
 BINT ExCompareString()
@@ -466,30 +467,30 @@ BINT ExCompareObject() //fix-me : there is another cmp after this call. May impr
 	return ret; //check-me
 }
 
-DVM_ObjectRef ExBoolToStr(BINT v)
+void ExBoolToStr(BINT v)
 {
-	return dvm_literal_to_dvm_string_i(curdvm,(DVM_Char*) (v ? TRUE_STRING: FALSE_STRING));
+	curthread->retvar.object= dvm_literal_to_dvm_string_i(curdvm,(DVM_Char*) (v ? TRUE_STRING: FALSE_STRING));
 }
 
-DVM_ObjectRef ExIntToStr(BINT v)
+void ExIntToStr(BINT v)
 {
     char buf[LINE_BUF_SIZE];
     DVM_Char *wc_str;
     sprintf(buf, "%d", v);
     wc_str = dvm_mbstowcs_alloc(curthread, buf);
-    return dvm_create_dvm_string_i(curdvm, wc_str);
+    curthread->retvar.object= dvm_create_dvm_string_i(curdvm, wc_str);
 }
 
-DVM_ObjectRef ExDoubleToStr(double v)
+void ExDoubleToStr(double v)
 {
     char buf[LINE_BUF_SIZE];
     DVM_Char *wc_str;
     sprintf(buf, "%lf", v);
     wc_str = dvm_mbstowcs_alloc(curthread, buf);
-    return dvm_create_dvm_string_i(curdvm, wc_str);
+    curthread->retvar.object= dvm_create_dvm_string_i(curdvm, wc_str);
 }
 
-DVM_ObjectRef ExNewDelegate(BINT index)
+void ExNewDelegate(BINT index)
 {
             int dvm_index;
             DVM_ObjectRef mdelegate;
@@ -497,7 +498,7 @@ DVM_ObjectRef ExNewDelegate(BINT index)
             dvm_index = index==-1?-1:curthread->current_executable->function_table[index];
             mdelegate = dvm_create_delegate(curdvm, dvm_null_object_ref,
                                            dvm_index);
-			return mdelegate;
+			curthread->retvar.object= mdelegate;
 }
 
 void BcInitLocalVar(BdThread *dvm,DVM_VirtualMachine* vm,BFunction *func, int from_sp)
@@ -826,16 +827,19 @@ extern "C" void ExInitExeEngine()
 
 }
 
+
 extern "C" BdThread* ExCreateThread()
 {
 	BdThread* th=(BdThread*)MEM_malloc(sizeof(BdThread));
-    th->stack.alloc_size = STACK_ALLOC_SIZE+2;
+    th->stack.alloc_size = sizeof(DVM_Value) * (STACK_ALLOC_SIZE);
     th->stack.stack =(DVM_Value*) UaGuardAlloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE));//MEM_malloc(sizeof(DVM_Value) * (STACK_ALLOC_SIZE+2));//modified
 	th->stack.stack_pointer=th->stack.stack;
 	th->esp=0;
 	th->estack=(PExExceptionItem)UaGuardAlloc(sizeof(ExExceptionItem)*1024);
+	th->e_alloc_size=sizeof(ExExceptionItem)*1024;
 	th->asp=0;
 	th->avstack=(AutoVarContext*)UaGuardAlloc(sizeof(AutoVarContext)*1024);
+	th->av_alloc_size=sizeof(AutoVarContext)*1024;
     th->stack.pointer_flags=(DVM_Boolean*) MEM_malloc(sizeof(DVM_Boolean) * STACK_ALLOC_SIZE);
 	th->stack.flg_sp=th->stack.pointer_flags;
 
@@ -847,15 +851,21 @@ extern "C" BdThread* ExCreateThread()
 	th->tid=NULL;
 	th->prv=NULL;
 	th->thread_obj_id=0;
+#ifdef BD_ON_LINUX
+    pthread_mutex_init(&th->suspend_lock,NULL);
+#endif
 	return th;
 }
 
 extern "C" BdThread* ExFreeThread(BdThread* t)
 {
-	UaGuardFree(t->stack.stack);
-	UaGuardFree(t->avstack);
-	UaGuardFree(t->estack);
+	UaGuardFree(t->stack.stack,t->stack.alloc_size);
+	UaGuardFree(t->avstack,t->av_alloc_size);
+	UaGuardFree(t->estack,t->e_alloc_size);
     MEM_free(t->stack.pointer_flags);
+#ifdef BD_ON_LINUX
+    pthread_mutex_destroy(&t->suspend_lock);
+#endif
 	BdThread* r=t->next;
 	MEM_free(t);
 	return r;
@@ -871,7 +881,6 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 
 extern "C" void ExGoMain()
 {
-
 	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curthread->current_executable =curdvm->top_level;
@@ -1097,25 +1106,25 @@ void ExFldPuto(BINT index)
 }
 extern "C" DVM_ObjectRef create_array(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier *type);
 extern "C" DVM_ObjectRef create_array_literal_int(DVM_VirtualMachine *dvm, int size);
-DVM_ObjectRef ExNewArray(BINT ty,BINT dim)
+void ExNewArray(BINT ty,BINT dim)
 {
             DVM_TypeSpecifier *type
 				= &curthread->current_executable->executable->type_specifier[ty];
             DVM_ObjectRef barray;
             barray = create_array(curdvm, dim, type);
             curthread->stack.stack_pointer -= dim; curthread->stack.flg_sp -=dim;
-            return barray;
+            curthread->retvar.object= barray;
 }
 
-DVM_ObjectRef ExArrayLiteral(BINT ty,BINT size)
+void ExArrayLiteral(BINT ty,BINT size)
 {
             DVM_ObjectRef barray;
             barray = create_array_literal_int(curdvm, size);//fix-me : double,obj
             curthread->stack.stack_pointer -= size; curthread->stack.flg_sp -=size;
-            return barray;
+            curthread->retvar.object= barray;
 }
 
-DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
+void ExNew(BINT idx_in_exe,BINT methodid)
 {
 	int class_index = curthread->current_executable->class_table[idx_in_exe];
     DVM_ObjectRef ret= dvm_create_class_object_i(curdvm, class_index);
@@ -1123,7 +1132,7 @@ DVM_ObjectRef ExNew(BINT idx_in_exe,BINT methodid)
 	*curthread->stack.flg_sp=DVM_TRUE;
 	curthread->stack.stack_pointer++; curthread->stack.flg_sp++;
 	ExCall(methodid);
-	return ret;
+	curthread->retvar.object= ret;
 }
 
 void ExFailure()
@@ -1302,7 +1311,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//	return 0;
 	Module* m=(Module*)mod->mod;
 
-	
+
 	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 
 	std::string ErrStr;
@@ -1317,7 +1326,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	{
 #ifdef BD_MULTITHREAD
 		MCJIT= new MCJITHelper(m,false);
-#else 
+#else
 		MCJIT= new MCJITHelper(m,true);
 #endif
 		dvm->exe_engine=MCJIT;
@@ -1392,7 +1401,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	MCJIT->addGlobalMapping("system!Instanceof",(void*)ExInstanceof);
 	f=m->getFunction("system!Instanceof2");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExInstanceof2);
-	MCJIT->addGlobalMapping("system!Instanceof2",(void*)ExInstanceof2);	
+	MCJIT->addGlobalMapping("system!Instanceof2",(void*)ExInstanceof2);
 	/*f=m->getFunction("system!ArrGeti");
 	TheExecutionEngine->addGlobalMapping(f,ExArrGeti);
 	f=m->getFunction("system!ArrGetd");
@@ -1486,7 +1495,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("shared!gets");
 	TheExecutionEngine->addGlobalMapping(f,(void*)SoGets);
 	MCJIT->addGlobalMapping("shared!gets",(void*)SoGets);
-	
+
 	f=m->getFunction("shared!seti");
 	TheExecutionEngine->addGlobalMapping(f,(void*)SoSeti);
 	MCJIT->addGlobalMapping("shared!seti",(void*)SoSeti);
@@ -1545,7 +1554,9 @@ extern "C" void ExFreeMCJIT(void* p)
 
 extern "C" void ExInitEngine()
 {
+#ifdef BD_ON_WINDOWS
 	UaInitTls();
+#endif
 }
 
 void replaceAllUsesWith(Value* ths,Value *New) {

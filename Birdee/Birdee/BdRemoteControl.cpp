@@ -5,15 +5,27 @@
 #include "BdException.h"
 #include "BdParameters.h"
 #include "Loader.h"
-#include "../../debug/debug.h"
+#include "debug.h"
 #include <vector>
 #include <time.h>
 #include "BdThread.h"
 #include <string>
+#include <string.h>
 #include "BdSharedObj.h"
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
 	#pragma comment(lib, "WS2_32")
+#endif
+#ifdef BD_ON_LINUX
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <errno.h>
+    #define SOCKET int
+    #define INVALID_SOCKET (-1)
+    #define SOCKET_ERROR (-1)
+    #define closesocket close
+    typedef sockaddr* LPSOCKADDR;
+
 #else
 	int a[-1];
 #endif
@@ -102,7 +114,11 @@ BD_SOCKET RcConnect(char* ip,int port)
 	sockaddr_in serAddr;
 	serAddr.sin_family = AF_INET;
 	serAddr.sin_port = htons(port);
+#ifdef BD_ON_WINDOWS
 	serAddr.sin_addr.S_un.S_addr = inet_addr(ip);
+#else
+    serAddr.sin_addr.s_addr = inet_addr(ip);
+#endif
 	if (connect(sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
 	{
 		closesocket(sclient);
@@ -124,7 +140,11 @@ BD_SOCKET RcListen(int port)
     sockaddr_in sin;
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
+#ifdef BD_ON_WINDOWS
     sin.sin_addr.S_un.S_addr = INADDR_ANY;
+#else
+    sin.sin_addr.s_addr = INADDR_ANY;
+#endif
     if(bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
     {
         printf("bind error !");
@@ -140,9 +160,9 @@ BD_SOCKET RcListen(int port)
 
     //循环接收数据
     sockaddr_in remoteAddr;
-    int nAddrlen = sizeof(remoteAddr);
+    unsigned int nAddrlen = sizeof(remoteAddr);
     printf("port %d waiting for connections...\n",port);
-    SOCKET sClient = accept(slisten, (SOCKADDR *)&remoteAddr, &nAddrlen);
+    SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
     if(sClient == INVALID_SOCKET)
     {
         printf("accept error !");
@@ -204,7 +224,7 @@ int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd)
 #ifdef BD_ON_WINDOWS
 		return WSAGetLastError();
 #else
-		int a[-1];
+		return errno;
 #endif
 	}
 	return 0;
@@ -236,7 +256,7 @@ void RcCreateThread(DVM_Value *args)
 	DVM_ObjectRef ret=SoDoNew(idx_remote_thread,method_remote_thread);
 	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
 	cmd.param3=(int)ret.data;
-	SoSeti((uint)ret.data,1,RC_THREAD_CREATING);//set the state
+	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
 	DVM_ObjectRef obj=args[2].object;
 	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)

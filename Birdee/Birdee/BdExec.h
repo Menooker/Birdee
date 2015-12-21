@@ -42,10 +42,10 @@ typedef enum {
 extern "C"
 {
 #endif
-#include "..\..\include\DVM.h"
-#include "..\..\include\MEM.h"
-#include "..\..\dvm\dvm_pri.h"
-//#include "..\..\compiler\diksamc.h"
+#include "DVM.h"
+#include "MEM.h"
+#include "dvm_pri.h"
+//#include "diksamc.h"
 typedef struct ExecutableEntry_tag sExecutableEntry;
 typedef struct ExecutableEntry_tag sExecutableEntry;
 void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,sExecutableEntry* ee);

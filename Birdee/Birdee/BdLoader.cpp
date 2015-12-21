@@ -5,8 +5,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "../../include/DVM.h"
-#include "../../include/MEM.h"
+#include "DVM.h"
+#include "MEM.h"
 #include <string.h>
 #include <string>
 #include <vector>
@@ -47,7 +47,7 @@ BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 		fclose(f);
 		return BdBadMagicNum;
 	}
-	LdReadVar(sz,f); 
+	LdReadVar(sz,f);
 	LdReadVar(index,f);
 
 	exe = (DVM_Executable*)MEM_malloc(sizeof(DVM_Executable)*sz);
@@ -191,7 +191,7 @@ BdStatus LdCodeBlock(DVM_CodeBlock* blk,CPBuffer* pbuf)
 		LdLoadVar(blk->blktry->try_start_pc,pbuf);
 		LdArray(blk->blktry->catch_count,blk->blktry->catch_clause,DVM_CatchClause,pbuf);
 		LdLoadBuffer(blk->blktry->catch_clause,sizeof(DVM_CatchClause)*blk->blktry->catch_count,pbuf);
-		
+
 	}*/
 	return BdSuccess;
 }
@@ -384,7 +384,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 		{
 			LdStringW(&exe->constant_pool[i].u.c_string,&buf);
 		}
-	}	
+	}
 
 	LdArray(exe->type_specifier_count,exe->type_specifier,DVM_TypeSpecifier,&buf);
 	for(i=0;i<exe->type_specifier_count;i++)

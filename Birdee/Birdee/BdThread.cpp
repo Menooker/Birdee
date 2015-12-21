@@ -24,7 +24,7 @@ extern "C"
 		while(th)
 		{
 			if(th!=self)
-				UaResumeThread(th->tid);
+				UaResumeThread(th->tid,th);
 			th=th->next;
 		}
 		UaLeaveLock(&curdvm->thread_lock);

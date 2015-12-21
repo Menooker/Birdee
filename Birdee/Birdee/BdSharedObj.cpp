@@ -1,7 +1,7 @@
 #include "BirdeeDef.h"
 #include "BdExec.h"
 #include "BdException.h"
-#include "../../debug/debug.h"
+#include "debug.h"
 #include "hash_compatible.h"
 #include "BdSharedObj.h"
 #include "BdMemcachedStorage.h"
@@ -46,26 +46,26 @@ public:
 	SoStorageLocalTest(char*){};
 	SoStorageLocalTest(){};
 
-	int getsize(uint key)
+	int getsize(_uint key)
 	{
 		return map[key].cls.field_cnt;
 	}
 
-	int inc(uint key,int fldid,int inc)
+	int inc(_uint key,int fldid,int inc)
 	{
 		return UaAtomicInc((long*)&map[MAKE64(key,fldid)].var.vi,inc);
 	}
 
-	int dec(uint key,int fldid,int dec)
+	int dec(_uint key,int fldid,int dec)
 	{
 		return UaAtomicDec((long*)&map[MAKE64(key,fldid)].var.vi,dec);
 	}
 
-	int getcounter(uint key,int fldid)
+	int getcounter(_uint key,int fldid)
 	{
 		return atoi((char*)map[MAKE64(key,fldid)].string.str);
 	}
-	void setcounter(uint key,int fldid,int n)
+	void setcounter(_uint key,int fldid,int n)
 	{
 		char* buf=(char*)malloc(65);
 		sprintf(buf,"%d",n);
@@ -75,7 +75,7 @@ public:
 		map[MAKE64(key,fldid)]=nd;
 	}
 
-	SoStatus putstr(uint key,wchar_t* str,uint len)
+	SoStatus putstr(_uint key,wchar_t* str,_uint len)
 	{
 		long long k=MAKE64(key,1);
 		DataNode nd;
@@ -90,7 +90,7 @@ public:
 		return SoOK;
 	}
 
-	SoStatus getstr(uint key,wchar_t** str,uint* len)
+	SoStatus getstr(_uint key,wchar_t** str,_uint* len)
 	{
 		long long k1,k2;
 		k1=MAKE64(key,0);
@@ -98,7 +98,7 @@ public:
 		if(map.find(k1)!=map.end())
 		{
 			if(map[k1].tag!=SoString)
-				return SoFail; 
+				return SoFail;
 
 			if(map.find(k2)!=map.end())
 			{
@@ -113,25 +113,25 @@ public:
 			return SoKeyNotFound;
 	}
 
-	SoStatus put(uint key,int fldid,SoVar v)
+	SoStatus put(_uint key,int fldid,SoVar v)
 	{
 		map[MAKE64(key,fldid)].var=v;
 		return SoOK;
 	}
 
-	SoVar get(uint key,int fldid)
+	SoVar get(_uint key,int fldid)
 	{
 		if(map.find(MAKE64(key,fldid))!=map.end())
 			return map[MAKE64(key,fldid)].var;
 		throw SO_KEY_NOT_FOUND;
 	}
 
-	bool exists(uint key)
+	bool exists(_uint key)
 	{
 		return map.find(MAKE64(key,0))!=map.end();
 	}
 
-	SoStatus newobj(uint key,SoType tag,int fld_cnt,int flag)
+	SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	{
 		if(map.find(MAKE64(key,0))==map.end())
 		{
@@ -203,18 +203,18 @@ public:
 	{
 		delete backend;
 	}
-	SoStatus put(uint key,int fldid,SoVar v)
+	SoStatus put(_uint key,int fldid,SoVar v)
 	{
 		return backend->put(key,fldid,v);
 	}
 
-	SoVar get(uint key,int fldid)
+	SoVar get(_uint key,int fldid)
 	{
 		SoVar ret;
 		try
 		{
 			ret=backend->get(key,fldid);
-			
+
 		}
 		catch (int &a)
 		{
@@ -226,14 +226,14 @@ public:
 		return ret;
 	}
 
-/*	SoStatus putvar(uint key,SoType tag,SoVar var)
+/*	SoStatus putvar(_uint key,SoType tag,SoVar var)
 	{
 		DataNode node={tag,0};
 		node.var=var;
 		return backend->put(key,&node);
 	};
 
-	SoVar getvar(uint key)
+	SoVar getvar(_uint key)
 	{
 		SoVar ret;
 		DataNode pnode=backend->get(key);
@@ -241,12 +241,12 @@ public:
 		return pnode.var;
 	};
 	*/
-	SoStatus putstr(uint key,DVM_ObjectRef* s)
+	SoStatus putstr(_uint key,DVM_ObjectRef* s)
 	{
 		DataNode nd;
 		nd.tag=SoString;
 		wchar_t* str;
-		uint len;
+		_uint len;
 		if(s->data)
 		{
 			len=s->data->u.string.length;
@@ -260,10 +260,10 @@ public:
 		return backend->putstr(key,str,len);
 	}
 
-	SoStatus getstr(uint key,DVM_ObjectRef* outstr)
+	SoStatus getstr(_uint key,DVM_ObjectRef* outstr)
 	{
 		wchar_t* pstr;
-		uint len=0;
+		_uint len=0;
 		SoStatus ret=backend->getstr(key,&pstr,&len);
 		if(ret!=SoOK)
 			return ret;
@@ -277,19 +277,19 @@ public:
 		return SoOK;
 	}
 
-	uint allockey(SoType tag,int fld_cnt)
+	_uint allockey(SoType tag,int fld_cnt)
 	{
 		return allockey(tag,fld_cnt,0);
 	}
-	uint allockey(SoType tag,int fld_cnt,int flag)
-	{		
+	_uint allockey(SoType tag,int fld_cnt,int flag)
+	{
 		//nd.tag=SoInvalid;
-		uint key=0;
+		_uint key=0;
 
 		for(int i=0;i<BD_MAX_SHARED_KEY_TRIES;i++)
 		{
 			key=rand();
-			//uint randk=rand();
+			//_uint randk=rand();
 			//nd.var.vi=randk;
 			if(backend->newobj(key,tag,fld_cnt,0)==SoOK)
 			{
@@ -300,27 +300,27 @@ public:
 			throw SO_KEY_NOT_FOUND;
 		return key;
 	}
-	uint newmodule(uint key,int cnt)
+	_uint newmodule(_uint key,int cnt)
 	{
 		return backend->newobj(key,SoModule,cnt,0);
 	}
-	uint newobj(ExecClass* cls)
+	_uint newobj(ExecClass* cls)
 	{
-		uint ret=allockey(SoObject,cls->field_count);
+		_uint ret=allockey(SoObject,cls->field_count);
 		if(ret==0)
 			SoThrowKeyError();
 		return ret;
 	};
-	uint newarray(int size, int isobj)
+	_uint newarray(int size, int isobj)
 	{
-		uint ret=allockey(SoArray,size,isobj);
+		_uint ret=allockey(SoArray,size,isobj);
 		if(ret==0)
 			SoThrowKeyError();
 		return ret;
 	};
-	uint newstr(DVM_ObjectRef* s)
+	_uint newstr(DVM_ObjectRef* s)
 	{
-		uint ret=allockey(SoString,1);
+		_uint ret=allockey(SoString,1);
 		if(ret==0)
 			SoThrowKeyError();
 		putstr(ret,s);
@@ -328,7 +328,7 @@ public:
 	};
 
 
-	uint getsize(uint id)
+	_uint getsize(_uint id)
 	{
 		try
 		{
@@ -341,7 +341,7 @@ public:
 		}
 	};
 
-	int inc(uint key,int fldid,int inc)
+	int inc(_uint key,int fldid,int inc)
 	{
 		try
 		{
@@ -354,7 +354,7 @@ public:
 		}
 	}
 
-	int dec(uint key,int fldid,int dec)
+	int dec(_uint key,int fldid,int dec)
 	{
 		try
 		{
@@ -367,7 +367,7 @@ public:
 		}
 	}
 
-	void setcounter(uint key,int fldid,int n)
+	void setcounter(_uint key,int fldid,int n)
 	{
 		try
 		{
@@ -379,7 +379,7 @@ public:
 		}
 	}
 
-	int getcounter(uint key,int fldid)
+	int getcounter(_uint key,int fldid)
 	{
 		try
 		{
@@ -399,7 +399,7 @@ SharedStorage storage(SoStorageFactory::SoBackendMemcached);
 
 
 
-inline uint TranslateKey(uint key)
+inline _uint TranslateKey(_uint key)
 {
 	int id=curthread->current_executable->executable->id;
 	if(key>=BD_MAX_SHARED_STATIC_PER_MODULE || id>=BD_MAX_SHARED_MODULES)
@@ -409,17 +409,17 @@ inline uint TranslateKey(uint key)
 	return key+id*BD_MAX_SHARED_STATIC_PER_MODULE;
 }
 
-extern "C" BINT SoGeti(uint key,uint fldid)
+extern "C" BINT SoGeti(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vi;
 }
 
-extern "C" double SoGetd(uint key,uint fldid)
+extern "C" double SoGetd(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vd;
 }
 
-extern "C" DVM_ObjectRef SoGeto(uint key,uint fldid,int idx_in_exe)
+extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 {
 	DVM_ObjectRef obj;
 	int ret= storage.get(key,fldid).key;
@@ -431,19 +431,21 @@ extern "C" DVM_ObjectRef SoGeto(uint key,uint fldid,int idx_in_exe)
 	else
 		obj.v_table=curdvm->array_v_table;
 	obj.data=(DVM_Object*)ret;
-	return obj;
+	curthread->retvar.object=obj;
+	return ;
 }
 
-extern "C" DVM_ObjectRef SoGets(uint key,uint fldid)
+extern "C" void SoGets(_uint key,_uint fldid)
 {
 	DVM_ObjectRef ret;
 
 	if(storage.getstr(storage.get(key,fldid).key,&ret)!=SoOK)
-		SoThrowGetValueError();	
-	return ret;
+		SoThrowGetValueError();
+    curthread->retvar.object=ret;
+	return;
 }
 
-extern "C" void SoSeti(uint key,uint fldid,BINT v)
+extern "C" void SoSeti(_uint key,_uint fldid,BINT v)
 {
 	SoVar var={v};
 	if(storage.put(key,fldid,var)!=SoOK)
@@ -453,7 +455,7 @@ extern "C" void SoSeti(uint key,uint fldid,BINT v)
 
 }
 
-extern "C" void SoSetd(uint key,uint fldid,double v)
+extern "C" void SoSetd(_uint key,_uint fldid,double v)
 {
 	SoVar var={v};
 	if(storage.put(key,fldid,var)!=SoOK)
@@ -462,7 +464,7 @@ extern "C" void SoSetd(uint key,uint fldid,double v)
 	}
 }
 
-extern "C" void SoSeto(uint key,uint fldid,uint v)
+extern "C" void SoSeto(_uint key,_uint fldid,_uint v)
 {
 	SoVar var={v};
 	if(storage.put(key,fldid,var)!=SoOK)
@@ -471,7 +473,7 @@ extern "C" void SoSeto(uint key,uint fldid,uint v)
 	}
 }
 
-extern "C" void SoSets(uint key,uint fldid,DVM_ObjectRef v)
+extern "C" void SoSets(_uint key,_uint fldid,DVM_ObjectRef v)
 {
 	SoVar var={storage.newstr(&v)};
 	if(storage.put(key,fldid,var)!=SoOK)
@@ -480,7 +482,7 @@ extern "C" void SoSets(uint key,uint fldid,DVM_ObjectRef v)
 	}
 }
 
-extern "C" void SoNewModule(uint key,int cnt)
+extern "C" void SoNewModule(_uint key,int cnt)
 {
 	if(storage.newmodule(key,cnt)!=SoOK)
 	{
@@ -492,27 +494,27 @@ extern "C" DVM_ObjectRef SoDoNew(int class_index,int methodid)
 {
 	ExecClass *ec;
     DVM_ObjectRef obj;
-	
-	uint ret=storage.newobj(curdvm->bclass[class_index]);
-	
+
+	_uint ret=storage.newobj(curdvm->bclass[class_index]);
+
 	if(ret==0)
-		SoThrowKeyError(); 
+		SoThrowKeyError();
 
 	ec = curdvm->bclass[class_index];
     obj.v_table = ec->class_table;
 	obj.data=(DVM_Object*)ret;
-  
+
 	curthread->stack.stack_pointer->object=obj;
-	*curthread->stack.flg_sp=DVM_TRUE; 
+	*curthread->stack.flg_sp=DVM_TRUE;
 	curthread->stack.stack_pointer++; curthread->stack.flg_sp++;
 	ExCall(methodid);
 	return obj;
 }
 
-extern "C" DVM_ObjectRef SoNew(int idx_in_exe,int methodid)
+extern "C" void SoNew(int idx_in_exe,int methodid)
 {
 	int class_index = curthread->current_executable->class_table[idx_in_exe];
-	return SoDoNew(class_index,methodid);
+	curthread->retvar.object= SoDoNew(class_index,methodid);
 }
 
 
@@ -575,18 +577,18 @@ DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier 
 {
     DVM_ObjectRef ret;
 	ret.data= (DVM_Object*)SoDoCreateArray(dvm, dim, 0, type);
-	ret.v_table = dvm->array_v_table;//fix-me : 
+	ret.v_table = dvm->array_v_table;//fix-me :
     curthread->stack.stack_pointer -= dim; curthread->stack.flg_sp -=dim;
 	return ret;
 }
 
-extern "C" DVM_ObjectRef SoNewArray(BINT ty,BINT dim)
+
+void SoNewArray(BINT ty,BINT dim)
 {
     DVM_TypeSpecifier *type
 		= &curthread->current_executable->executable->type_specifier[ty];
-    DVM_ObjectRef barray;
-    barray = SoCreateArray(curdvm, dim, type);
-    return barray;
+    curthread->retvar.object= SoCreateArray(curdvm, dim, type);
+    return;
 }
 
 extern "C" void SoGlobalArrBoundaryCheck(BINT arr,BINT idx)
@@ -600,22 +602,22 @@ extern "C" void SoGlobalArrBoundaryCheck(BINT arr,BINT idx)
 
 extern "C" void SoInc(DVM_Value* args)
 {
-	curthread->retvar.int_value = storage.inc((uint)args[1].object.data,32,args[0].int_value);
+	curthread->retvar.int_value = storage.inc((_uint)args[1].object.data,32,args[0].int_value);
 }
 
 extern "C" void SoDec(DVM_Value* args)
 {
-	curthread->retvar.int_value = storage.dec((uint)args[1].object.data,32,args[0].int_value);
+	curthread->retvar.int_value = storage.dec((_uint)args[1].object.data,32,args[0].int_value);
 }
 
 extern "C" void SoSetCounter(DVM_Value* args)
 {
-	storage.setcounter((uint)args[1].object.data,32,args[0].int_value);
+	storage.setcounter((_uint)args[1].object.data,32,args[0].int_value);
 }
 
 extern "C" void SoGetCounter(DVM_Value* args)
 {
-	curthread->retvar.int_value = storage.getcounter((uint)args[0].object.data,32);
+	curthread->retvar.int_value = storage.getcounter((_uint)args[0].object.data,32);
 }
 
 enum OutBufferMethod
@@ -634,7 +636,7 @@ void ExCallWriteObjBuffer(DVM_Value* val,DVM_Boolean isobj,DVM_ObjectRef buf,int
 	curthread->stack.flg_sp++;
 
 	curthread->stack.stack_pointer->object=buf;
-	curthread->stack.stack_pointer++;	
+	curthread->stack.stack_pointer++;
 	*curthread->stack.flg_sp=DVM_TRUE;
 	curthread->stack.flg_sp++;
 	ExCall(idx);
@@ -688,7 +690,7 @@ void SoDoDump(DVM_Object* obj,ExecClass* cls,CPBuffer* pbuf)
 				CpDumpBuffer(& obj->u.class_object.field[i].object.data->u.class_object.field[0].int_value,sizeof(BINT),pbuf);
 				break;
 			default:
-				DBG_assert(0, ("Error Type %d", cls->field_type[i]->basic_type));	
+				DBG_assert(0, ("Error Type %d", cls->field_type[i]->basic_type));
 			}
 		}
 		else if(cls->field_type[i]->derive->tag==DVM_ARRAY_DERIVE)
@@ -696,11 +698,11 @@ void SoDoDump(DVM_Object* obj,ExecClass* cls,CPBuffer* pbuf)
 			//int arrsz=0;
 			//arrsz=cls->field_type[i]->derive_count;//check if it is right
 			//ExSerializeArray(obj.data->u.class_object.field[i].object,args[0].object,cls->field_type[i]->basic_type,arrsz);
-			DBG_assert(0, ("Error Derive %d"));	
+			DBG_assert(0, ("Error Derive %d"));
 		}
 		else
 		{
-			DBG_assert(0, ("Error Derive %d"));	
+			DBG_assert(0, ("Error Derive %d"));
 		}
 
 

@@ -3,7 +3,7 @@
 
 #include <setjmp.h>
 #include "BirdeeDef.h"
-#include "../../include/DVM.h"
+#include "DVM.h"
 
 typedef struct
 {

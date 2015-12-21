@@ -6,7 +6,7 @@
 extern "C"
 {
 #endif
-#include "../../dvm/dvm_pri.h"
+#include "dvm_pri.h"
 
 typedef struct _RtlHashMap RtlHashMap ;
 void RtlHashmapPut(RtlHashMap* pmap,BdIntPtr name,DVM_ObjectRef v);

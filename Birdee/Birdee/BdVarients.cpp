@@ -3,6 +3,8 @@
 #include "BdException.h"
 #include <stdlib.h>
 #include <string>
+#include <string.h>
+#include <wchar.h>
 #include "hash_compatible.h"
 #include "UnportableAPI.h"
 
@@ -10,8 +12,8 @@ using namespace std;
 
 extern "C"
 {
-#include "../../dvm/dvm_pri.h"
-#include "../../include/MEM.h"
+#include "dvm_pri.h"
+#include "MEM.h"
 //DVM_VirtualMachine_tag* curdvm;
 
 
@@ -572,7 +574,7 @@ void AvCmp()
 	curthread->stack.stack_pointer-=2 ;curthread->stack.flg_sp-=2;
 }
 
-DVM_ObjectRef AvGetOrCreateVar(char* name)
+void AvGetOrCreateVar(char* name)
 {
 	DVM_ObjectRef ret;
 	if(*name=='#')
@@ -586,13 +588,15 @@ DVM_ObjectRef AvGetOrCreateVar(char* name)
 		}
 		if((*mp).find(name)!=(*mp).end())
 		{
-			return (*mp)[name];
+		    curthread->retvar.object=(*mp)[name];
+			return ;
 		}
 		else
 		{
 			ret= ExLoadStaticVar(curdvm,(ExVarient*)MEM_malloc(sizeof(ExVarient*)));
 			(*mp)[name]=ret;
-			return ret;
+			curthread->retvar.object=ret;
+			return ;
 		}
 	}
 	else if(*name=='$')
@@ -605,15 +609,16 @@ DVM_ObjectRef AvGetOrCreateVar(char* name)
 		}
 		else
 			ret=MainMap[name];
-		return ret;
+        curthread->retvar.object=ret;
+		return;
 	}
-	return dvm_null_object_ref;
+	curthread->retvar.object=dvm_null_object_ref;
 
 }
 
 
 
-DVM_ObjectRef AvGetVar(char* name)
+void AvGetVar(char* name)
 {
 	if(*name=='#')
 	{
@@ -623,7 +628,8 @@ DVM_ObjectRef AvGetVar(char* name)
 		{
 			if((*mp).find(name)!=(*mp).end())
 			{
-				return (*mp)[name];
+			    curthread->retvar.object= (*mp)[name];
+				return;
 			}
 		}
 		//if no context or var not found
@@ -634,14 +640,15 @@ DVM_ObjectRef AvGetVar(char* name)
 		name++;
 		if(MainMap.find(name)!=MainMap.end())
 		{
-			return MainMap[name];
+		    curthread->retvar.object=MainMap[name];
+			return ;
 		}
 		else
 		{
 			ExSystemRaise(ExVarUseBeforeSet);
 		}
 	}
-	return dvm_null_object_ref;
+	curthread->retvar.object= dvm_null_object_ref;
 }
 
 

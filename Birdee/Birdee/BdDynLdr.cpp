@@ -1,9 +1,9 @@
 #include "BdDynLdr.h"
 extern "C"{
-#include "..\..\include\DBG.h"
-//#include "..\..\include\DVM.h"
-#include "..\..\DVM\DVM_pri.h"
-#include "../../include/MEM.h"
+#include "DBG.h"
+//#include "DVM.h"
+#include "dvm_pri.h"
+#include "MEM.h"
 }
 
 #include "Loader.h"
@@ -14,7 +14,14 @@ extern "C"{
 
 #include <string>
 #include <stdio.h>
+
+#ifdef BO_ON_WINDOWS
 #include <io.h>
+#else
+#include<unistd.h>
+#define _access access
+#endif
+
 #include <string.h>
 
 std::hash_map<std::string,DVM_ExecutableList> LoadedLibs;

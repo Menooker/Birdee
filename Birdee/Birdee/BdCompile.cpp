@@ -3,7 +3,7 @@
 
 
 extern "C"{
-#include "..\..\include\DBG.h"
+#include "DBG.h"
 }
 
 #define ConstInt(bit,i) ConstantInt::get(Type::getInt32Ty(context),APInt(bit,i))
@@ -32,6 +32,9 @@ extern "C"{
 #include <stack>
 #include "hash_compatible.h"
 
+#ifdef BD_ON_LINUX
+#define stricmp strcasecmp
+#endif
 
 
 using namespace llvm;
@@ -807,7 +810,8 @@ Value* BcGenerateAutoVar(Expression *expr,Function* f)
 {
 	std::vector<Value*> args;
 	args.push_back(GetStrValue(expr->u.identifier.name));//builder.CreateGlobalStringPtr(expr->u.identifier.name));
-	return builder.CreateCall(f,args);
+	builder.CreateCall(f,args);
+	return builder.CreateLoad(builder.CreateLoad(bretvar));
 }
 
 
@@ -924,7 +928,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 	std::vector<Type*> Args2(1,Type::getInt32Ty(context));
 	FunctionType* FT2 = FunctionType::get(TyObjectRef,Args2, false);
-	fLoadStringFromPool = Function::Create(FT2, Function::ExternalLinkage,"string!LoadStringFromPool", module);
+	fLoadStringFromPool = Function::Create(FunctionType::get(Type::getVoidTy(context),Args2, false), Function::ExternalLinkage,"string!LoadStringFromPool", module);
 	fDownCast=Function::Create(FT2, Function::ExternalLinkage,"system!DownCast", module);
 	fUpCast=Function::Create(FT2, Function::ExternalLinkage,"system!UpCast", module);
 	fNewDelegate = Function::Create(FT2, Function::ExternalLinkage,"system!NewDelegate", module);
@@ -938,7 +942,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 	std::vector<Type*> Args3(2,TyObjectRef);//temp : to del
 	FunctionType* FT3 = FunctionType::get(TyObjectRef,Args3, false);//temp : to del
-	FunctionType* FT32 = FunctionType::get(TyObjectRef, false);
+	FunctionType* FT32 = FunctionType::get(Type::getVoidTy(context), false);
 	fChainString = Function::Create(FT32, Function::ExternalLinkage,"string!ChainString", module);
 
 	std::vector<Type*> Args4(2,TyObjectRef);//temp : to del
@@ -950,14 +954,13 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 
 	std::vector<Type*> Args2Int(2,Type::getInt32Ty(context));
-	FunctionType* FTArr = FunctionType::get(TyObjectRef,Args2Int, false);
+	FunctionType* FTArr = FunctionType::get(Type::getVoidTy(context),Args2Int, false);
 	fArrayLiteral = Function::Create(FTArr, Function::ExternalLinkage,"system!ArrayLiteral", module);
 	fNewArray = Function::Create(FTArr, Function::ExternalLinkage,"system!NewArray", module);
 	fNewGlobalArray = Function::Create(FTArr, Function::ExternalLinkage,"shared!NewArray", module);
 	fNew = Function::Create(FTArr, Function::ExternalLinkage,"object!New", module);
 	fNewShared = Function::Create(FTArr, Function::ExternalLinkage,"shared!New", module);
 
-	 
 	fGlobalArrBoundaryCheck=Function::Create(FunctionType::get(Type::getVoidTy(context),Args2Int, false)
 		, Function::ExternalLinkage,"shared!GlobalArrBoundaryCheck", module);
 
@@ -990,7 +993,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fInvokeDelegate = Function::Create(nft, Function::ExternalLinkage,"system!InvokeDelegate", module);
-	nft = FunctionType::get(TyObjectRef, false);
+	nft = FunctionType::get(Type::getVoidTy(context), false);
 	fGetSuper = Function::Create(nft, Function::ExternalLinkage,"system!GetSuper", module);
 	std::vector<Type*> ArgsOII;  ArgsOII.push_back(Type::getInt32Ty(context));ArgsOII.push_back(Type::getInt32Ty(context));
 	nft = FunctionType::get(Type::getVoidTy(context),ArgsOII, false);
@@ -1014,15 +1017,15 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fReraise=Function::Create(nft, Function::ExternalLinkage,"system!Reraise", module);
 
 	std::vector<Type*> ArgSSI;	ArgSSI.push_back(Type::getInt32Ty(context));
-	FT4 = FunctionType::get(TyObjectRef,ArgSSI, false);
+	FT4 = FunctionType::get(Type::getVoidTy(context),ArgSSI, false);
 	fIntToStr = Function::Create(FT4, Function::ExternalLinkage,"system!IntToStr", module);
 
 	std::vector<Type*> ArgSSD;	ArgSSD.push_back(Type::getDoubleTy(context));
-	FT4 = FunctionType::get(TyObjectRef,ArgSSD, false);
+	FT4 = FunctionType::get(Type::getVoidTy(context),ArgSSD, false);
 	fDoubleToStr = Function::Create(FT4, Function::ExternalLinkage,"system!DoubleToStr", module);
 
 	std::vector<Type*> ArgSSB;	ArgSSB.push_back(Type::getInt32Ty(context));
-	FT4 = FunctionType::get(TyObjectRef,ArgSSB, false);
+	FT4 = FunctionType::get(Type::getVoidTy(context),ArgSSB, false);
 	fBoolToStr = Function::Create(FT4, Function::ExternalLinkage,"system!BoolToStr", module);
 
 	std::vector<Type*> ArgIpI;	ArgIpI.push_back(Type::getInt32PtrTy(context));ArgIpI.push_back(Type::getInt32Ty(context));
@@ -1063,11 +1066,11 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fDoInvoke = Function::Create(FTInvoke, Function::ExternalLinkage,"system!DoInvoke", module);
 
 	std::vector<Type*> ArgPStr;	ArgPStr.push_back(Type::getInt8PtrTy(context));
-	nft= FunctionType::get(TyObjectRef,ArgPStr, false);
+	nft= FunctionType::get(Type::getVoidTy(context),ArgPStr, false);
 	fGetVar= Function::Create(nft, Function::ExternalLinkage,"autovar!get", module);
 	fGetOrCreateVar= Function::Create(nft, Function::ExternalLinkage,"autovar!getorcreate", module);
 
-	std::vector<Type*> mArg;	
+	std::vector<Type*> mArg;
 	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
@@ -1098,12 +1101,12 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
 	SharedGetSwitch[1]=fSharedGetd;
 
-	nft=FunctionType::get(TyObjectRef,mArg, false);
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedGets=Function::Create(nft, Function::ExternalLinkage,"shared!gets", module);
 	SharedGetSwitch[3]=fSharedGets;
 
 	mArg.push_back(Type::getInt32Ty(context));
-	nft=FunctionType::get(TyObjectRef,mArg, false);
+	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
 	SharedGetSwitch[2]=fSharedGeto;
 
@@ -1155,7 +1158,8 @@ Value* BcGenerateStringExpression(DVM_Executable *cf, Expression *expr)
     cp.u.c_string = expr->u.string_value;
     cp_idx = add_constant_pool(cf, &cp);
 	std::vector<Value*> args(1,ConstantInt::get(context,APInt(32,cp_idx)));
-	return builder.CreateCall(fLoadStringFromPool,args);
+	builder.CreateCall(fLoadStringFromPool,args);
+	return builder.CreateLoad(builder.CreateLoad(bretvar));
     //generate_code(ob, expr->line_number, DVM_PUSH_STRING, cp_idx);
 }
 
@@ -1273,7 +1277,8 @@ Value* BcBinaryString(int kind,Value* lv,Value* rv)
 	switch(kind)
 	{
 	case ADD_EXPRESSION:
-		return builder.CreateCall(fChainString);
+		builder.CreateCall(fChainString);
+		return builder.CreateLoad(builder.CreateLoad(bretvar));
 	case EQ_EXPRESSION:
 		t=builder.CreateCall(fCmpString);
 		return builder.CreateICmpEQ(t,zero);
@@ -1407,12 +1412,18 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			switch(ty)
 			{
 			case 2: //object
-				return builder.CreateCall3(SharedGetSwitch[ty],
+				builder.CreateCall3(SharedGetSwitch[ty],
 					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,decl->type->u.class_ref.class_index));
+                return builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
+            case 3: //string
+                builder.CreateCall2(SharedGetSwitch[ty],
+					cached_mid,ConstInt(32,decl->variable_index));
+                return builder.CreateLoad(builder.CreateLoad(bretvar));
 			case 4: //array
-				return builder.CreateCall3(SharedGetSwitch[2],
+				builder.CreateCall3(SharedGetSwitch[2],
 					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,-1));
+                return builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
 				return builder.CreateCall2(SharedGetSwitch[ty],
@@ -1715,8 +1726,8 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		{
 			builder.CreateCall(GetPush(2),v);
 		}
-		
-		
+
+
 		if(expr->u.member_expression.expression->type->u.class_ref.class_definition->is_shared)
 		{//shared var
 			obj=builder.CreateCall(GetObjrefPtr(),obj);
@@ -1746,7 +1757,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 		builder.CreateCall(GetPush(2),BcGenerateExpression(exe, block, expr->u.member_expression.expression));
 		arg.push_back(ConstInt(32,member->u.field.field_index));
 		Value* to=builder.CreateCall(FldGet[2],arg);*/
-		
+
 		Value* fld=builder.CreateCall(GetFldAddr(),obj);
 		fld=builder.CreateBitCast(builder.CreateGEP(fld,ConstInt(32,member->u.field.field_index)),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		Value* to= builder.CreateLoad(fld);
@@ -1959,13 +1970,13 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 			}
 			else
 			{
-				
+
 				t1=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
 				ptr=builder.CreateBitCast(t1,Type::getInt32PtrTy(context));
 				if(isInc)
 					builder.CreateCall2(fAtmInc,ptr,r);
 				else
-					builder.CreateCall2(fAtmDec,ptr,r);			
+					builder.CreateCall2(fAtmDec,ptr,r);
 				BcParameter& ps=bstatic[decl->variable_index];
 				if(ps.v)//fix-me : optimize here! We now must read back.
 				{
@@ -1979,7 +1990,7 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 	{
 		_BreakPoint;//fix-me
 	}
-	else 
+	else
 	{
 		DBG_assert(0, ("Bad kind\n"));
 	}
@@ -2075,7 +2086,8 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 	if(expr->u.cast.type==FUNCTION_TO_DELEGATE_CAST)
 	{
 		if (expr->u.cast.operand->kind == IDENTIFIER_EXPRESSION) {
-            return builder.CreateCall(fNewDelegate,ConstInt(32,expr->u.cast.operand->u.identifier.u.function.function_index));
+            builder.CreateCall(fNewDelegate,ConstInt(32,expr->u.cast.operand->u.identifier.u.function.function_index));
+            return builder.CreateLoad(builder.CreateLoad(bretvar));
         } else {
              //Method's delegate is generated in generate_member_expression().
             _BreakPoint;
@@ -2093,13 +2105,16 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
         return builder.CreateFPToSI(v,Type::getInt32Ty(context));
         break;
     case BOOLEAN_TO_STRING_CAST:
-        return builder.CreateCall(fBoolToStr,builder.CreateIntCast(v,Type::getInt32Ty(context),true));
+        builder.CreateCall(fBoolToStr,builder.CreateIntCast(v,Type::getInt32Ty(context),true));
+        return builder.CreateLoad(builder.CreateLoad(bretvar));
         break;
     case INT_TO_STRING_CAST:
-		return builder.CreateCall(fIntToStr,v);
+		builder.CreateCall(fIntToStr,v);
+		return builder.CreateLoad(builder.CreateLoad(bretvar));
         break;
     case DOUBLE_TO_STRING_CAST:
-		return builder.CreateCall(fDoubleToStr,v);
+		builder.CreateCall(fDoubleToStr,v);
+		return builder.CreateLoad(builder.CreateLoad(bretvar));
         break;
 	case VAR_TO_INT_CAST:
 	case VAR_TO_DOUBLE_CAST:
@@ -2144,7 +2159,8 @@ Value* BcGenerateArrayLiteralExpression(DVM_Executable *exe, Block *block,Expres
     std::vector<Value*> arg;
 	arg.push_back(ConstInt(32,get_opcode_type_offset(expr->u.array_literal->expression->type)));
 	arg.push_back(ConstInt(32,count));
-    return builder.CreateCall(fArrayLiteral,arg);
+    builder.CreateCall(fArrayLiteral,arg);
+    return builder.CreateLoad(builder.CreateLoad(bretvar));
 }
 
 extern "C" int add_type_specifier(TypeSpecifier *src, DVM_Executable *exe);
@@ -2176,9 +2192,15 @@ Value* BcGenerateArrayCreationExpression(DVM_Executable *exe, Block *block,Expre
 	arg.push_back(ConstInt(32,index));
 	arg.push_back(ConstInt(32,dim_count));
 	if(expr->type->derive->u.array_d.is_global)
-		return builder.CreateCall(fNewGlobalArray,arg);
+	{
+	    builder.CreateCall(fNewGlobalArray,arg);
+	    return builder.CreateLoad(builder.CreateLoad(bretvar));
+	}
 	else
-		return builder.CreateCall(fNewArray,arg);
+	{
+	    builder.CreateCall(fNewArray,arg);
+	    return builder.CreateLoad(builder.CreateLoad(bretvar));
+	}
     //generate_code(ob, expr->line_number, DVM_NEW_ARRAY, dim_count, index);
 }
 
@@ -2201,7 +2223,7 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 		idx=BcGenerateExpression(exe, block, expr->u.index_expression.index);
 		//Value* p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[get_opcode_type_offset(expr->type)]);
 		//int array_cache_index=expr->u.index_expression.barray->u.identifier.u.declaration->variable_index+(expr->u.index_expression.barray->u.identifier.u.declaration->is_local)?0:2000;
-		
+
 		Value* p;
 		if(expr->u.index_expression.barray->type->derive->u.array_d.is_global)
 		{
@@ -2214,16 +2236,22 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 			switch(ty)
 			{
 			case 2: //object
-				p= builder.CreateCall3(SharedGetSwitch[ty],obj,idx,
+				builder.CreateCall3(SharedGetSwitch[ty],obj,idx,
 					ConstInt(32,expr->type->u.class_ref.class_index));
+                p=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
+            case 3:
+                builder.CreateCall2(SharedGetSwitch[ty],obj,idx);
+                p=builder.CreateLoad(builder.CreateLoad(bretvar));
+                break;
 			case 4: //array
-				p= builder.CreateCall3(SharedGetSwitch[2],obj,idx,
+				builder.CreateCall3(SharedGetSwitch[2],obj,idx,
 					ConstInt(32,-1));
+                p=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
 				p= builder.CreateCall2(SharedGetSwitch[ty],obj,idx);
-			}	
+			}
 		}
 		else
 		{
@@ -2296,16 +2324,21 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 			switch(ty)
 			{
 			case 2: //object
-				ret= builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
+				builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
 					ConstInt(32,expr->type->u.class_ref.class_index));
+                ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
+            case 3: //string
+                builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
+                ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 			case 4: //array
-				ret= builder.CreateCall3(SharedGetSwitch[2],obj,ConstInt(32,member->u.field.field_index),
+				builder.CreateCall3(SharedGetSwitch[2],obj,ConstInt(32,member->u.field.field_index),
 					ConstInt(32,-1));
+                ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
 				ret= builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
-			}				
+			}
 		}
 		else
 		{
@@ -2325,7 +2358,8 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 
 	if(expr->u.new_e.isDelegate)
 	{
-		return builder.CreateCall(fNewDelegate,ConstInt(32,-1));
+		builder.CreateCall(fNewDelegate,ConstInt(32,-1));
+		return builder.CreateLoad(builder.CreateLoad(bretvar));
 	}
     int param_count;
 
@@ -2337,9 +2371,10 @@ Value* BcGenerateNew(DVM_Executable *exe, Block *block,Expression *expr)
 	arg.push_back(ConstInt(32,expr->u.new_e.method_declaration->u.method.method_index));
 	Value* v;
 	if(expr->u.new_e.class_definition->is_shared)
-		v=builder.CreateCall(fNewShared,arg);
+		builder.CreateCall(fNewShared,arg);
 	else
-		v=builder.CreateCall(fNew,arg);
+		builder.CreateCall(fNew,arg);
+    v=builder.CreateLoad(builder.CreateLoad(bretvar));
     return v;
     //generate_code(ob, expr->line_number, DVM_DUPLICATE_OFFSET,param_count); // check-me : wtf?
 
@@ -2362,7 +2397,8 @@ Value* BcGenerateNull(DVM_Executable *exe, Expression *expr)
 Value* BcGenerateSuper(DVM_Executable *exe, Block *block,Expression *expr)
 {
     builder.CreateCall(GetPush(2),BcGenerateThisExpression(exe,block,expr));
-	return builder.CreateCall(fGetSuper);
+	builder.CreateCall(fGetSuper);
+	return builder.CreateLoad(builder.CreateLoad(bretvar));
 }
 
 
@@ -2533,7 +2569,8 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
         return BcGenerateThisExpression(exe, current_block, expr);
         break;
 	case AUTOVAR_EXPRESSION:
-		return BcGenerateAutoVar(expr,fGetVar);
+		BcGenerateAutoVar(expr,fGetVar);
+		return builder.CreateLoad(builder.CreateLoad(bretvar));
 		break;
     case NULL_EXPRESSION:
         return BcGenerateNull(exe, expr);
