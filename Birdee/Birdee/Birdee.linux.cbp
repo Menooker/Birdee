@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Birdee.linux" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Birdee" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="-e ../../compiler/test/test.dkm" />
+				<Compiler>
+					<Add option="-w" />
+					<Add option="-Wfatal-errors" />
+					<Add option="-g" />
+					<Add option="-fno-rtti -fno-pcc-struct-return" />
+					<Add option="-D__STDC_LIMIT_MACROS" />
+					<Add option="-D__STDC_CONSTANT_MACROS" />
+					<Add option="-DBD_ON_GCC" />
+					<Add option="-DBD_ON_LINUX" />
+					<Add directory="../../../include" />
+					<Add directory="../../../include3" />
+					<Add directory="../../../" />
+					<Add directory="." />
+					<Add directory="../../compiler" />
+					<Add directory="../../debug" />
+					<Add directory="../../dvm" />
+					<Add directory="../../include" />
+					<Add directory="../../memory" />
+					<Add directory="../../require" />
+					<Add directory="../../shared" />
+				</Compiler>
+				<Linker>
+					<Add library="../../../libLLVMLite.a" />
+					<Add library="pthread" />
+					<Add library="memcached" />
+					<Add library="dl" />
+					<Add library="ncurses" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Birdee" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="../Birdee.sln" />
+		<Unit filename="123.bde" />
+		<Unit filename="8Queens.txt" />
+		<Unit filename="ArrayCacheTest.txt" />
+		<Unit filename="ArrayCacheTest_Reg.txt" />
+		<Unit filename="BcMCJIT.cpp" />
+		<Unit filename="BcMCJIT.h" />
+		<Unit filename="BcMemcachedStorage.cpp" />
+		<Unit filename="BdArrayCache.cpp" />
+		<Unit filename="BdArrayCache.h" />
+		<Unit filename="BdCompile.cpp" />
+		<Unit filename="BdCompile.h" />
+		<Unit filename="BdDumper.cpp" />
+		<Unit filename="BdDynLdr.cpp" />
+		<Unit filename="BdDynLdr.h" />
+		<Unit filename="BdException.cpp" />
+		<Unit filename="BdException.h" />
+		<Unit filename="BdExec.cpp" />
+		<Unit filename="BdExec.h" />
+		<Unit filename="BdHashMap.cpp" />
+		<Unit filename="BdHashMap.h" />
+		<Unit filename="BdLoader.cpp" />
+		<Unit filename="BdMemcachedStorage.h" />
+		<Unit filename="BdParameters.h" />
+		<Unit filename="BdRemoteControl.cpp" />
+		<Unit filename="BdRemoteControl.h" />
+		<Unit filename="BdSharedObj.cpp" />
+		<Unit filename="BdSharedObj.h" />
+		<Unit filename="BdThread.cpp" />
+		<Unit filename="BdThread.h" />
+		<Unit filename="BdVarients.cpp" />
+		<Unit filename="BdVarients.h" />
+		<Unit filename="Birdee" />
+		<Unit filename="Birdee.cpp" />
+		<Unit filename="Birdee.depend" />
+		<Unit filename="Birdee.layout" />
+		<Unit filename="Birdee.vcxproj" />
+		<Unit filename="Birdee.vcxproj.filters" />
+		<Unit filename="BirdeeDef.cpp" />
+		<Unit filename="BirdeeDef.h" />
+		<Unit filename="Birdee_linux.depend" />
+		<Unit filename="Birdee_linux.layout" />
+		<Unit filename="Bubbles.txt" />
+		<Unit filename="Conf.h" />
+		<Unit filename="Dumper.h" />
+		<Unit filename="Exceptions.dkh" />
+		<Unit filename="Exceptions2.dkh" />
+		<Unit filename="Loader.h" />
+		<Unit filename="ReadMe.txt" />
+		<Unit filename="Remote.dkh" />
+		<Unit filename="SharedObjTests.txt" />
+		<Unit filename="ToDoList.txt" />
+		<Unit filename="UnportableAPI.cpp" />
+		<Unit filename="UnportableAPI.h" />
+		<Unit filename="ab.dkh" />
+		<Unit filename="ab.dkm" />
+		<Unit filename="backup.txt" />
+		<Unit filename="hash_compatible.h" />
+		<Unit filename="list.txt" />
+		<Unit filename="req2.dkh" />
+		<Unit filename="stdafx.cpp" />
+		<Unit filename="stdafx.h" />
+		<Unit filename="targetver.h" />
+		<Unit filename="template_test.txt" />
+		<Unit filename="test_delegate.txt" />
+		<Unit filename="thread.txt" />
+		<Unit filename="vartest.dkm" />
+		<Unit filename="../../LICENCE.md" />
+		<Unit filename="../../Lib/AAA.bdl" />
+		<Unit filename="../../Lib/Exceptions.bdl" />
+		<Unit filename="../../Lib/Remote.dkm" />
+		<Unit filename="../../README.md" />
+		<Unit filename="../../README.md~" />
+		<Unit filename="../../compiler/Makefile" />
+		<Unit filename="../../compiler/a.dkm" />
+		<Unit filename="../../compiler/b.dkm" />
+		<Unit filename="../../compiler/builder.bat" />
+		<Unit filename="../../compiler/builder2.bat" />
+		<Unit filename="../../compiler/builtin/Makefile" />
+		<Unit filename="../../compiler/builtin/builtin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/builtin/builtin_conv" />
+		<Unit filename="../../compiler/builtin/builtin_conv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/builtin/head.txt" />
+		<Unit filename="../../compiler/builtin/tail.txt" />
+		<Unit filename="../../compiler/classsub.dkh" />
+		<Unit filename="../../compiler/classsub.dkm" />
+		<Unit filename="../../compiler/classtest.dkm" />
+		<Unit filename="../../compiler/create.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/ctest00.dkm" />
+		<Unit filename="../../compiler/dh.dki" />
+		<Unit filename="../../compiler/dh.dkm" />
+		<Unit filename="../../compiler/diksam.h" />
+		<Unit filename="../../compiler/diksam.output" />
+		<Unit filename="../../compiler/diksamc" />
+		<Unit filename="../../compiler/diksamc.h" />
+		<Unit filename="../../compiler/dl.dkm" />
+		<Unit filename="../../compiler/error_compiler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/error_message_compiler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/fix_tree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/foo.dkm" />
+		<Unit filename="../../compiler/generate.c_gomi" />
+		<Unit filename="../../compiler/generate.cpp" />
+		<Unit filename="../../compiler/interface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/lex.yy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/piyo.dkh" />
+		<Unit filename="../../compiler/piyo.dkm" />
+		<Unit filename="../../compiler/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/test/ab.dkh" />
+		<Unit filename="../../compiler/test/ab.dkm" />
+		<Unit filename="../../compiler/test/test - 副本 - 副本.dkm" />
+		<Unit filename="../../compiler/test/test - 副本.dkm" />
+		<Unit filename="../../compiler/test/test.dkm" />
+		<Unit filename="../../compiler/test/test.dkm~" />
+		<Unit filename="../../compiler/test/test.result" />
+		<Unit filename="../../compiler/test2.result" />
+		<Unit filename="../../compiler/util_compiler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/wchar_compiler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/y.output" />
+		<Unit filename="../../compiler/y.tab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../compiler/y.tab.h" />
+		<Unit filename="../../debug/Makefile" />
+		<Unit filename="../../debug/debug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../debug/debug.h" />
+		<Unit filename="../../dvm/Makefile" />
+		<Unit filename="../../dvm/dvm_pri.h" />
+		<Unit filename="../../dvm/error_dvm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/error_message_dvm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/execute.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/heap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/load.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/native.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/nativeif.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/util_dvm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../dvm/wchar_dvm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../include/DBG.h" />
+		<Unit filename="../../include/DKC.h" />
+		<Unit filename="../../include/DVM.h" />
+		<Unit filename="../../include/DVM_code.h" />
+		<Unit filename="../../include/DVM_code2.h" />
+		<Unit filename="../../include/DVM_dev.h" />
+		<Unit filename="../../include/MEM.h" />
+		<Unit filename="../../include/share.h" />
+		<Unit filename="../../main/Makefile" />
+		<Unit filename="../../main/Makefile.tmp" />
+		<Unit filename="../../main/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../main/test/array.dkm" />
+		<Unit filename="../../main/test/array.result" />
+		<Unit filename="../../main/test/array_.result" />
+		<Unit filename="../../main/test/array_ex.dkm" />
+		<Unit filename="../../main/test/array_ex.result" />
+		<Unit filename="../../main/test/array_ex_.result" />
+		<Unit filename="../../main/test/cast.dkm" />
+		<Unit filename="../../main/test/cast.result" />
+		<Unit filename="../../main/test/cast_.result" />
+		<Unit filename="../../main/test/class01.dkm" />
+		<Unit filename="../../main/test/class01.result" />
+		<Unit filename="../../main/test/class01_.result" />
+		<Unit filename="../../main/test/class02.dkm" />
+		<Unit filename="../../main/test/class02.result" />
+		<Unit filename="../../main/test/class02_.result" />
+		<Unit filename="../../main/test/class03.dkm" />
+		<Unit filename="../../main/test/class03.result" />
+		<Unit filename="../../main/test/class03_.result" />
+		<Unit filename="../../main/test/class04.dkm" />
+		<Unit filename="../../main/test/classmain.dkm" />
+		<Unit filename="../../main/test/classmain.result" />
+		<Unit filename="../../main/test/classmain_.result" />
+		<Unit filename="../../main/test/classsub.dkh" />
+		<Unit filename="../../main/test/classsub.dkm" />
+		<Unit filename="../../main/test/const.dkm" />
+		<Unit filename="../../main/test/constant_req.dkh" />
+		<Unit filename="../../main/test/delegate.dkm" />
+		<Unit filename="../../main/test/delegate.result" />
+		<Unit filename="../../main/test/delegate_.result" />
+		<Unit filename="../../main/test/do_while.dkm" />
+		<Unit filename="../../main/test/do_while.result" />
+		<Unit filename="../../main/test/do_while_.result" />
+		<Unit filename="../../main/test/downcast.dkm" />
+		<Unit filename="../../main/test/downcast.result" />
+		<Unit filename="../../main/test/downcast_.result" />
+		<Unit filename="../../main/test/else_ex.dkm" />
+		<Unit filename="../../main/test/else_ex.result" />
+		<Unit filename="../../main/test/else_ex_.result" />
+		<Unit filename="../../main/test/enum.dkm" />
+		<Unit filename="../../main/test/enum.result" />
+		<Unit filename="../../main/test/enum_.result" />
+		<Unit filename="../../main/test/enumsub.dkh" />
+		<Unit filename="../../main/test/exception.dkm" />
+		<Unit filename="../../main/test/exception.result" />
+		<Unit filename="../../main/test/exception2.dkm" />
+		<Unit filename="../../main/test/exception_.result" />
+		<Unit filename="../../main/test/field_init.dkm" />
+		<Unit filename="../../main/test/final.dkm" />
+		<Unit filename="../../main/test/final.result" />
+		<Unit filename="../../main/test/final_.result" />
+		<Unit filename="../../main/test/fizzbuzz.dkm" />
+		<Unit filename="../../main/test/func_ptr.dkm" />
+		<Unit filename="../../main/test/global1.dkm" />
+		<Unit filename="../../main/test/global2.dkh" />
+		<Unit filename="../../main/test/global2.dkm" />
+		<Unit filename="../../main/test/if.dkm" />
+		<Unit filename="../../main/test/instanceof.dkm" />
+		<Unit filename="../../main/test/instanceof.result" />
+		<Unit filename="../../main/test/instanceof_.result" />
+		<Unit filename="../../main/test/mathtest.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../main/test/mathtest.dkm" />
+		<Unit filename="../../main/test/mathtest.result" />
+		<Unit filename="../../main/test/mathtest_.result" />
+		<Unit filename="../../main/test/method.dkm" />
+		<Unit filename="../../main/test/method.result" />
+		<Unit filename="../../main/test/method_.result" />
+		<Unit filename="../../main/test/native_pointer.dkm" />
+		<Unit filename="../../main/test/nativecall.dkm" />
+		<Unit filename="../../main/test/nullpointer.dkm" />
+		<Unit filename="../../main/test/nullpointer.result" />
+		<Unit filename="../../main/test/nullpointer_.result" />
+		<Unit filename="../../main/test/rand.dkm" />
+		<Unit filename="../../main/test/rename.dkm" />
+		<Unit filename="../../main/test/rename.result" />
+		<Unit filename="../../main/test/rename_.result" />
+		<Unit filename="../../main/test/shape.dkh" />
+		<Unit filename="../../main/test/shape.dkm" />
+		<Unit filename="../../main/test/shapemain.dkm" />
+		<Unit filename="../../main/test/shapemain.result" />
+		<Unit filename="../../main/test/shapemain_.result" />
+		<Unit filename="../../main/test/super.dkm" />
+		<Unit filename="../../main/test/super.result" />
+		<Unit filename="../../main/test/super_.result" />
+		<Unit filename="../../main/test/switch.dkm" />
+		<Unit filename="../../main/test/switch.result" />
+		<Unit filename="../../main/test/switch_.result" />
+		<Unit filename="../../main/test/test.copy" />
+		<Unit filename="../../main/test/test.dkm" />
+		<Unit filename="../../main/test/test.result" />
+		<Unit filename="../../main/test/test.sh" />
+		<Unit filename="../../main/test/test_.result" />
+		<Unit filename="../../main/test/throws.dkm" />
+		<Unit filename="../../main/test/throws.result" />
+		<Unit filename="../../main/test/throws_.result" />
+		<Unit filename="../../memory/Makefile" />
+		<Unit filename="../../memory/memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../memory/memory.h" />
+		<Unit filename="../../memory/storage.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../require/diksam/lang.dkh" />
+		<Unit filename="../../require/diksam/lang.dkm" />
+		<Unit filename="../../require/diksam/math.dkh" />
+		<Unit filename="../../share/Makefile" />
+		<Unit filename="../../share/a.out" />
+		<Unit filename="../../share/disassemble.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../share/dispose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../share/opcode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../share/util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../share/wchar_share.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

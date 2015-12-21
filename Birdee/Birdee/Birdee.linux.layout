@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="BdCompile.cpp" open="1" top="0" tabpos="8">
+		<Cursor position="25155" topLine="879" />
+	</File>
+	<File name="BdException.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="2270" topLine="59" />
+	</File>
+	<File name="BdExec.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="24571" topLine="868" />
+	</File>
+	<File name="BdSharedObj.cpp" open="1" top="0" tabpos="12">
+		<Cursor position="10893" topLine="574" />
+	</File>
+	<File name="BdSharedObj.h" open="1" top="0" tabpos="13">
+		<Cursor position="1379" topLine="78" />
+	</File>
+	<File name="Birdee.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="BirdeeDef.h" open="1" top="0" tabpos="10">
+		<Cursor position="1782" topLine="78" />
+	</File>
+	<File name="UnportableAPI.cpp" open="1" top="0" tabpos="16">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="UnportableAPI.h" open="1" top="0" tabpos="15">
+		<Cursor position="1115" topLine="0" />
+	</File>
+	<File name="../../compiler/create.c" open="1" top="0" tabpos="1">
+		<Cursor position="10994" topLine="432" />
+	</File>
+	<File name="../../compiler/wchar_compiler.c" open="0" top="0" tabpos="3">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="../../compiler/y.tab.c" open="1" top="0" tabpos="2">
+		<Cursor position="95215" topLine="2446" />
+	</File>
+	<File name="../../debug/debug.c" open="1" top="0" tabpos="11">
+		<Cursor position="1761" topLine="53" />
+	</File>
+	<File name="../../dvm/wchar_dvm.c" open="1" top="0" tabpos="5">
+		<Cursor position="124" topLine="0" />
+	</File>
+	<File name="../../include/share.h" open="1" top="0" tabpos="4">
+		<Cursor position="2229" topLine="63" />
+	</File>
+	<File name="../../main/main.c" open="1" top="0" tabpos="6">
+		<Cursor position="867" topLine="37" />
+	</File>
+</CodeBlocks_layout_file>

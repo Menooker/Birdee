@@ -34,7 +34,7 @@
 1450591294 /home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.h
 	"Conf.h"
 
-1450591422 /home/menooker/Birdee/Birdee/Birdee/Birdee/Conf.h
+1450608259 /home/menooker/Birdee/Birdee/Birdee/Birdee/Conf.h
 
 1384296440 /home/menooker/Birdee/include3/llvm/Analysis/Passes.h
 
@@ -61,7 +61,7 @@
 1384479299 /home/menooker/Birdee/include3/llvm-c/Core.h
 	"llvm/Support/DataTypes.h"
 
-1450531572 /home/menooker/Birdee/include/llvm/Support/DataTypes.h
+1450671928 /home/menooker/Birdee/include/llvm/Support/DataTypes.h
 	<cmath>
 	<math.h>
 	<sys/types.h>
@@ -93,15 +93,15 @@
 	"llvm/Config/AsmParsers.def"
 	"llvm/Config/Disassemblers.def"
 
-1450531572 /home/menooker/Birdee/include/llvm/Config/llvm-config.h
+1450671928 /home/menooker/Birdee/include/llvm/Config/llvm-config.h
 
-1450531572 /home/menooker/Birdee/include/llvm/Config/Targets.def
+1450671928 /home/menooker/Birdee/include/llvm/Config/Targets.def
 
-1450531572 /home/menooker/Birdee/include/llvm/Config/AsmPrinters.def
+1450671928 /home/menooker/Birdee/include/llvm/Config/AsmPrinters.def
 
-1450531572 /home/menooker/Birdee/include/llvm/Config/AsmParsers.def
+1450671928 /home/menooker/Birdee/include/llvm/Config/AsmParsers.def
 
-1450531572 /home/menooker/Birdee/include/llvm/Config/Disassemblers.def
+1450671928 /home/menooker/Birdee/include/llvm/Config/Disassemblers.def
 
 1384483872 /home/menooker/Birdee/include3/llvm-c/TargetMachine.h
 	"llvm-c/Core.h"
@@ -663,7 +663,7 @@
 	<libmemcached/memcached.h>
 	<stdlib.h>
 
-1450590740 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.h
+1450678989 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.h
 	"BdExec.h"
 
 1450588525 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.h
@@ -740,7 +740,7 @@
 	<stdio.h>
 	<stdarg.h>
 
-1450588491 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.cpp
+1450678885 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.cpp
 	"BirdeeDef.h"
 	"BdCompile.h"
 	"DBG.h"
@@ -886,11 +886,11 @@
 	<string.h>
 	"dvm_pri.h"
 
-1450587297 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.h
+1450676989 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.h
 	"BirdeeDef.h"
 	"DVM.h"
 
-1450593975 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.cpp
+1450678964 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.cpp
 	"BirdeeDef.h"
 	"BdExec.h"
 	"BdException.h"
@@ -992,7 +992,7 @@
 	<stdio.h>
 	"DBG.h"
 
-1450587297 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.cpp
+1450677304 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.cpp
 	"BirdeeDef.h"
 	"BdExec.h"
 	"BdException.h"
@@ -1006,7 +1006,7 @@
 	"BdThread.h"
 	"BdSharedObj.h"
 
-1450591036 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.cpp
+1450677112 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.cpp
 	"BdVarients.h"
 	"BdException.h"
 	<stdlib.h>
@@ -1025,6 +1025,8 @@
 	<stdio.h>
 	<tchar.h>
 
+1450530937 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.cpp
+
 1450591613 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/UnportableAPI.cpp
 	"UnportableAPI.h"
 	"BirdeeDef.h"
@@ -1033,6 +1035,12 @@
 	<sys/mman.h>
 	<signal.h>
 	<stdlib.h>
+
+1450601289 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/main.cpp
+	<iostream>
+
+1450530883 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/stdafx.cpp
+	"stdafx.h"
 
 1450586643 source:/home/menooker/Birdee/Birdee/compiler/builtin/builtin.c
 	<stdio.h>
@@ -1063,6 +1071,10 @@
 	"diksamc.h"
 
 1450530937 source:/home/menooker/Birdee/Birdee/compiler/error_message_compiler.c
+	"diksamc.h"
+
+1450530883 source:/home/menooker/Birdee/Birdee/compiler/error_message_not_gcc_compiler.c
+	<string.h>
 	"diksamc.h"
 
 1450588525 source:/home/menooker/Birdee/Birdee/compiler/fix_tree.c
@@ -1118,6 +1130,13 @@
 	"DBG.h"
 	"diksamc.h"
 
+1450602080 source:/home/menooker/Birdee/Birdee/compiler/wchar.c
+	<stdio.h>
+	<string.h>
+	<wchar.h>
+	"DBG.h"
+	"diksamc.h"
+
 1450587297 source:/home/menooker/Birdee/Birdee/compiler/wchar_compiler.c
 	<stdio.h>
 	<string.h>
@@ -1155,6 +1174,10 @@
 	"dvm_pri.h"
 
 1450530883 source:/home/menooker/Birdee/Birdee/dvm/error_message_dvm.c
+	"dvm_pri.h"
+
+1450530883 source:/home/menooker/Birdee/Birdee/dvm/error_message_not_gcc_dvm.c
+	<string.h>
 	"dvm_pri.h"
 
 1450588525 source:/home/menooker/Birdee/Birdee/dvm/execute.c
