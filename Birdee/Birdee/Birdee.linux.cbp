@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
@@ -16,7 +16,7 @@
 					<Add option="-w" />
 					<Add option="-Wfatal-errors" />
 					<Add option="-g" />
-					<Add option="-fno-rtti -fno-pcc-struct-return" />
+					<Add option="-fno-rtti" />
 					<Add option="-D__STDC_LIMIT_MACROS" />
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
