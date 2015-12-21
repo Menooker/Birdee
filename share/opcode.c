@@ -1,4 +1,4 @@
-#include "..\include\share.h"
+#include "share.h"
 
 DVM_ObjectRef dvm_null_object_ref = {
     NULL,

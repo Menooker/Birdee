@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\DKC.h"
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
-#include "../Birdee/Birdee/BdDynLdr.h"
+#include "DKC.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "BdExec.h"
+#include "UnportableAPI.h"
+#include "BdDynLdr.h"
 #include "dvm_pri.h"
 
 static void
@@ -818,7 +818,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 
 	executable->id=dvm->executable_count;
 	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
-	
+
 	dvm->executable_count++;
     return new_entry;
 }
@@ -963,7 +963,7 @@ DVM_create_virtual_machine(void)
 	dvm->classObject=NULL;
 	dvm->executable_count=0;
 	dvm->is_master=1;
-	UaInitLock(&dvm->thread_lock); 
+	UaInitLock(&dvm->thread_lock);
 	UaInitLock(&dvm->heap.lock);
 	ExInitRegArray(dvm->mainvm);
     dvm_add_native_functions(dvm);

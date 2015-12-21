@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <wchar.h>
-#include "..\include\MEM.h"
-#include "..\include\DKC.h"
-#include "..\include\DVM_code.h"
-#include "..\include\share.h"
+#include "MEM.h"
+#include "DKC.h"
+#include "DVM_code.h"
+#include "share.h"
 
 #ifdef __cplusplus
 
@@ -952,7 +952,7 @@ typedef struct {
 } BuiltinScript;
 
 
-typedef struct 
+typedef struct
 {
 	char* libname;
 	int isLib;

@@ -1,9 +1,9 @@
 #include <math.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "BdExec.h"
+#include "UnportableAPI.h"
 #include "dvm_pri.h"
 
 DVM_ObjectRef

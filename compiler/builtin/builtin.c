@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../diksamc.h"
+#include "diksamc.h"
 
 
 char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as void \n\n",
@@ -201,7 +201,7 @@ char *st_diksam_lang_dkm_text[] ={"require diksam.lang;\n",
     "    print(str + \"\\n\")\n",
     "end\n",
 	0};/* {
-    
+
     "\n",
     "native_pointer __fopen(string file_name, string mode);\n",
     "string __fgets(native_pointer fp);\n",

@@ -1,7 +1,7 @@
 #ifndef PUBLIC_DKC_H_INCLUDED
 #define PUBLIC_DKC_H_INCLUDED
 #include <stdio.h>
-#include "..\include\DVM_code.h"
+#include "DVM_code.h"
 
 typedef struct DKC_Compiler_tag DKC_Compiler;
 

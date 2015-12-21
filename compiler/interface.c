@@ -1,9 +1,9 @@
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
-#include "..\Birdee\Birdee\BirdeeDef.h"
-#include "..\Birdee\Birdee\BdParameters.h"
+#include "BirdeeDef.h"
+#include "BdParameters.h"
 
 #define UTF_8_SOURCE
 
@@ -95,7 +95,7 @@ create_built_in_method(DKC_Compiler* compiler,BuiltInMethod *src, int method_cou
     int param_idx;
     ParameterList *param_list;
     FunctionDefinition *fd_array;
-	
+
     fd_array = dkc_malloc(sizeof(FunctionDefinition) * method_count);
 	memset(fd_array,0,sizeof(FunctionDefinition) * method_count);
     for (i = 0; i < method_count; i++) {
@@ -146,7 +146,7 @@ create_built_in_class(DKC_Compiler* compiler,BuiltInClass *src, int cls_count,Cl
 	pn->next->name="lang";
 	pn->next->next=NULL;
 
-	
+
 	for(i=0;i<cls_count;i++)
 	{
 		cd=(ClassDefinition*)dkc_malloc(sizeof(ClassDefinition));
@@ -224,7 +224,7 @@ DKC_create_compiler(void)
     compiler->current_catch_clause = NULL;
     compiler->input_mode = FILE_INPUT_MODE;
     compiler->required_list = NULL;
-	
+
 
     compiler->array_method_count = ARRAY_SIZE(st_array_method);
     compiler->array_method
@@ -234,8 +234,8 @@ DKC_create_compiler(void)
     compiler->string_method
         = create_built_in_method(compiler,st_string_method,
                                  ARRAY_SIZE(st_string_method));
-	
-	
+
+
 #ifdef EUC_SOURCE
     compiler->source_encoding = EUC_ENCODING;
 #else
@@ -501,7 +501,7 @@ set_path_to_compiler(DKC_Compiler *compiler, char *path)
 		nm->next=NULL;
 		compiler->package_name=nm;
 	}
-	
+
 }
 
 static DVM_Executable *

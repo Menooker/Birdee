@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <locale.h>
 #include <string.h>
-#include "..\Birdee\Birdee\stdafx.h"
-#include "..\include\DKC.h"
-#include "..\include\DVM.h"
-#include "..\include\MEM.h"
+#include "stdafx.h"
+#include "DKC.h"
+#include "DVM.h"
+#include "MEM.h"
 
 
 
-#include "..\Birdee\Birdee\Dumper.h"
-#include "..\Birdee\Birdee\Loader.h"
-#include "..\Birdee\Birdee\BdParameters.h"
+#include "Dumper.h"
+#include "Loader.h"
+#include "BdParameters.h"
 
 
 struct BdParameters parameters;

@@ -1,9 +1,9 @@
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\include\DVM_dev.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "DVM_dev.h"
 #include "dvm_pri.h"
-#include "..\Birdee\Birdee\BdException.h"
+#include "BdException.h"
 extern DVM_ObjectRef ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,RuntimeError id, ...);
  DVM_ErrorStatus
 check_array(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
@@ -143,7 +143,7 @@ DVM_array_set_object(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index,
     }
 */
     barray.data->u.barray.u.object[index] = value;
-	
+
     return DVM_SUCCESS;
 }
 
@@ -216,7 +216,7 @@ resize_array(DVM_VirtualMachine *dvm, DVM_Object *barray, int new_size)
 void
 DVM_array_resize(DVM_VirtualMachine *dvm, DVM_Object *barray, int new_size)
 {
-    int i;    
+    int i;
 
     resize_array(dvm, barray, new_size);
 

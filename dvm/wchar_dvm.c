@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-#include "..\include\DBG.h"
-#include "..\include\MEM.h"
+#include "DBG.h"
+#include "MEM.h"
 #include "dvm_pri.h"
 
 wchar_t *

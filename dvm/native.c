@@ -2,15 +2,15 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\include\DVM_dev.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "DVM_dev.h"
 #include "dvm_pri.h"
-#include "..\Birdee\Birdee\BdVarients.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\BdThread.h"
-#include "..\Birdee\Birdee\BdRemoteControl.h"
-//#include "..\Birdee\Birdee\BdSharedObj.h"
+#include "BdVarients.h"
+#include "BdExec.h"
+#include "BdThread.h"
+#include "BdRemoteControl.h"
+//#include "BdSharedObj.h"
 
 //extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
@@ -708,7 +708,7 @@ nv_string_substr_proc(DVM_VirtualMachine *dvm, DVM_Context *context,
                ("str->type..%d", str->type));
 
     org_len = DVM_string_length(dvm, str);
-    
+
     if (pos < 0 || pos >= org_len) {
         DVM_set_exception(dvm, context, &st_lib_info,
                           DVM_DIKSAM_DEFAULT_PACKAGE,
@@ -813,7 +813,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
                             1, DVM_FALSE, DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "parse_double",
                             nv_parse_double_proc, 1, DVM_FALSE, DVM_FALSE);
-    
+
     //math.dkh
     DVM_add_native_function(dvm, "math", "fabs", nv_fabs_proc, 1,
                             DVM_FALSE, DVM_FALSE);

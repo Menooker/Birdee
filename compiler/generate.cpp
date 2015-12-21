@@ -1,5 +1,5 @@
 
-#include "../Birdee/Birdee/BdCompile.h"
+#include "BdCompile.h"
 
 
 
@@ -12,8 +12,8 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
 
 
@@ -104,7 +104,7 @@ copy_parameter_list(ParameterList *src, int *param_count_p)
     *param_count_p = param_count;
 
     dest =(DVM_LocalVariable *) MEM_malloc(sizeof(DVM_LocalVariable) * param_count);
-    
+
     for (param = src, i = 0; param; param = param->next, i++) {
         dest[i].name = MEM_strdup(param->name);
         dest[i].type = dkc_copy_type_specifier(param->type);
@@ -576,7 +576,7 @@ get_opcode_type_offset(TypeSpecifier *type)
 	case DVM_TEMPLATE_TYPE:
         return 2;
         break;
-	case DVM_CLASS_TYPE: 
+	case DVM_CLASS_TYPE:
 		if(type->u.class_ref.class_definition->is_shared)
 			return 2;
 		else
@@ -853,7 +853,7 @@ generate_assign_expression(DVM_Executable *exe, Block *block,
                            DVM_Boolean is_toplevel)
 {
     if (expr->u.assign_expression.boperator != NORMAL_ASSIGN) {
-        generate_expression(exe, block, 
+        generate_expression(exe, block,
                             expr->u.assign_expression.left, ob);
     }
     generate_expression(exe, block, expr->u.assign_expression.operand, ob);
@@ -1081,7 +1081,7 @@ generate_array_literal_expression(DVM_Executable *exe, Block *block,
         count++;
     }
     DBG_assert(count > 0, ("empty barray literal"));
-    
+
     generate_code(ob, expr->line_number,
                   DVM_NEW_ARRAY_LITERAL_INT
                   + get_opcode_type_offset(expr->u.array_literal
@@ -1228,7 +1228,7 @@ generate_member_expression(DVM_Executable *exe, Block *block,
 {
     MemberDeclaration *member;
     int method_index;
-    
+
     member = expr->u.member_expression.declaration;
 
     if (dkc_is_array(expr->u.member_expression.expression->type)
@@ -1925,7 +1925,7 @@ generate_try_statement(DVM_Executable *exe, Block *block,
     }
     dvm_try.catch_clause = dvm_catch;
     dvm_try.catch_count = catch_count;
-    
+
     dvm_try.finally_start_pc = ob->size;
     set_label(ob, compiler->current_finally_label);
     if (try_s->finally_block) {
@@ -2244,7 +2244,7 @@ dkc_generate(DKC_Compiler *compiler)
 	else
 		mod=BcNewModule("",compiler->path);
 	MEM_free(strname);
-		
+
 	exe->module.mod =mod;
     add_global_variable(compiler, exe);
     add_classes(compiler, exe);

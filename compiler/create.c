@@ -1,9 +1,9 @@
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
-#include "..\include\DVM_dev.h"
-#include "..\Birdee\Birdee\BdParameters.h"
+#include "DVM_dev.h"
+#include "BdParameters.h"
 
 
 CompilerContext default_context={0};
@@ -443,7 +443,7 @@ TypeSpecifier *
 dkc_create_array_type_specifier(TypeSpecifier *base,int is_global)
 {
     TypeDerive *new_derive;
-    
+
     new_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
 	new_derive->u.array_d.is_global=is_global;
     if (base->derive == NULL) {
@@ -947,7 +947,7 @@ dkc_open_block(int unsafe)
     new_block->outer_block = compiler->current_block;
 	if(unsafe!=0)
 	{
-		new_block->unsafe = (unsafe>0); 
+		new_block->unsafe = (unsafe>0);
 	}
 	else
 	{
@@ -1132,7 +1132,7 @@ conv_access_modifier(ClassOrMemberModifierKind src)
     if (src == PUBLIC_MODIFIER) {
         return DVM_PUBLIC_ACCESS;
     } else if (src == PRIVATE_MODIFIER) {
-        return DVM_PRIVATE_ACCESS;
+        return dvm_priVATE_ACCESS;
     } else {
         DBG_assert(src == NOT_SPECIFIED_MODIFIER, ("src..%d\n", src));
         return DVM_FILE_ACCESS;
@@ -1196,7 +1196,7 @@ void dkc_class_define(MemberDeclaration *member_list)
     cd->member = member_list;
 	cd->checked=0;
     compiler->current_class_definition = NULL;
-	
+
 }
 
 ExtendsList *
@@ -1580,7 +1580,7 @@ dkc_create_const_definition(TypeSpecifier *type, char *identifier,
     ConstantDefinition *cd;
     ConstantDefinition *pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
-    
+
     cd = dkc_malloc(sizeof(ConstantDefinition));
     cd->type = type;
     cd->package_name = compiler->package_name;
