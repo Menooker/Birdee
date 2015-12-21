@@ -1,9 +1,9 @@
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "diksamc.h"
-#include "..\include\DVM_dev.h"
-
+#include "DVM_dev.h"
+#include "BdParameters.h"
 
 
 CompilerContext default_context={0};
@@ -200,7 +200,7 @@ dkc_set_require_and_rename_list(RequireList *require_list,
         = dkc_package_name_to_string(compiler->package_name);
 
     if (!dvm_compare_string(current_package_name,
-                            DVM_DIKSAM_DEFAULT_PACKAGE)) {
+		DVM_DIKSAM_DEFAULT_PACKAGE)) {
         require_list = add_default_package(require_list);
     }
     MEM_free(current_package_name);
@@ -440,12 +440,12 @@ dkc_create_template_type_specifier(char *identifier,TemplateTypes* tylist)
 }
 
 TypeSpecifier *
-dkc_create_array_type_specifier(TypeSpecifier *base)
+dkc_create_array_type_specifier(TypeSpecifier *base,int is_global)
 {
     TypeDerive *new_derive;
-    
-    new_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
 
+    new_derive = dkc_alloc_type_derive(ARRAY_DERIVE);
+	new_derive->u.array_d.is_global=is_global;
     if (base->derive == NULL) {
         base->derive = new_derive;
     } else {
@@ -716,13 +716,13 @@ dkc_create_array_literal_expression(ExpressionList *list)
 Expression *
 dkc_create_basic_array_creation(DVM_BasicType basic_type,
                                 ArrayDimension *dim_expr_list,
-                                ArrayDimension *dim_list)
+                                ArrayDimension *dim_list,int is_global)
 {
     Expression  *exp;
     TypeSpecifier *type;
 
     type = dkc_create_type_specifier(basic_type);
-    exp = dkc_create_class_array_creation(type, dim_expr_list, dim_list);
+    exp = dkc_create_class_array_creation(type, dim_expr_list, dim_list,is_global);
 
     return exp;
 }
@@ -730,7 +730,7 @@ dkc_create_basic_array_creation(DVM_BasicType basic_type,
 Expression *
 dkc_create_class_array_creation(TypeSpecifier *type,
                                 ArrayDimension *dim_expr_list,
-                                ArrayDimension *dim_list)
+                                ArrayDimension *dim_list,int is_global)
 {
     Expression  *exp;
 
@@ -738,7 +738,7 @@ dkc_create_class_array_creation(TypeSpecifier *type,
     exp->u.array_creation.type = type;
     exp->u.array_creation.dimension
         = dkc_chain_array_dimension(dim_expr_list, dim_list);
-
+	exp->u.array_creation.is_global=is_global;
     return exp;
 }
 
@@ -947,7 +947,7 @@ dkc_open_block(int unsafe)
     new_block->outer_block = compiler->current_block;
 	if(unsafe!=0)
 	{
-		new_block->unsafe = (unsafe>0); 
+		new_block->unsafe = (unsafe>0);
 	}
 	else
 	{
@@ -1132,7 +1132,7 @@ conv_access_modifier(ClassOrMemberModifierKind src)
     if (src == PUBLIC_MODIFIER) {
         return DVM_PUBLIC_ACCESS;
     } else if (src == PRIVATE_MODIFIER) {
-        return DVM_PRIVATE_ACCESS;
+        return dvm_priVATE_ACCESS;
     } else {
         DBG_assert(src == NOT_SPECIFIED_MODIFIER, ("src..%d\n", src));
         return DVM_FILE_ACCESS;
@@ -1196,7 +1196,7 @@ void dkc_class_define(MemberDeclaration *member_list)
     cd->member = member_list;
 	cd->checked=0;
     compiler->current_class_definition = NULL;
-	
+
 }
 
 ExtendsList *
@@ -1405,7 +1405,7 @@ dkc_create_method_member(ClassOrMemberModifierList *modifier,
                               MESSAGE_ARGUMENT_END);
         }
     } else {
-		if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0 && compiler->path[0]!=0) { // compiler->path[0]!=0 means this is not basic module
+		if (function_definition->block == NULL && BcGetCurrentCompilerContext()->isLib==0 && compiler->path[0]!=0 && parameters.isSyslib==0) { // compiler->path[0]!=0 means this is not basic module
             dkc_compile_error(compiler->current_line_number,
                               CONCRETE_METHOD_HAS_NO_BODY_ERR,
                               MESSAGE_ARGUMENT_END);
@@ -1580,7 +1580,7 @@ dkc_create_const_definition(TypeSpecifier *type, char *identifier,
     ConstantDefinition *cd;
     ConstantDefinition *pos;
     DKC_Compiler *compiler = dkc_get_current_compiler();
-    
+
     cd = dkc_malloc(sizeof(ConstantDefinition));
     cd->type = type;
     cd->package_name = compiler->package_name;

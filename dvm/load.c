@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\DKC.h"
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
-#include "../Birdee/Birdee/BdDynLdr.h"
+#include "DKC.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "BdExec.h"
+#include "UnportableAPI.h"
+#include "BdDynLdr.h"
 #include "dvm_pri.h"
 
 static void
@@ -678,8 +678,6 @@ add_classes(DVM_VirtualMachine *dvm, ExecutableEntry *ee)
     DVM_Boolean *new_class_flags;
     int old_class_count;
     DVM_Executable *exe = ee->executable;
-	if(exe->isDyn==DVM_TRUE)
-		return;
     new_class_flags = MEM_malloc(sizeof(DVM_Boolean)
                                  * exe->class_count);
 
@@ -766,6 +764,19 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
     ExecutableEntry *ee_pos;
     ExecutableEntry *new_entry;
 
+	if(executable->libname)
+	{
+		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
+		{
+
+				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
+							LOAD_FILE_NOT_FOUND_ERR,
+							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
+							DVM_MESSAGE_ARGUMENT_END);
+		}
+		return LdGetLoadedModule(executable->package_name);
+	}
+
     new_entry = MEM_malloc(sizeof(ExecutableEntry));
     new_entry->executable = executable;
     new_entry->next = NULL;
@@ -778,17 +789,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
             ;
         ee_pos->next = new_entry;
     }
-    if(executable->libname)
-	{
-		if(!LdLoadPackage(dvm,executable->libname,executable->package_name))
-		{
 
-				dvm_error_i(NULL, NULL, NO_LINE_NUMBER_PC,
-							LOAD_FILE_NOT_FOUND_ERR,
-							DVM_STRING_MESSAGE_ARGUMENT, "file", executable->libname ? executable->libname : "(null)",
-							DVM_MESSAGE_ARGUMENT_END);
-		}
-	}
     add_functions(dvm, new_entry);
     add_enums(dvm, new_entry);
     add_constants(dvm, new_entry);
@@ -799,14 +800,14 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
                  executable->top_level.code, executable->top_level.code_size,
                  NULL);*/ //check-me : check the stack operations
 
-    for (i = 0; i < executable->function_count; i++) {
+/*    for (i = 0; i < executable->function_count; i++) {
         if (executable->function[i].is_implemented) {
             convert_code(dvm, executable,
                          executable->function[i].code_block.code,
                          executable->function[i].code_block.code_size,
                          &executable->function[i]);
         }
-    }
+    }*/
     add_reference_table(dvm, new_entry, executable);
 
     add_static_variables(dvm,new_entry, executable);
@@ -817,7 +818,7 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 
 	executable->id=dvm->executable_count;
 	ExInitThread(dvm->mainvm,executable->module.mod,ExPrepareModule(&executable->module,dvm,new_entry));
-	
+
 	dvm->executable_count++;
     return new_entry;
 }
@@ -893,6 +894,7 @@ static void
 set_built_in_methods(DVM_VirtualMachine *dvm)
 {
     DVM_VTable *array_v_table;
+	DVM_VTable *global_array_v_table;
     DVM_VTable *string_v_table;
     int i;
 
@@ -907,6 +909,18 @@ set_built_in_methods(DVM_VirtualMachine *dvm)
                                   array_v_table->table[i].name);
     }
     dvm->array_v_table = array_v_table;
+
+	global_array_v_table= alloc_v_table(NULL);
+    array_v_table->table_size = ARRAY_SIZE(st_array_method_v_table);
+    array_v_table->table = MEM_malloc(sizeof(VTableItem)
+                                      * array_v_table->table_size);
+    for (i = 0; i < array_v_table->table_size; i++) {
+        array_v_table->table[i] = st_array_method_v_table[i];
+        array_v_table->table[i].index
+            = dvm_search_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,
+                                  array_v_table->table[i].name);
+    }
+	dvm->global_array_v_table = global_array_v_table;
 
     string_v_table = alloc_v_table(NULL);
     string_v_table->table_size = ARRAY_SIZE(st_string_method_v_table);
@@ -948,7 +962,8 @@ DVM_create_virtual_machine(void)
 	dvm->mainvm=ExCreateThread();
 	dvm->classObject=NULL;
 	dvm->executable_count=0;
-	UaInitLock(&dvm->thread_lock); 
+	dvm->is_master=1;
+	UaInitLock(&dvm->thread_lock);
 	UaInitLock(&dvm->heap.lock);
 	ExInitRegArray(dvm->mainvm);
     dvm_add_native_functions(dvm);

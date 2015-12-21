@@ -1,7 +1,7 @@
 #ifndef DVM_DEV_H_INCLUDED
 #define DVM_DEV_H_INCLUDED
-#include "..\include\DVM.h"
-#include "..\include\DVM_code.h"
+#include "DVM.h"
+#include "DVM_code.h"
 
 typedef struct DVM_Array_tag DVM_Array;
 typedef struct DVM_Context_tag DVM_Context;

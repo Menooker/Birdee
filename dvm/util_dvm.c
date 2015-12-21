@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "dvm_pri.h"
 
 DVM_VirtualMachine* curdvm;
@@ -36,7 +36,7 @@ void
 dvm_vstr_append_character(VString *v, DVM_Char ch)
 {
     int current_len;
-    
+
     current_len = my_strlen(v->string);
     v->string = MEM_realloc(v->string,sizeof(DVM_Char) * (current_len + 2));
     v->string[current_len] = ch;

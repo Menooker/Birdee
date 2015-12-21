@@ -1,9 +1,9 @@
 #include <math.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
-#include "..\Birdee\Birdee\BdExec.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
+#include "MEM.h"
+#include "DBG.h"
+#include "BdExec.h"
+#include "UnportableAPI.h"
 #include "dvm_pri.h"
 
 DVM_ObjectRef
@@ -2100,6 +2100,8 @@ DVM_dispose_virtual_machine(DVM_VirtualMachine *dvm)
 
     MEM_free(dvm->array_v_table->table);
     MEM_free(dvm->array_v_table);
+	MEM_free(dvm->global_array_v_table->table);
+    MEM_free(dvm->global_array_v_table);
     MEM_free(dvm->string_v_table->table);
     MEM_free(dvm->string_v_table);
     MEM_free(dvm->bclass);

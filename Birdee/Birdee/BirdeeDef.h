@@ -8,15 +8,19 @@ typedef void (*BdVMFunction)(void *args, ...);
 	#ifdef BD_ON_VC
 		typedef int BINT ;
 		typedef unsigned long BdIntPtr; // vc + x86
-		typedef unsigned long uint; // vc + x86
+		typedef unsigned long _uint; // vc + x86
 	#endif
 	#ifdef BD_ON_GCC
 		#define sprintf_s snprintf
 		#define sprintf_s snprintf
 		#define swscanf_s swscanf
+		#ifdef BD_ON_LINUX
+		#define vswprintf_s vswprintf
+		#else
 		#define vswprintf_s vsnwprintf
+		#endif
 		typedef int BINT ;
-		typedef unsigned long uint;
+		typedef unsigned long _uint;
 		typedef unsigned long BdIntPtr; // gcc + x86
 	#endif
 

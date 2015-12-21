@@ -8,7 +8,7 @@
 
 extern "C"
 {
-#include "..\..\dvm\dvm_pri.h"
+#include "dvm_pri.h"
 }
 
 //typedef struct DVM_VirtualMachine_tag sDVM_VirtualMachine;
@@ -32,13 +32,13 @@ extern "C"
 	};
 extern DVM_ObjectRef AvPrintf(wchar_t* str,...);
 void TraceCallBack(void* param,void* ebp,void* retaddr,void* calladdr)
-{	
+{
 	BINT id=*(int*)((char*)ebp+8);
 	if(calladdr==ExDoInvoke)
 	{
 		//printf("%s!%s\n",curdvm->function[id]->package_name,curdvm->function[id]->name);
-		TraceParams* p=(TraceParams*)param; 
-		DVM_Object* stack_trace_array=p->stack_trace_array ; 
+		TraceParams* p=(TraceParams*)param;
+		DVM_Object* stack_trace_array=p->stack_trace_array ;
 		int array_size = DVM_array_size(curdvm, stack_trace_array);
 		DVM_ObjectRef stack_trace = dvm_create_class_object_i(curdvm, p->cls_trace_index );
 		stack_trace.data->u.class_object.field[p->line_number_index].int_value= (int)retaddr;
@@ -158,7 +158,7 @@ ExCreateExceptionEx(DVM_VirtualMachine *dvm, char *class_name,BINT* clsindex,
     int message_index;
     int stack_trace_index;
 
-    va_start(ap, id); 
+    va_start(ap, id);
 	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
@@ -298,7 +298,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
     int message_index;
     int stack_trace_index;
 
-    va_start(ap, id); 
+    va_start(ap, id);
 	if(curthread->esp <=0)
 	{
 		printf("Uncaught exception : %s",class_name);
@@ -311,7 +311,7 @@ void ExRaiseNativeException(DVM_VirtualMachine *dvm, char *package_name, char *c
 	//for(int i=0;i<=exe->class_table;
 	int clsindex;
 	clsindex=	EXE_search_class(exe->executable , "Exceptions",class_name);
-	
+
     obj = dvm_create_class_object_i(dvm, class_index);
 	curthread->current_exception=obj;
 

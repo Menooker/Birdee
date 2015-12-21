@@ -5,15 +5,26 @@
 #include "BdException.h"
 #include "BdParameters.h"
 #include "Loader.h"
-#include "../../debug/debug.h"
+#include "debug.h"
 #include <vector>
 #include <time.h>
 #include "BdThread.h"
+#include <string>
+#include <string.h>
+#include "BdSharedObj.h"
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
-	#pragma comment(lib, "WS2_32") 
-#else
-	int a[-1];
+	#pragma comment(lib, "WS2_32")
+#endif
+#ifdef BD_ON_LINUX
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <errno.h>
+    #define SOCKET int
+    #define INVALID_SOCKET (-1)
+    #define SOCKET_ERROR (-1)
+    #define closesocket close
+    typedef sockaddr* LPSOCKADDR;
 #endif
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
@@ -24,7 +35,7 @@ extern "C" std::vector<std::string> LoadedModFiles; //@BdLoader.cpp
 
 struct MasterInfo
 {
-	int32 magic; 
+	int32 magic;
 	uint32 mod_cnt;
 };
 
@@ -51,6 +62,16 @@ struct RcCommandPack
 {
 	RcCommand cmd;
 	int param;
+	int param2;
+	union
+	{
+		struct
+		{
+			int param3;
+			int param4;
+		};
+		long long param34;
+	};
 };
 //fix-me : close all sockets when closing the dvm
 //fix-me : close the sockets when GC
@@ -90,7 +111,11 @@ BD_SOCKET RcConnect(char* ip,int port)
 	sockaddr_in serAddr;
 	serAddr.sin_family = AF_INET;
 	serAddr.sin_port = htons(port);
-	serAddr.sin_addr.S_un.S_addr = inet_addr(ip); 
+#ifdef BD_ON_WINDOWS
+	serAddr.sin_addr.S_un.S_addr = inet_addr(ip);
+#else
+    serAddr.sin_addr.s_addr = inet_addr(ip);
+#endif
 	if (connect(sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
 	{
 		closesocket(sclient);
@@ -112,7 +137,11 @@ BD_SOCKET RcListen(int port)
     sockaddr_in sin;
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
-    sin.sin_addr.S_un.S_addr = INADDR_ANY; 
+#ifdef BD_ON_WINDOWS
+    sin.sin_addr.S_un.S_addr = INADDR_ANY;
+#else
+    sin.sin_addr.s_addr = INADDR_ANY;
+#endif
     if(bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
     {
         printf("bind error !");
@@ -128,9 +157,13 @@ BD_SOCKET RcListen(int port)
 
     //循环接收数据
     sockaddr_in remoteAddr;
+#ifdef BD_ON_WINDOWS
     int nAddrlen = sizeof(remoteAddr);
+#else
+	unsigned int nAddrlen = sizeof(remoteAddr);
+#endif
     printf("port %d waiting for connections...\n",port);
-    SOCKET sClient = accept(slisten, (SOCKADDR *)&remoteAddr, &nAddrlen);
+    SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
     if(sClient == INVALID_SOCKET)
     {
         printf("accept error !");
@@ -148,7 +181,7 @@ inline int RcSend(BD_SOCKET s,void* data,size_t len)
 
 inline int RcRecv(BD_SOCKET s,void* data,size_t len)
 {
-	return recv((SOCKET)s,(char*)data,len, 0);  
+	return recv((SOCKET)s,(char*)data,len, 0);
 }
 
 inline int RcCloseSocket(BD_SOCKET s)
@@ -161,7 +194,7 @@ void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip;
     ip = args[1].object.data ;
-    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));	
+    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));
 	char* buf=(char*)malloc(ip->u.string.length+1);
 	wcstombs(buf,ip->u.string.string,ip->u.string.length+1);
 	SOCKET s=(SOCKET)RcConnect(buf,args[0].int_value);
@@ -172,15 +205,15 @@ void RcConnectNode(DVM_Value *args)
 		RcThrowSocketError();
 	}
 	if(node_class_index==-1)
-		node_class_index=DVM_search_class(curdvm,"diksam.lang", "RemoteNode");
+		node_class_index=DVM_search_class(curdvm,"Remote", "RemoteNode");
 	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
 	obj.data->u.class_object.field[0].object=args[1].object;
 	obj.data->u.class_object.field[1].int_value=args[0].int_value;
 	obj.data->u.class_object.field[2].int_value=(int)s; //fix-me : 64 bit?
 	obj.data->u.class_object.field[3].int_value=DVM_FALSE; //closed
 	obj.data->u.class_object.field[4].int_value=DVM_TRUE; //connected
-	curthread->retvar.object = obj; 
-	
+	curthread->retvar.object = obj;
+
 }
 
 
@@ -192,7 +225,7 @@ int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd)
 #ifdef BD_ON_WINDOWS
 		return WSAGetLastError();
 #else
-		int a[-1];
+		return errno;
 #endif
 	}
 	return 0;
@@ -210,15 +243,27 @@ void RcCloseNode(DVM_Value *args)
 }
 
 
-
+int idx_remote_thread=-1;
+int method_remote_thread=-1;
 void RcCreateThread(DVM_Value *args)
 {
-	int idx= args[0].object.data->u.delegate.index;
-	RcCommandPack cmd={RcCmdCreateThread,idx};
-	DVM_ObjectRef obj=args[1].object;
-	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
-	if(ret)
-		RcThrowSocketError(ret);
+	int idx= args[1].object.data->u.delegate.index;
+
+	if(idx_remote_thread==-1)
+		idx_remote_thread  = DVM_search_class(curdvm,"Remote","RemoteThread");
+	if(method_remote_thread==-1)
+		method_remote_thread = ExGetMethodIndex(curdvm->bclass[idx_remote_thread],"initialize");
+
+	DVM_ObjectRef ret=SoDoNew(idx_remote_thread,method_remote_thread);
+	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
+	cmd.param3=(int)ret.data;
+	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
+	DVM_ObjectRef obj=args[2].object;
+	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	if(sret)
+		RcThrowSocketError(sret);
+	curthread->retvar.object=ret;
+	return ;
 }
 
 
@@ -230,7 +275,7 @@ int RcSendModule(BD_SOCKET s,char* path)
 	fseek(f,0L,SEEK_END);
 	long len=ftell(f);
 	fseek(f,0L,SEEK_SET);
-	
+
 	char* finda=strrchr(path,'/');
 	char* findb=strrchr(path,'\\');
 	char* found;
@@ -240,7 +285,9 @@ int RcSendModule(BD_SOCKET s,char* path)
 		found=findb;
 	if(!found)
 		found=path;
-	size_t nlen=strlen(path)+1;
+	else
+		found++;
+	size_t nlen=strlen(found)+1;
 	FileHeader fh={RC_MAGIC_FILE_HEADER,len,nlen};
 	RcSend(s,&fh,sizeof(fh));
 	RcSend(s,found,nlen);
@@ -289,6 +336,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	}
 	printf("Received %s\n",name);
 	fclose(f);
+	return 0;
 }
 
 void RcSlaveMainLoop(char* path,BD_SOCKET s)
@@ -296,6 +344,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
 	BdStatus status;
+	DVM_ObjectRef paramvar;
 	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
 	plist->list=0;plist->top_level=0;
 
@@ -332,11 +381,20 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 				goto CLOSE;
 				break;
 			case RcCmdCreateThread:
-				curthread->stack.stack_pointer->int_value=0;
+				SoSeti(cmd.param3,1,RC_THREAD_RUNNING);//set the state
+				paramvar=ExCreateVar(curdvm,NULL);
+				paramvar.data->u.var.pobj->type=AV_INT;
+				paramvar.data->u.var.pobj->v.int_value=cmd.param2;
+#ifdef BD_ON_VC
+				curthread->stack.stack_pointer->object=paramvar;
 				curthread->stack.stack_pointer++;
 				*curthread->stack.flg_sp=DVM_TRUE;
 				curthread->stack.flg_sp++;
 				ExDoInvoke(cmd.param);
+				SoSeti(cmd.param3,1,RC_THREAD_DEAD);//set the state
+#else
+				ThDoCreateThread(cmd.param,paramvar,cmd.param3);
+#endif
 				break;
 			default:
 				printf("Unknown command %d\n",cmd.cmd);
@@ -362,34 +420,41 @@ void RcSlave(int port)
 	si.magic=RC_MAGIC_SLAVE;
 	RcSend(s,&si,sizeof(si));
 	int cnt=RcRecv(s,&mi,sizeof(mi));
+	int err=0,err2=0;
 	if(cnt==sizeof(mi) && mi.magic==RC_MAGIC_MASTER)
 	{
 		char path[255];
 		char mainmod[255];
+		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
+		printf("Module file count %d\n",mi.mod_cnt);
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
 			cnt=RcRecv(s,&fh,sizeof(fh));
+			err=2;
 			if(cnt!=sizeof(fh) || fh.magic!=RC_MAGIC_FILE_HEADER)
 				goto ERR;
 			char* name =(char*)malloc(fh.name_len);
 			cnt=RcRecv(s,name,fh.name_len);
 			if(cnt!=fh.name_len)
 			{
+			    err=3;
 				free(name);
 				goto ERR;
 			}
 			name[fh.name_len-1]=0;
-			if(RcRecvModule(s,name,fh.size,path)!=0)
+			err2=RcRecvModule(s,name,fh.size,path);
+			if(err2!=0)
 			{
+			    err=4;
 				free(name);
 				goto ERR;
 			}
 			if(i==0)
 				strncpy(mainmod,path,255);
-			
+
 		}
 		printf("All modules received, waiting for command");
 		RcSlaveMainLoop(mainmod,s);
@@ -397,7 +462,7 @@ void RcSlave(int port)
 	else
 	{
 ERR:
-		printf("Hand shaking error!\n");
+		printf("Hand shaking error! %d %d\n",err,err2);
 		RcCloseSocket(s);
 	}
 }
@@ -413,7 +478,7 @@ int RcMasterHello(BD_SOCKET s)
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,1};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size()};
 	RcSend(s,&mi,sizeof(mi));
 	std::vector<std::string>::iterator itr;
 	for(itr=LoadedModFiles.begin();itr!=LoadedModFiles.end();itr++)

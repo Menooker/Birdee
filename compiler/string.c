@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\MEM.h"
+#include "MEM.h"
 #include "diksamc.h"
 
 #define STRING_ALLOC_SIZE       (256)
@@ -73,7 +73,7 @@ dkc_close_character_literal(void)
                           TOO_LONG_CHARACTER_LITERAL_ERR,
                           MESSAGE_ARGUMENT_END);
     }
-    
+
     dvm_mbstowcs(st_string_literal_buffer, buf);
 
     return buf[0];

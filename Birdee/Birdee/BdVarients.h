@@ -1,7 +1,7 @@
 #ifndef _H_BIRDEE_VARIENTS
 #define _H_BIRDEE_VARIENTS
 
-/*typedef enum 
+/*typedef enum
 {
 	AV_INT=1,
 	AV_DOUBLE,
@@ -9,7 +9,7 @@
 	AV_OBJECT
 }AvType;*/
 #include "BirdeeDef.h"
-#include "..\..\include\DVM.h"
+#include "DVM.h"
 
 
 #ifdef __cplusplus
@@ -37,8 +37,8 @@ void AvMul();
 void AvDiv();
 void AvMod();
 void AvCmp();
-DVM_ObjectRef AvGetVar(char* name);
-DVM_ObjectRef AvGetOrCreateVar(char* name);
+void AvGetVar(char* name);
+void AvGetOrCreateVar(char* name);
 void AvDisposeMainMap();
 #ifdef __cplusplus
 }

@@ -23,8 +23,8 @@ extern "C"
 {
 #endif
 
-#include "..\..\include\MEM.h"
-#include "..\..\compiler\diksamc.h"
+#include "MEM.h"
+#include "diksamc.h"
 
 
 #ifdef __cplusplus

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-#include "..\include\DBG.h"
-#include "..\include\share.h"
+#include "DBG.h"
+#include "share_dvm.h"
 #include "diksamc.h"
 
 wchar_t *

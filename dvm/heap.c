@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include "..\include\MEM.h"
-#include "..\include\DBG.h"
+#include "MEM.h"
+#include "DBG.h"
 #include "dvm_pri.h"
-#include "..\Birdee\Birdee\BdHashMap.h"
-#include "..\Birdee\Birdee\UnportableAPI.h"
+#include "BdHashMap.h"
+#include "UnportableAPI.h"
 //extern DVM_VirtualMachine* curdvm;
 
 void
@@ -286,7 +286,7 @@ dvm_create_class_object_i(DVM_VirtualMachine *dvm, int class_index)
     obj = alloc_object(dvm, CLASS_OBJECT);
 
     ec = dvm->bclass[class_index];
-    
+
     obj.v_table = ec->class_table;
 
     obj.data->u.class_object.field_count = ec->field_count;
@@ -482,7 +482,7 @@ gc_mark_objects(DVM_VirtualMachine *dvm)
         gc_mark_ref_in_native_method(context_pos);
     }
 	ThResumeTheWorld();
-	
+
 }
 
 static DVM_Boolean
@@ -498,7 +498,7 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
             MEM_free(obj->u.string.string);
         }
 		else
-		{	
+		{
 			if(curdvm->static_str_map)
 				RtlHashmapPut(curdvm->static_str_map,(BdIntPtr)obj->u.string.string,dvm_null_object_ref);
 		}
@@ -598,7 +598,7 @@ dvm_garbage_collect(DVM_VirtualMachine *dvm)
     DVM_Boolean call_finalizer;
 	UaEnterLock(&dvm->heap.lock);
 		do {
-			
+
 			gc_mark_objects(dvm);
 			call_finalizer = gc_sweep_objects(dvm);
 		} while(call_finalizer);

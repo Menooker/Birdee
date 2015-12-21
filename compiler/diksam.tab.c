@@ -1525,7 +1525,7 @@ yyparse ()
 #endif
 #endif
 {
-  
+
   int yystate;
   int yyn;
   int yyresult;
@@ -1880,7 +1880,7 @@ yyreduce:
   case 24:
 #line 152 "diksam.y"
     {
-            (yyval.type_specifier) = dkc_create_array_type_specifier((yyvsp[(1) - (3)].type_specifier));
+            (yyval.type_specifier) = dkc_create_array_type_specifier((yyvsp[(1) - (3)].type_specifier),0);
         ;}
     break;
 

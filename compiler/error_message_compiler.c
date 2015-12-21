@@ -127,5 +127,7 @@ ErrorDefinition dkc_error_message_format[] = {
 	{"共享变量应为全局变量"},
 	{"父类$(fname)与子类$(sname)应都为共享类"},
 	{"共享类只能有共享类对象成员"},
+	{"共享数组中出现了不允许的类型"},
+	{"shared数组必须为global的类型"},
     {"dummy"}
 };

@@ -1,8 +1,8 @@
 #ifndef PRIVATE_SHARE_H_INCLUDED
 #define PRIVATE_SHARE_H_INCLUDED
 #include <stdio.h>
-#include "..\include\DVM_code.h"
-#include "..\include\DKC.h"
+#include "DVM_code.h"
+#include "DKC.h"
 
 
 

@@ -13,6 +13,7 @@ extern "C"
 	void ThCreateThread(DVM_Value* args);
 	void ThPauseTheWorld();
 	void ThResumeTheWorld();
+	int ThDoCreateThread(int func,DVM_ObjectRef arg,unsigned int thread_object_id);
 #ifdef __cplusplus
 }
 #endif

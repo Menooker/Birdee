@@ -1,8 +1,8 @@
 #include "BdArrayCache.h"
 extern "C"{
-#include "..\..\include\DBG.h"
-//#include "..\..\include\DVM.h"
-#include "..\..\DVM\DVM_pri.h"
+#include "DBG.h"
+//#include "DVM.h"
+#include "dvm_pri.h"
 
 	int hit=0;
 int miss=0;
@@ -30,7 +30,7 @@ void ExCheckArray(DVM_VirtualMachine *dvm, DVM_ObjectRef barray, int index)
 {
 /*	BINT eindex;
     if (barray.data == NULL) {
-        
+
         dvm->current_exception = ExCreateExceptionEx(dvm, DVM_NULL_POINTER_EXCEPTION_NAME,&eindex,
                                    NULL_POINTER_ERR,
                                    DVM_MESSAGE_ARGUMENT_END);
