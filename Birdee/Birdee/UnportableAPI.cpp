@@ -11,7 +11,11 @@
 extern "C"
 {
 thread_local BdThread* curthread;
+
+#ifndef BD_ON_WINDOWS
 int PAGE_SIZE=getpagesize();
+#endif
+
 #ifdef BD_ON_VC
 #ifdef BD_ON_X86
 void __stdcall _UaStackTrace(int StackBase, int ebp, int esp,UaTraceCallBack cb,void* param)

@@ -122,9 +122,6 @@
     <ClInclude Include="..\..\memory\memory.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\share.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\compiler\y.tab.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -186,6 +183,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdMemcachedStorage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\share_dvm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

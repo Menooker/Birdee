@@ -15,7 +15,7 @@ extern "C"{
 #include <string>
 #include <stdio.h>
 
-#ifdef BO_ON_WINDOWS
+#ifdef BD_ON_WINDOWS
 #include <io.h>
 #else
 #include<unistd.h>

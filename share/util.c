@@ -2,7 +2,7 @@
 #include <string.h>
 #include "DBG.h"
 #include "MEM.h"
-#include "share.h"
+#include "share_dvm.h"
 
 /*
  * found_path size is FILENAME_MAX.

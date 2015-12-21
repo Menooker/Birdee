@@ -6,7 +6,7 @@
 #include "MEM.h"
 #include "DKC.h"
 #include "DVM_code.h"
-#include "share.h"
+#include "share_dvm.h"
 
 #ifdef __cplusplus
 

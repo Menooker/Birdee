@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "DBG.h"
-#include "share.h"
+#include "share_dvm.h"
 
 extern OpcodeInfo dvm_opcode_info[];
 

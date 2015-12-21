@@ -3,7 +3,7 @@
 
 #include "DVM_code.h"
 #include "DVM_dev.h"
-#include "share.h"
+#include "share_dvm.h"
 #include "BdException.h"
 #include "BirdeeDef.h"
 #include "BdHashMap.h"

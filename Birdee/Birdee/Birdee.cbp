@@ -26,6 +26,13 @@
 					<Add directory="$(IncludePath)" />
 					<Add directory="C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Include" />
 					<Add directory="../../../" />
+					<Add directory="." />
+					<Add directory="../../dvm" />
+					<Add directory="../../share" />
+					<Add directory="../../compiler" />
+					<Add directory="../../debug" />
+					<Add directory="../../include" />
+					<Add directory="../../memory" />
 				</Compiler>
 				<Linker>
 					<Add library="..\..\..\libLLVMLite.a" />

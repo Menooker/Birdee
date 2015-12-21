@@ -6,7 +6,7 @@
 #pragma once
 
 //#include "targetver.h"
-
+#define HAVE_BOOL_T
 #include <stdio.h>
 #ifdef BD_ON_WINDOWS
 #include <tchar.h>

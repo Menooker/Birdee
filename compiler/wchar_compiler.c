@@ -2,7 +2,7 @@
 #include <string.h>
 #include <wchar.h>
 #include "DBG.h"
-#include "share.h"
+#include "share_dvm.h"
 #include "diksamc.h"
 
 wchar_t *

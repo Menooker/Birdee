@@ -25,9 +25,6 @@
     #define SOCKET_ERROR (-1)
     #define closesocket close
     typedef sockaddr* LPSOCKADDR;
-
-#else
-	int a[-1];
 #endif
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
@@ -160,7 +157,11 @@ BD_SOCKET RcListen(int port)
 
     //循环接收数据
     sockaddr_in remoteAddr;
-    unsigned int nAddrlen = sizeof(remoteAddr);
+#ifdef BD_ON_WINDOWS
+    int nAddrlen = sizeof(remoteAddr);
+#else
+	unsigned int nAddrlen = sizeof(remoteAddr);
+#endif
     printf("port %d waiting for connections...\n",port);
     SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
     if(sClient == INVALID_SOCKET)
