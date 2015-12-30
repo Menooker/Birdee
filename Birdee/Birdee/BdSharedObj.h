@@ -88,6 +88,8 @@ void SoSetCounter(DVM_Value* args);
 void SoGetCounter(DVM_Value* args);
 void SoNewArray(BINT ty,BINT dim);
 void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
+void SoKillStorage();
+
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
@@ -96,12 +98,16 @@ void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
 #endif
 
 #ifdef __cplusplus
+#include <string>
+#include <list>
+void SoInitStorage(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports);
+
 #define SO_KEY_NOT_FOUND 1
 class SoStorage
 {
 public:
 	SoStorage(){};
-	SoStorage(char*){};
+	SoStorage(std::list<std::string>& ,std::list<int>&){};
 	virtual inline ~SoStorage(){};
 	virtual SoStatus putstr(_uint key,wchar_t* str,_uint len)=0;
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;

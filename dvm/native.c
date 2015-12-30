@@ -785,7 +785,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, "diksam.lang", "gets", ExGets, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "Sleep", ExSleep, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "CreateThread", ThCreateThread, 3,DVM_FALSE);
-	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 2,DVM_FALSE);
+	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 4,DVM_FALSE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#CreateThread", RcCreateThread, 2,DVM_TRUE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#Close", RcCloseNode, 0,DVM_TRUE);
 

@@ -28,7 +28,7 @@ using namespace llvm;
 #include "Loader.h"
 #include <stdlib.h>
 #include <setjmp.h>
-#include "BcMCJIT.h"
+#include "BdMCJIT.h"
 #include "llvm/Support/DynamicLibrary.h"
 
 llvm::Function* BcBuildFldPtrImp(llvm::Type *);
@@ -1324,7 +1324,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-#ifdef BD_MULTITHREAD
+#if defined(BD_MULTITHREAD) && defined(BD_ON_WINDOWS)
 		MCJIT= new MCJITHelper(m,false);
 #else
 		MCJIT= new MCJITHelper(m,true);

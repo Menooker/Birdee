@@ -170,8 +170,6 @@
 		<Unit filename="8Queens.txt" />
 		<Unit filename="ArrayCacheTest.txt" />
 		<Unit filename="ArrayCacheTest_Reg.txt" />
-		<Unit filename="BcMCJIT.cpp" />
-		<Unit filename="BcMemcachedStorage.cpp" />
 		<Unit filename="BdArrayCache.cpp" />
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
@@ -186,6 +184,8 @@
 		<Unit filename="BdHashMap.cpp" />
 		<Unit filename="BdHashMap.h" />
 		<Unit filename="BdLoader.cpp" />
+		<Unit filename="BdMCJIT.cpp" />
+		<Unit filename="BdMemcachedStorage.cpp" />
 		<Unit filename="BdMemcachedStorage.h" />
 		<Unit filename="BdRemoteControl.cpp" />
 		<Unit filename="BdSharedObj.cpp" />

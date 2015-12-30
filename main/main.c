@@ -16,6 +16,7 @@
 struct BdParameters parameters;
 void ExInitEngine();
 void BcInitLLVMCompiler();
+void SoKillStorage();
 int ExExec(char* path);
 void RcSlave(int port);
 
@@ -37,6 +38,43 @@ int compile(char* path,char* outpath)
 	DKC_dispose_compiler(compiler);
 	CpSaveCodeToFile(outpath,list);
 	DVM_dispose_executable_list(list);
+	return 0;
+}
+
+
+int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
+{
+	int mh=0;
+	int mp=0;
+	for(;cur_arg<argc;cur_arg++)
+	{
+		if(!strcmp(argv[cur_arg],"-mh"))
+		{
+			if(argc-1-cur_arg==0)
+				return 1;
+			if(strlen(argv[cur_arg+1])>254)
+			{
+				printf("Error: Memory Host Name too long\n");
+				return 1;
+			}
+			strcpy(parameters.memip,argv[cur_arg+1]);
+			mh=1;
+			cur_arg+=1;
+		}
+		else if(!strcmp(argv[cur_arg],"-mp"))
+		{
+			if(argc-1-cur_arg==0)
+				return 1;
+			parameters.memport=atoi(argv[cur_arg+1]);
+			mp=1;
+			cur_arg+=1;
+		}
+	}
+
+	if(!mh)
+		strcpy(parameters.memip,"127.0.0.1");
+	if(!mp)
+		parameters.memport=11211;
 	return 0;
 }
 
@@ -73,24 +111,27 @@ main(int argc, char* argv[])
 			}
 			break;
 		case 'c':
-			if(argc<3)
+			if(argc<4)
 				goto BAD_PARAM;
-			if(compile(argv[2],"123.bde"))
+			if(compile(argv[2],argv[3]))
 			{
 				printf("Error when opening input file\n");
 				return 1;
 			}
 			break;
 		case 'e':
-			if(argc<3)
+			if(argc<4)
 				goto BAD_PARAM;
-			if(compile(argv[2],"123.bde"))
+			if(compile(argv[2],argv[3]))
 			{
 				printf("Error when opening input file\n");
 				return 1;
 			}
 			printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-			ExExec("123.bde");
+			if(ParseExecutionParameters(4,argc,argv))
+				goto BAD_PARAM;
+			ExExec(argv[3]);
+			SoKillStorage();
 			break;
 		case 's':
 			if(argc<4)
@@ -108,8 +149,10 @@ main(int argc, char* argv[])
 				parameters.RemoteModulePath[len]='/';
 				parameters.RemoteModulePath[len+1]=0;
 			}
-
+			//if(ParseExecutionParameters(4,argc,argv))
+			//	goto BAD_PARAM;
 			RcSlave(atoi(argv[2]));
+			SoKillStorage();
 			break;
 		default:
 			goto BAD_PARAM;

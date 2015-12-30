@@ -164,9 +164,6 @@
     <ClInclude Include="BdDynLdr.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BcMCJIT.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="hash_compatible.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -186,6 +183,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\share_dvm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdMCJIT.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -316,9 +316,6 @@
     <ClCompile Include="BdDynLdr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BcMCJIT.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\compiler\fix_tree.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -331,7 +328,10 @@
     <ClCompile Include="BdRemoteControl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BcMemcachedStorage.cpp">
+    <ClCompile Include="BdMCJIT.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdMemcachedStorage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

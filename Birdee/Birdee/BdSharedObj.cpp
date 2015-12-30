@@ -6,6 +6,7 @@
 #include "BdSharedObj.h"
 #include "BdMemcachedStorage.h"
 #include "UnportableAPI.h"
+#include "BdParameters.h"
 
 extern void ExCall(BINT index);
 
@@ -43,7 +44,7 @@ private:
 
 	std::hash_map<long long,DataNode> map;
 public:
-	SoStorageLocalTest(char*){};
+	SoStorageLocalTest(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports){};
 	SoStorageLocalTest(){};
 
 	int getsize(_uint key)
@@ -174,15 +175,15 @@ public:
 		type=ty;
 		return this;
 	}
-	SoStorage* make()
+	SoStorage* make(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
 	{
 		switch(type)
 		{
 		case SoBackendTest:
-			return new SoStorageLocalTest("127.0.0.1");
+			return new SoStorageLocalTest(arr_mem_hosts, arr_mem_ports);
 			break;
 		case SoBackendMemcached:
-			return new SoStorageMemcached("127.0.0.1");
+			return new SoStorageMemcached(arr_mem_hosts, arr_mem_ports);
 		default:
 			DBG_assert(0,("Var type is wrong %d\n",type));
 		}
@@ -195,9 +196,9 @@ class SharedStorage
 private:
 	SoStorage* backend;
 public:
-	SharedStorage(SoStorageFactory::BackendType ty)
+	SharedStorage(SoStorageFactory::BackendType ty,std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
 	{
-		backend=SoStorageFactory(ty).make();
+		backend=SoStorageFactory(ty).make(arr_mem_hosts, arr_mem_ports);
 	}
 	~SharedStorage()
 	{
@@ -392,12 +393,21 @@ public:
 		}
 	}
 };
+#define storage (*pstorage)
 
-SharedStorage storage(SoStorageFactory::SoBackendMemcached);
+SharedStorage* pstorage=NULL;
 
 
+void SoInitStorage(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
+{
+	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,arr_mem_hosts,arr_mem_ports);
+}
 
-
+extern "C" void SoKillStorage()
+{
+	if(pstorage)
+		delete pstorage;
+}
 
 inline _uint TranslateKey(_uint key)
 {

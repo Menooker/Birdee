@@ -37,6 +37,7 @@ struct MasterInfo
 {
 	int32 magic;
 	uint32 mod_cnt;
+	int32 num_mem_server;
 };
 
 struct FileHeader
@@ -90,6 +91,10 @@ int RcWinsockStartup()
 int RcStartipRet=RcWinsockStartup();
 #endif
 
+void RcThrowInvalidParametersError()
+{
+	_BreakPoint
+}
 void RcThrowSocketError()
 {
 	_BreakPoint
@@ -190,30 +195,92 @@ inline int RcCloseSocket(BD_SOCKET s)
 }
 
 int node_class_index=-1;
-void RcConnectNode(DVM_Value *args)
+
+int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports);
+
+int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* hosts,DVM_Object* memports)
 {
-    DVM_Object  *ip;
-    ip = args[1].object.data ;
-    DBG_assert(ip->type == STRING_OBJECT, ("ip->type..%d", ip->type));
-	char* buf=(char*)malloc(ip->u.string.length+1);
-	wcstombs(buf,ip->u.string.string,ip->u.string.length+1);
-	SOCKET s=(SOCKET)RcConnect(buf,args[0].int_value);
+	char* buf=(char*)malloc(host.data->u.string.length+1);
+	wcstombs(buf,host.data->u.string.string,host.data->u.string.length+1);
+	SOCKET s=(SOCKET)RcConnect(buf,port);
 	free(buf);
-	RcMasterHello((BD_SOCKET)s);
-	if(s==0)
+	if(s==0 || RcMasterHello((BD_SOCKET)s, hosts, memports))
 	{
-		RcThrowSocketError();
+		return 1;
 	}
-	if(node_class_index==-1)
-		node_class_index=DVM_search_class(curdvm,"Remote", "RemoteNode");
+
 	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
-	obj.data->u.class_object.field[0].object=args[1].object;
-	obj.data->u.class_object.field[1].int_value=args[0].int_value;
+	obj.data->u.class_object.field[0].object = host;
+	obj.data->u.class_object.field[1].int_value=port;
 	obj.data->u.class_object.field[2].int_value=(int)s; //fix-me : 64 bit?
 	obj.data->u.class_object.field[3].int_value=DVM_FALSE; //closed
 	obj.data->u.class_object.field[4].int_value=DVM_TRUE; //connected
-	curthread->retvar.object = obj;
 
+	*out=obj;
+}
+
+int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd);
+void RcConnectNode(DVM_Value *args)
+{
+    DVM_Object  *ip,*port,*memhost,*memport;
+	DVM_ObjectRef arr,obj;
+
+    ip = args[3].object.data ;
+    DBG_assert(ip->type == ARRAY_OBJECT, ("ip->type..%d", ip->type));
+
+	port = args[2].object.data ;
+    DBG_assert(port->type == ARRAY_OBJECT, ("port->type..%d", port->type));
+
+	memhost = args[1].object.data ;
+    DBG_assert(memhost->type == ARRAY_OBJECT, ("memhost->type..%d", memhost->type));
+
+	memport = args[1].object.data ;
+    DBG_assert(memport->type == ARRAY_OBJECT, ("memport->type..%d", memport->type));
+
+	if(node_class_index==-1)
+		node_class_index=DVM_search_class(curdvm,"Remote", "RemoteNode");
+
+	if(ip->u.barray.size==0 || ip->u.barray.size!=port->u.barray.size)
+	{
+		 RcThrowInvalidParametersError();
+		 return;
+	}
+
+	arr = dvm_create_array_object_i(curdvm, ip->u.barray.size);
+	curthread->stack.stack_pointer->object=arr;
+	curthread->stack.stack_pointer++;
+	for(int i=0;i<ip->u.barray.size;i++)
+	{
+		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,memhost,memport))
+		{
+			for(int j=0;j<i;j++)//if one node fails, roll back all nodes
+			{
+				RcCommandPack cmd={RcCmdClose,0};
+				DVM_Object *node=arr.data->u.barray.u.object[j].data;
+				int ret=RcSendCmd((BD_SOCKET)node->u.class_object.field[2].int_value,&cmd);
+				node->u.class_object.field[3].int_value=DVM_TRUE; //closed
+				node->u.class_object.field[4].int_value=DVM_FALSE; //connected
+			}
+			RcThrowSocketError();
+			return;
+		}
+		//if create node success
+		arr.data->u.barray.u.object[i]=obj;
+	}
+	std::list<std::string> hosts;
+	std::list<int> ports;
+	char buf[255];
+	for(int i=0;i<memhost->u.barray.size;i++)
+	{
+		if(sprintf_s(buf,254,"%ws",memhost->u.barray.u.object[i].data->u.string.string)>=254)
+			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
+		hosts.push_back(std::string(buf));
+		printf("%x %x\n",buf,hosts.back().c_str());
+		ports.push_back(memport->u.barray.u.int_array[i]);
+	}	
+
+	SoInitStorage(hosts,ports);
+	curthread->retvar.object = arr;
 }
 
 
@@ -425,10 +492,44 @@ void RcSlave(int port)
 	{
 		char path[255];
 		char mainmod[255];
+
 		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
 		printf("Module file count %d\n",mi.mod_cnt);
+		printf("Memory server count %d\n",mi.num_mem_server);
+
+		char buf[255];
+		printf("Memory server list :\n");
+		std::list<std::string> hosts;
+		std::list<int> ports;
+		for(int i=0;i<mi.num_mem_server;i++)
+		{
+			uint32 len,port;
+			err=5;
+			if(RcRecv(s,&len,sizeof(len))!=sizeof(len))
+				goto ERR;
+			if(len>255)
+			{
+				err=6;
+				goto ERR;
+			}
+			if(RcRecv(s,buf,len)!=len)
+			{
+				err=7;
+				goto ERR;
+			}
+			if(RcRecv(s,&port,sizeof(port))!=sizeof(port))
+			{
+				err=8;
+				goto ERR;
+			}
+			hosts.push_back(std::string(buf));
+			ports.push_back(port);
+			printf("%s:%d\n",buf,port);
+		}
+		SoInitStorage(hosts,ports);
+
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
@@ -467,9 +568,11 @@ ERR:
 	}
 }
 
-int RcMasterHello(BD_SOCKET s)
+int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
 {
 	SlaveInfo si;
+	int mem_cnt;
+	mem_cnt=hosts->u.barray.size;
 	if(RcRecv(s,&si,sizeof(si))!=sizeof(si))
 	{
 		return 1;
@@ -478,8 +581,26 @@ int RcMasterHello(BD_SOCKET s)
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size()};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt};
 	RcSend(s,&mi,sizeof(mi));
+
+	char buf[255];
+	for(int i=0;i<mem_cnt;i++)
+	{
+		if(sprintf_s(buf,254,"%ws",hosts->u.barray.u.object[i].data->u.string.string)>=254)
+			printf("Warning : host name %ws too long\n",hosts->u.barray.u.object[i].data->u.string.string);
+		
+		uint32 sendl=hosts->u.barray.u.object[i].data->u.string.length+1;
+		if(sendl>255)
+		{
+			sendl=255;
+			buf[254]=0;
+		}
+		RcSend(s,&sendl,sizeof(sendl));
+		RcSend(s,buf,sendl);
+		RcSend(s,&memports->u.barray.u.int_array[i],sizeof(memports->u.barray.u.int_array[i]));
+	}
+
 	std::vector<std::string>::iterator itr;
 	for(itr=LoadedModFiles.begin();itr!=LoadedModFiles.end();itr++)
 	{
