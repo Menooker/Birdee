@@ -217,6 +217,7 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* h
 	obj.data->u.class_object.field[4].int_value=DVM_TRUE; //connected
 
 	*out=obj;
+	return 0;
 }
 
 int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd);
@@ -234,7 +235,7 @@ void RcConnectNode(DVM_Value *args)
 	memhost = args[1].object.data ;
     DBG_assert(memhost->type == ARRAY_OBJECT, ("memhost->type..%d", memhost->type));
 
-	memport = args[1].object.data ;
+	memport = args[0].object.data ;
     DBG_assert(memport->type == ARRAY_OBJECT, ("memport->type..%d", memport->type));
 
 	if(node_class_index==-1)
@@ -267,15 +268,14 @@ void RcConnectNode(DVM_Value *args)
 		//if create node success
 		arr.data->u.barray.u.object[i]=obj;
 	}
-	std::list<std::string> hosts;
-	std::list<int> ports;
+	std::vector<std::string> hosts;
+	std::vector<int> ports;
 	char buf[255];
 	for(int i=0;i<memhost->u.barray.size;i++)
 	{
 		if(sprintf_s(buf,254,"%ws",memhost->u.barray.u.object[i].data->u.string.string)>=254)
 			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
 		hosts.push_back(std::string(buf));
-		printf("%x %x\n",buf,hosts.back().c_str());
 		ports.push_back(memport->u.barray.u.int_array[i]);
 	}	
 
@@ -406,7 +406,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
-void RcSlaveMainLoop(char* path,BD_SOCKET s)
+void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports)
 {
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
@@ -432,6 +432,8 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s)
 		srand((unsigned)time(NULL));
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;
+		SoInitStorage(mem_hosts,mem_ports);
+
 		for(;;)
 		{
 			RcCommandPack cmd;
@@ -501,8 +503,8 @@ void RcSlave(int port)
 
 		char buf[255];
 		printf("Memory server list :\n");
-		std::list<std::string> hosts;
-		std::list<int> ports;
+		std::vector<std::string> hosts;
+		std::vector<int> ports;
 		for(int i=0;i<mi.num_mem_server;i++)
 		{
 			uint32 len,port;
@@ -528,8 +530,7 @@ void RcSlave(int port)
 			ports.push_back(port);
 			printf("%s:%d\n",buf,port);
 		}
-		SoInitStorage(hosts,ports);
-
+		
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
@@ -558,7 +559,7 @@ void RcSlave(int port)
 
 		}
 		printf("All modules received, waiting for command");
-		RcSlaveMainLoop(mainmod,s);
+		RcSlaveMainLoop(mainmod,s,hosts,ports);
 	}
 	else
 	{

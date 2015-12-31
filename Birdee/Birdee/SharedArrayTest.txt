@@ -1,0 +1,19 @@
+dim d as shared int[][] global=new int[10][10] global
+dim p as int[][] global=d
+p[1][1]=1
+println(p[1][1])
+
+dim a as shared string[] global = new string[2] global
+a[1]="LLL"
+println(a[1])
+//println(a[10])
+
+sub test(arr as string[] global)
+unsafe
+	println(a[1])
+end
+test(a)
+
+//dim k as int[]=d
+//dim ll as  bbb[] global
+//dim ll as shared int[]

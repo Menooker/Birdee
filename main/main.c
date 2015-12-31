@@ -44,7 +44,7 @@ int compile(char* path,char* outpath)
 
 int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
 {
-	int mh=0;
+	/*int mh=0;
 	int mp=0;
 	for(;cur_arg<argc;cur_arg++)
 	{
@@ -74,7 +74,7 @@ int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
 	if(!mh)
 		strcpy(parameters.memip,"127.0.0.1");
 	if(!mp)
-		parameters.memport=11211;
+		parameters.memport=11211;*/
 	return 0;
 }
 

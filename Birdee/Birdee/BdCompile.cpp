@@ -2151,13 +2151,14 @@ Value* BcGenerateArrayLiteralExpression(DVM_Executable *exe, Block *block,Expres
                ("barray literal is not barray."));
 
     count = 0;
+	int ty=get_opcode_type_offset(expr->u.array_literal->expression->type);
     for (pos = expr->u.array_literal; pos; pos = pos->next) {
-        builder.CreateCall(GetPush(0),BcGenerateExpression(exe, block, pos->expression));
+        builder.CreateCall(GetPush(ty),BcGenerateExpression(exe, block, pos->expression));
         count++;
     }
     DBG_assert(count > 0, ("empty barray literal"));
     std::vector<Value*> arg;
-	arg.push_back(ConstInt(32,get_opcode_type_offset(expr->u.array_literal->expression->type)));
+	arg.push_back(ConstInt(32,ty));
 	arg.push_back(ConstInt(32,count));
     builder.CreateCall(fArrayLiteral,arg);
     return builder.CreateLoad(builder.CreateLoad(bretvar));

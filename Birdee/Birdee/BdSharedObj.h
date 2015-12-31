@@ -99,15 +99,15 @@ void SoKillStorage();
 
 #ifdef __cplusplus
 #include <string>
-#include <list>
-void SoInitStorage(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports);
+#include <vector>
+void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports);
 
 #define SO_KEY_NOT_FOUND 1
 class SoStorage
 {
 public:
 	SoStorage(){};
-	SoStorage(std::list<std::string>& ,std::list<int>&){};
+	SoStorage(std::vector<std::string>& ,std::vector<int>&){};
 	virtual inline ~SoStorage(){};
 	virtual SoStatus putstr(_uint key,wchar_t* str,_uint len)=0;
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;

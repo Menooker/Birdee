@@ -19,7 +19,7 @@ lib Remote
 		//public declare sub Stop()
 	end
 	
-	declare function ConnectNode(host as String,port as int) as RemoteNode
+	declare function ConnectNode(host as String[],port as int[],mem_host as String[],mem_port as int[]) as RemoteNode[]
 
 	shared public class AtomicCounter
 		public declare sub Set(n as int)

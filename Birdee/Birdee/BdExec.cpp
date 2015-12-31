@@ -1106,6 +1106,8 @@ void ExFldPuto(BINT index)
 }
 extern "C" DVM_ObjectRef create_array(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier *type);
 extern "C" DVM_ObjectRef create_array_literal_int(DVM_VirtualMachine *dvm, int size);
+extern "C" DVM_ObjectRef create_array_literal_double(DVM_VirtualMachine *dvm, int size);
+extern "C" DVM_ObjectRef create_array_literal_object(DVM_VirtualMachine *dvm, int size);
 void ExNewArray(BINT ty,BINT dim)
 {
             DVM_TypeSpecifier *type
@@ -1119,7 +1121,21 @@ void ExNewArray(BINT ty,BINT dim)
 void ExArrayLiteral(BINT ty,BINT size)
 {
             DVM_ObjectRef barray;
-            barray = create_array_literal_int(curdvm, size);//fix-me : double,obj
+			switch(ty)
+			{
+			case 0:
+				barray = create_array_literal_int(curdvm, size);
+				break;
+			case 1:
+				barray = create_array_literal_double(curdvm, size);
+				break;
+			case 2:
+				barray = create_array_literal_object(curdvm, size);
+				break;
+			default:
+				DBG_assert(0, ("Bad type %d\n",ty));
+			}
+            
             curthread->stack.stack_pointer -= size; curthread->stack.flg_sp -=size;
             curthread->retvar.object= barray;
 }
@@ -1536,8 +1552,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoDec);
 	MCJIT->addGlobalMapping("shared!dec",(void*)SoDec);}*/
 	//m->dump();
-	if(dvm->is_master)
-		SoNewModule(ee->executable->id,ee->executable->shared_count);
+
 
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;

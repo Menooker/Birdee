@@ -2227,7 +2227,7 @@ fix_array_literal_expression(Block *current_block, Expression *expr,
     *expr->type = *elem_type;
     expr->type->derive = dkc_alloc_type_derive(ARRAY_DERIVE);
     expr->type->derive->next = elem_type->derive;
-
+	expr->type->derive->u.array_d.is_global=0;
     return expr;
 }
 

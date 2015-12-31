@@ -1,19 +1,30 @@
-dim d as shared int[][] global=new int[10][10] global
-dim p as int[][] global=d
-p[1][1]=1
-println(p[1][1])
+require Remote
 
-dim a as shared string[] global = new string[2] global
-a[1]="LLL"
-println(a[1])
-//println(a[10])
-
-sub test(arr as string[] global)
-unsafe
-	println(a[1])
+shared class clsa
+	public ca as int
+	public cb as string
 end
-test(a)
 
-//dim k as int[]=d
-//dim ll as  bbb[] global
-//dim ll as shared int[]
+gets()
+dim hosts as string[]={"127.0.0.1"}
+dim ports as int[]={3020}
+dim mem_hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim mem_ports as int[]={11211,11211}
+dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
+
+dim a as shared int=1
+dim b as shared string
+
+dim t as RemoteThread=nodes[0].CreateThread(myproc,2)
+t.Join(-1,1000)
+nodes[0].Close()
+println(nodes[0].host+","+nodes[0].port)
+gets()
+println(a)
+
+
+function myproc ( par as var) as int
+
+	println(a)
+	a++
+end

@@ -44,7 +44,7 @@ private:
 
 	std::hash_map<long long,DataNode> map;
 public:
-	SoStorageLocalTest(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports){};
+	SoStorageLocalTest(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports){};
 	SoStorageLocalTest(){};
 
 	int getsize(_uint key)
@@ -175,7 +175,7 @@ public:
 		type=ty;
 		return this;
 	}
-	SoStorage* make(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
+	SoStorage* make(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 	{
 		switch(type)
 		{
@@ -196,7 +196,7 @@ class SharedStorage
 private:
 	SoStorage* backend;
 public:
-	SharedStorage(SoStorageFactory::BackendType ty,std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
+	SharedStorage(SoStorageFactory::BackendType ty,std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 	{
 		backend=SoStorageFactory(ty).make(arr_mem_hosts, arr_mem_ports);
 	}
@@ -398,9 +398,17 @@ public:
 SharedStorage* pstorage=NULL;
 
 
-void SoInitStorage(std::list<std::string>& arr_mem_hosts,std::list<int>& arr_mem_ports)
+extern std::hash_map<std::string,ExecutableEntry*> LoadedMods;
+void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 {
 	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,arr_mem_hosts,arr_mem_ports);
+	if(curdvm->is_master)
+	{
+		for( ExecutableEntry* ee=curdvm->executable_entry;ee;ee=ee->next)
+		{
+			SoNewModule(ee->executable->id,ee->executable->shared_count);
+		}
+	}
 }
 
 extern "C" void SoKillStorage()
