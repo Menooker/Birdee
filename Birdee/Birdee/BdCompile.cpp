@@ -147,13 +147,15 @@ DIFile currentfile;
 DICompileUnit* currentcompileunit;
 DISubprogram currentdifunc;
 
-#ifdef BD_MULTITHREAD
+/*#ifdef BD_MULTITHREAD
 	#define THREAD_MODEL GlobalVariable::LocalDynamicTLSModel
 	#define LINKAGE_TYPE GlobalVariable::WeakAnyLinkage
 #else
 	#define THREAD_MODEL GlobalVariable::NotThreadLocal
 	#define LINKAGE_TYPE GlobalVariable::ExternalLinkage
-#endif
+#endif*/
+#define THREAD_MODEL GlobalVariable::LocalDynamicTLSModel
+#define LINKAGE_TYPE GlobalVariable::WeakAnyLinkage
 
 
 class BcParameter{

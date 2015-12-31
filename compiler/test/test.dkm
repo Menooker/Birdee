@@ -4,7 +4,11 @@ shared class clsa
 	public ca as int
 	public cb as string
 end
+dim static as int=2
 
+println(static+1)
+CreateThread(myproc,true,1)
+CreateThread(myproc,true,2)
 gets()
 dim hosts as string[]={"192.168.88.153"}
 dim ports as int[]={3020}
@@ -14,6 +18,7 @@ dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
 
 dim a as shared int=1
 dim b as shared string
+
 
 dim t as RemoteThread=nodes[0].CreateThread(myproc,2)
 t.Join(-1,1000)
@@ -26,5 +31,6 @@ println(a)
 function myproc ( par as var) as int
 
 	println("var a="+a)
+	println("var par="+par)
 	a++
 end

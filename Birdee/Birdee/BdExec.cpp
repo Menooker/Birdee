@@ -1320,7 +1320,14 @@ extern "C" void ExInitThreadInAllModules()
 }
 
 
-
+void SetNoThreadLocal(Module* m,char* name,ExecutionEngine* TheExecutionEngine,int idx)
+{
+	GlobalVariable* global=m->getGlobalVariable(name);
+	global->setThreadLocalMode(GlobalVariable::NotThreadLocal);
+	global->setThreadLocal(false);
+	global->setLinkage(GlobalVariable::ExternalLinkage);
+	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[idx]));
+}
 extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,ExecutableEntry* ee)
 {
 	//if(ee->executable->is_required)
@@ -1340,7 +1347,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-#if defined(BD_MULTITHREAD) && defined(BD_ON_WINDOWS)
+#ifdef BD_USE_MCJIT
 		MCJIT= new MCJITHelper(m,false);
 #else
 		MCJIT= new MCJITHelper(m,true);
@@ -1350,18 +1357,12 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
 
 #ifndef BD_MULTITHREAD
-	GlobalVariable* global=m->getGlobalVariable("bpc");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[0]));
-	global=m->getGlobalVariable("bei");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[1]));
-	global=m->getGlobalVariable("beo");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[2]));
-	global=m->getGlobalVariable("bsp");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[3]));
-	global=m->getGlobalVariable("arr_sp");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[4]));
-	global=m->getGlobalVariable("retvar");
-	TheExecutionEngine->addGlobalMapping(global,&(cur_prep_regs[5]));
+	SetNoThreadLocal(m,"bpc",TheExecutionEngine,0);
+	SetNoThreadLocal(m,"bei",TheExecutionEngine,1);
+	SetNoThreadLocal(m,"beo",TheExecutionEngine,2);
+	SetNoThreadLocal(m,"bsp",TheExecutionEngine,3);
+	SetNoThreadLocal(m,"arr_sp",TheExecutionEngine,4);
+	SetNoThreadLocal(m,"retvar",TheExecutionEngine,5);
 #endif
 	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
 	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
