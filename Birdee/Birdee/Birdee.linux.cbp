@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-e ../../compiler/test/test.dkm" />
+				<Option parameters="-e ../../compiler/test/test.dkm 123.bde" />
 				<Compiler>
 					<Add option="-w" />
 					<Add option="-Wfatal-errors" />
@@ -21,6 +21,8 @@
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_LINUX" />
+					<Add option="-DBD_USE_MCJIT" />
+					<Add option="-DBD_MULTITHREAD" />
 					<Add directory="../../../include" />
 					<Add directory="../../../include3" />
 					<Add directory="../../../" />
@@ -62,9 +64,6 @@
 		<Unit filename="8Queens.txt" />
 		<Unit filename="ArrayCacheTest.txt" />
 		<Unit filename="ArrayCacheTest_Reg.txt" />
-		<Unit filename="BdMCJIT.cpp" />
-		<Unit filename="BdMCJIT.h" />
-		<Unit filename="BdMemcachedStorage.cpp" />
 		<Unit filename="BdArrayCache.cpp" />
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
@@ -79,6 +78,9 @@
 		<Unit filename="BdHashMap.cpp" />
 		<Unit filename="BdHashMap.h" />
 		<Unit filename="BdLoader.cpp" />
+		<Unit filename="BdMCJIT.cpp" />
+		<Unit filename="BdMCJIT.h" />
+		<Unit filename="BdMemcachedStorage.cpp" />
 		<Unit filename="BdMemcachedStorage.h" />
 		<Unit filename="BdParameters.h" />
 		<Unit filename="BdRemoteControl.cpp" />
