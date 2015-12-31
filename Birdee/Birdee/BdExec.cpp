@@ -1347,7 +1347,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-#ifdef BD_USE_MCJIT
+#ifndef BD_USE_MCJIT
 		MCJIT= new MCJITHelper(m,false);
 #else
 		MCJIT= new MCJITHelper(m,true);
