@@ -32,7 +32,9 @@
 #define RC_MAGIC_SLAVE 0x33450f0e
 
 extern "C" std::vector<std::string> LoadedModFiles; //@BdLoader.cpp
-
+#ifndef BD_ON_VC
+#pragma ms_struct on
+#endif
 struct MasterInfo
 {
 	int32 magic;
@@ -59,21 +61,27 @@ enum RcCommand
 	RcCmdSuspendThread,
 	RcCmdStopThread,
 };
+
+#pragma pack(4)
 struct RcCommandPack
 {
-	RcCommand cmd;
-	int param;
-	int param2;
+	uint32 cmd;
+	int32 param;
+	int32 param2;
 	union
 	{
 		struct
 		{
-			int param3;
-			int param4;
+			int32 param3;
+			int32 param4;
 		};
 		long long param34;
 	};
 };
+
+#ifndef BD_ON_VC
+#pragma ms_struct off
+#endif
 //fix-me : close all sockets when closing the dvm
 //fix-me : close the sockets when GC
 #ifdef BD_ON_WINDOWS
@@ -273,11 +281,12 @@ void RcConnectNode(DVM_Value *args)
 	char buf[255];
 	for(int i=0;i<memhost->u.barray.size;i++)
 	{
-		if(sprintf_s(buf,254,"%ws",memhost->u.barray.u.object[i].data->u.string.string)>=254)
+	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
+		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
 			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
 		hosts.push_back(std::string(buf));
 		ports.push_back(memport->u.barray.u.int_array[i]);
-	}	
+	}
 
 	SoInitStorage(hosts,ports);
 	curthread->retvar.object = arr;
@@ -325,6 +334,7 @@ void RcCreateThread(DVM_Value *args)
 	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
 	cmd.param3=(int)ret.data;
 	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
+	printf("thread obj id=%d %d\n",cmd.param3,sizeof(RcCommandPack));
 	DVM_ObjectRef obj=args[2].object;
 	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)
@@ -530,7 +540,7 @@ void RcSlave(int port)
 			ports.push_back(port);
 			printf("%s:%d\n",buf,port);
 		}
-		
+
 		for(int i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
@@ -588,9 +598,10 @@ int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
 	char buf[255];
 	for(int i=0;i<mem_cnt;i++)
 	{
-		if(sprintf_s(buf,254,"%ws",hosts->u.barray.u.object[i].data->u.string.string)>=254)
+	    wcstombs(buf,hosts->u.barray.u.object[i].data->u.string.string,255);
+		if(hosts->u.barray.u.object[i].data->u.string.length>=254)
 			printf("Warning : host name %ws too long\n",hosts->u.barray.u.object[i].data->u.string.string);
-		
+
 		uint32 sendl=hosts->u.barray.u.object[i].data->u.string.length+1;
 		if(sendl>255)
 		{
