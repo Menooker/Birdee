@@ -9,6 +9,7 @@
     #else
         #include <unistd.h>
         #include <pthread.h>
+        #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
         typedef pthread_t THREAD_ID;
 	#endif

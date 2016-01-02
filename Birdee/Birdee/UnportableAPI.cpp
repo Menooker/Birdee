@@ -208,14 +208,17 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
     void thread1_suspend(int dummy)
     {
-        pthread_mutex_lock(&curthread->suspend_lock);
-        pthread_mutex_lock(&curthread->suspend_lock);
+        sem_wait(&curthread->suspend_lock);
     }
 
 
 	extern void ThThreadStub(BdThread*);
 	void* UaThreadStub(void* p)
 	{
+	    sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set, SIGUSR1);
+	    pthread_sigmask(SIG_UNBLOCK,&set,NULL);
         signal(SIGUSR1, thread1_suspend);
 		ThThreadStub((BdThread*)p);
 		return 0;
@@ -247,14 +250,13 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 	void UaSuspendThread(THREAD_ID id)
 	{
-		//pthread_kill(id, SIGUSR1);
+		pthread_kill(id, SIGUSR1);
 	}
 
 	void UaResumeThread(THREAD_ID id,BdThread* th)
 	{
-		pthread_mutex_unlock(&th->suspend_lock);
-		pthread_mutex_unlock(&th->suspend_lock);
-	}
+		sem_post(&th->suspend_lock);
+    }
 	void UaInitLock(BD_LOCK* lc)
 	{
 		pthread_spin_init(lc,PTHREAD_PROCESS_PRIVATE);

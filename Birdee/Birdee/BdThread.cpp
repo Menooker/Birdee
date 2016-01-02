@@ -97,8 +97,20 @@ extern "C"
 		th->thread_obj_id=thread_object_id;
 		ThAddThreadToList(th);
 		th->tid=UaCreateThread(th,1,arg);
-		return (int)th->tid;
+		return (int)th;
 	}
+
+    void ThSuspendThread(DVM_Value* args)
+    {
+        BdThread* th=(BdThread*)args[0].int_value;
+        UaSuspendThread(th->tid);
+    }
+
+    void ThResumeThread(DVM_Value* args)
+    {
+        BdThread* th=(BdThread*)args[0].int_value;
+        UaResumeThread(th->tid,th);
+    }
 
 	void ThCreateThread(DVM_Value* args)
 	{

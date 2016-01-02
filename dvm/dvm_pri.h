@@ -298,7 +298,7 @@ struct _BdThread {
 	BINT				main;
 	unsigned int		thread_obj_id;
 #ifdef BD_ON_LINUX
-    pthread_mutex_t   suspend_lock;
+    sem_t   suspend_lock;
 #endif
 	struct _BdThread* next;
 	struct _BdThread* prv;

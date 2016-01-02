@@ -858,7 +858,7 @@ extern "C" BdThread* ExCreateThread()
 	th->prv=NULL;
 	th->thread_obj_id=0;
 #ifdef BD_ON_LINUX
-    pthread_mutex_init(&th->suspend_lock,NULL);
+    sem_init(&th->suspend_lock,0,0);
 #endif
 	return th;
 }
@@ -870,7 +870,7 @@ extern "C" BdThread* ExFreeThread(BdThread* t)
 	UaGuardFree(t->estack,t->e_alloc_size);
     MEM_free(t->stack.pointer_flags);
 #ifdef BD_ON_LINUX
-    pthread_mutex_destroy(&t->suspend_lock);
+    sem_destroy(&t->suspend_lock);
 #endif
 	BdThread* r=t->next;
 	MEM_free(t);
