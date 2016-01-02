@@ -90,6 +90,8 @@ extern "C"
 
 	int ThDoCreateThread(int func,DVM_ObjectRef arg,unsigned int thread_object_id)
 	{
+        if(curdvm->function[func]->pfun==ExLoadFunction)
+            ExDoLoadFunction(func);
 		BdThread* th=ExCreateThread();
 		th->main=func;
 		th->thread_obj_id=thread_object_id;

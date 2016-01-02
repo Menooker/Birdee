@@ -62,12 +62,26 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 #include "UnportableAPI.h"
 #include "BdThread.h"
 #include "BdSharedObj.h"
-extern "C"  thread_local BdThread* curthread;
+thread_local BdThread* curthread;
+thread_local int* cur_prep_regs[8]; // current dvm for ExPrepareModule
 extern "C"
 {
 	DVM_VirtualMachine* curdvm;
 }
-thread_local int* cur_prep_regs[8]; // current dvm for ExPrepareModule
+
+BdVMFunction ExDoLoadFunction(int p1)
+{
+    DVM_Executable* exe=curdvm->function[p1]->u.diksam_f.executable->executable;
+	ExecutableEntry* ee=curdvm->function[p1]->u.diksam_f.executable;
+    Module* m=(Module*)exe->module.mod;
+	Function* f=m->getFunction(curdvm->function[p1]->u.diksam_f.executable->executable->function[curdvm->function[p1]->u.diksam_f.index].name);
+	//FunctionPassManager* pm=(FunctionPassManager*)exe->module.pass;
+	//pm->run(*f);
+	MCJITHelper* engine=(MCJITHelper*)(curdvm->exe_engine);
+	BdVMFunction FPtr =(BdVMFunction) engine->getPointerToFunction(f);
+	curdvm->function[p1]->pfun=FPtr;
+	return FPtr;
+}
 
 extern "C" void ExLoadFunction(void* args,...)
 {
@@ -78,15 +92,7 @@ extern "C" void ExLoadFunction(void* args,...)
 	{
 
 	}*/
-	DVM_Executable* exe=curdvm->function[p1]->u.diksam_f.executable->executable;
-	ExecutableEntry* ee=curdvm->function[p1]->u.diksam_f.executable;
-	Module* m=(Module*)exe->module.mod;
-	Function* f=m->getFunction(curdvm->function[p1]->u.diksam_f.executable->executable->function[curdvm->function[p1]->u.diksam_f.index].name);
-	//FunctionPassManager* pm=(FunctionPassManager*)exe->module.pass;
-	//pm->run(*f);
-	MCJITHelper* engine=(MCJITHelper*)(curdvm->exe_engine);
-	BdVMFunction FPtr =(BdVMFunction) engine->getPointerToFunction(f);
-	curdvm->function[p1]->pfun=FPtr;
+	BdVMFunction FPtr =ExDoLoadFunction(p1);
 	FPtr(args);
 	va_end(pvar);
 
@@ -1135,7 +1141,7 @@ void ExArrayLiteral(BINT ty,BINT size)
 			default:
 				DBG_assert(0, ("Bad type %d\n",ty));
 			}
-            
+
             curthread->stack.stack_pointer -= size; curthread->stack.flg_sp -=size;
             curthread->retvar.object= barray;
 }
@@ -1274,10 +1280,27 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 //*/
 void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
 
-int* ExGetReg(BINT i)
+int* ExGetReg(BdThread* th,BINT i)
 {
-	return cur_prep_regs[i];
+    switch(i)
+    {
+    case 0:
+     	return (int*)&th->bpc;
+    case 1:
+        return (int*)&th->exception_index;
+	case 2:
+        return (int*)&th->current_exception;
+    case 3:
+        return (int*)&th->stack.stack_pointer;
+    case 4:
+        return (int*)&th->stack.flg_sp;
+    case 5:
+        return (int*)&th->retvar;
+    }
+
+	return NULL;;
 }
+
 
 extern "C" void ExInitRegArray(BdThread* t)
 {
@@ -1292,10 +1315,10 @@ extern "C" void ExInitThread(BdThread* t,void* mod,void* eng)
 
 	Module* m=(Module*)mod;
 	ExecutionEngine* e=(ExecutionEngine*)eng;
-	void(*RegInit)();
-	RegInit=(void(*)())e->getPointerToFunction(m->getFunction("system!RegInit"));
+	void(*RegInit)(BdThread*);
+	RegInit=(void(*)(BdThread*))e->getPointerToFunction(m->getFunction("system!RegInit"));
 
-	RegInit();
+	RegInit(t);
 
 }
 

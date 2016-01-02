@@ -754,29 +754,31 @@ Function* BcBuildPush(char* name,int isptr,Type* ty)
 	return fret;
 }
 
-void BcBuildGetReg(Value* v,int index,Function* fGetReg)
+void BcBuildGetReg(Value* v,Value* th,int index,Function* fGetReg)
 {
-	builder.CreateStore(builder.CreateBitCast(builder.CreateCall(fGetReg,ConstInt(32,index)),v->getType()->getPointerElementType()),v);
+	builder.CreateStore(builder.CreateBitCast(builder.CreateCall2(fGetReg,th,ConstInt(32,index)),v->getType()->getPointerElementType()),v);
 }
 
 Function* BcBuildRegInit()
 {
-	std::vector<Type*> Args2(1,Type::getInt32Ty(context));
-	FunctionType* FT8 = FunctionType::get(Type::getInt32PtrTy(context),Args2,false);
-	Function* fGetReg=Function::Create(FT8, Function::ExternalLinkage,"system!GetReg", module);
+	std::vector<Type*> Args2(1,Type::getInt32PtrTy(context));
+	Args2.push_back(Type::getInt32Ty(context));
+ 	FunctionType* FT8 = FunctionType::get(Type::getInt32PtrTy(context),Args2,false);
+ 	Function* fGetReg=Function::Create(FT8, Function::ExternalLinkage,"system!GetReg", module);
 
-	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
-	FT8 = FunctionType::get(Type::getVoidTy(context),false);
-	Function* fret=Function::Create(FT8, Function::ExternalLinkage,"system!RegInit", module);
-	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
-	SwitchBlock(BB);
+    std::vector<Type*> Args3(1,Type::getInt32PtrTy(context));
+ 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
+	FT8 = FunctionType::get(Type::getVoidTy(context),Args3,false);
+ 	Function* fret=Function::Create(FT8, Function::ExternalLinkage,"system!RegInit", module);
+ 	BasicBlock *BB = BasicBlock::Create(context, "entry",fret);
+ 	SwitchBlock(BB);
 
-	BcBuildGetReg(bpc,0,fGetReg);
-	BcBuildGetReg(bei,1,fGetReg);
-	BcBuildGetReg(beo,2,fGetReg);
-	BcBuildGetReg(bsp,3,fGetReg);
-	BcBuildGetReg(arr_sp,4,fGetReg);
-	BcBuildGetReg(bretvar,5,fGetReg);
+	BcBuildGetReg(bpc,fret->arg_begin(),0,fGetReg);
+	BcBuildGetReg(bei,fret->arg_begin(),1,fGetReg);
+	BcBuildGetReg(beo,fret->arg_begin(),2,fGetReg);
+	BcBuildGetReg(bsp,fret->arg_begin(),3,fGetReg);
+	BcBuildGetReg(arr_sp,fret->arg_begin(),4,fGetReg);
+	BcBuildGetReg(bretvar,fret->arg_begin(),5,fGetReg);
 
 	builder.CreateRetVoid();
 	builder.restoreIP(IP);

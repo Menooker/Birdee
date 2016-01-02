@@ -8,9 +8,9 @@
     #include <signal.h>
 #endif
 #include <stdlib.h>
+extern "C" thread_local BdThread* curthread;
 extern "C"
 {
-thread_local BdThread* curthread;
 
 #ifndef BD_ON_WINDOWS
 int PAGE_SIZE=getpagesize();
@@ -247,7 +247,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 	void UaSuspendThread(THREAD_ID id)
 	{
-		pthread_kill(id, SIGUSR1);
+		//pthread_kill(id, SIGUSR1);
 	}
 
 	void UaResumeThread(THREAD_ID id,BdThread* th)
