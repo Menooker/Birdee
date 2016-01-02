@@ -47,6 +47,11 @@ extern "C"
 	void UaSleep(int ms);
 	int UaAtomicInc(long* ptr,long inc);
 	int UaAtomicDec(long* ptr,long dec);
+	#ifdef BD_ON_WINDOWS
+        #define UaPrepareThread()
+    #else
+        void UaPrepareThread();
+    #endif
 #ifdef __cplusplus
 }
 #endif

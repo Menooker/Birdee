@@ -211,18 +211,24 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
         sem_wait(&curthread->suspend_lock);
     }
 
-
-	extern void ThThreadStub(BdThread*);
-	void* UaThreadStub(void* p)
-	{
-	    sigset_t set;
+    void UaPrepareThread()
+    {
+  	    sigset_t set;
         sigemptyset(&set);
         sigaddset(&set, SIGUSR1);
 	    pthread_sigmask(SIG_UNBLOCK,&set,NULL);
         signal(SIGUSR1, thread1_suspend);
+    }
+
+	extern void ThThreadStub(BdThread*);
+	void* UaThreadStub(void* p)
+	{
+        UaPrepareThread();
 		ThThreadStub((BdThread*)p);
 		return 0;
 	}
+
+
 
 	THREAD_ID UaGetCurrentThread()
 	{

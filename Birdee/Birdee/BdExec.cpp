@@ -887,6 +887,7 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 
 extern "C" void ExGoMain()
 {
+    UaPrepareThread();
 	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curthread->current_executable =curdvm->top_level;
