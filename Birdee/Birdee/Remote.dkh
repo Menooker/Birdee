@@ -34,4 +34,14 @@ lib Remote
 		public declare sub leave()
 		public declare function enter(timeout as int,maxinterval as int) as boolean
 	end
+
+	public class CounterOutOfBoundException
+	end
+
+	shared public class RemoteBarrier
+		
+		public declare constructor initialize(count as int)
+		public declare sub printstat()
+		public declare sub enter(timeout as int,maxinterval as int) throws CounterOutOfBoundException
+	end
 end

@@ -64,9 +64,16 @@ extern "C"
 		UaLeaveLock(&curdvm->thread_lock);
 	}
 
+
+#ifdef BD_ON_WINDOWS
+	extern "C" void init_memcached_this_thread();
+#endif
+
 	void ThThreadStub(BdThread* param)
 	{
-
+#ifdef BD_ON_WINDOWS
+		init_memcached_this_thread();
+#endif
 		curthread=param;
         if(param->thread_obj_id)
 		{

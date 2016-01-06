@@ -11,7 +11,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-e ..\..\compiler\test\test.dkm 123.bde" />
+				<Option parameters="-s 3020 . -e ..\..\compiler\test\test.dkm 123.bde" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DWIN32" />
@@ -21,6 +21,7 @@
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_WINDOWS" />
+					<Add option="-DBD_MULTITHREAD" />
 					<Add directory="../../../include" />
 					<Add directory="../../../include3" />
 					<Add directory="$(IncludePath)" />

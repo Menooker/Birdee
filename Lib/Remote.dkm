@@ -1,3 +1,7 @@
+public class CounterOutOfBoundException
+end
+
+
 public class RemoteNode
 		public host as string
 		public port as int
@@ -81,5 +85,72 @@ shared public class RemoteSpinLock
 	end
 end
 
+shared public class RemoteBarrier
+	dim cnt as AtomicCounter
+	dim go0 as int
+	dim go1 as int
+	dim turn as int
+	dim max_cnt as int
+	constructor initialize(count as int)
+		cnt=new AtomicCounter(0)
+		go0=0
+		go1=0
+		turn=0
+		max_cnt=count
+	end
 
+	public sub printstat()
+		println("stat: "+cnt.Get()+" "+go0)	
+	end
+
+	public sub enter(timeout as int,maxinterval as int) throws CounterOutOfBoundException
+		dim myturn as int=turn
+		println("to inc cnt")
+		dim c as int=this.cnt.Inc(1)
+		println("cnt="+c)
+		if c==max_cnt then
+			turn++
+			if turn==100000 then
+				turn = 0
+			end
+			cnt.Set(0)
+			if turn%2==0 then
+				//if turn was originally odd
+				go0=0
+				go1=1
+			else
+				go1=0
+				go0=1
+			end
+			return
+		end
+		if c>max_cnt then
+			println("OUT!")
+			dim e as CounterOutOfBoundException
+			throw e
+		end
+		dim t as int=0
+		dim itv as int=8
+		for  ;  ;
+			if myturn%2==0 then
+				if go0==1 then
+					return
+				end
+			else
+				if go1==1 then
+					return
+				end
+			end
+			if  timeout!=-1 && t>timeout then
+				return
+			end
+			itv=itv*2
+			if itv>maxinterval then
+				itv=16
+			end
+			t+=itv
+			Sleep(itv)
+		end
+	end
+end
 
