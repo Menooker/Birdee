@@ -3,20 +3,21 @@
 #include "BdSharedObj.h"
 #include <libmemcached/memcached.h>
 
-#ifdef BD_ON_WINDOWS
-extern thread_local memcached_st *memc;
+#define memc ((memcached_st *)_memc)
+extern thread_local void *_memc;
 class SoStorageMemcached;
 extern SoStorageMemcached* sto;
 
 extern "C" void init_memcached_this_thread();
-#endif
+
 
 class SoStorageMemcached : public SoStorage
 {
 private:
 	int offset;
+
 #ifndef BD_ON_WINDOWS
-	memcached_st *memc;
+	//memcached_st *memc;
 #endif
 public:
 
@@ -33,7 +34,8 @@ public:
 	int getsize(_uint key);
 	~SoStorageMemcached();
 
-#ifdef BD_ON_WINDOWS
+    memcached_st *main_memc;
+//#ifdef BD_ON_WINDOWS
 	std::vector<std::string> mem_hosts;
 	std::vector<int> mem_ports;
 	//std::vector<memcached_st *> clients;
@@ -43,9 +45,27 @@ public:
 		mem_hosts=arr_mem_hosts;
 		mem_ports=arr_mem_ports;
 		sto=this;
-		init_memcached_this_thread();
+        memcached_return rc;
+		memcached_server_st *servers;
+        _memc=(memcached_st*)memcached_create(NULL);
+		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
+		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
+		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
+//		memc->call_malloc=(memcached_malloc_function)malloc;
+//		memc->call_free=(memcached_free_function)free;
+//		memc->call_realloc=(memcached_realloc_function)realloc;
+		char buf[255];
+		servers=NULL;
+		for(int i=0;i<sto->mem_hosts.size();i++)
+		{
+			servers = memcached_server_list_append(servers, sto->mem_hosts[i].c_str(),sto->mem_ports[i], &rc);
+		}
+
+		rc = memcached_server_push((memcached_st*)_memc, servers);
+		memcached_server_free(servers);
+		main_memc=memc;
 	}
-#else
+/*#else
 	SoStorageMemcached(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 	{
 		offset=2147483647;
@@ -68,7 +88,7 @@ public:
 		rc = memcached_server_push(memc, servers);
 		memcached_server_free(servers);
 	}
-#endif
+#endif*/
 };
 
 

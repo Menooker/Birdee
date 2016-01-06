@@ -5,13 +5,13 @@
 
 #ifdef BD_ON_WINDOWS
 	#define atoll _atoi64
-    thread_local memcached_st *memc;
-	SoStorageMemcached* sto;
 #endif
 #ifdef BD_ON_LINUX
     #define memcached_free2 free
 #endif
 
+
+SoStorageMemcached* sto=NULL;
 #pragma pack(4)
 struct NodeValue
 {
@@ -38,13 +38,13 @@ struct NodeValue
 	};
 };
 
-#ifdef BD_ON_WINDOWS
+
 void init_memcached_this_thread()
 {
-		memcached_return rc;
-		memcached_server_st *servers;
-		memc = memcached_create(NULL);
-		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
+        //_memc=(memcached_st*)memcached_create(NULL);
+        if(sto)
+            _memc=memcached_clone(memc,sto->main_memc);
+/*		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
 		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
 		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
 //		memc->call_malloc=(memcached_malloc_function)malloc;
@@ -58,14 +58,14 @@ void init_memcached_this_thread()
 		}
 
 		rc = memcached_server_push(memc, servers);
-		memcached_server_free(servers);
+		memcached_server_free(servers);*/
 }
-#endif
-memcached_return memcached_put(memcached_st* memc,unsigned long long k,void* v,size_t len)
+
+memcached_return memcached_put(memcached_st* memca,unsigned long long k,void* v,size_t len)
 {
 	char ch[17];
 	sprintf(ch,"%016llx",k);
-	memcached_return rc = memcached_set(memc, ch, 16, (char*)v,len,(time_t)0, (uint32_t)0);
+	memcached_return rc = memcached_set(memca, ch, 16, (char*)v,len,(time_t)0, (uint32_t)0);
 	return rc;
 }
 
@@ -226,7 +226,6 @@ SoVar SoStorageMemcached::get(_uint key,int fldid)
 	memcached_return rc;
 	char ch[17];
 	sprintf(ch,"%016llx",k);
-
     mret=memcached_get(memc,ch,16,&len,&flg,&rc);
     if (rc == MEMCACHED_SUCCESS) {
         ret=*(SoVar*)mret;

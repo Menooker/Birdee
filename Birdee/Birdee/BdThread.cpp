@@ -65,15 +65,15 @@ extern "C"
 	}
 
 
-#ifdef BD_ON_WINDOWS
+//#ifdef BD_ON_WINDOWS
 	extern "C" void init_memcached_this_thread();
-#endif
+//#endif
 
 	void ThThreadStub(BdThread* param)
 	{
-#ifdef BD_ON_WINDOWS
+//#ifdef BD_ON_WINDOWS
 		init_memcached_this_thread();
-#endif
+//#endif
 		curthread=param;
         if(param->thread_obj_id)
 		{

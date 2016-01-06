@@ -63,6 +63,7 @@ extern "C" DVM_ObjectRef chain_string(DVM_VirtualMachine*,DVM_ObjectRef,DVM_Obje
 #include "BdThread.h"
 #include "BdSharedObj.h"
 thread_local BdThread* curthread;
+thread_local void *_memc;
 thread_local int* cur_prep_regs[8]; // current dvm for ExPrepareModule
 extern "C"
 {
