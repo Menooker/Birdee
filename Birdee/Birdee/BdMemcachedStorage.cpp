@@ -38,7 +38,7 @@ struct NodeValue
 	};
 };
 
-
+#ifdef BD_ON_WINDOWS
 void init_memcached_this_thread()
 {
 		memcached_return rc;
@@ -60,7 +60,7 @@ void init_memcached_this_thread()
 		rc = memcached_server_push(memc, servers);
 		memcached_server_free(servers);
 }
-
+#endif
 memcached_return memcached_put(memcached_st* memc,unsigned long long k,void* v,size_t len)
 {
 	char ch[17];
