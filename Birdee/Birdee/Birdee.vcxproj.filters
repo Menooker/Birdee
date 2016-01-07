@@ -87,6 +87,9 @@
     <None Include="SharedArrayTest.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="barriertest.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

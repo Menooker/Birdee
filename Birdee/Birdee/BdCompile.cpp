@@ -330,15 +330,15 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 		{
 
 
-			if(isParam)
-			{
+			//if(isParam)
+			//{
 
 				Value* addr=curfun->arg_begin();
 				addr=builder.CreateGEP(addr,ConstInt(32,index));
 				addr=builder.CreateLoad(addr);
 
 				builder.CreateStore(builder.CreateCall(GetFldAddr(),addr),v);
-			}
+			//}
 		}
 		else
 		{

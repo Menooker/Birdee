@@ -32,7 +32,7 @@ shared public class RemoteThread
 			t+=itv
 			Sleep(itv)
 		end
-		println("@"+ t +"-"+ itv)
+		//println("@"+ t +"-"+ itv)
 		return true
 	end
 	//public declare sub Pause()
@@ -80,7 +80,7 @@ shared public class RemoteSpinLock
 			t+=itv
 			Sleep(itv)
 		end
-		println("@"+ t +"-"+ itv)
+		//println("@"+ t +"-"+ itv)
 		return true
 	end
 end
@@ -100,14 +100,14 @@ shared public class RemoteBarrier
 	end
 
 	public sub printstat()
-		println("stat: "+cnt.Get()+" "+go0)	
+		println("stat: cnt="+cnt.Get() + " go0=" + go0 + " go1=" + go1 + " turn="+turn)	
 	end
 
 	public sub enter(timeout as int,maxinterval as int) throws CounterOutOfBoundException
 		dim myturn as int=turn
-		println("to inc cnt")
+		//println("to inc cnt")
 		dim c as int=this.cnt.Inc(1)
-		println("cnt="+c)
+		//println("cnt="+c)
 		if c==max_cnt then
 			turn++
 			if turn==100000 then
@@ -125,7 +125,7 @@ shared public class RemoteBarrier
 			return
 		end
 		if c>max_cnt then
-			println("OUT!")
+			//println("OUT!")
 			dim e as CounterOutOfBoundException
 			throw e
 		end

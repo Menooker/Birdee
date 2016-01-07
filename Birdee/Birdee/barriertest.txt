@@ -1,0 +1,65 @@
+require Remote
+require math
+
+shared class clsa
+	public ca as int
+	public cb as string
+end
+dim static as int=2
+
+/*
+dim  hosts as string[]={"192.168.88.153"}
+dim ports as int[]={3020}
+dim mem_hosts as string[]={"192.168.1.7","192.168.1.7"}
+dim mem_ports as int[]={11211,11211}
+*/
+dim  hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={3020,3021}
+dim mem_hosts as string[]={"127.0.0.1"}
+dim mem_ports as int[]={11211}
+dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
+
+dim a as shared int=1
+dim b as shared string
+dim barrier as shared RemoteBarrier=new RemoteBarrier(6)
+dim t as RemoteThread[]=new RemoteThread[6]
+for #i=0;#i<3;#i++
+	t[#i]=nodes[0].CreateThread(myproc,#i+1)
+end
+for ;#i<6;#i++
+	t[#i]=nodes[1].CreateThread(myproc,#i+1)
+end
+
+for #i=0;#i<6;#i++
+	t[#i].Join(-1,1024)
+end
+//gets()
+println("exec ok")
+nodes[0].Close()
+println(nodes[0].host+","+nodes[0].port)
+println(a)
+
+function fab(n as int) as int
+	if(n==1 || n==2) then
+		return 1
+	end
+	return fab(n-1)+fab(n-2)
+end
+
+function myproc ( par as var) as int
+	dim i as int
+	dim tim as int=par
+	//println("var par="+par+" "+fab(par))
+	for i=0;i<10;i++
+		tim=(44*tim*tim+333*tim-1)%2000
+		
+		//println("Th:"+par+" itr:"+i+" slp:"+tim)
+		Sleep(tim)
+		try
+			barrier.enter(-1,1024)
+		catch CounterOutOfBoundException e
+			//println("Out!!!!")
+		end
+		
+	end
+end

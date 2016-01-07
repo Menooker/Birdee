@@ -1,66 +1,14 @@
 require Remote
-require math
-
-shared class clsa
-	public ca as int
-	public cb as string
-end
-dim static as int=2
-
-/*
 dim  hosts as string[]={"192.168.88.153"}
 dim ports as int[]={3020}
-dim mem_hosts as string[]={"192.168.1.7","192.168.1.7"}
-dim mem_ports as int[]={11211,11211}
-*/
-dim  hosts as string[]={"192.168.88.153"}
-dim ports as int[]={3020}
-dim mem_hosts as string[]={"192.168.1.10"}
+dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
 
-dim a as shared int=1
-dim b as shared string
-dim barrier as shared RemoteBarrier=new RemoteBarrier(3)
-
-dim t1 as RemoteThread=nodes[0].CreateThread(myproc,2)
-dim t2 as RemoteThread=nodes[0].CreateThread(myproc,3)
-dim t3 as RemoteThread=nodes[0].CreateThread(myproc,4)
-
-for ;;
-	barrier.printstat()
-	Sleep(1000)
-end
-//t1.Join(-1,1000)
-//t2.Join(-1,1000)
-//t3.Join(-1,1000)
-//gets()
-println("exec ok")
+dim t as RemoteThread=nodes[0].CreateThread(myproc,1)
+t.Join(-1,1000)
 nodes[0].Close()
-println(nodes[0].host+","+nodes[0].port)
-println(a)
-
-function fab(n as int) as int
-	if(n==1 || n==2) then
-		return 1
-	end
-	return fab(n-1)+fab(n-2)
-end
 
 function myproc ( par as var) as int
-	dim i as int
-	dim tim as int
-	println("var par="+par+" "+fab(par))
-	for i=0;i<10;i++
-		tim=rand(1000)
-		
-		println("Th:"+par+" itr:"+i+" slp:"+tim)
-		Sleep(tim)
-		try
-			barrier.enter(-1,1024)
-		catch CounterOutOfBoundException e
-			println("Out!!!!")
-		end
-		
-	end
+	println("var par="+par)
 end
