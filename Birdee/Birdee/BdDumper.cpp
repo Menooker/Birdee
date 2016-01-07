@@ -27,7 +27,29 @@ public:
   ~buffer_ostream(){}
 };
 
+#ifdef BD_ON_LINUX
+#include <iconv.h>
+void conv_wcs4_2_wsc2(wchar_t* src,size_t sz_src,char* dest, size_t sz_dest)
+{
+    size_t result;
+    iconv_t env;
+    //env = iconv_open("UCS-4-INTERNAL","UCS-2-INTERNAL");
+    env = iconv_open("UTF-16","UTF-32");
+    if (env==(iconv_t)-1)
+    {
+        printf("iconv_open error %d\n",errno);
+        return ;
+    }
 
+    result = iconv(env, (char**)&src, &sz_src, (char**)&dest, &sz_dest);
+    if (result==(size_t)-1)
+    {
+        printf("UTF32 -> UTF16 conv error %d\n",errno) ;
+        return ;
+    }
+    iconv_close(env);
+}
+#endif
 
 extern "C"
 {
@@ -146,9 +168,19 @@ BdStatus CpDumpStringW(wchar_t* p,CPBuffer* pbuf)
 	}
 	else
 	{
+#ifdef BD_ON_LINUX
+        size_t len_src=(wcslen(p)+1)*sizeof(wchar_t);
+        size_t len_dest=len_src/2+2;
+        char* bufchar=(char*)malloc(len_dest);
+        conv_wcs4_2_wsc2(p,len_src,bufchar,len_dest);
+        CpDumpBuffer(&len_dest,sizeof(BINT),pbuf);
+		ret=CpDumpBuffer(bufchar,len_dest,pbuf);
+        free(bufchar);
+#else
 		len=(wcslen(p)+1)*sizeof(wchar_t);
 		CpDumpBuffer(&len,sizeof(BINT),pbuf);
 		ret=CpDumpBuffer(p,len,pbuf);
+#endif
 		return ret;
 	}
 

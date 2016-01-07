@@ -10,6 +10,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+
 using namespace llvm;
 
 extern int isPackageInBuiltIn(char* packagename);
@@ -31,6 +32,30 @@ void CpDisplayBuffer(CPBuffer* p,int s);
 
 std::vector<std::string> LoadedModFiles;
 
+
+#ifdef BD_ON_LINUX
+#include <iconv.h>
+void conv_wcs2_2_wsc4(char* src,size_t sz_src,wchar_t* dest, size_t sz_dest)
+{
+    size_t result;
+    iconv_t env;
+    //env = iconv_open("UCS-4-INTERNAL","UCS-2-INTERNAL");
+    env = iconv_open("UTF-32","UTF-16");
+    if (env==(iconv_t)-1)
+    {
+        printf("iconv_open error %d\n",errno);
+        return ;
+    }
+
+    result = iconv(env, (char**)&src, &sz_src, (char**)&dest, &sz_dest);
+    if (result==(size_t)-1)
+    {
+        printf("UTF16 -> UTF32 conv error %d\n",errno) ;
+        return ;
+    }
+    iconv_close(env);
+}
+#endif
 BdStatus LdLoadCode(char* path,DVM_ExecutableList* exelist )
 {
 	void* inline_module=0;
@@ -144,8 +169,16 @@ BdStatus LdStringW(wchar_t** p,CPBuffer* pbuf)
 	}
 	else
 	{
-		*p=(wchar_t*)MEM_malloc(len*sizeof(wchar_t));
+#ifdef BD_ON_WINDOWS
+		*p=(wchar_t*)MEM_malloc(len);
 		LdLoadBuffer(*p,len,pbuf);
+#else
+		char *p2=(char*)MEM_malloc(len);
+		LdLoadBuffer(p2,len,pbuf);
+        *p=(wchar_t*)MEM_malloc(len*2+4);
+        conv_wcs2_2_wsc4(p2,len,*p, len*2+4);
+        MEM_free(p2);
+#endif
 	}
 	return BdSuccess;
 }

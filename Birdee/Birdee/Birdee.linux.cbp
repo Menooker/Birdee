@@ -21,7 +21,6 @@
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_LINUX" />
-					<Add option="-DBD_USE_MCJIT" />
 					<Add option="-DBD_MULTITHREAD" />
 					<Add directory="../../../include" />
 					<Add directory="../../../include3" />
