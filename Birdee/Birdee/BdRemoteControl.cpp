@@ -249,7 +249,7 @@ void RcConnectNode(DVM_Value *args)
 	if(node_class_index==-1)
 		node_class_index=DVM_search_class(curdvm,"Remote", "RemoteNode");
 
-	if(ip->u.barray.size==0 || ip->u.barray.size!=port->u.barray.size)
+	if( ip->u.barray.size!=port->u.barray.size)
 	{
 		 RcThrowInvalidParametersError();
 		 return;

@@ -63,9 +63,9 @@ void init_memcached_this_thread()
 
 memcached_return memcached_put(memcached_st* memca,unsigned long long k,void* v,size_t len)
 {
-	char ch[17];
-	sprintf(ch,"%016llx",k);
-	memcached_return rc = memcached_set(memca, ch, 16, (char*)v,len,(time_t)0, (uint32_t)0);
+	//char ch[17];
+	//sprintf(ch,"%016llx",k);
+	memcached_return rc = memcached_set(memca, (char*)&k, 8, (char*)v,len,(time_t)0, (uint32_t)0);
 	return rc;
 }
 
@@ -78,13 +78,14 @@ SoStorageMemcached::~SoStorageMemcached()
 
 int SoStorageMemcached::getsize(_uint key)
 {
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,0));
-	size_t return_key_length=16;
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,0));
+	long long k=MAKE64(key,0);
+	size_t return_key_length=8;
 	size_t return_value_length;
 	uint32_t flags;
 	memcached_return rc;
-	char* return_value = memcached_get(memc, ch,return_key_length, &return_value_length, &flags, &rc);
+	char* return_value = memcached_get(memc, (char*)&k,return_key_length, &return_value_length, &flags, &rc);
 	if(rc!=MEMCACHED_SUCCESS)
 		throw 1;
 	NodeValue* node=(NodeValue*) return_value;
@@ -93,13 +94,14 @@ int SoStorageMemcached::getsize(_uint key)
 
 int SoStorageMemcached::getcounter(_uint key,int fldid)
 {
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,fldid));
-	size_t return_key_length=16;
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,fldid));
+	long long k=MAKE64(key,fldid);
+	size_t return_key_length=8;
 	size_t return_value_length;
 	uint32_t flags;
 	memcached_return rc;
-	char* return_value = memcached_get(memc, ch,return_key_length, &return_value_length, &flags, &rc);
+	char* return_value = memcached_get(memc, (char*)&k,return_key_length, &return_value_length, &flags, &rc);
 	if(rc!=MEMCACHED_SUCCESS)
 		throw 1;
 	long long ret=atoll(return_value);
@@ -107,30 +109,32 @@ int SoStorageMemcached::getcounter(_uint key,int fldid)
 }
 void SoStorageMemcached::setcounter(_uint key,int fldid,int n)
 {
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,fldid));
-	size_t return_key_length=16;
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,fldid));
+	long long k=MAKE64(key,fldid);
+	size_t return_key_length=8;
 	size_t return_value_length;
 	uint32_t flags;
 	memcached_return rc;
 
 	char ch2[65];
 	sprintf(ch2,"%lld",(long long)n+offset);
-	rc = memcached_set(memc, ch,return_key_length,ch2,strlen(ch2),0, 0);
+	rc = memcached_set(memc, (char*)&k,return_key_length,ch2,strlen(ch2),0, 0);
 	if(rc!=MEMCACHED_SUCCESS)
 		throw 1;
 }
 
 int SoStorageMemcached::inc(_uint key,int fldid,int inc)
 {
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,fldid));
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,fldid));
+	long long k=MAKE64(key,fldid);
 	uint64_t ret;
 	memcached_return rc;
 	if(inc>0)
-		rc=memcached_increment(memc,ch,16,inc,&ret);
+		rc=memcached_increment(memc,(char*)&k,8,inc,&ret);
 	else
-		rc=memcached_decrement(memc,ch,16,-inc,&ret);
+		rc=memcached_decrement(memc,(char*)&k,8,-inc,&ret);
 	if(rc!=MEMCACHED_SUCCESS)
 		throw 1;
 	return ret-offset;
@@ -167,16 +171,16 @@ SoStatus SoStorageMemcached::getstr(_uint key,wchar_t** str,_uint* len)
 	k1=MAKE64(key,0);
 	k2=MAKE64(key,1);
 	char ch1[17],ch2[17];
-	sprintf(ch1,"%016llx",k1);
-	sprintf(ch2,"%016llx",k2);
+	//sprintf(ch1,"%016llx",k1);
+	//sprintf(ch2,"%016llx",k2);
 	char *keys[]= {ch1,ch2};
-	size_t key_length[]= {16,16};
+	size_t key_length[]= {8,8};
 	memcached_return rc;
 
-	size_t return_key_length=16;
+	size_t return_key_length=8;
 	size_t return_value_length;
 	uint32_t flags;
-	char* return_value = memcached_get(memc, ch1,return_key_length, &return_value_length, &flags, &rc);
+	char* return_value = memcached_get(memc, (char*)&k1,return_key_length, &return_value_length, &flags, &rc);
 	NodeValue* node;
 	if(rc==MEMCACHED_SUCCESS)
 	{
@@ -185,7 +189,7 @@ SoStatus SoStorageMemcached::getstr(_uint key,wchar_t** str,_uint* len)
 		if(ty!=SoString)
 			return SoFail;
 
-		return_value = memcached_get(memc, ch2,return_key_length, &return_value_length, &flags, &rc);
+		return_value = memcached_get(memc, (char*)&k2,return_key_length, &return_value_length, &flags, &rc);
 		if(rc==MEMCACHED_SUCCESS)
 		{
 			node=(NodeValue*) return_value;
@@ -224,9 +228,9 @@ SoVar SoStorageMemcached::get(_uint key,int fldid)
 	size_t len;
 	size_t flg;
 	memcached_return rc;
-	char ch[17];
-	sprintf(ch,"%016llx",k);
-    mret=memcached_get(memc,ch,16,&len,&flg,&rc);
+//	char ch[17];
+//	sprintf(ch,"%016llx",k);
+    mret=memcached_get(memc,(char*)&k,8,&len,&flg,&rc);
     if (rc == MEMCACHED_SUCCESS) {
         ret=*(SoVar*)mret;
         memcached_free2(mret);
@@ -248,9 +252,10 @@ bool SoStorageMemcached::exists(_uint key)//fix-me : improve
 	size_t outlen;
 	size_t flg;
 	memcached_return rc;
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,0));
-	char* r= memcached_get(memc,ch,16,&outlen,&flg,&rc);
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,0));
+	long long k=MAKE64(key,0);
+	char* r= memcached_get(memc,(char*)&k,8,&outlen,&flg,&rc);
 	if(rc==MEMCACHED_SUCCESS)
 	{
 		memcached_free2(r);
@@ -265,9 +270,10 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	nd.tag=tag;
 	nd.field_cnt=fld_cnt;
 	nd.flag=flag;
-	char ch[17];
-	sprintf(ch,"%016llx",MAKE64(key,0));
-	if(memcached_add(memc,ch,16,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
+	//char ch[17];
+	//sprintf(ch,"%016llx",MAKE64(key,0));
+	long long k=MAKE64(key,0);
+	if(memcached_add(memc,(char*)&k,8,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
 		return SoOK;
 	return SoFail;
 }
