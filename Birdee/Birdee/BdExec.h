@@ -54,6 +54,7 @@ void ExLoadFunction(void* args,...);
 void ExInitExeEngine();
 void ExSetCurrentDVM(DVM_VirtualMachine *dvm);
 void ExGoMain();
+void ExCallInit();
 void  ExInvokeByName(DVM_Value* v);
 void  ExGetFunction(DVM_Value* v);
 void  ExRand(DVM_Value* v);

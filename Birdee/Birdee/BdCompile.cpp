@@ -185,7 +185,7 @@ enum BcInlineFunctions
 
 std::vector<BcParameter> bparameters;
 Value* psta=0;
-std::vector<BcParameter> bstatic;
+//std::vector<BcParameter> bstatic;
 std::hash_map<int ,Value*> barrays;
 
 extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
@@ -417,12 +417,12 @@ void SwitchBlock(BasicBlock* bb)
 		bparameters[i].v=0;
 		bparameters[i].violated=0;
 	}
-	count = bstatic.size();
+/*	count = bstatic.size();
 	for (size_t i = 0; i < count; ++i)
 	{
 		bstatic[i].v=0;
 		bstatic[i].violated=0;
-	}
+	}*/
 	psta=0;
 	builder.SetInsertPoint(bb);
 }
@@ -1436,21 +1436,21 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 		}
 		else
 		{
-			BcParameter& ps=bstatic[decl->variable_index];
-			if(!ps.v)
-			{
+			//BcParameter& ps=bstatic[decl->variable_index];
+			//if(!ps.v)
+			//{
 				//if(!psta)
 				psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
 				Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
-				p2=builder.CreateLoad(p2);
+				p2=builder.CreateLoad(p2,true);
 				//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
-				ps.v=p2;
+				//ps.v=p2;
 				return p2;
-			}
-			else
-			{
-				return ps.v;
-			}
+			//}
+			//else
+			//{
+			//	return ps.v;
+			//}
 		}
     }
 }
@@ -1661,8 +1661,8 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				{
 					//if(get_opcode_type_offset(decl->type)!=2)
 					//{
-					bstatic[decl->variable_index].v=v;
-					bstatic[decl->variable_index].violated=1;
+					//bstatic[decl->variable_index].v=v;
+					//bstatic[decl->variable_index].violated=1;
 					//}
 					builder.CreateStore(v,p2);
 					if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global) //Full_arr_chk
@@ -1981,11 +1981,11 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 					builder.CreateCall2(fAtmInc,ptr,r);
 				else
 					builder.CreateCall2(fAtmDec,ptr,r);
-				BcParameter& ps=bstatic[decl->variable_index];
+				/*BcParameter& ps=bstatic[decl->variable_index];
 				if(ps.v)//fix-me : optimize here! We now must read back.
 				{
 					ps.v=builder.CreateLoad(ptr);
-				}
+				}*/
 
 			}
 		}
@@ -3141,8 +3141,8 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 {
 	bparameters.clear();
 	bparameters.resize(local_var_cnt+1);
-	bstatic.clear();
-	bstatic.resize(100); //fix-me : get the number of static
+	//bstatic.clear();
+	//bstatic.resize(100); //fix-me : get the number of static
 	barrays.clear();
 	cached_mid=NULL;
 	//block->parent

@@ -475,7 +475,8 @@ extern "C" void SoSeti(_uint key,_uint fldid,BINT v)
 
 extern "C" void SoSetd(_uint key,_uint fldid,double v)
 {
-	SoVar var={v};
+	SoVar var;
+	var.vd=v;
 	if(storage.put(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();

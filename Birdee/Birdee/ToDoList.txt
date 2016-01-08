@@ -7,3 +7,4 @@ global array 's v_table
 find a fast way from int key to string key
 global array built-in functions
 close all sockets when closing the dvm
+static global的load现在都是volatile的，降低了性能，应该让开发者自己决定（添加关键字）

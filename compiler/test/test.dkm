@@ -1,14 +1,107 @@
 require Remote
-dim  hosts as string[]={"192.168.88.153"}
-dim ports as int[]={3020}
+
+dim n as int=1000000000
+dim threads as int=2
+dim node_num as int=2
+
+/*
+dim time as int=GetClock()
+single_thread()
+println( GetClock()-time)
+time=GetClock()
+*/
+
+dim hosts as string[]={"192.168.88.1","192.168.88.1"}
+dim ports as int[]={3020,3021}
+//dim hosts as string[]=new string[0]
+//dim ports as int[]=new int[0]
 dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
 
-dim t as RemoteThread=nodes[0].CreateThread(myproc,1)
-t.Join(-1,1000)
-nodes[0].Close()
 
-function myproc ( par as var) as int
-	println("var par="+par)
+dim partial_sum as shared double[] global=new double[node_num] global
+dim barrier as shared RemoteBarrier=new RemoteBarrier(node_num+1)
+
+//dim t as RemoteThread[]=new RemoteThread[node_num*threads]
+dim i as int
+dim j as int
+for i=0;i<node_num;i++
+	for j=0;j<threads;j++
+		nodes[i].CreateThread(threadproc,i*threads+j)
+	end
+end
+
+try
+	barrier.enter(-1,512)
+catch CounterOutOfBoundException err
+	println("Error!")
+end
+dim result as double
+for i=0;i<node_num;i++
+	result+=partial_sum[i]
+end
+println( GetClock()-time)
+println( result/n)
+
+dim sums as double[]
+
+dim thread_num as int
+dim done as int
+sub RemoteInitialize()
+	n=1000000000
+	threads=2
+	node_num=2
+	thread_num=node_num*threads
+	sums=new double[threads]
+	done=0
+	println("Remote Initializd")
+end
+
+function threadproc(id as var) as int
+unsafe
+	dim localid as int=id % threads
+	dim sum as double = 0.0
+	dim ii as int
+	dim x as double
+	dim h as double
+	h= 1.0 /  n
+	for ii = 1; ii <= n; ii +=thread_num
+		x = h * (ii - 0.5)
+		sum += (4.0 / (1.0 + x*x))
+	end
+	sums[localid]=sum
+	done@+=1
+	if localid==0 then
+	unsafe
+		//first wait for other threads in the same node
+		for ;done!=threads;
+			//empty
+		end
+
+		//sum the results of the current node
+		for ii=1;ii<threads;ii++
+			sum+=sums[ii]
+		end
+		partial_sum[id/threads]=sum
+		println("summing "+sum +" node id="+id/threads)
+		try
+			barrier.enter(0,1024)
+		catch CounterOutOfBoundException e
+			println("Error!")
+		end
+	end
+end
+
+sub single_thread()
+	dim sum as double = 0.0
+	dim ii as int
+	dim x as double
+	dim h as double
+	h= 1.0 /  n
+	for ii = 1; ii <= n; ii ++
+		x = h * (ii - 0.5)
+		sum += (4.0 / (1.0 + x*x))
+	end
+	println(sum/n)
 end

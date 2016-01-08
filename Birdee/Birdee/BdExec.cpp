@@ -885,6 +885,20 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 	//curdvm=dvm;
 }
 
+extern "C" void ExCallInit()
+{
+    UaPrepareThread();
+	srand((unsigned)time(NULL));
+	DVM_Executable* exe=curdvm->top_level->executable;
+	curthread->current_executable =curdvm->top_level;
+	AvPushNullContext();
+	MCJITHelper* eng =(MCJITHelper*)curdvm->exe_engine;
+	Module* m=(Module*)exe->module.mod;
+	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("RemoteInitialize"));
+	if(FPtr)
+		FPtr(curthread->stack.stack);
+}
+
 
 extern "C" void ExGoMain()
 {

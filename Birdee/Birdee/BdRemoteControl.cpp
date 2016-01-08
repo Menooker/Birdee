@@ -443,7 +443,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;
 		SoInitStorage(mem_hosts,mem_ports);
-
+		ExCallInit();
 		for(;;)
 		{
 			RcCommandPack cmd;
