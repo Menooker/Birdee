@@ -19,6 +19,11 @@ lib Remote
 		//public declare sub Stop()
 	end
 	
+	shared public class ThisNodeThread: RemoteThread
+		public thistid as int
+		public override declare constructor initialize(del as thread_proc,param as int)
+	end
+
 	declare function ConnectNode(host as String[],port as int[],mem_host as String[],mem_port as int[]) as RemoteNode[]
 
 	shared public class AtomicCounter

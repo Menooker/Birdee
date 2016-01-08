@@ -39,6 +39,14 @@ shared public class RemoteThread
 	//public declare sub Stop()
 end
 
+shared public class ThisNodeThread: RemoteThread
+	public thistid as int
+	override constructor initialize(del as thread_proc,param as int)
+		thistid=CreateThread(del,true,param)
+		state=1
+	end
+end
+
 declare function ConnectNode(host as String,port as int) as RemoteNode
 
 shared public class AtomicCounter

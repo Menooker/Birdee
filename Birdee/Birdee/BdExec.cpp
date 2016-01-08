@@ -887,8 +887,15 @@ extern "C" void ExSetCurrentDVM(DVM_VirtualMachine *dvm)
 
 extern "C" void ExCallInit()
 {
+	int fn=dvm_search_function(curdvm,curdvm->top_level->executable->package_name,"RemoteInitialize" );
+	if(fn==FUNCTION_NOT_FOUND)
+		return;
+	if(curdvm->function[fn]->param_cnt!=0)
+	{
+		printf("Bad signature of function \'RemoteInitialize\'\n");
+		return;
+	}
     UaPrepareThread();
-	srand((unsigned)time(NULL));
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curthread->current_executable =curdvm->top_level;
 	AvPushNullContext();

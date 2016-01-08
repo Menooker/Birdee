@@ -1,11 +1,10 @@
 require Remote
-
+dim time as int=GetClock()
 dim n as int=1000000000
 dim threads as int=2
 dim node_num as int=2
-
 /*
-dim time as int=GetClock()
+
 single_thread()
 println( GetClock()-time)
 time=GetClock()
