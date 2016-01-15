@@ -208,10 +208,9 @@ int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports);
 
 int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* hosts,DVM_Object* memports)
 {
-	char* buf=(char*)malloc(host.data->u.string.length+1);
-	wcstombs(buf,host.data->u.string.string,host.data->u.string.length+1);
+	char* buf=dvm_wcstombs_alloc(host.data->u.string.string);
 	SOCKET s=(SOCKET)RcConnect(buf,port);
-	free(buf);
+	MEM_free(buf);
 	if(s==0 || RcMasterHello((BD_SOCKET)s, hosts, memports))
 	{
 		return 1;

@@ -561,13 +561,7 @@ BINT ExFindFunctionByName(char* mod,char* fun)
 char* ExConvertAndAllocWchar(wchar_t* WStr)
 {
 
-		size_t len = wcslen(WStr) + 1;
-		size_t converted = 0;
-		char *CStr;
-		CStr=(char*)malloc(len*sizeof(char));
-		//wcstombs_s(&converted, CStr, len, WStr, _TRUNCATE);
-        wcstombs ( CStr, WStr, len );
-		return CStr;
+		return dvm_wcstombs_alloc(WStr);
 }
 
 
