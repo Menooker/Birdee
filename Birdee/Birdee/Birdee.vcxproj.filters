@@ -194,6 +194,9 @@
     <ClInclude Include="BdMCJIT.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BdSocket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
@@ -338,6 +341,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BdMemcachedStorage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdDSMCache.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdSocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

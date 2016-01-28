@@ -136,6 +136,7 @@
     <ClInclude Include="BdParameters.h" />
     <ClInclude Include="BdRemoteControl.h" />
     <ClInclude Include="BdSharedObj.h" />
+    <ClInclude Include="BdSocket.h" />
     <ClInclude Include="BdThread.h" />
     <ClInclude Include="BirdeeDef.h" />
     <ClInclude Include="Conf.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="..\..\share\opcode.c" />
     <ClCompile Include="..\..\share\util.c" />
     <ClCompile Include="..\..\share\wchar_share.c" />
+    <ClCompile Include="BdDSMCache.cpp" />
     <ClCompile Include="BdMCJIT.cpp" />
     <ClCompile Include="BdMemcachedStorage.cpp" />
     <ClCompile Include="BdArrayCache.cpp" />
@@ -189,6 +191,7 @@
     <ClCompile Include="BdExec.cpp" />
     <ClCompile Include="BdHashMap.cpp" />
     <ClCompile Include="BdRemoteControl.cpp" />
+    <ClCompile Include="BdSocket.cpp" />
     <ClCompile Include="BdThread.cpp" />
     <ClCompile Include="BdVarients.cpp" />
     <ClCompile Include="Birdee.cpp" />

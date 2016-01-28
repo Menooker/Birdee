@@ -49,6 +49,13 @@ extern "C"
 	int UaAtomicDec(long* ptr,long dec);
 	#ifdef BD_ON_WINDOWS
         #define UaPrepareThread()
+		#define BD_RWLOCK SRWLOCK
+		#define UaInitRWLock(a) InitializeSRWLock(a)
+		#define UaEnterWriteRWLock(a) AcquireSRWLockExclusive(a)
+		#define UaLeaveWriteRWLock(a) ReleaseSRWLockExclusive(a)
+		#define UaEnterReadRWLock(a) AcquireSRWLockShared(a)
+		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
+		#define UaKillRWLock(a) 
     #else
         void UaPrepareThread();
     #endif

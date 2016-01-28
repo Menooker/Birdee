@@ -71,6 +71,14 @@ struct DataNode
 
 };
 
+struct CacheBlock
+{
+	SoVar cache[32];
+	long lru;
+	long long key;
+	BD_RWLOCK lock;
+};
+
 BINT SoGeti(_uint key,_uint fldid);
 double SoGetd(_uint key,_uint fldid);
 void SoGeto(_uint key,_uint fldid,int idx_in_exe);
