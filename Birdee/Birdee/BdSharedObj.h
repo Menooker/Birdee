@@ -73,7 +73,7 @@ struct DataNode
 
 struct CacheBlock
 {
-	SoVar cache[32];
+	SoVar cache[16];
 	long lru;
 	long long key;
 	BD_RWLOCK lock;

@@ -49,6 +49,7 @@ enum RcCommand
 	RcCmdStopThread,
 };
 
+#pragma pack(push)
 #pragma pack(4)
 struct RcCommandPack
 {
@@ -65,6 +66,7 @@ struct RcCommandPack
 		long long param34;
 	};
 };
+#pragma pack(pop)
 
 #ifndef BD_ON_VC
 #pragma ms_struct off

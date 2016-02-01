@@ -8,13 +8,27 @@
 #define DSM_CACHE_SIZE 2048
 
 using namespace std;
+
+#define CACHE_HELLO_MAGIC (0x2e3a4f01)
+
+#pragma pack(push)
+#pragma pack(4)
+struct CacheHelloPackage
+{
+	int magic;
+	int cacheid;
+};
+#pragma pack(pop)
+
+
+
 class DSMCache
 {
 public:
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,int fldid)=0;
-}
+};
 
 #define FLD_HIGH_MASK (0xfffffff0)
 #define FLD_LOW_MASK (0x0000000f)
@@ -46,22 +60,221 @@ private:
 	vector<string> hosts;
 	vector<int> ports;
 	int cache_id;
+	BD_SOCKET controllisten;
+	BD_SOCKET datalisten;
 
 	class DSMCacheProtocal
 	{
 	private:
-		BD_SOCKET* sockets;
+		hash_map<long long,long long> directory;
+		BD_RWLOCK dir_lock;
+		typedef hash_map<long long,long long>::iterator dir_iterator;
+
+		BD_SOCKET* controlsockets;
+		BD_SOCKET* datasockets;
+		BD_LOCK*   datasocketlocks;
+		THREAD_ID* threads;
 		DirectoryDSMCache* ths;
-	public:
-		DSMCacheProtocal(DirectoryDSMCache* t) : ths(t)
+		int caches;
+		enum CacheMessageKind
 		{
-			for(int i=0;i<ths->cache_id;i++)
+			DSMReadMiss=1,
+		};
+
+		struct Params
+		{
+			DSMCacheProtocal* ths;
+			int target_id;
+		};
+
+
+#ifdef BD_ON_WINDOWS
+		static DWORD __stdcall ListenSocketProc(void* param)
+#else
+		static void* ListenSocketProc(void* param)
+#endif
+		{
+			DSMCacheProtocal* ths=(DSMCacheProtocal*)param;
+			for(int i=0;i<ths->ths->cache_id;i++)
 			{
-				
+				for(int j=0;j<2;j++)
+				{
+					sockaddr_in remoteAddr;
+				#ifdef BD_ON_WINDOWS
+					int nAddrlen = sizeof(remoteAddr);
+				#else
+					unsigned int nAddrlen = sizeof(remoteAddr);
+				#endif
+					BD_SOCKET mylisten= (j%2==0)?ths->ths->controllisten:ths->ths->datalisten;
+					SOCKET sClient = accept((SOCKET)mylisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
+					if(sClient == INVALID_SOCKET)
+					{
+						printf("cache socket accept error !");
+						return 0;
+					}
+					BD_SOCKET sock=(BD_SOCKET)sClient;
+					CacheHelloPackage pack;
+					if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC)
+					{
+						printf("cache socket handshake error !");
+						return 0;
+					}
+					if(pack.cacheid>=ths->ths->cache_id)
+					{
+						printf("bad cache id %d!",pack.cacheid);
+						return 0;
+					}
+					Params* param=new Params;
+					param->target_id=pack.cacheid;
+					param->ths=ths;
+					if(j%2==0)
+						ths->threads[pack.cacheid]=UaCreateThreadEx(CacheProtocalProc,param);
+					CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->ths->cache_id};
+					RcSend(sock,&pack,sizeof(pack));
+					if(j%2==0)
+						ths->controlsockets[pack.cacheid]=sock;
+					else
+						ths->datasockets[pack.cacheid]=sock;
+				}
+			}
+			return 0;
+		}
+
+
+		enum ServerReplyKind
+		{
+			ReplyOK=1,
+			ReplyBadAddress,
+		};
+#pragma pack(push)
+#pragma pack(4)
+		struct ServerReply
+		{
+			ServerReplyKind status;
+		};
+#pragma pack(pop)
+
+		#ifdef BD_ON_WINDOWS
+		static DWORD __stdcall CacheProtocalProc(void* param)
+#else
+		static void* CacheProtocalProc(void* param)
+#endif
+		{
+			DSMCacheProtocal* ths=((Params*)param)->ths;
+			int target_id=((Params*)param)->target_id;
+			delete ths;
+			
+		}
+
+
+		ServerReplyKind ServerReadMiss(long long addr,int src_id,void* outbuf)
+		{
+			bool islocal= (src_id==ths->cache_id);
+			ServerReplyKind status;
+			if(islocal &&  ((addr>>4) % caches!=ths->cache_id))
+			{
+				status=ReplyBadAddress;
+				RcSend((BD_SOCKET)outbuf,&status,sizeof(status));
+				return status;
+			}
+			UaEnterWriteRWLock(&dir_lock);
+			dir_iterator itr=directory.find(addr);
+			long long old=0;
+			if(itr!=directory.end())
+			{
+				old=itr->second;
+			}
+			old |= ( ((long long)1)<< src_id);
+			directory[addr]=old;
+			UaLeaveWriteRWLock(&dir_lock);
+		}
+
+	public:
+
+		SoStatus ReadMiss(long long addr,CacheBlock* blk)
+		{
+			int target_cache_id=(addr>>4) % caches;
+			ServerReplyKind rep;
+			if(target_cache_id==ths->cache_id)
+				rep=ServerReadMiss(addr,ths->cache_id,blk);
+			else
+			{
+
 			}
 		}
-	};
 
+		DSMCacheProtocal(DirectoryDSMCache* t) : ths(t)
+		{
+			caches=ths->hosts.size();
+			controlsockets=new BD_SOCKET[caches];
+			datasockets=new BD_SOCKET[caches];
+			threads=new THREAD_ID[caches];
+			datasocketlocks=new BD_LOCK[caches];
+			for(int i=0;i<caches;i++)
+				UaInitLock(&datasocketlocks[i]);
+			UaInitRWLock(&dir_lock);
+			THREAD_ID th=UaCreateThreadEx(ListenSocketProc,ths);
+			for(int i=ths->cache_id+1;i<caches;i++)
+			{
+				Params* param=new Params;
+				param->target_id=ths->cache_id;
+				param->ths=this;
+				threads[i]=UaCreateThreadEx(CacheProtocalProc,param);
+				BD_SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]);
+				if(sock==NULL)
+				{
+					printf("cache socket connect error %d!\n",i);
+					_BreakPoint;
+				}
+				CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->cache_id};
+				RcSend(sock,&pack,sizeof(pack));
+				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC 
+					||pack.cacheid!=i)
+				{
+					printf("cache socket handshake error %d !",i);
+					_BreakPoint;
+				}
+				controlsockets[i]=sock;
+				/////////////////////////////////////////////////////////////
+
+				sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1); //data sockets
+				if(sock==NULL)
+				{
+					printf("cache socket connect error %d!\n",i);
+					_BreakPoint;
+				}
+				CacheHelloPackage pack2={CACHE_HELLO_MAGIC,ths->cache_id};
+				RcSend(sock,&pack2,sizeof(pack2));
+				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC 
+					||pack.cacheid!=i)
+				{
+					printf("cache socket handshake error %d !",i);
+					_BreakPoint;
+				}
+				datasockets[i]=sock;
+			}
+			UaWaitForThread(th);
+		}
+
+		~DSMCacheProtocal()
+		{
+			for(int i=0;i<caches;i++)
+			{
+				if(i==ths->cache_id)
+					continue;
+				closesocket((SOCKET)controlsockets[i]);
+				closesocket((SOCKET)datasockets[i]);
+				UaKillLock(&datasocketlocks[i]);
+				UaStopThread(threads[i]);
+			}
+			delete []controlsockets;
+			delete []datasockets;
+			delete []datasocketlocks;
+			delete []threads;
+			UaKillRWLock(&dir_lock);
+		}
+	}protocal;
+	//end of class DSMCacheProtocal
 
 
 	inline void mapput(long long key,CacheBlock* blk)
@@ -305,6 +518,3 @@ MISS:
 
 
 };
-
-
-

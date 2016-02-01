@@ -6,12 +6,14 @@
 		#include <Windows.h>
 		typedef void* THREAD_ID;
 		#define BD_LOCK CRITICAL_SECTION
+		typedef DWORD (__stdcall *UaThreadProc)(PVOID p);
     #else
         #include <unistd.h>
         #include <pthread.h>
         #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
         typedef pthread_t THREAD_ID;
+		typedef (void*) (*UaThreadProc)(void* p);
 	#endif
 
 	#undef min
@@ -47,6 +49,8 @@ extern "C"
 	void UaSleep(int ms);
 	int UaAtomicInc(long* ptr,long inc);
 	int UaAtomicDec(long* ptr,long dec);
+	THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param);
+	void UaWaitForThread(THREAD_ID th);
 	#ifdef BD_ON_WINDOWS
         #define UaPrepareThread()
 		#define BD_RWLOCK SRWLOCK
