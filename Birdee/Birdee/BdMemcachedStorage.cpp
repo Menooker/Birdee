@@ -173,7 +173,7 @@ SoStatus SoStorageMemcached::getstr(_uint key,wchar_t** str,_uint* len)
 	char ch1[17],ch2[17];
 	//sprintf(ch1,"%016llx",k1);
 	//sprintf(ch2,"%016llx",k2);
-	char *keys[]= {ch1,ch2};
+	char *keys[]= {(char*)&k1,(char*)&k2};
 	size_t key_length[]= {8,8};
 	memcached_return rc;
 

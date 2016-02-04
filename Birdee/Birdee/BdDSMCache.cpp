@@ -78,7 +78,12 @@ private:
 		int caches;
 		enum CacheMessageKind
 		{
-			DSMReadMiss=1,
+			MsgReplyOK=1,
+			MsgReplyBadAddress,
+			MsgReadMiss,
+			MsgWrite,
+			MsgRenew,
+			MsgWriteback,
 		};
 
 		struct Params
@@ -141,18 +146,140 @@ private:
 		}
 
 
-		enum ServerReplyKind
-		{
-			ReplyOK=1,
-			ReplyBadAddress,
-		};
+
 #pragma pack(push)
 #pragma pack(4)
-		struct ServerReply
+		struct DataPack
 		{
-			ServerReplyKind status;
+			CacheMessageKind kind;
+			long long addr;
+			SoVar buf[16];
 		};
+
 #pragma pack(pop)
+
+		CacheMessageKind ServerRenew(long long addr,int src_id,SoVar* buf)
+		{
+			UaEnterReadRWLock(&ths->hash_lock);
+			hash_iterator itr=ths->cache.find(addr);
+			bool found=(itr!=ths->cache.end());
+			UaLeaveReadRWLock(&ths->hash_lock);
+			if(found)
+			{
+				UaEnterReadRWLock(&itr->second->lock);
+				memcpy(itr->second->cache,buf,sizeof(itr->second->cache));
+				UaLeaveReadRWLock(&itr->second->lock);
+			}
+		}
+
+
+		void ServerWrite(long long addr,int src_id,SoVar* buf)
+		{
+			bool islocal= (src_id==ths->cache_id);
+			if(!islocal &&  ((addr>>4) % caches!=ths->cache_id))
+			{
+				//RcSend(datasockets[src_id],&status,sizeof(status));
+				printf("Cache server bad address!!!%llx\n",addr);
+				_BreakPoint;
+				return;
+			}
+			UaEnterReadRWLock(&dir_lock);
+			dir_iterator itr=directory.find(addr);
+			long long old=0;
+			if(itr!=directory.end())
+			{
+				old=itr->second;
+			}
+			if(old)
+			{
+				DataPack sendpack;
+				sendpack.kind=MsgRenew;
+				sendpack.addr=addr;
+				memcpy(sendpack.buf,buf,sizeof(sendpack.buf));
+				for(int i=0;i<caches;i++)
+				{
+					if(old & 1)
+					{
+						if(i==ths->cache_id)
+						{
+							ServerRenew(addr,i,buf);
+						}
+						else
+						{
+							RcSend(controlsockets[i],&sendpack,sizeof(sendpack));
+						}
+					}
+					old=old>>1;
+				}
+			}
+			UaLeaveReadRWLock(&dir_lock);
+		}
+
+		void ServerWriteback(long long addr,int src_id)
+		{
+			if(((addr>>4) % caches!=ths->cache_id))
+			{
+				printf("Cache server bad address!!!%llx\n",addr);
+				_BreakPoint;
+			}
+			UaEnterWriteRWLock(&dir_lock);
+			dir_iterator itr=directory.find(addr);
+			if(itr!=directory.end())
+			{
+				long long old;
+				old=itr->second;
+				long long newv = old & ~( ((long long)1)<< src_id);
+				if(newv)
+					directory[addr]=newv;
+				else
+					directory.erase(addr);
+			}
+
+			UaLeaveWriteRWLock(&dir_lock);
+			
+		}
+
+
+		CacheMessageKind ServerReadMiss(long long addr,int src_id,SoVar* outbuf)
+		{
+			bool islocal= (src_id==ths->cache_id);
+			CacheMessageKind status=MsgReplyOK;
+			if(!islocal &&  ((addr>>4) % caches!=ths->cache_id))
+			{
+				printf("Cache server bad address!!!%llx\n",addr);
+				_BreakPoint;
+			}
+			UaEnterWriteRWLock(&dir_lock);
+			dir_iterator itr=directory.find(addr);
+			long long old=0;
+			if(itr!=directory.end())
+			{
+				old=itr->second;
+			}
+			long long newv = old | ( ((long long)1)<< src_id);
+			directory[addr]=newv;
+			UaLeaveWriteRWLock(&dir_lock);
+			
+			if(islocal)
+			{
+				if(ths->backend->getblock(addr,outbuf)!=SoOK)
+					return MsgReplyBadAddress; 
+			}
+			else
+			{
+				DataPack sendpack;
+				sendpack.kind=MsgReplyOK;
+				sendpack.addr=addr;
+				if(ths->backend->getblock(addr,sendpack.buf)!=SoOK)
+				{
+					sendpack.kind=MsgReplyBadAddress;
+				}
+				RcSend(datasockets[src_id],&sendpack,sizeof(sendpack));
+			}
+			
+			return status;
+		}
+
 
 		#ifdef BD_ON_WINDOWS
 		static DWORD __stdcall CacheProtocalProc(void* param)
@@ -163,44 +290,76 @@ private:
 			DSMCacheProtocal* ths=((Params*)param)->ths;
 			int target_id=((Params*)param)->target_id;
 			delete ths;
-			
-		}
-
-
-		ServerReplyKind ServerReadMiss(long long addr,int src_id,void* outbuf)
-		{
-			bool islocal= (src_id==ths->cache_id);
-			ServerReplyKind status;
-			if(islocal &&  ((addr>>4) % caches!=ths->cache_id))
+			DataPack pack;
+			for(;;)
 			{
-				status=ReplyBadAddress;
-				RcSend((BD_SOCKET)outbuf,&status,sizeof(status));
-				return status;
+				if(RcRecv(ths->controlsockets[target_id],&pack,sizeof(pack))!=sizeof(pack))
+				{
+					printf("Cache server socket error\n");
+					break;
+				}
+				switch(pack.kind)
+				{
+				case MsgReadMiss:
+					ths->ServerReadMiss(pack.addr,target_id,NULL);
+					break;
+				case MsgWrite:
+					ths->ServerWrite(pack.addr,target_id,NULL);
+					break;
+				case MsgRenew:
+					ths->ServerRenew(pack.addr,target_id,NULL);
+					break;
+				case MsgWriteback:
+					ths->ServerMsgWriteback(pack.addr,target_id,NULL);
+					break;
+				default:
+					printf("Bad cache server message %d\n",pack.kind);
+				}
 			}
-			UaEnterWriteRWLock(&dir_lock);
-			dir_iterator itr=directory.find(addr);
-			long long old=0;
-			if(itr!=directory.end())
-			{
-				old=itr->second;
-			}
-			old |= ( ((long long)1)<< src_id);
-			directory[addr]=old;
-			UaLeaveWriteRWLock(&dir_lock);
 		}
-
 	public:
+
+		void Write(long long addr,CacheBlock* blk)
+		{
+			int target_cache_id=(addr>>4) % caches;
+			if(target_cache_id==ths->cache_id)
+			{
+				ServerWrite(addr,ths->cache_id,blk->cache);
+			}
+			else
+			{
+				DataPack pack={MsgWrite,addr};
+				memcpy(pack.buf,blk->cache,sizeof(pack.buf));
+				RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
+			}
+		}
 
 		SoStatus ReadMiss(long long addr,CacheBlock* blk)
 		{
 			int target_cache_id=(addr>>4) % caches;
-			ServerReplyKind rep;
 			if(target_cache_id==ths->cache_id)
-				rep=ServerReadMiss(addr,ths->cache_id,blk);
+			{
+				if(ServerReadMiss(addr,ths->cache_id,blk->cache)!=MsgReplyOK)
+					return SoFail;
+			}
 			else
 			{
-
+				DataPack pack={MsgReadMiss,addr};
+				UaEnterLock(&datasocketlocks[target_cache_id]);
+				RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
+				RcRecv(datasockets[target_cache_id],&pack,sizeof(pack));
+				UaLeaveLock(&datasocketlocks[target_cache_id]);
+				if(pack.kind!=MsgReplyOK)
+					return SoFail;
+				if(pack.addr!=addr)
+				{
+					printf("Read miss return a bad addr\n");
+					return SoFail;
+				}
+				memcpy(blk->cache,pack.buf,sizeof(blk->cache));
 			}
+			blk->key=addr;
+			return SoOK;
 		}
 
 		DSMCacheProtocal(DirectoryDSMCache* t) : ths(t)
