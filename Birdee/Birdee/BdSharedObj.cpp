@@ -7,6 +7,7 @@
 #include "BdMemcachedStorage.h"
 #include "UnportableAPI.h"
 #include "BdParameters.h"
+#include "BdDSMCache.h"
 
 extern void ExCall(BINT index);
 
@@ -127,6 +128,18 @@ public:
 		throw SO_KEY_NOT_FOUND;
 	}
 
+	SoStatus getblock(long long addr,SoVar* buf)
+	{
+		for (int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
+		{
+			if(map.find((addr & DSM_CACHE_HIGH_MASK_64)+i)!=map.end())
+				buf[i]=map[(addr & DSM_CACHE_HIGH_MASK_64)+i].var;
+			else
+				buf[i].vd=0;
+		}
+		return SoOK;
+	}
+
 	bool exists(_uint key)
 	{
 		return map.find(MAKE64(key,0))!=map.end();
@@ -162,24 +175,30 @@ public:
 		SoBackendTest,
 		SoBackendMemcached,
 	};
+	enum CacheType
+	{
+		SoNoCache,
+		SoWriteThroughCache,
+	};
 private:
 	BackendType type;
-
+	CacheType cachetype;
 public:
-	SoStorageFactory(BackendType ty)
+	SoStorageFactory(BackendType ty,CacheType cty)
 	{
-		setType(ty);
+		setType(ty,cty);
 	}
-	SoStorageFactory* setType(BackendType ty)
+	SoStorageFactory* setType(BackendType ty,CacheType cty)
 	{
 		type=ty;
+		cachetype=cty;
 		return this;
 	}
 	SoStorage* make(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 	{
 		switch(type)
 		{
-		case SoBackendTest:
+		case SoNoCache:
 			return new SoStorageLocalTest(arr_mem_hosts, arr_mem_ports);
 			break;
 		case SoBackendMemcached:
@@ -189,20 +208,59 @@ public:
 		}
 		return NULL;
 	}
+
+	DSMCache* makecache(SoStorage* storage,std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,
+		int mcache_id,BD_SOCKET mcontrollisten,BD_SOCKET mdatalisten)
+	{
+		switch(cachetype)
+		{
+		case SoNoCache:
+			return new DSMNoCache(storage);
+			break;
+		case SoWriteThroughCache:
+			return new DSMDirectoryCache(storage,arr_hosts,arr_ports,mcache_id,mcontrollisten,mdatalisten);
+		default:
+			DBG_assert(0,("Var type is wrong %d\n",type));
+		}
+		return NULL;
+	}
+
 };
 
 class SharedStorage
 {
 private:
 	SoStorage* backend;
+	DSMCache* cache;
+	BD_SOCKET controllisten; // the control socket for cache, managed by SharedStorage
+	BD_SOCKET datalisten; //the data socket for cache, managed by SharedStorage
 public:
-	SharedStorage(SoStorageFactory::BackendType ty,std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
+	/*
+		params :
+		arr_mem_hosts,arr_mem_ports : the list of memory server's hosts and ports
+		arr_hosts,arr_ports : the lists of node's host and ports, the port arr_ports[i]+1 is the
+			cache control port for node[i], and the port arr_ports[i]+2 is the cache data port
+			for node[i]
+		int mcache_id the node_id for the current node
+	*/
+	SharedStorage(SoStorageFactory::BackendType ty,SoStorageFactory::CacheType cachety,std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
+		std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id)
 	{
-		backend=SoStorageFactory(ty).make(arr_mem_hosts, arr_mem_ports);
+		controllisten=RcCreateListen(arr_ports[node_id]+1);
+		if(!controllisten)
+			_BreakPoint;
+		datalisten=RcCreateListen(arr_ports[node_id]+2);
+		if(!datalisten)
+			_BreakPoint;		
+		SoStorageFactory factory(ty,cachety);
+		backend=factory.make(arr_mem_hosts, arr_mem_ports);
+		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
+
 	}
 	~SharedStorage()
 	{
 		delete backend;
+		delete cache;
 	}
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
@@ -399,9 +457,11 @@ SharedStorage* pstorage=NULL;
 
 
 extern std::hash_map<std::string,ExecutableEntry*> LoadedMods;
-void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
+void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
+	std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id)
 {
-	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,arr_mem_hosts,arr_mem_ports);
+	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,SoStorageFactory::SoWriteThroughCache,arr_mem_hosts,arr_mem_ports,
+		arr_hosts,arr_ports,node_id);
 	if(curdvm->is_master)
 	{
 		for( ExecutableEntry* ee=curdvm->executable_entry;ee;ee=ee->next)

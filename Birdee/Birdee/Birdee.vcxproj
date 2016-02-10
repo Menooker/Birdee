@@ -125,6 +125,7 @@
     <ClInclude Include="..\..\include\MEM.h" />
     <ClInclude Include="..\..\include\share_dvm.h" />
     <ClInclude Include="..\..\memory\memory.h" />
+    <ClInclude Include="BdDSMCache.h" />
     <ClInclude Include="BdMCJIT.h" />
     <ClInclude Include="BdArrayCache.h" />
     <ClInclude Include="BdCompile.h" />

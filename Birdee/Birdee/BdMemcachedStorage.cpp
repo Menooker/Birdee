@@ -277,3 +277,38 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 		return SoOK;
 	return SoFail;
 }
+
+SoStatus SoStorageMemcached::getblock(long long addr,SoVar* buf)
+{
+	char* keys[DSM_CACHE_BLOCK_SIZE];
+	size_t key_length[DSM_CACHE_BLOCK_SIZE];
+	long long maddr[DSM_CACHE_BLOCK_SIZE];
+	for (int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
+	{
+		maddr[i]= (addr & DSM_CACHE_HIGH_MASK_64)+i;
+		keys[i]=(char*) &maddr[i];
+		key_length[i]=8;
+	}
+	memcached_result_st results_obj;
+	memcached_result_st* results;
+	results= memcached_result_create(memc, &results_obj);
+
+	memset(buf,0,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+    memcached_return rc = memcached_mget(memc, (char**)keys, key_length, DSM_CACHE_BLOCK_SIZE);
+	
+	SoStatus ret= (rc==MEMCACHED_SUCCESS)?SoOK:SoFail;
+	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	{
+	
+		if(rc == MEMCACHED_SUCCESS)
+		{
+			long long* pkey;
+			SoVar* pvalue;
+			pkey=(long long*)memcached_result_key_value(results);
+			pvalue=(SoVar*)memcached_result_value(results);
+			buf[ (*pkey) & DSM_CACHE_HIGH_MASK_64]= *pvalue; 
+		}
+	}
+	memcached_result_free(&results_obj);
+	return ret;
+}

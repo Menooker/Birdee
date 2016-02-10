@@ -14,9 +14,17 @@
     typedef sockaddr* LPSOCKADDR;
 #endif
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 BD_SOCKET RcConnect(char* ip,int port);
 BD_SOCKET RcListen(int port);
-
+BD_SOCKET RcCreateListen(int port);
+#ifdef __cplusplus
+}
+#endif
 
 inline int RcSend(BD_SOCKET s,void* data,size_t len)
 {

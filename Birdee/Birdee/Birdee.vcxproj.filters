@@ -197,6 +197,9 @@
     <ClInclude Include="BdSocket.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BdDSMCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Birdee.cpp">
