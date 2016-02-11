@@ -13,7 +13,6 @@ void RcCreateThread(DVM_Value *args);
 int RcSendModule(BD_SOCKET s,char* path);
 int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path);
 void RcSlave(int port);
-int RcMasterHello(BD_SOCKET s);
 void RcCloseNode(DVM_Value *args);
 #ifdef __cplusplus
 }

@@ -27,6 +27,8 @@ struct MasterInfo
 	int32 magic;
 	uint32 mod_cnt;
 	int32 num_mem_server;
+	int32 num_nodes;
+	int32 node_id;
 };
 
 struct FileHeader
@@ -91,14 +93,13 @@ void RcThrowSocketError(int err)
 
 int node_class_index=-1;
 
-int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports);
+int RcMasterHello(BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id);
 
-int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* hosts,DVM_Object* memports)
+int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
+	std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports)
 {
-	char* buf=dvm_wcstombs_alloc(host.data->u.string.string);
-	SOCKET s=(SOCKET)RcConnect(buf,port);
-	MEM_free(buf);
-	if(s==0 || RcMasterHello((BD_SOCKET)s, hosts, memports))
+	SOCKET s=(SOCKET)RcConnect((char*)hosts[node_id].c_str(),port);
+	if(s==0 || RcMasterHello((BD_SOCKET)s,hosts,ports, memhosts, memports,node_id))
 	{
 		return 1;
 	}
@@ -144,9 +145,34 @@ void RcConnectNode(DVM_Value *args)
 	arr = dvm_create_array_object_i(curdvm, ip->u.barray.size);
 	curthread->stack.stack_pointer->object=arr;
 	curthread->stack.stack_pointer++;
+
+	std::vector<std::string> memhosts;
+	std::vector<int> memports;
+	std::vector<std::string> hosts;
+	std::vector<int> ports;
+	char buf[255];
+	for(int i=0;i<memhost->u.barray.size;i++)
+	{
+	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
+		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
+			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
+		memhosts.push_back(std::string(buf));
+		memports.push_back(memport->u.barray.u.int_array[i]);
+	}
+
+	hosts.push_back("");
+	ports.push_back(0);
 	for(int i=0;i<ip->u.barray.size;i++)
 	{
-		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,memhost,memport))
+	    wcstombs(buf,ip->u.barray.u.object[i].data->u.string.string,255);
+		if(ip->u.barray.u.object[i].data->u.string.length>=254)
+			printf("Warning : host name %ws too long\n",ip->u.barray.u.object[i].data->u.string.string);
+		hosts.push_back(std::string(buf));
+		ports.push_back(port->u.barray.u.int_array[i]);
+	}
+	for(int i=0;i<ip->u.barray.size;i++)
+	{
+		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,i+1,hosts,ports,memhosts,memports))
 		{
 			for(int j=0;j<i;j++)//if one node fails, roll back all nodes
 			{
@@ -162,19 +188,9 @@ void RcConnectNode(DVM_Value *args)
 		//if create node success
 		arr.data->u.barray.u.object[i]=obj;
 	}
-	std::vector<std::string> hosts;
-	std::vector<int> ports;
-	char buf[255];
-	for(int i=0;i<memhost->u.barray.size;i++)
-	{
-	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
-		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
-			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
-		hosts.push_back(std::string(buf));
-		ports.push_back(memport->u.barray.u.int_array[i]);
-	}
 
-	SoInitStorage(hosts,ports);
+
+	SoInitStorage(hosts,ports,memhosts,memports,0);
 	curthread->retvar.object = arr;
 }
 
@@ -302,7 +318,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
-void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports)
+void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
 {
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
@@ -328,7 +344,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,
 		srand((unsigned)time(NULL));
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;
-		SoInitStorage(mem_hosts,mem_ports);
+		SoInitStorage(hosts,ports,mem_hosts,mem_ports,node_id);
 		ExCallInit();
 		for(;;)
 		{
@@ -376,6 +392,27 @@ ERR:
 	return;
 }
 
+void get_peer_ip_port(BD_SOCKET fd, std::string& ip, int& port)
+{
+   
+    // discovery client information
+    struct sockaddr_in addr;
+#ifdef BD_ON_WINDOWS
+    int addrlen = sizeof(addr);
+#else
+	size_t addrlen = sizeof(addr);
+#endif
+    if(getpeername((SOCKET)fd, (struct sockaddr*)&addr, &addrlen) == -1){
+        fprintf(stderr,"discovery client information failed, fd=%d, errno=%d(%#x).\n", fd, errno, errno);        
+        return;
+    }
+	port = ntohs(addr.sin_port); 
+	ip=inet_ntoa(addr.sin_addr);
+	
+    return;
+}
+
+
 void RcSlave(int port)
 {
 	BD_SOCKET s=RcListen(port);
@@ -395,13 +432,24 @@ void RcSlave(int port)
 		if(mi.mod_cnt<=0)
 			goto ERR;
 		printf("Module file count %d\n",mi.mod_cnt);
+		printf("Node count %d\n",mi.num_nodes);
 		printf("Memory server count %d\n",mi.num_mem_server);
 
 		char buf[255];
-		printf("Memory server list :\n");
+
+		printf("Host list :\n");
 		std::vector<std::string> hosts;
 		std::vector<int> ports;
-		for(int i=0;i<mi.num_mem_server;i++)
+
+		std::string master;
+		int masterport;
+		get_peer_ip_port(s,master,masterport);
+
+		hosts.push_back(master);
+		ports.push_back(masterport);
+		printf("Master = %s:%d\n",master.c_str(),masterport);
+
+		for(int i=1;i<mi.num_nodes;i++)
 		{
 			uint32 len,port;
 			err=5;
@@ -424,6 +472,35 @@ void RcSlave(int port)
 			}
 			hosts.push_back(std::string(buf));
 			ports.push_back(port);
+			printf("%s:%d\n",buf,port);
+		}
+
+		printf("Memory server list :\n");
+		std::vector<std::string> memhosts;
+		std::vector<int> memports;
+		for(int i=0;i<mi.num_mem_server;i++)
+		{
+			uint32 len,port;
+			err=5;
+			if(RcRecv(s,&len,sizeof(len))!=sizeof(len))
+				goto ERR;
+			if(len>255)
+			{
+				err=6;
+				goto ERR;
+			}
+			if(RcRecv(s,buf,len)!=len)
+			{
+				err=7;
+				goto ERR;
+			}
+			if(RcRecv(s,&port,sizeof(port))!=sizeof(port))
+			{
+				err=8;
+				goto ERR;
+			}
+			memhosts.push_back(std::string(buf));
+			memports.push_back(port);
 			printf("%s:%d\n",buf,port);
 		}
 
@@ -455,7 +532,7 @@ void RcSlave(int port)
 
 		}
 		printf("All modules received, waiting for command");
-		RcSlaveMainLoop(mainmod,s,hosts,ports);
+		RcSlaveMainLoop(mainmod,s,hosts,ports,memhosts,memports,mi.node_id);
 	}
 	else
 	{
@@ -465,11 +542,12 @@ ERR:
 	}
 }
 
-int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
+int RcMasterHello(BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
 {
 	SlaveInfo si;
 	int mem_cnt;
-	mem_cnt=hosts->u.barray.size;
+	mem_cnt=memhosts.size();
+	int host_cnt=hosts.size();
 	if(RcRecv(s,&si,sizeof(si))!=sizeof(si))
 	{
 		return 1;
@@ -478,25 +556,37 @@ int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt,host_cnt,node_id};
 	RcSend(s,&mi,sizeof(mi));
 
-	char buf[255];
-	for(int i=0;i<mem_cnt;i++)
+	for(int i=1;i<host_cnt;i++)
 	{
-	    wcstombs(buf,hosts->u.barray.u.object[i].data->u.string.string,255);
-		if(hosts->u.barray.u.object[i].data->u.string.length>=254)
-			printf("Warning : host name %ws too long\n",hosts->u.barray.u.object[i].data->u.string.string);
-
-		uint32 sendl=hosts->u.barray.u.object[i].data->u.string.length+1;
+	    
+		uint32 sendl=hosts[i].size()+1;
 		if(sendl>255)
 		{
 			sendl=255;
-			buf[254]=0;
+			hosts[i][254]=0;
 		}
 		RcSend(s,&sendl,sizeof(sendl));
-		RcSend(s,buf,sendl);
-		RcSend(s,&memports->u.barray.u.int_array[i],sizeof(memports->u.barray.u.int_array[i]));
+		RcSend(s,(char*)hosts[i].c_str(),sendl);
+		sendl=ports[i];
+		RcSend(s,&sendl,sizeof(sendl));
+	}
+
+	for(int i=0;i<mem_cnt;i++)
+	{
+	    
+		uint32 sendl=memhosts[i].size()+1;
+		if(sendl>255)
+		{
+			sendl=255;
+			memhosts[i][254]=0;
+		}
+		RcSend(s,&sendl,sizeof(sendl));
+		RcSend(s,(char*)memhosts[i].c_str(),sendl);
+		sendl=memports[i];
+		RcSend(s,&sendl,sizeof(sendl));
 	}
 
 	std::vector<std::string>::iterator itr;
