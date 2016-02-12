@@ -90,6 +90,9 @@
     <None Include="barriertest.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="pi.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

@@ -264,7 +264,7 @@ public:
 	}
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
-		return backend->put(key,fldid,v);
+		return cache->put(key,fldid,v);
 	}
 
 	SoVar get(_uint key,int fldid)
@@ -272,7 +272,7 @@ public:
 		SoVar ret;
 		try
 		{
-			ret=backend->get(key,fldid);
+			ret=cache->get(key,fldid);
 
 		}
 		catch (int &a)

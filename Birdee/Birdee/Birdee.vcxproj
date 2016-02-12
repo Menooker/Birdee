@@ -100,6 +100,7 @@
     <None Include="Exceptions.dkh" />
     <None Include="Exceptions2.dkh" />
     <None Include="list.txt" />
+    <None Include="pi.txt" />
     <None Include="ReadMe.txt" />
     <None Include="Remote.dkh" />
     <None Include="req2.dkh" />

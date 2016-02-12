@@ -29,6 +29,7 @@ struct MasterInfo
 	int32 num_mem_server;
 	int32 num_nodes;
 	int32 node_id;
+	int32 localport;
 };
 
 struct FileHeader
@@ -120,6 +121,8 @@ void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip,*port,*memhost,*memport;
 	DVM_ObjectRef arr,obj;
+	int localport;
+	localport = args[4].int_value ;
 
     ip = args[3].object.data ;
     DBG_assert(ip->type == ARRAY_OBJECT, ("ip->type..%d", ip->type));
@@ -161,7 +164,7 @@ void RcConnectNode(DVM_Value *args)
 	}
 
 	hosts.push_back("");
-	ports.push_back(0);
+	ports.push_back(localport);
 	for(int i=0;i<ip->u.barray.size;i++)
 	{
 	    wcstombs(buf,ip->u.barray.u.object[i].data->u.string.string,255);
@@ -190,7 +193,7 @@ void RcConnectNode(DVM_Value *args)
 	}
 
 
-	SoInitStorage(hosts,ports,memhosts,memports,0);
+	SoInitStorage(memhosts,memports,hosts,ports,0);
 	curthread->retvar.object = arr;
 }
 
@@ -344,7 +347,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& hosts,std:
 		srand((unsigned)time(NULL));
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;
-		SoInitStorage(hosts,ports,mem_hosts,mem_ports,node_id);
+		SoInitStorage(mem_hosts,mem_ports,hosts,ports,node_id);
 		ExCallInit();
 		for(;;)
 		{
@@ -446,8 +449,8 @@ void RcSlave(int port)
 		get_peer_ip_port(s,master,masterport);
 
 		hosts.push_back(master);
-		ports.push_back(masterport);
-		printf("Master = %s:%d\n",master.c_str(),masterport);
+		ports.push_back(mi.localport);
+		printf("Master = %s:%d\n",master.c_str(),mi.localport);
 
 		for(int i=1;i<mi.num_nodes;i++)
 		{
@@ -556,7 +559,7 @@ int RcMasterHello(BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& 
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt,host_cnt,node_id};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt,host_cnt,node_id,ports[0]};
 	RcSend(s,&mi,sizeof(mi));
 
 	for(int i=1;i<host_cnt;i++)

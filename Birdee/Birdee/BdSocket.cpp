@@ -71,6 +71,7 @@ BD_SOCKET RcCreateListen(int port)
         printf("listen error !");
         return 0;
     }
+	return (BD_SOCKET)slisten;
 }
 
 BD_SOCKET RcListen(int port)

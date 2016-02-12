@@ -9,6 +9,9 @@
 
 #define CACHE_HELLO_MAGIC (0x2e3a4f01)
 
+extern "C" void init_memcached_this_thread();
+
+
 #pragma pack(push)
 #pragma pack(4)
 struct CacheHelloPackage
@@ -36,7 +39,7 @@ public:
 	{}
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
-		backend->put(key,fldid,v);
+		return backend->put(key,fldid,v);
 	}
 	SoVar get(_uint key,int fldid)
 	{
@@ -180,15 +183,16 @@ private:
 		static void* CacheProtocalProc(void* param)
 #endif
 		{
+			init_memcached_this_thread();
 			DSMCacheProtocal* ths=((Params*)param)->ths;
 			int target_id=((Params*)param)->target_id;
-			delete ths;
+			delete param;
 			DataPack pack;
 			for(;;)
 			{
 				if(RcRecv(ths->controlsockets[target_id],&pack,sizeof(pack))!=sizeof(pack))
 				{
-					printf("Cache server socket error\n");
+					printf("Cache server socket error %d\n",WSAGetLastError());
 					break;
 				}
 				switch(pack.kind)
@@ -200,7 +204,7 @@ private:
 					ths->ServerWriteMiss(pack.addr,target_id,pack.buf[0],NULL);
 					break;
 				case MsgWrite:
-					ths->ServerWrite(pack.addr,target_id,NULL);
+					ths->ServerWrite(pack.addr,target_id,pack.buf);
 					break;
 				case MsgRenew:
 					ths->ServerRenew(pack.addr,target_id,pack.buf[0]);
@@ -212,6 +216,7 @@ private:
 					printf("Bad cache server message %d\n",pack.kind);
 				}
 			}
+			return 0;
 		}
 	public:
 		void Writeback(long long addr);
@@ -236,15 +241,13 @@ private:
 			threads=new THREAD_ID[caches];
 			datasocketlocks=new BD_LOCK[caches];
 			for(int i=0;i<caches;i++)
+			{
 				UaInitLock(&datasocketlocks[i]);
+			}
 			UaInitRWLock(&dir_lock);
-			THREAD_ID th=UaCreateThreadEx(ListenSocketProc,ths);
+			THREAD_ID th=UaCreateThreadEx(ListenSocketProc,this);
 			for(int i=ths->cache_id+1;i<caches;i++)
 			{
-				Params* param=new Params;
-				param->target_id=ths->cache_id;
-				param->ths=this;
-				threads[i]=UaCreateThreadEx(CacheProtocalProc,param);
 				BD_SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
 				if(sock==NULL)
 				{
@@ -279,6 +282,16 @@ private:
 				datasockets[i]=sock;
 			}
 			UaWaitForThread(th);
+			for(int i=0;i<caches;i++)
+			{
+				if(i==ths->cache_id)
+					continue;
+				Params* param=new Params;
+				param->target_id=i;
+				param->ths=this;
+				threads[i]=UaCreateThreadEx(CacheProtocalProc,param);
+			}
+			printf("LISTEN OK\n");
 		}
 
 		~DSMCacheProtocal()
