@@ -22,12 +22,13 @@ dim p as shared int[] global=new int[100] global
 nodes[0].CreateThread(threadproc,0)
 nodes[1].CreateThread(threadproc,1)
 
+
 function threadproc(id as var) as int
 unsafe
 	println("HI")
 	p[id]=0
 	println(p[id])
-	p[id]=id+1
+	p[id]=id+100
 end
 
 gets()

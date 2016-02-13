@@ -151,13 +151,15 @@ private:
 					param->target_id=pack.cacheid;
 					param->ths=ths;
 					if(j%2==0)
-						ths->threads[pack.cacheid]=UaCreateThreadEx(CacheProtocalProc,param);
-					CacheHelloPackage pack2={CACHE_HELLO_MAGIC,ths->ths->cache_id};
-					RcSend(sock,&pack2,sizeof(pack2));
-					if(j%2==0)
 						ths->controlsockets[pack.cacheid]=sock;
 					else
 						ths->datasockets[pack.cacheid]=sock;
+
+					if(j%2==0)
+						ths->threads[pack.cacheid]=UaCreateThreadEx(CacheProtocalProc,param);
+					CacheHelloPackage pack2={CACHE_HELLO_MAGIC,ths->ths->cache_id};
+					RcSend(sock,&pack2,sizeof(pack2));
+
 				}
 			}
 			return 0;
@@ -193,6 +195,7 @@ private:
 				if(RcRecv(ths->controlsockets[target_id],&pack,sizeof(pack))!=sizeof(pack))
 				{
 					printf("Cache server socket error %d\n",WSAGetLastError());
+					//_BreakPoint;
 					break;
 				}
 				switch(pack.kind)

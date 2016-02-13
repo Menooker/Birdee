@@ -25,7 +25,7 @@ using namespace std;
 			UaEnterReadRWLock(&itr->second->lock);
 			itr->second->cache[addr & DSM_CACHE_LOW_MASK]=v;
 			UaLeaveReadRWLock(&itr->second->lock);
-			printf("Write!!! index=%lld,value=%d\n",addr & DSM_CACHE_LOW_MASK,v.vi);
+			//printf("Renew!!! index=%llx,value=%d\n",addr ,v.vi);
 		}
 	}
 
@@ -42,7 +42,8 @@ using namespace std;
 			return;
 		}
 		SoVar v=buf[addr & DSM_CACHE_LOW_MASK];
-		ths->backend->put(addr>>32,(addr&0x00000000ffffffff),v);
+		ths->backend->put(addr>>32,(addr & 0xffffffff),v);
+		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi); 
 		UaEnterReadRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
 		long long old=0;
@@ -111,7 +112,8 @@ using namespace std;
 			_BreakPoint;
 		}
 
-		ths->backend->put( addr>>32,(addr&0x00000000ffffffff),v);
+		ths->backend->put( addr>>32,(addr&0xffffffff),v);
+		//printf("WRITE Miss!!!!! [%llx]=%d\n",addr,v.vi); 
 
 		UaEnterWriteRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);

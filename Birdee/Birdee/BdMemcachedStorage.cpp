@@ -306,7 +306,8 @@ SoStatus SoStorageMemcached::getblock(long long addr,SoVar* buf)
 			SoVar* pvalue;
 			pkey=(long long*)memcached_result_key_value(results);
 			pvalue=(SoVar*)memcached_result_value(results);
-			buf[ (*pkey) & DSM_CACHE_HIGH_MASK_64]= *pvalue; 
+			//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
+			buf[ (*pkey) & DSM_CACHE_LOW_MASK_64]= *pvalue; 
 		}
 	}
 	memcached_result_free(&results_obj);
