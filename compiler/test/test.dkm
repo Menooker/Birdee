@@ -1,34 +1,74 @@
 require Remote
-dim time as int=GetClock()
-dim n as int=1000000000
-dim threads as int=2
-dim node_num as int=2
-/*
 
-single_thread()
-println( GetClock()-time)
-time=GetClock()
-*/
+dim n as int
+dim threads as shared int=1
+dim node_num as shared int=2
+dim thread_num as shared int=threads*node_num
+dim n as shared int=65536
 
 dim hosts as string[]={"192.168.88.1","192.168.88.1"}
 dim ports as int[]={3020,3030}
-//dim hosts as string[]=new string[0]
-//dim ports as int[]=new int[0]
 dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
-dim p as shared int[] global=new int[100] global
+dim p as shared int[] global=new int[n] global
+dim rand_num as int =1234
+for #i=0;#i<65536;#i++
+	p[#i]=rand_num
+	rand_num=(rand_num*rand_num+rand_num*10+3) % 500000
+end
+
+dim time as int=GetClock()
+dim current_step as int
+dim barrier as shared RemoteBarrier=new RemoteBarrier(thread_num)
+
 nodes[0].CreateThread(threadproc,0)
 nodes[1].CreateThread(threadproc,1)
 
 
 function threadproc(id as var) as int
 unsafe
-	println("HI")
-	p[id]=0
-	println(p[id])
-	p[id]=id+100
+	dim base as int
+	dim tmp as int[]=new int[n]
+	for current_step=2;current_step<=n;current_step*=2
+		for base=id*current_step;base<n;base+=thread_num*current_step
+			dim start1 as int=base
+			dim start2 as int=base+current_step/2
+			dim end1 as int=start2
+			dim end2 as int=base+current_step
+
+			dim i as int
+			for i=0;i<current_step;i++
+				if start1>=end1 then
+					tmp[i]=p[start2]
+					start2++
+					continue
+				end
+
+				if start2>=end2 then
+					tmp[i]=p[start1]
+					start1++
+					continue
+				end
+				if p[start1]<p[start2] then
+					tmp[i]=p[start1]
+					start1++
+				else
+					tmp[i]=p[start2]
+					start2++
+				end
+			end
+			for i=0;i<current_step;i++
+				p[base+i]=tmp[i]
+			end
+		end
+		try
+			barrier.enter(-1,32)
+		catch CounterOutOfBoundException err
+			println("Error!")
+		end
+	end
 end
 
 gets()
