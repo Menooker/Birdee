@@ -385,6 +385,9 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& hosts,std:
 			}
 		}
 CLOSE:
+		#ifdef BD_DSM_STAT
+		SoPrintStat();
+		#endif
 		MEM_check_all_blocks();
 		MEM_dump_blocks(stdout);
 	}

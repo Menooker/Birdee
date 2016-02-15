@@ -285,6 +285,15 @@ public:
 		return ret;
 	}
 
+	void print_stat()
+	{
+		long writes,whit,reads,rhit;
+		cache->get_stat(writes,whit,reads,rhit);
+		printf("Write Stats %d/%d=%f\n",whit,writes,1.0*whit/writes);
+		printf("Read Stats %d/%d=%f\n",rhit,reads,1.0*rhit/reads);
+		printf("Overall Stats %d/%d=%f\n",whit+rhit,writes+reads,1.0*(whit+rhit)/(writes+reads));
+	}
+
 /*	SoStatus putvar(_uint key,SoType tag,SoVar var)
 	{
 		DataNode node={tag,0};
@@ -496,6 +505,14 @@ extern "C" double SoGetd(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vd;
 }
+
+#ifdef BD_DSM_STAT
+void SoPrintStat()
+{
+	if(pstorage)
+		pstorage->print_stat();
+}
+#endif
 
 extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 {

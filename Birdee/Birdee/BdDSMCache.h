@@ -23,11 +23,27 @@ struct CacheHelloPackage
 
 class DSMCache
 {
+protected:
+#ifdef BD_DSM_STAT
+	unsigned long writes,whit,reads,rhit;
+#endif
 public:
+
 	DSMCache(){}
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,int fldid)=0;
+#ifdef BD_DSM_STAT
+	virtual void get_stat(long& mwrites,long& mwhit,long& mreads,long& mrhit)
+	{
+		mwrites=writes;
+		mwhit=whit;
+		mreads=reads;
+		mrhit=rhit;
+	}
+#endif
+
+
 };
 
 class DSMNoCache: public DSMCache
@@ -52,9 +68,7 @@ class DSMDirectoryCache: public DSMCache
 {
 private:
 
-#ifdef BD_DSM_STAT
-	unsigned long writes,whit,reads,rhit;
-#endif
+
 	SoStorage* backend;
 	/*
 	cacheline's key:

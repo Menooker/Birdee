@@ -105,6 +105,9 @@ void SoGetCounter(DVM_Value* args);
 void SoNewArray(BINT ty,BINT dim);
 void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
 void SoKillStorage();
+#ifdef BD_DSM_STAT
+void SoPrintStat();
+#endif
 
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 

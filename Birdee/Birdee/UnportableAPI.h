@@ -58,6 +58,8 @@ extern "C"
 		#define UaEnterWriteRWLock(a) AcquireSRWLockExclusive(a)
 		#define UaLeaveWriteRWLock(a) ReleaseSRWLockExclusive(a)
 		#define UaEnterReadRWLock(a) AcquireSRWLockShared(a)
+		#define UaTryEnterWriteRWLock(a) TryAcquireSRWLockExclusive(a)
+		#define UaTryEnterReadRWLock(a) TryAcquireSRWLockShared(a)
 		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
 		#define UaKillRWLock(a) 
     #else

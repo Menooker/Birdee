@@ -19,12 +19,16 @@ using namespace std;
 		UaEnterReadRWLock(&ths->hash_lock);
 		hash_iterator itr=ths->cache.find(addr & DSM_CACHE_HIGH_MASK_64);
 		bool found=(itr!=ths->cache.end());
+		CacheBlock* blk=found?itr->second:NULL;
 		UaLeaveReadRWLock(&ths->hash_lock);
 		if(found)
 		{
-			UaEnterReadRWLock(&itr->second->lock);
-			itr->second->cache[addr & DSM_CACHE_LOW_MASK]=v;
-			UaLeaveReadRWLock(&itr->second->lock);
+			if(UaTryEnterReadRWLock(&blk->lock))
+			{
+				if(blk->key== (addr & DSM_CACHE_HIGH_MASK_64))
+					blk->cache[addr & DSM_CACHE_LOW_MASK]=v;
+				UaLeaveReadRWLock(&blk->lock);
+			}
 			//printf("Renew!!! index=%llx,value=%d\n",addr ,v.vi);
 		}
 	}
@@ -321,10 +325,11 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 		(which means another block request for the same address
 		has already sent) 
 		*/
+		CacheBlock* blk=itr->second;
 		UaLeaveReadRWLock(&hash_lock);
 		UaLeaveLock(&queue_lock);
 		is_pending=true;
-		return itr->second;
+		return blk;
 	}
 	UaLeaveReadRWLock(&hash_lock);
 
@@ -343,7 +348,6 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 				mini=i;
 			}
 		}
-
 		assert(mini!=-1);
 		//acquire the control over the block and swap it out
 		UaEnterWriteRWLock(&block_cache[mini].lock);
@@ -352,7 +356,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 		block_cache[mini].key=DSM_CACHE_BAD_KEY;
 
 		UaEnterWriteRWLock(&hash_lock);
-		cache.erase(block_cache[mini].key);
+		cache.erase(oldkey);
 		cache[k]=&block_cache[mini];
 		UaLeaveWriteRWLock(&hash_lock);
 
@@ -387,23 +391,24 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
 	bool found=(itr!=cache.end());
+	CacheBlock* foundblock=found?itr->second:NULL;
 	UaLeaveReadRWLock(&hash_lock);
 		
 	if(found)
 	{
-		UaEnterReadRWLock(&itr->second->lock);
-		if(itr->second->key!=k) //in case that the block is swapped out and reused
+		UaEnterReadRWLock(&foundblock->lock);
+		if(foundblock->key!=k) //in case that the block is swapped out and reused
 		{
-			UaLeaveReadRWLock(&itr->second->lock);
+			UaLeaveReadRWLock(&foundblock->lock);
 			goto MISS;
 		}
 #ifdef BD_DSM_STAT
 		whit++;
 #endif
-		itr->second->lru=clock();
-		itr->second->cache[fldid & DSM_CACHE_LOW_MASK]=v;
-		protocal->Write(MAKE64(okey,fldid),itr->second);
-		UaLeaveReadRWLock(&itr->second->lock);
+		foundblock->lru=clock();
+		foundblock->cache[fldid & DSM_CACHE_LOW_MASK]=v;
+		protocal->Write(MAKE64(okey,fldid),foundblock);
+		UaLeaveReadRWLock(&foundblock->lock);
 		return SoOK;
 	}
 MISS:
@@ -443,22 +448,23 @@ SoVar DSMDirectoryCache::get(_uint okey,int fldid)
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
 	bool found=(itr!=cache.end());
+	CacheBlock* foundblock=found?itr->second:NULL;
 	UaLeaveReadRWLock(&hash_lock);
 		
 	if(found)
 	{
-		UaEnterReadRWLock(&itr->second->lock);
-		if(itr->second->key!=k) //in case that the block is swapped out and reused
+		UaEnterReadRWLock(&foundblock->lock);
+		if(foundblock->key!=k) //in case that the block is swapped out and reused
 		{
-			UaLeaveReadRWLock(&itr->second->lock);
+			UaLeaveReadRWLock(&foundblock->lock);
 			goto MISS;
 		}
 #ifdef BD_DSM_STAT
 		rhit++;
 #endif
-		itr->second->lru=clock();
-		ret= itr->second->cache[fldid & DSM_CACHE_LOW_MASK];
-		UaLeaveReadRWLock(&itr->second->lock);
+		foundblock->lru=clock();
+		ret= foundblock->cache[fldid & DSM_CACHE_LOW_MASK];
+		UaLeaveReadRWLock(&foundblock->lock);
 		return ret;
 	}
 MISS:
