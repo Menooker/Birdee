@@ -1,5 +1,6 @@
 #ifndef _H_BIRDEE_DSM_CACHE
 #define _H_BIRDEE_DSM_CACHE
+
 #include "BdSharedObj.h"
 #include "BdSocket.h"
 #include <queue>
@@ -273,7 +274,7 @@ private:
 				}
 				CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->cache_id};
 				RcSend(sock,&pack,sizeof(pack));
-				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC 
+				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC
 					||pack.cacheid!=i)
 				{
 					printf("cache socket handshake error %d !",i);
@@ -290,7 +291,7 @@ private:
 				}
 				CacheHelloPackage pack2={CACHE_HELLO_MAGIC,ths->cache_id};
 				RcSend(sock,&pack2,sizeof(pack2));
-				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC 
+				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC
 					||pack.cacheid!=i)
 				{
 					printf("cache socket handshake error %d !",i);
@@ -340,7 +341,7 @@ private:
 	}
 
 	/*
-	return a cache block from free list. if no free block is 
+	return a cache block from free list. if no free block is
 	available, swap out a block. Then this function puts the
 	new block to the cache, using the key "k".
 	input: k - the key of the new block
@@ -350,7 +351,7 @@ private:
 				wait for the lock of the block until the block
 				is ready.
 				if false, the returned block is a new block,
-				and the block's lock is held. RELEASE it when 
+				and the block's lock is held. RELEASE it when
 				the block is ready!!!!
 	*/
 	CacheBlock* getblock(long long k,bool& is_pending);
@@ -399,7 +400,7 @@ public:
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
 	}
-	
+
 	SoStatus put(_uint key,int fldid,SoVar v);
 	SoVar get(_uint key,int fldid);
 };

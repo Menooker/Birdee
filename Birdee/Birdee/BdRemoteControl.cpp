@@ -224,7 +224,7 @@ void RcCloseNode(DVM_Value *args)
 }
 
 
-int idx_remote_thread=-1;
+extern "C" int idx_remote_thread=-1;
 int method_remote_thread=-1;
 void RcCreateThread(DVM_Value *args)
 {

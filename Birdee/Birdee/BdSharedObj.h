@@ -1,6 +1,7 @@
 #ifndef _H_BIRDEE_SHARED_OBJ
 #define _H_BIRDEE_SHARED_OBJ
 #include "BdExec.h"
+#include "UnportableAPI.h"
 #ifdef __cplusplus
 extern "C"
 {

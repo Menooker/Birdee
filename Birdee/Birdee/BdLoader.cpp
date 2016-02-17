@@ -431,6 +431,12 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 		LdVariable(&exe->global_variable[i],&buf);
 	}
 
+	LdArray(exe->shared_global_variable_count,exe->shared_global_variable,DVM_Variable,&buf);
+	for(i=0;i<exe->shared_global_variable_count;i++)
+	{
+		LdVariable(&exe->shared_global_variable[i],&buf);
+	}
+
 	LdArray(exe->function_count,exe->function,DVM_Function,&buf);
 	for(i=0;i<exe->function_count;i++)
 	{

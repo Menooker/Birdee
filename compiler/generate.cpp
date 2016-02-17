@@ -170,17 +170,35 @@ add_global_variable(DKC_Compiler *compiler, DVM_Executable *exe)
     DeclarationList *dl;
     int i;
     int var_count = 0;
+	int var_count_shared = 0;
+	int priv_i=0,share_i=0;
 
     for (dl = compiler->declaration_list; dl; dl = dl->next) {
-        var_count++;
+		if(dl->declaration->is_shared)
+			var_count_shared++;
+		else
+			var_count++;
     }
     exe->global_variable_count = var_count;
     exe->global_variable =(DVM_Variable*) MEM_malloc(sizeof(DVM_Variable) * var_count);
+    exe->shared_global_variable_count = var_count_shared;
+    exe->shared_global_variable =(DVM_Variable*) MEM_malloc(sizeof(DVM_Variable) * var_count_shared);
 
-    for (dl = compiler->declaration_list, i = 0; dl; dl = dl->next, i++) {
-        exe->global_variable[i].name = MEM_strdup(dl->declaration->name);
-        exe->global_variable[i].type
-            = dkc_copy_type_specifier(dl->declaration->type);
+    for (dl = compiler->declaration_list; dl; dl = dl->next) {
+		if(dl->declaration->is_shared)
+		{
+			exe->shared_global_variable[share_i].name = MEM_strdup(dl->declaration->name);
+			exe->shared_global_variable[share_i].type
+				= dkc_copy_type_specifier(dl->declaration->type);
+			share_i++;
+		}
+		else
+		{
+			exe->global_variable[priv_i].name = MEM_strdup(dl->declaration->name);
+			exe->global_variable[priv_i].type
+				= dkc_copy_type_specifier(dl->declaration->type);
+			priv_i++;
+		}
     }
 }
 
