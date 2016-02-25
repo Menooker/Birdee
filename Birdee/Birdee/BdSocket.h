@@ -19,24 +19,25 @@
 extern "C"
 {
 #endif
-BD_SOCKET RcConnect(char* ip,int port);
-BD_SOCKET RcListen(int port);
-BD_SOCKET RcCreateListen(int port);
+void RcSetTCPNoDelay(SOCKET fd);
+SOCKET RcConnect(char* ip,int port);
+SOCKET RcListen(int port);
+SOCKET RcCreateListen(int port);
 #ifdef __cplusplus
 }
 #endif
 
-inline int RcSend(BD_SOCKET s,void* data,size_t len)
+inline int RcSend(SOCKET s,void* data,size_t len)
 {
 	return send((SOCKET)s,(char*)data,len,0);
 }
 
-inline int RcRecv(BD_SOCKET s,void* data,size_t len)
+inline int RcRecv(SOCKET s,void* data,size_t len)
 {
 	return recv((SOCKET)s,(char*)data,len, 0);
 }
 
-inline int RcCloseSocket(BD_SOCKET s)
+inline int RcCloseSocket(SOCKET s)
 {
 	return closesocket((SOCKET)s);
 }

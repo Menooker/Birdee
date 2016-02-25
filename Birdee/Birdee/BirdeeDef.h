@@ -35,10 +35,6 @@ typedef void (*BdVMFunction)(void *args, ...);
 	#define forceinline
 #endif
 
-
-typedef void* BD_SOCKET;
-
-
 #define _CRT_SECURE_NO_WARNINGS
 #define BD_STACK_DEEPTH 2048
 

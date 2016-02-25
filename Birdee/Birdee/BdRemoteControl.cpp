@@ -94,13 +94,13 @@ void RcThrowSocketError(int err)
 
 int node_class_index=-1;
 
-int RcMasterHello(BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id);
+int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id);
 
 int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 	std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports)
 {
 	SOCKET s=(SOCKET)RcConnect((char*)hosts[node_id].c_str(),port);
-	if(s==0 || RcMasterHello((BD_SOCKET)s,hosts,ports, memhosts, memports,node_id))
+	if(s==0 || RcMasterHello((SOCKET)s,hosts,ports, memhosts, memports,node_id))
 	{
 		return 1;
 	}
@@ -116,7 +116,7 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 	return 0;
 }
 
-int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd);
+int RcSendCmd(SOCKET s,RcCommandPack* cmd);
 void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip,*port,*memhost,*memport;
@@ -181,7 +181,7 @@ void RcConnectNode(DVM_Value *args)
 			{
 				RcCommandPack cmd={RcCmdClose,0};
 				DVM_Object *node=arr.data->u.barray.u.object[j].data;
-				int ret=RcSendCmd((BD_SOCKET)node->u.class_object.field[2].int_value,&cmd);
+				int ret=RcSendCmd((SOCKET)node->u.class_object.field[2].int_value,&cmd);
 				node->u.class_object.field[3].int_value=DVM_TRUE; //closed
 				node->u.class_object.field[4].int_value=DVM_FALSE; //connected
 			}
@@ -198,7 +198,7 @@ void RcConnectNode(DVM_Value *args)
 }
 
 
-int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd)
+int RcSendCmd(SOCKET s,RcCommandPack* cmd)
 {
 	int ret=RcSend(s,cmd,sizeof(RcCommandPack));
 	if(ret==SOCKET_ERROR)
@@ -216,7 +216,7 @@ void RcCloseNode(DVM_Value *args)
 {
 	DVM_ObjectRef obj=args->object;
 	RcCommandPack cmd={RcCmdClose,0};
-	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	int ret=RcSendCmd((SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(ret)
 		RcThrowSocketError(ret);
 	obj.data->u.class_object.field[3].int_value=DVM_TRUE; //closed
@@ -241,7 +241,7 @@ void RcCreateThread(DVM_Value *args)
 	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
 	printf("thread obj id=%d %d\n",cmd.param3,sizeof(RcCommandPack));
 	DVM_ObjectRef obj=args[2].object;
-	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	int sret=RcSendCmd((SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)
 		RcThrowSocketError(sret);
 	curthread->retvar.object=ret;
@@ -249,7 +249,7 @@ void RcCreateThread(DVM_Value *args)
 }
 
 
-int RcSendModule(BD_SOCKET s,char* path)
+int RcSendModule(SOCKET s,char* path)
 {
 	FILE* f=fopen(path,"rb");
 	if(!f)
@@ -291,7 +291,7 @@ int RcSendModule(BD_SOCKET s,char* path)
 	return 0;
 }
 
-int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
+int RcRecvModule(SOCKET s,char* name,size_t len,char* path)
 {
 	size_t remaining=len;
 	int buflen;
@@ -321,7 +321,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
-void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
+void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
 {
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
@@ -398,7 +398,7 @@ ERR:
 	return;
 }
 
-void get_peer_ip_port(BD_SOCKET fd, std::string& ip, int& port)
+void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
 {
    
     // discovery client information
@@ -421,7 +421,7 @@ void get_peer_ip_port(BD_SOCKET fd, std::string& ip, int& port)
 
 void RcSlave(int port)
 {
-	BD_SOCKET s=RcListen(port);
+	SOCKET s=RcListen(port);
 	printf("Waiting for hand shaking...\n");
 	MasterInfo mi;
 	SlaveInfo si;
@@ -548,7 +548,7 @@ ERR:
 	}
 }
 
-int RcMasterHello(BD_SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
+int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
 {
 	SlaveInfo si;
 	int mem_cnt;

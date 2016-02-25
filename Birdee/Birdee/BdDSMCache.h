@@ -89,8 +89,8 @@ private:
 	std::vector<std::string> hosts;
 	std::vector<int> ports;
 	int cache_id;
-	BD_SOCKET controllisten;
-	BD_SOCKET datalisten;
+	SOCKET controllisten;
+	SOCKET datalisten;
 
 	class DSMCacheProtocal;
 	DSMCacheProtocal* protocal;
@@ -102,8 +102,8 @@ private:
 		BD_RWLOCK dir_lock;
 		typedef std::hash_map<long long,long long>::iterator dir_iterator;
 
-		BD_SOCKET* controlsockets;
-		BD_SOCKET* datasockets;
+		SOCKET* controlsockets;
+		SOCKET* datasockets;
 		BD_LOCK*   datasocketlocks;
 		THREAD_ID* threads;
 		DSMDirectoryCache* ths;
@@ -143,14 +143,15 @@ private:
 				#else
 					unsigned int nAddrlen = sizeof(remoteAddr);
 				#endif
-					BD_SOCKET mylisten= (j%2==0)?ths->ths->controllisten:ths->ths->datalisten;
+					SOCKET mylisten= (j%2==0)?ths->ths->controllisten:ths->ths->datalisten;
 					SOCKET sClient = accept((SOCKET)mylisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
 					if(sClient == INVALID_SOCKET)
 					{
 						printf("cache socket accept error !");
 						return 0;
 					}
-					BD_SOCKET sock=(BD_SOCKET)sClient;
+					RcSetTCPNoDelay(sClient);
+					SOCKET sock=(SOCKET)sClient;
 					CacheHelloPackage pack;
 					if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC)
 					{
@@ -254,8 +255,8 @@ private:
 		DSMCacheProtocal(DSMDirectoryCache* t) : ths(t)
 		{
 			caches=ths->hosts.size();
-			controlsockets=new BD_SOCKET[caches];
-			datasockets=new BD_SOCKET[caches];
+			controlsockets=new SOCKET[caches];
+			datasockets=new SOCKET[caches];
 			threads=new THREAD_ID[caches];
 			datasocketlocks=new BD_LOCK[caches];
 			for(int i=0;i<caches;i++)
@@ -266,12 +267,13 @@ private:
 			THREAD_ID th=UaCreateThreadEx(ListenSocketProc,this);
 			for(int i=ths->cache_id+1;i<caches;i++)
 			{
-				BD_SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
+				SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
 				if(sock==NULL)
 				{
 					printf("cache socket connect error %d!\n",WSAGetLastError());
 					_BreakPoint;
 				}
+				RcSetTCPNoDelay(sock);
 				CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->cache_id};
 				RcSend(sock,&pack,sizeof(pack));
 				if(RcRecv(sock,&pack,sizeof(CacheHelloPackage))!=sizeof(CacheHelloPackage) || pack.magic!=CACHE_HELLO_MAGIC
@@ -370,7 +372,7 @@ private:
 public:
 
 	DSMDirectoryCache(SoStorage* back,std::vector<std::string> mhosts,std::vector<int> mports,int mcache_id,
-		BD_SOCKET mcontrollisten,BD_SOCKET mdatalisten)
+		SOCKET mcontrollisten,SOCKET mdatalisten)
 		: backend(back),hosts(mhosts),ports(mports),cache_id(mcache_id),controllisten(mcontrollisten),datalisten(mdatalisten)
 	{
 		#ifdef BD_DSM_STAT

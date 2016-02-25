@@ -210,7 +210,7 @@ public:
 	}
 
 	DSMCache* makecache(SoStorage* storage,std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,
-		int mcache_id,BD_SOCKET mcontrollisten,BD_SOCKET mdatalisten)
+		int mcache_id,SOCKET mcontrollisten,SOCKET mdatalisten)
 	{
 		switch(cachetype)
 		{
@@ -232,8 +232,8 @@ class SharedStorage
 private:
 	SoStorage* backend;
 	DSMCache* cache;
-	BD_SOCKET controllisten; // the control socket for cache, managed by SharedStorage
-	BD_SOCKET datalisten; //the data socket for cache, managed by SharedStorage
+	SOCKET controllisten; // the control socket for cache, managed by SharedStorage
+	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
 public:
 	/*
 		params :

@@ -229,6 +229,7 @@ using namespace std;
 
 	void DSMDirectoryCache::DSMCacheProtocal::Writeback(long long addr)
 	{
+		printf("WriteBack %lld\n",addr);
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{

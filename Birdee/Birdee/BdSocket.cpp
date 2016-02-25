@@ -17,7 +17,14 @@ int RcWinsockStartup()
 int RcStartipRet=RcWinsockStartup();
 #endif
 
-BD_SOCKET RcConnect(char* ip,int port)
+
+void RcSetTCPNoDelay(SOCKET fd)
+{
+    int enable = 1;
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&enable, sizeof(enable));
+}
+
+SOCKET RcConnect(char* ip,int port)
 {
 	SOCKET sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(sclient == INVALID_SOCKET)
@@ -38,10 +45,10 @@ BD_SOCKET RcConnect(char* ip,int port)
 		closesocket(sclient);
 		return NULL;
 	}
-	return (BD_SOCKET)sclient;
+	return (SOCKET)sclient;
 }
 
-BD_SOCKET RcCreateListen(int port)
+SOCKET RcCreateListen(int port)
 {
     SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(slisten == INVALID_SOCKET)
@@ -71,10 +78,10 @@ BD_SOCKET RcCreateListen(int port)
         printf("listen error !");
         return 0;
     }
-	return (BD_SOCKET)slisten;
+	return (SOCKET)slisten;
 }
 
-BD_SOCKET RcListen(int port)
+SOCKET RcListen(int port)
 {
     SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(slisten == INVALID_SOCKET)
@@ -121,6 +128,6 @@ BD_SOCKET RcListen(int port)
     }
     printf("port %d accepted £º%s \n", port , inet_ntoa(remoteAddr.sin_addr));
 	closesocket(slisten);
-	return (BD_SOCKET)sClient;
+	return (SOCKET)sClient;
 }
 
