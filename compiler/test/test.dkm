@@ -1,10 +1,10 @@
 require Remote
 
-dim hosts as string[]={"192.168.88.1","192.168.88.1"}
-dim ports as int[]={3020,3090}
+dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13020,13090}
 //dim hosts as string[]=new string[0]
 //dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"192.168.88.1"}
+dim mem_hosts as string[]={"127.0.0.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
@@ -12,7 +12,7 @@ dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 dim threads as shared int=2
 dim node_num as shared int=2
 dim thread_num as shared int=threads*node_num
-dim n as shared int=1024
+dim n as shared int=65536/4
 dim p as shared int[] global=new int[n] global
 dim p2 as int[]=new int[n]
 dim rand_num as int =1234
@@ -21,18 +21,23 @@ dim time as int=GetClock()
 dim ii as int
 for ii=0;ii<n;ii++
 unsafe
-	p[ii]=rand_num
+	/*p[ii]=rand_num
 	p2[ii]=rand_num
 	rand_num=(rand_num*rand_num+rand_num*17+3)
+	*/
+	p[ii]=n-ii-1
+
 end
 
 println("Put ok " + (GetClock()-time))
 
+/*
 threadproc2(0)
 println("LOCAL OK")
 for ii=0;ii<20;ii++
     println(p2[ii])
 end
+*/
 time=GetClock()
 
 dim barrier as shared RemoteBarrier=new RemoteBarrier(thread_num)
@@ -55,9 +60,14 @@ for ii=0;ii<20;ii++
 end
 for ii=0;ii<n;ii++
 unsafe
-	if p[ii]!=p2[ii] then
-		println("ERROR"+ii)
-		BreakPoint()
+	/*if p[ii]!=p2[ii] then
+		println("ERROR"+ii + " "+p[ii] + " "+p2[ii])
+		gets()
+	end
+	*/
+	if p[ii]!=ii then
+		println("ERROR"+ii + " "+p[ii] )
+		gets()
 	end
 end
 
@@ -103,6 +113,7 @@ unsafe
 				p[base+i]=tmp[i]
 			end
 		end
+		Sleep(1000)
 		try
 			barrier.enter(-1,32)
 		catch CounterOutOfBoundException err

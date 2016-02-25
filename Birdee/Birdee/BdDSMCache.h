@@ -269,7 +269,7 @@ private:
 				BD_SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
 				if(sock==NULL)
 				{
-					printf("cache socket connect error %d!\n",i);
+					printf("cache socket connect error %d!\n",WSAGetLastError());
 					_BreakPoint;
 				}
 				CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->cache_id};

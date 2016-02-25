@@ -27,8 +27,14 @@ using namespace std;
 			{
 				if(blk->key== (addr & DSM_CACHE_HIGH_MASK_64))
 					blk->cache[addr & DSM_CACHE_LOW_MASK]=v;
+				else
+					printf("Discard write changed key : [%lld->%lld]=%d->%d\n",addr &0xffffffff,blk->key,blk->cache[addr & DSM_CACHE_LOW_MASK],v.vi);
 				UaLeaveReadRWLock(&blk->lock);
 			}
+			else
+            {
+                printf("Discard write : [%lld]=%d->%d\n",addr &0xffffffff,blk->cache[addr & DSM_CACHE_LOW_MASK],v.vi);
+            }
 			//printf("Renew!!! index=%llx,value=%d\n",addr ,v.vi);
 		}
 	}
@@ -47,7 +53,7 @@ using namespace std;
 		}
 		SoVar v=buf[addr & DSM_CACHE_LOW_MASK];
 		ths->backend->put(addr>>32,(addr & 0xffffffff),v);
-		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi); 
+		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
 		UaEnterReadRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
 		long long old=0;
@@ -101,7 +107,7 @@ using namespace std;
 		}
 
 		UaLeaveWriteRWLock(&dir_lock);
-			
+
 	}
 
 
@@ -117,7 +123,7 @@ using namespace std;
 		}
 
 		ths->backend->put( addr>>32,(addr&0xffffffff),v);
-		//printf("WRITE Miss!!!!! [%llx]=%d\n",addr,v.vi); 
+		//printf("WRITE Miss!!!!! [%llx]=%d\n",addr,v.vi);
 
 		UaEnterWriteRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
@@ -152,15 +158,15 @@ using namespace std;
 			}
 		}
 
-
-		UaLeaveWriteRWLock(&dir_lock);
-
 		////////////////////////////////////////////////////
 
 		if(islocal)
 		{
 			if(ths->backend->getblock(baddr,outbuf)!=SoOK)
-				return MsgReplyBadAddress; 
+			{
+				UaLeaveWriteRWLock(&dir_lock);
+				return MsgReplyBadAddress;
+			}
 		}
 		else
 		{
@@ -173,7 +179,7 @@ using namespace std;
 			}
 			RcSend(datasockets[src_id],&sendpack,sizeof(sendpack));
 		}
-			
+		UaLeaveWriteRWLock(&dir_lock);
 		return status;
 	}
 
@@ -195,12 +201,14 @@ using namespace std;
 		}
 		long long newv = old | ( ((long long)1)<< src_id);
 		directory[addr]=newv;
-		UaLeaveWriteRWLock(&dir_lock);
-			
+
 		if(islocal)
 		{
 			if(ths->backend->getblock(addr,outbuf)!=SoOK)
-				return MsgReplyBadAddress; 
+			{
+				UaLeaveWriteRWLock(&dir_lock);
+				return MsgReplyBadAddress;
+			}
 		}
 		else
 		{
@@ -213,7 +221,8 @@ using namespace std;
 			}
 			RcSend(datasockets[src_id],&sendpack,sizeof(sendpack));
 		}
-			
+		UaLeaveWriteRWLock(&dir_lock);
+		
 		return status;
 	}
 
@@ -311,19 +320,19 @@ using namespace std;
 
 
 
-	
+
 CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 {
 	UaEnterLock(&queue_lock);
 
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
-	if(itr!=cache.end()) 
+	if(itr!=cache.end())
 	{
 		/*if a pending block is already in the cache,
 		we just return the new block.
 		(which means another block request for the same address
-		has already sent) 
+		has already sent)
 		*/
 		CacheBlock* blk=itr->second;
 		UaLeaveReadRWLock(&hash_lock);
@@ -365,7 +374,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 
 		//we don't release the block's lock here. we should release it when the block is finally ready
 		protocal->Writeback(oldkey);
-			
+
 		ret=&block_cache[mini];
 	}
 	else
@@ -378,10 +387,10 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 		UaEnterWriteRWLock(&ret->lock);
 		UaLeaveLock(&queue_lock);
 	}
-		
+
 	return ret;
 }
-	
+
 SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 {
 #ifdef BD_DSM_STAT
@@ -393,7 +402,7 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 	bool found=(itr!=cache.end());
 	CacheBlock* foundblock=found?itr->second:NULL;
 	UaLeaveReadRWLock(&hash_lock);
-		
+
 	if(found)
 	{
 		UaEnterReadRWLock(&foundblock->lock);
@@ -450,7 +459,7 @@ SoVar DSMDirectoryCache::get(_uint okey,int fldid)
 	bool found=(itr!=cache.end());
 	CacheBlock* foundblock=found?itr->second:NULL;
 	UaLeaveReadRWLock(&hash_lock);
-		
+
 	if(found)
 	{
 		UaEnterReadRWLock(&foundblock->lock);
