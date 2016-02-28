@@ -68,7 +68,7 @@ int ParseCompilationParameters(int cur_arg,int argc,char* argv[])
 				printf("Path too long\n");
 				return 1;
 			}
-			strcpy_s(parameters.AsmPath,255,argv[cur_arg+1]);
+			strncpy(parameters.AsmPath,argv[cur_arg+1],255);
 			cur_arg++;
 		}
 	}
@@ -82,6 +82,10 @@ int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
 		if(!strcmp(argv[cur_arg],"-debug"))
 		{
 			parameters.debug=1;
+		}
+		else if(!strcmp(argv[cur_arg],"-nocache"))
+		{
+			parameters.nocache=1;
 		}
 	}
 	return 0;

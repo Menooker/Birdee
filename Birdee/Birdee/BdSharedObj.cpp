@@ -469,7 +469,12 @@ extern std::hash_map<std::string,ExecutableEntry*> LoadedMods;
 void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
 	std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id)
 {
-	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,SoStorageFactory::SoWriteThroughCache,arr_mem_hosts,arr_mem_ports,
+	SoStorageFactory::CacheType cachety;
+	if(parameters.nocache)
+		cachety=SoStorageFactory::SoNoCache;
+	else
+		cachety=SoStorageFactory::SoWriteThroughCache;
+	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,cachety,arr_mem_hosts,arr_mem_ports,
 		arr_hosts,arr_ports,node_id);
 	if(curdvm->is_master)
 	{

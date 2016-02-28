@@ -10,6 +10,7 @@ struct BdParameters
 	int debug;
 	int asm2file;
 	char AsmPath[255];
+	int nocache;
 	//int memport;
 	//char memip[255];
 };
