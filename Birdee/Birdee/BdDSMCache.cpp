@@ -16,6 +16,10 @@ using namespace std;
 
 	void DSMDirectoryCache::DSMCacheProtocal::ServerRenew(long long addr,int src_id,SoVar v)
 	{
+
+
+		//	printf("renew : %lld[%lld]=%d\n",addr>>32,addr &0xffffffff,v.vi);
+
 		UaEnterReadRWLock(&ths->hash_lock);
 		hash_iterator itr=ths->cache.find(addr & DSM_CACHE_HIGH_MASK_64);
 		bool found=(itr!=ths->cache.end());
@@ -40,7 +44,7 @@ using namespace std;
 	}
 
 
-	void DSMDirectoryCache::DSMCacheProtocal::ServerWrite(long long addr,int src_id,SoVar* buf)
+	void DSMDirectoryCache::DSMCacheProtocal::ServerWrite(long long addr,int src_id,SoVar v)
 	{
 		bool islocal= (src_id==ths->cache_id);
 		long long baddr=addr & DSM_CACHE_HIGH_MASK_64;
@@ -51,7 +55,6 @@ using namespace std;
 			_BreakPoint;
 			return;
 		}
-		SoVar v=buf[addr & DSM_CACHE_LOW_MASK];
 		ths->backend->put(addr>>32,(addr & 0xffffffff),v);
 		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
 		UaEnterReadRWLock(&dir_lock);
@@ -66,7 +69,7 @@ using namespace std;
 			DataPack sendpack;
 			sendpack.kind=MsgRenew;
 			sendpack.addr=addr;
-			sendpack.buf[0]=buf[addr & DSM_CACHE_LOW_MASK];
+			sendpack.buf[0]=v;
 			for(int i=0;i<caches;i++)
 			{
 				if((old & 1) && src_id!=i)
@@ -222,14 +225,14 @@ using namespace std;
 			RcSend(datasockets[src_id],&sendpack,sizeof(sendpack));
 		}
 		UaLeaveWriteRWLock(&dir_lock);
-		
+
 		return status;
 	}
 
 
 	void DSMDirectoryCache::DSMCacheProtocal::Writeback(long long addr)
 	{
-		printf("WriteBack %lld\n",addr);
+		//printf("WriteBack %lld\n",addr);
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{
@@ -242,18 +245,23 @@ using namespace std;
 		}
 	}
 
+	extern long testaddr;
 
-	void DSMDirectoryCache::DSMCacheProtocal::Write(long long addr,CacheBlock* blk)
+	void DSMDirectoryCache::DSMCacheProtocal::Write(long long addr,SoVar v)
 	{
+		if(addr>>32==testaddr)
+		{
+			shadow[addr&0xffffffff]=v;
+		}
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{
-			ServerWrite(addr,ths->cache_id,blk->cache);
+			ServerWrite(addr,ths->cache_id,v);
 		}
 		else
 		{
 			DataPack pack={MsgWrite,addr};
-			memcpy(pack.buf,blk->cache,sizeof(pack.buf));
+			pack.buf[0]=v;
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
 		}
 	}
@@ -261,6 +269,10 @@ using namespace std;
 
 	SoStatus DSMDirectoryCache::DSMCacheProtocal::WriteMiss(long long addr,SoVar v,CacheBlock* blk)
 	{
+		if(addr>>32==testaddr)
+		{
+			shadow[addr&0xffffffff]=v;
+		}
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{
@@ -273,7 +285,11 @@ using namespace std;
 			pack.buf[0]=v;
 			UaEnterLock(&datasocketlocks[target_cache_id]);
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
-			RcRecv(datasockets[target_cache_id],&pack,sizeof(pack));
+			if(RcRecv(datasockets[target_cache_id],&pack,sizeof(pack))!=sizeof(pack))
+            {
+                printf("Write miss receive error %d\n",WSAGetLastError());
+                return SoFail;
+            }
 			UaLeaveLock(&datasocketlocks[target_cache_id]);
 			if(pack.kind!=MsgReplyOK)
 				return SoFail;
@@ -302,16 +318,30 @@ using namespace std;
 			DataPack pack={MsgReadMiss,addr};
 			UaEnterLock(&datasocketlocks[target_cache_id]);
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
-			RcRecv(datasockets[target_cache_id],&pack,sizeof(pack));
+			if(RcRecv(datasockets[target_cache_id],&pack,sizeof(pack))!=sizeof(pack))
+            {
+                printf("Read miss receive error %d\n",WSAGetLastError());
+                return SoFail;
+            }
 			UaLeaveLock(&datasocketlocks[target_cache_id]);
 			if(pack.kind!=MsgReplyOK)
 				return SoFail;
 			if(pack.addr!=addr)
 			{
 				printf("Read miss return a bad addr\n");
+				_BreakPoint;
 				return SoFail;
 			}
 			memcpy(blk->cache,pack.buf,sizeof(blk->cache));
+		}
+		if(addr>>32== testaddr && memcmp(blk->cache,&shadow[addr&0xffffffff],sizeof(blk->cache)))
+		{
+			printf("shadow error: addr=%llx, index=%lld, size=%d\n",addr,addr&0xffffffff,sizeof(blk->cache));
+			for(int i=0;i<16;i++)
+			{
+				printf("%d \t %d\n",blk->cache[i].vi,shadow[(addr&0xffffffff) + i].vi);
+			}
+			_BreakPoint;
 		}
 		blk->key=addr;
 		return SoOK;
@@ -348,7 +378,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 	if(block_queue.empty())
 	{
 		//if there is no free block,first find the oldest block not referenced
-		long minlru=MAXLONG;
+		unsigned long minlru=0xffffffff;
 		int mini=-1;
 		for(int i=0;i<DSM_CACHE_SIZE;i++)
 		{
@@ -364,7 +394,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 
 		long long oldkey=block_cache[mini].key;
 		block_cache[mini].key=DSM_CACHE_BAD_KEY;
-
+		block_cache[mini].lru=0xffffffff;
 		UaEnterWriteRWLock(&hash_lock);
 		cache.erase(oldkey);
 		cache[k]=&block_cache[mini];
@@ -417,7 +447,7 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 #endif
 		foundblock->lru=clock();
 		foundblock->cache[fldid & DSM_CACHE_LOW_MASK]=v;
-		protocal->Write(MAKE64(okey,fldid),foundblock);
+		protocal->Write(MAKE64(okey,fldid),v);
 		UaLeaveReadRWLock(&foundblock->lock);
 		return SoOK;
 	}
@@ -434,7 +464,7 @@ MISS:
 		}
 		blk->lru=clock();
 		blk->cache[fldid & DSM_CACHE_LOW_MASK]=v;
-		protocal->Write(MAKE64(okey,fldid),blk);
+		protocal->Write(MAKE64(okey,fldid),v);
 		UaLeaveReadRWLock(&blk->lock);
 		return SoOK;
 	}
@@ -442,6 +472,11 @@ MISS:
 	{
 		protocal->WriteMiss(MAKE64(okey,fldid),v,blk);
 		blk->lru=clock();
+		if(blk->key!=k)
+		{
+			printf("Write Miss key error");
+			_BreakPoint;
+		}
 		//blk->cache[fldid & DSM_CACHE_LOW_MASK]=v;
 		UaLeaveWriteRWLock(&blk->lock);
 		return SoOK;
@@ -497,6 +532,11 @@ MISS:
 	{
 		protocal->ReadMiss(k,blk);
 		blk->lru=clock();
+		if(blk->key!=k)
+		{
+			printf("Write Miss key error");
+			_BreakPoint;
+		}
 		ret= blk->cache[fldid & DSM_CACHE_LOW_MASK];
 		UaLeaveWriteRWLock(&blk->lock);
 		return ret;

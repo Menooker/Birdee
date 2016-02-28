@@ -101,6 +101,7 @@ private:
 		std::hash_map<long long,long long> directory;
 		BD_RWLOCK dir_lock;
 		typedef std::hash_map<long long,long long>::iterator dir_iterator;
+		SoVar shadow[65536];
 
 		SOCKET* controlsockets;
 		SOCKET* datasockets;
@@ -191,7 +192,7 @@ private:
 #pragma pack(pop)
 
 		void ServerRenew(long long addr,int src_id,SoVar v);
-		void ServerWrite(long long addr,int src_id,SoVar* buf);
+		void ServerWrite(long long addr,int src_id,SoVar v);
 		void ServerWriteback(long long addr,int src_id);
 		CacheMessageKind ServerWriteMiss(long long addr,int src_id,SoVar v,SoVar* outbuf);
 		CacheMessageKind ServerReadMiss(long long addr,int src_id,SoVar* outbuf);
@@ -204,7 +205,7 @@ private:
 			init_memcached_this_thread();
 			DSMCacheProtocal* ths=((Params*)param)->ths;
 			int target_id=((Params*)param)->target_id;
-			delete param;
+			delete ((Params*)param);
 			DataPack pack;
 			for(;;)
 			{
@@ -223,7 +224,7 @@ private:
 					ths->ServerWriteMiss(pack.addr,target_id,pack.buf[0],NULL);
 					break;
 				case MsgWrite:
-					ths->ServerWrite(pack.addr,target_id,pack.buf);
+					ths->ServerWrite(pack.addr,target_id,pack.buf[0]);
 					break;
 				case MsgRenew:
 					ths->ServerRenew(pack.addr,target_id,pack.buf[0]);
@@ -239,7 +240,7 @@ private:
 		}
 	public:
 		void Writeback(long long addr);
-		void Write(long long addr,CacheBlock* blk);
+		void Write(long long addr,SoVar v);
 
 		/*
 		Send a write message and fetch the written block
@@ -254,6 +255,7 @@ private:
 
 		DSMCacheProtocal(DSMDirectoryCache* t) : ths(t)
 		{
+			memset(shadow,0,sizeof(shadow));
 			caches=ths->hosts.size();
 			controlsockets=new SOCKET[caches];
 			datasockets=new SOCKET[caches];

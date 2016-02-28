@@ -14,7 +14,7 @@ extern "C"
 #define DSM_CACHE_HIGH_MASK_64 ((long long)0xffffffffffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
 #define DSM_CACHE_LOW_MASK_64 (~DSM_CACHE_HIGH_MASK_64)
 #define DSM_CACHE_BAD_KEY  ((long long) DSM_CACHE_LOW_MASK)
-#define DSM_CACHE_SIZE 2048
+#define DSM_CACHE_SIZE 1024
 
 #define RC_THREAD_CREATING 0
 #define RC_THREAD_RUNNING 1
@@ -82,8 +82,8 @@ struct DataNode
 
 struct CacheBlock
 {
-	SoVar cache[16];
-	long lru;
+	SoVar cache[1<<DSM_CACHE_BITS];
+	unsigned long lru;
 	long long key;
 	BD_RWLOCK lock;
 };

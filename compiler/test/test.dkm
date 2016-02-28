@@ -10,7 +10,7 @@ dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
 dim threads as shared int=2
-dim node_num as shared int=2
+dim node_num as shared int=1
 dim thread_num as shared int=threads*node_num
 dim n as shared int=4096*4
 dim p as shared int[] global=new int[n] global
@@ -25,7 +25,7 @@ unsafe
 	p2[ii]=rand_num
 	rand_num=(rand_num*rand_num+rand_num*17+3)
 	*/
-	p[ii]=n-ii-1
+	p[ii]=n-ii
 
 end
 
@@ -42,10 +42,17 @@ time=GetClock()
 
 dim barrier as shared RemoteBarrier=new RemoteBarrier(thread_num)
 dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
-nodes[0].CreateThread(threadproc,0)
-nodes[0].CreateThread(threadproc,1)
-nodes[1].CreateThread(threadproc,2)
-nodes[1].CreateThread(threadproc,3)
+
+dim tid as int
+for #i=0;#i<node_num;#i++
+    for #j=0;#j<threads;#j++
+        //nodes[#i].CreateThread(threadproc,tid)
+        CreateThread(threadproc,true,tid)
+        tid++
+    end
+end
+
+
 
 
 try
@@ -65,18 +72,19 @@ unsafe
 		gets()
 	end
 	*/
-	if p[ii]!=ii then
-		println("ERROR"+ii + " "+p[ii] )
+	if p[ii]!=ii+1 then
+		println("ERROR"+ (ii+1) + " "+p[ii] )
 		gets()
 	end
 end
 
-nodes[0].Close()
-nodes[1].Close()
+//nodes[0].Close()
+//nodes[1].Close()
 gets()
 
 function threadproc(id as var) as int
 unsafe
+    println("ID="+id)
 	dim base as int
 	dim tmp as int[]=new int[n]
     dim current_step as int
@@ -113,7 +121,6 @@ unsafe
 				p[base+i]=tmp[i]
 			end
 		end
-		Sleep(1000)
 		try
 			barrier.enter(-1,32)
 		catch CounterOutOfBoundException err
