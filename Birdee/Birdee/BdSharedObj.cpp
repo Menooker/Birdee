@@ -678,13 +678,11 @@ DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier 
 	return ret;
 }
 
-long testaddr=-1;
 void SoNewArray(BINT ty,BINT dim)
 {
     DVM_TypeSpecifier *type
 		= &curthread->current_executable->executable->type_specifier[ty];
     curthread->retvar.object= SoCreateArray(curdvm, dim, type);
-	testaddr=(long)curthread->retvar.object.data;
 	//printf("Array id=%d\n",curthread->retvar.object.data);
     return;
 }

@@ -101,7 +101,6 @@ private:
 		std::hash_map<long long,long long> directory;
 		BD_RWLOCK dir_lock;
 		typedef std::hash_map<long long,long long>::iterator dir_iterator;
-		SoVar shadow[65536];
 
 		SOCKET* controlsockets;
 		SOCKET* datasockets;
@@ -189,6 +188,10 @@ private:
 			long long addr;
 			SoVar buf[DSM_CACHE_BLOCK_SIZE];
 		};
+		struct ServerWriteReply
+		{
+			long long addr;
+		};
 #pragma pack(pop)
 
 		void ServerRenew(long long addr,int src_id,SoVar v);
@@ -255,7 +258,6 @@ private:
 
 		DSMCacheProtocal(DSMDirectoryCache* t) : ths(t)
 		{
-			memset(shadow,0,sizeof(shadow));
 			caches=ths->hosts.size();
 			controlsockets=new SOCKET[caches];
 			datasockets=new SOCKET[caches];

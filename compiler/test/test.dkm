@@ -10,9 +10,9 @@ dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
 dim threads as shared int=2
-dim node_num as shared int=1
+dim node_num as shared int=2
 dim thread_num as shared int=threads*node_num
-dim n as shared int=4096*4
+dim n as shared int=4096*8
 dim p as shared int[] global=new int[n] global
 dim p2 as int[]=new int[n]
 dim rand_num as int =1234
@@ -46,8 +46,8 @@ dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
 dim tid as int
 for #i=0;#i<node_num;#i++
     for #j=0;#j<threads;#j++
-        //nodes[#i].CreateThread(threadproc,tid)
-        CreateThread(threadproc,true,tid)
+        nodes[#i].CreateThread(threadproc,tid)
+        //CreateThread(threadproc,true,tid)
         tid++
     end
 end

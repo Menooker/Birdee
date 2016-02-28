@@ -13,7 +13,6 @@ using namespace std;
 
 
 
-
 	void DSMDirectoryCache::DSMCacheProtocal::ServerRenew(long long addr,int src_id,SoVar v)
 	{
 
@@ -85,6 +84,11 @@ using namespace std;
 				}
 				old=old>>1;
 			}
+		}
+		if(!islocal)
+		{
+			ServerWriteReply reply={addr};
+			RcSend(datasockets[src_id],&reply,sizeof(reply));
 		}
 		UaLeaveReadRWLock(&dir_lock);
 	}
@@ -245,14 +249,9 @@ using namespace std;
 		}
 	}
 
-	extern long testaddr;
 
 	void DSMDirectoryCache::DSMCacheProtocal::Write(long long addr,SoVar v)
 	{
-		if(addr>>32==testaddr)
-		{
-			shadow[addr&0xffffffff]=v;
-		}
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{
@@ -260,19 +259,29 @@ using namespace std;
 		}
 		else
 		{
+			UaEnterLock(&datasocketlocks[target_cache_id]);
 			DataPack pack={MsgWrite,addr};
 			pack.buf[0]=v;
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
+			ServerWriteReply reply;
+			if(RcRecv(datasockets[target_cache_id],&reply,sizeof(reply))!=sizeof(reply))
+            {
+                printf("Write receive error %d\n",WSAGetLastError());
+                return;
+            }
+			if(reply.addr!=addr)
+            {
+                printf("Write return a bad address\n");
+				_BreakPoint;
+                return;
+            }
+			UaLeaveLock(&datasocketlocks[target_cache_id]);
 		}
 	}
 
 
 	SoStatus DSMDirectoryCache::DSMCacheProtocal::WriteMiss(long long addr,SoVar v,CacheBlock* blk)
 	{
-		if(addr>>32==testaddr)
-		{
-			shadow[addr&0xffffffff]=v;
-		}
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
 		{
@@ -333,15 +342,6 @@ using namespace std;
 				return SoFail;
 			}
 			memcpy(blk->cache,pack.buf,sizeof(blk->cache));
-		}
-		if(addr>>32== testaddr && memcmp(blk->cache,&shadow[addr&0xffffffff],sizeof(blk->cache)))
-		{
-			printf("shadow error: addr=%llx, index=%lld, size=%d\n",addr,addr&0xffffffff,sizeof(blk->cache));
-			for(int i=0;i<16;i++)
-			{
-				printf("%d \t %d\n",blk->cache[i].vi,shadow[(addr&0xffffffff) + i].vi);
-			}
-			_BreakPoint;
 		}
 		blk->key=addr;
 		return SoOK;
