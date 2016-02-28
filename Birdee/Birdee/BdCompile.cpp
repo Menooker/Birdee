@@ -31,6 +31,7 @@ extern "C"{
 #include <string>
 #include <stack>
 #include "hash_compatible.h"
+#include <stdio.h>
 
 #ifdef BD_ON_LINUX
 #define stricmp strcasecmp
@@ -181,7 +182,26 @@ enum BcInlineFunctions
 	FunMax
 };
 
+class myfile_ostream : public raw_ostream {
+  FILE* f;
+  unsigned long pos;
+  virtual void write_impl(const char *Ptr, size_t Size) {
+	fwrite(Ptr,Size,1,f);
+	pos+=Size;
+  }
+  virtual uint64_t current_pos()const { return pos; }  LLVM_OVERRIDE;
 
+public:
+  myfile_ostream(char* path)  
+  {
+	  f=fopen(path,"w");
+	  if(!f)
+		  printf("Error writing file %s\n",path);
+	  pos=0;
+  }
+  ~myfile_ostream(){fclose(f);}
+};
+myfile_ostream *myfileos;
 
 std::vector<BcParameter> bparameters;
 Value* psta=0;
@@ -824,6 +844,21 @@ extern "C" void BcDumpModule()
 {
 	printf("================\n");
 	module->dump();
+}
+
+extern "C" void BcPrintModule()
+{
+	module->print(*myfileos,NULL);
+}
+
+extern "C" void BcOpenOutputFile(char* path)
+{
+	myfileos=new myfile_ostream(path);
+}
+
+extern "C" void BcCloseOutputFile()
+{
+	delete myfileos;
 }
 
 extern "C" void BcBuildInlines(void* mod)
@@ -1491,7 +1526,6 @@ int BcGeneratePushArgument(DVM_Executable *exe, Block *block,ArgumentList *arg_l
 	{
 		Value* v=BcGenerateExpression(exe,block,stk.top());
 		v=BcBitToInt(v);
-		v->getType()->dump();
 		int a=get_opcode_type_offset(stk.top()->type);
 		builder.CreateCall(GetPush(get_opcode_type_offset(stk.top()->type)),v);
 		stk.pop();

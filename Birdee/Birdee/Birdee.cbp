@@ -141,7 +141,6 @@
 		<Unit filename="../../include/DVM_code.h" />
 		<Unit filename="../../include/DVM_dev.h" />
 		<Unit filename="../../include/MEM.h" />
-		<Unit filename="../../include/share.h" />
 		<Unit filename="../../main/main.c">
 			<Option compilerVar="CC" />
 		</Unit>

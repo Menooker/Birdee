@@ -1,5 +1,6 @@
 #include "BdThread.h"
 #include "BdSharedObj.h"
+#include "BdParameters.h"
 extern "C"
 {
 	void ThPauseTheWorld()
@@ -131,9 +132,8 @@ extern "C"
 		DVM_Boolean run=(DVM_Boolean)args[1].int_value;
 		DVM_ObjectRef arg=args[0].object;
 		curthread->stack.stack_pointer-=3 ;curthread->stack.flg_sp-=3;
-#ifndef BD_MULTITHREAD
-		ExSystemRaise(ExMultiThreadNotSupported);
-#endif
+		if(parameters.debug)
+			ExSystemRaise(ExMultiThreadNotSupported);
 		BINT func_idx;
 		if(del_obj.data==NULL)
 			ExNullPointerException();

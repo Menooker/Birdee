@@ -6,6 +6,10 @@ struct BdParameters
 	char RemoteModulePath[255];
 	int isLib;
 	int isSyslib;
+	int need_disasm;
+	int debug;
+	int asm2file;
+	char AsmPath[255];
 	//int memport;
 	//char memip[255];
 };

@@ -1,6 +1,6 @@
 
 #include "BdCompile.h"
-
+#include "../Birdee/Birdee/BdParameters.h"
 
 
 
@@ -2238,6 +2238,8 @@ generate_constant_initializer(DKC_Compiler *compiler, DVM_Executable *exe)
 
 }
 
+extern "C" void BcPrintModule();
+
 DVM_Executable *
 dkc_generate(DKC_Compiler *compiler)
 {
@@ -2270,7 +2272,10 @@ dkc_generate(DKC_Compiler *compiler)
     add_top_level(compiler, exe);
     generate_constant_initializer(compiler, exe);
 	BcFreeDIBuilder(BcGetCurrentCompilerContext()->dibuilder);
-	BcDumpModule();
+	if(parameters.need_disasm)
+		BcDumpModule();
+	if(parameters.asm2file)
+		BcPrintModule();
     return exe;
 }
 }
