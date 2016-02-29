@@ -12,20 +12,7 @@
 #include <string>
 #include <string.h>
 #include "BdSharedObj.h"
-#ifdef BD_ON_WINDOWS
-	#include <WinSock.h>
-	#pragma comment(lib, "WS2_32")
-#endif
-#ifdef BD_ON_LINUX
-    #include <arpa/inet.h>
-    #include <sys/socket.h>
-    #include <errno.h>
-    #define SOCKET int
-    #define INVALID_SOCKET (-1)
-    #define SOCKET_ERROR (-1)
-    #define closesocket close
-    typedef sockaddr* LPSOCKADDR;
-#endif
+#include "BdSocket.h"
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
 #define RC_MAGIC_MASTER 0x12345edf
@@ -40,6 +27,9 @@ struct MasterInfo
 	int32 magic;
 	uint32 mod_cnt;
 	int32 num_mem_server;
+	int32 num_nodes;
+	int32 node_id;
+	int32 localport;
 };
 
 struct FileHeader
@@ -62,6 +52,7 @@ enum RcCommand
 	RcCmdStopThread,
 };
 
+#pragma pack(push)
 #pragma pack(4)
 struct RcCommandPack
 {
@@ -78,26 +69,12 @@ struct RcCommandPack
 		long long param34;
 	};
 };
+#pragma pack(pop)
 
 #ifndef BD_ON_VC
 #pragma ms_struct off
 #endif
-//fix-me : close all sockets when closing the dvm
-//fix-me : close the sockets when GC
-#ifdef BD_ON_WINDOWS
-int RcWinsockStartup()
-{
-    WORD sockVersion = MAKEWORD(2,2);
-    WSADATA wsaData;
-    if(WSAStartup(sockVersion, &wsaData)!=0)
-    {
-        return 1;
-    }
-	return 0;
-}
-//called when initialized
-int RcStartipRet=RcWinsockStartup();
-#endif
+
 
 void RcThrowInvalidParametersError()
 {
@@ -113,105 +90,17 @@ void RcThrowSocketError(int err)
 	_BreakPoint
 }
 
-BD_SOCKET RcConnect(char* ip,int port)
-{
-	SOCKET sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if(sclient == INVALID_SOCKET)
-	{
-		return NULL;
-	}
 
-	sockaddr_in serAddr;
-	serAddr.sin_family = AF_INET;
-	serAddr.sin_port = htons(port);
-#ifdef BD_ON_WINDOWS
-	serAddr.sin_addr.S_un.S_addr = inet_addr(ip);
-#else
-    serAddr.sin_addr.s_addr = inet_addr(ip);
-#endif
-	if (connect(sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
-	{
-		closesocket(sclient);
-		return NULL;
-	}
-	return (BD_SOCKET)sclient;
-}
-
-BD_SOCKET RcListen(int port)
-{
-    SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); //fix-me : need to close slisten?
-    if(slisten == INVALID_SOCKET)
-    {
-        printf("socket error ! \n");
-        return 0;
-    }
-
-    //绑定IP和端口
-    sockaddr_in sin;
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(port);
-#ifdef BD_ON_WINDOWS
-    sin.sin_addr.S_un.S_addr = INADDR_ANY;
-#else
-    sin.sin_addr.s_addr = INADDR_ANY;
-#endif
-    if(bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR)
-    {
-        printf("bind error !");
-		return 0;
-    }
-
-    //开始监听
-    if(listen(slisten, 5) == SOCKET_ERROR)
-    {
-        printf("listen error !");
-        return 0;
-    }
-
-    //循环接收数据
-    sockaddr_in remoteAddr;
-#ifdef BD_ON_WINDOWS
-    int nAddrlen = sizeof(remoteAddr);
-#else
-	unsigned int nAddrlen = sizeof(remoteAddr);
-#endif
-    printf("port %d waiting for connections...\n",port);
-    SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
-    if(sClient == INVALID_SOCKET)
-    {
-        printf("accept error !");
-        return 0;
-    }
-    printf("port %d accepted ：%s \n", port , inet_ntoa(remoteAddr.sin_addr));
-	return (BD_SOCKET)sClient;
-}
-
-
-inline int RcSend(BD_SOCKET s,void* data,size_t len)
-{
-	return send((SOCKET)s,(char*)data,len,0);
-}
-
-inline int RcRecv(BD_SOCKET s,void* data,size_t len)
-{
-	return recv((SOCKET)s,(char*)data,len, 0);
-}
-
-inline int RcCloseSocket(BD_SOCKET s)
-{
-	return closesocket((SOCKET)s);
-}
 
 int node_class_index=-1;
 
-int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports);
+int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id);
 
-int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* hosts,DVM_Object* memports)
+int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
+	std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports)
 {
-	char* buf=dvm_wcstombs_alloc(host.data->u.string.string);
-	SOCKET s=(SOCKET)RcConnect(buf,port);
-	MEM_free(buf);
-	if(s==0 || RcMasterHello((BD_SOCKET)s, hosts, memports))
+	SOCKET s=(SOCKET)RcConnect((char*)hosts[node_id].c_str(),port);
+	if(s==0 || RcMasterHello((SOCKET)s,hosts,ports, memhosts, memports,node_id))
 	{
 		return 1;
 	}
@@ -227,11 +116,13 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,DVM_Object* h
 	return 0;
 }
 
-int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd);
+int RcSendCmd(SOCKET s,RcCommandPack* cmd);
 void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip,*port,*memhost,*memport;
 	DVM_ObjectRef arr,obj;
+	int localport;
+	localport = args[4].int_value ;
 
     ip = args[3].object.data ;
     DBG_assert(ip->type == ARRAY_OBJECT, ("ip->type..%d", ip->type));
@@ -257,15 +148,40 @@ void RcConnectNode(DVM_Value *args)
 	arr = dvm_create_array_object_i(curdvm, ip->u.barray.size);
 	curthread->stack.stack_pointer->object=arr;
 	curthread->stack.stack_pointer++;
+
+	std::vector<std::string> memhosts;
+	std::vector<int> memports;
+	std::vector<std::string> hosts;
+	std::vector<int> ports;
+	char buf[255];
+	for(int i=0;i<memhost->u.barray.size;i++)
+	{
+	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
+		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
+			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
+		memhosts.push_back(std::string(buf));
+		memports.push_back(memport->u.barray.u.int_array[i]);
+	}
+
+	hosts.push_back("");
+	ports.push_back(localport);
 	for(int i=0;i<ip->u.barray.size;i++)
 	{
-		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,memhost,memport))
+	    wcstombs(buf,ip->u.barray.u.object[i].data->u.string.string,255);
+		if(ip->u.barray.u.object[i].data->u.string.length>=254)
+			printf("Warning : host name %ws too long\n",ip->u.barray.u.object[i].data->u.string.string);
+		hosts.push_back(std::string(buf));
+		ports.push_back(port->u.barray.u.int_array[i]);
+	}
+	for(int i=0;i<ip->u.barray.size;i++)
+	{
+		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,i+1,hosts,ports,memhosts,memports))
 		{
 			for(int j=0;j<i;j++)//if one node fails, roll back all nodes
 			{
 				RcCommandPack cmd={RcCmdClose,0};
 				DVM_Object *node=arr.data->u.barray.u.object[j].data;
-				int ret=RcSendCmd((BD_SOCKET)node->u.class_object.field[2].int_value,&cmd);
+				int ret=RcSendCmd((SOCKET)node->u.class_object.field[2].int_value,&cmd);
 				node->u.class_object.field[3].int_value=DVM_TRUE; //closed
 				node->u.class_object.field[4].int_value=DVM_FALSE; //connected
 			}
@@ -275,24 +191,14 @@ void RcConnectNode(DVM_Value *args)
 		//if create node success
 		arr.data->u.barray.u.object[i]=obj;
 	}
-	std::vector<std::string> hosts;
-	std::vector<int> ports;
-	char buf[255];
-	for(int i=0;i<memhost->u.barray.size;i++)
-	{
-	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
-		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
-			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
-		hosts.push_back(std::string(buf));
-		ports.push_back(memport->u.barray.u.int_array[i]);
-	}
 
-	SoInitStorage(hosts,ports);
+
+	SoInitStorage(memhosts,memports,hosts,ports,0);
 	curthread->retvar.object = arr;
 }
 
 
-int RcSendCmd(BD_SOCKET s,RcCommandPack* cmd)
+int RcSendCmd(SOCKET s,RcCommandPack* cmd)
 {
 	int ret=RcSend(s,cmd,sizeof(RcCommandPack));
 	if(ret==SOCKET_ERROR)
@@ -310,7 +216,7 @@ void RcCloseNode(DVM_Value *args)
 {
 	DVM_ObjectRef obj=args->object;
 	RcCommandPack cmd={RcCmdClose,0};
-	int ret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	int ret=RcSendCmd((SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(ret)
 		RcThrowSocketError(ret);
 	obj.data->u.class_object.field[3].int_value=DVM_TRUE; //closed
@@ -318,7 +224,7 @@ void RcCloseNode(DVM_Value *args)
 }
 
 
-int idx_remote_thread=-1;
+extern "C" int idx_remote_thread=-1;
 int method_remote_thread=-1;
 void RcCreateThread(DVM_Value *args)
 {
@@ -335,7 +241,7 @@ void RcCreateThread(DVM_Value *args)
 	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
 	printf("thread obj id=%d %d\n",cmd.param3,sizeof(RcCommandPack));
 	DVM_ObjectRef obj=args[2].object;
-	int sret=RcSendCmd((BD_SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
+	int sret=RcSendCmd((SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)
 		RcThrowSocketError(sret);
 	curthread->retvar.object=ret;
@@ -343,7 +249,7 @@ void RcCreateThread(DVM_Value *args)
 }
 
 
-int RcSendModule(BD_SOCKET s,char* path)
+int RcSendModule(SOCKET s,char* path)
 {
 	FILE* f=fopen(path,"rb");
 	if(!f)
@@ -385,7 +291,7 @@ int RcSendModule(BD_SOCKET s,char* path)
 	return 0;
 }
 
-int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
+int RcRecvModule(SOCKET s,char* name,size_t len,char* path)
 {
 	size_t remaining=len;
 	int buflen;
@@ -415,7 +321,7 @@ int RcRecvModule(BD_SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
-void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports)
+void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
 {
 	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
@@ -441,7 +347,7 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,
 		srand((unsigned)time(NULL));
 		DVM_Executable* exe=curdvm->top_level->executable;
 		curthread->current_executable =curdvm->top_level;
-		SoInitStorage(mem_hosts,mem_ports);
+		SoInitStorage(mem_hosts,mem_ports,hosts,ports,node_id);
 		ExCallInit();
 		for(;;)
 		{
@@ -479,6 +385,9 @@ void RcSlaveMainLoop(char* path,BD_SOCKET s,std::vector<std::string>& mem_hosts,
 			}
 		}
 CLOSE:
+		#ifdef BD_DSM_STAT
+		SoPrintStat();
+		#endif
 		MEM_check_all_blocks();
 		MEM_dump_blocks(stdout);
 	}
@@ -489,9 +398,30 @@ ERR:
 	return;
 }
 
+void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
+{
+   
+    // discovery client information
+    struct sockaddr_in addr;
+#ifdef BD_ON_WINDOWS
+    int addrlen = sizeof(addr);
+#else
+	size_t addrlen = sizeof(addr);
+#endif
+    if(getpeername((SOCKET)fd, (struct sockaddr*)&addr, &addrlen) == -1){
+        fprintf(stderr,"discovery client information failed, fd=%d, errno=%d(%#x).\n", fd, errno, errno);        
+        return;
+    }
+	port = ntohs(addr.sin_port); 
+	ip=inet_ntoa(addr.sin_addr);
+	
+    return;
+}
+
+
 void RcSlave(int port)
 {
-	BD_SOCKET s=RcListen(port);
+	SOCKET s=RcListen(port);
 	printf("Waiting for hand shaking...\n");
 	MasterInfo mi;
 	SlaveInfo si;
@@ -508,13 +438,24 @@ void RcSlave(int port)
 		if(mi.mod_cnt<=0)
 			goto ERR;
 		printf("Module file count %d\n",mi.mod_cnt);
+		printf("Node count %d\n",mi.num_nodes);
 		printf("Memory server count %d\n",mi.num_mem_server);
 
 		char buf[255];
-		printf("Memory server list :\n");
+
+		printf("Host list :\n");
 		std::vector<std::string> hosts;
 		std::vector<int> ports;
-		for(int i=0;i<mi.num_mem_server;i++)
+
+		std::string master;
+		int masterport;
+		get_peer_ip_port(s,master,masterport);
+
+		hosts.push_back(master);
+		ports.push_back(mi.localport);
+		printf("Master = %s:%d\n",master.c_str(),mi.localport);
+
+		for(int i=1;i<mi.num_nodes;i++)
 		{
 			uint32 len,port;
 			err=5;
@@ -537,6 +478,35 @@ void RcSlave(int port)
 			}
 			hosts.push_back(std::string(buf));
 			ports.push_back(port);
+			printf("%s:%d\n",buf,port);
+		}
+
+		printf("Memory server list :\n");
+		std::vector<std::string> memhosts;
+		std::vector<int> memports;
+		for(int i=0;i<mi.num_mem_server;i++)
+		{
+			uint32 len,port;
+			err=5;
+			if(RcRecv(s,&len,sizeof(len))!=sizeof(len))
+				goto ERR;
+			if(len>255)
+			{
+				err=6;
+				goto ERR;
+			}
+			if(RcRecv(s,buf,len)!=len)
+			{
+				err=7;
+				goto ERR;
+			}
+			if(RcRecv(s,&port,sizeof(port))!=sizeof(port))
+			{
+				err=8;
+				goto ERR;
+			}
+			memhosts.push_back(std::string(buf));
+			memports.push_back(port);
 			printf("%s:%d\n",buf,port);
 		}
 
@@ -568,7 +538,7 @@ void RcSlave(int port)
 
 		}
 		printf("All modules received, waiting for command");
-		RcSlaveMainLoop(mainmod,s,hosts,ports);
+		RcSlaveMainLoop(mainmod,s,hosts,ports,memhosts,memports,mi.node_id);
 	}
 	else
 	{
@@ -578,11 +548,12 @@ ERR:
 	}
 }
 
-int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
+int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
 {
 	SlaveInfo si;
 	int mem_cnt;
-	mem_cnt=hosts->u.barray.size;
+	mem_cnt=memhosts.size();
+	int host_cnt=hosts.size();
 	if(RcRecv(s,&si,sizeof(si))!=sizeof(si))
 	{
 		return 1;
@@ -591,25 +562,37 @@ int RcMasterHello(BD_SOCKET s,DVM_Object* hosts,DVM_Object* memports)
 	{
 		return 2;
 	}
-	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt};
+	MasterInfo mi={RC_MAGIC_MASTER,LoadedModFiles.size(),mem_cnt,host_cnt,node_id,ports[0]};
 	RcSend(s,&mi,sizeof(mi));
 
-	char buf[255];
-	for(int i=0;i<mem_cnt;i++)
+	for(int i=1;i<host_cnt;i++)
 	{
-	    wcstombs(buf,hosts->u.barray.u.object[i].data->u.string.string,255);
-		if(hosts->u.barray.u.object[i].data->u.string.length>=254)
-			printf("Warning : host name %ws too long\n",hosts->u.barray.u.object[i].data->u.string.string);
-
-		uint32 sendl=hosts->u.barray.u.object[i].data->u.string.length+1;
+	    
+		uint32 sendl=hosts[i].size()+1;
 		if(sendl>255)
 		{
 			sendl=255;
-			buf[254]=0;
+			hosts[i][254]=0;
 		}
 		RcSend(s,&sendl,sizeof(sendl));
-		RcSend(s,buf,sendl);
-		RcSend(s,&memports->u.barray.u.int_array[i],sizeof(memports->u.barray.u.int_array[i]));
+		RcSend(s,(char*)hosts[i].c_str(),sendl);
+		sendl=ports[i];
+		RcSend(s,&sendl,sizeof(sendl));
+	}
+
+	for(int i=0;i<mem_cnt;i++)
+	{
+	    
+		uint32 sendl=memhosts[i].size()+1;
+		if(sendl>255)
+		{
+			sendl=255;
+			memhosts[i][254]=0;
+		}
+		RcSend(s,&sendl,sizeof(sendl));
+		RcSend(s,(char*)memhosts[i].c_str(),sendl);
+		sendl=memports[i];
+		RcSend(s,&sendl,sizeof(sendl));
 	}
 
 	std::vector<std::string>::iterator itr;

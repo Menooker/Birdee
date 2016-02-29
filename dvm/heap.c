@@ -373,11 +373,16 @@ gc_mark(DVM_ObjectRef *ref)
 {
     int i;
 
+	if(ref->v_table && ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)
+		return;
+
+
     if (ref->data == NULL)
         return;
 
     if (ref->data->marked)
         return;
+
 
     ref->data->marked = DVM_TRUE;
 
@@ -489,7 +494,6 @@ static DVM_Boolean
 gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
 {
     DVM_Boolean call_finalizer = DVM_FALSE;
-
     switch (obj->type) {
     case STRING_OBJECT:
         if (!obj->u.string.is_literal) {

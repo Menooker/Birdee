@@ -20,7 +20,7 @@ private:
 	//memcached_st *memc;
 #endif
 public:
-
+	SoStatus getblock(long long addr,SoVar* buf);
 	SoStatus putstr(_uint key,wchar_t* str,_uint len);
 	SoStatus put(_uint key,int fldid,SoVar v);
 	SoVar get(_uint key,int fldid);

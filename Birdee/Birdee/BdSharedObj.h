@@ -1,11 +1,20 @@
 #ifndef _H_BIRDEE_SHARED_OBJ
 #define _H_BIRDEE_SHARED_OBJ
 #include "BdExec.h"
+#include "UnportableAPI.h"
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+#define DSM_CACHE_BITS 4
+#define DSM_CACHE_BLOCK_SIZE (1<<DSM_CACHE_BITS)
+#define DSM_CACHE_HIGH_MASK (0xffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
+#define DSM_CACHE_LOW_MASK (~DSM_CACHE_HIGH_MASK)
+#define DSM_CACHE_HIGH_MASK_64 ((long long)0xffffffffffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
+#define DSM_CACHE_LOW_MASK_64 (~DSM_CACHE_HIGH_MASK_64)
+#define DSM_CACHE_BAD_KEY  ((long long) DSM_CACHE_LOW_MASK)
+#define DSM_CACHE_SIZE 1024
 
 #define RC_THREAD_CREATING 0
 #define RC_THREAD_RUNNING 1
@@ -71,6 +80,14 @@ struct DataNode
 
 };
 
+struct CacheBlock
+{
+	SoVar cache[1<<DSM_CACHE_BITS];
+	unsigned long lru;
+	long long key;
+	BD_RWLOCK lock;
+};
+
 BINT SoGeti(_uint key,_uint fldid);
 double SoGetd(_uint key,_uint fldid);
 void SoGeto(_uint key,_uint fldid,int idx_in_exe);
@@ -89,6 +106,9 @@ void SoGetCounter(DVM_Value* args);
 void SoNewArray(BINT ty,BINT dim);
 void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
 void SoKillStorage();
+#ifdef BD_DSM_STAT
+void SoPrintStat();
+#endif
 
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
@@ -100,7 +120,8 @@ void SoKillStorage();
 #ifdef __cplusplus
 #include <string>
 #include <vector>
-void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports);
+void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
+	std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id);
 
 #define SO_KEY_NOT_FOUND 1
 class SoStorage
@@ -120,6 +141,7 @@ public:
 	virtual bool exists(_uint key)=0;
 	virtual SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)=0;
 	virtual int getsize(_uint key)=0;
+	virtual SoStatus getblock(long long addr,SoVar* buf)=0;
 };
 #endif
 

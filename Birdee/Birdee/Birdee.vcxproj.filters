@@ -90,6 +90,9 @@
     <None Include="barriertest.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="pi.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -192,6 +195,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdMCJIT.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdSocket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BdDSMCache.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -338,6 +347,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BdMemcachedStorage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdDSMCache.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BdSocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

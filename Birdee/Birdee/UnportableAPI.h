@@ -4,14 +4,17 @@
 #include "Conf.h"
 	#ifdef BD_ON_WINDOWS
 		#include <Windows.h>
+		#include <WinBase.h>
 		typedef void* THREAD_ID;
 		#define BD_LOCK CRITICAL_SECTION
+		typedef DWORD (__stdcall *UaThreadProc)(PVOID p);
     #else
         #include <unistd.h>
         #include <pthread.h>
         #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
         typedef pthread_t THREAD_ID;
+		typedef (void*) (*UaThreadProc)(void* p);
 	#endif
 
 	#undef min
@@ -47,8 +50,74 @@ extern "C"
 	void UaSleep(int ms);
 	int UaAtomicInc(long* ptr,long inc);
 	int UaAtomicDec(long* ptr,long dec);
+	THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param);
+	void UaWaitForThread(THREAD_ID th);
 	#ifdef BD_ON_WINDOWS
+        #ifdef BD_ON_GCC
+typedef struct{void* PTR;} SRWLOCK, *PSRWLOCK;
+
+#define SRWLOCK_INIT RTL_SRWLOCK_INIT
+
+WINBASEAPI
+VOID
+WINAPI
+InitializeSRWLock (
+     PSRWLOCK SRWLock
+     );
+
+WINBASEAPI
+VOID
+WINAPI
+ReleaseSRWLockExclusive (
+     PSRWLOCK SRWLock
+     );
+
+WINBASEAPI
+VOID
+WINAPI
+ReleaseSRWLockShared (
+     PSRWLOCK SRWLock
+     );
+
+WINBASEAPI
+VOID
+WINAPI
+AcquireSRWLockExclusive (
+     PSRWLOCK SRWLock
+     );
+
+WINBASEAPI
+VOID
+WINAPI
+AcquireSRWLockShared (
+     PSRWLOCK SRWLock
+     );
+
+WINBASEAPI
+BOOLEAN
+WINAPI
+TryAcquireSRWLockExclusive (
+    PSRWLOCK SRWLock
+    );
+
+WINBASEAPI
+BOOLEAN
+WINAPI
+TryAcquireSRWLockShared (
+    PSRWLOCK SRWLock
+    );
+
+        #endif
         #define UaPrepareThread()
+		#define BD_RWLOCK SRWLOCK
+		#define UaInitRWLock(a) InitializeSRWLock(a)
+		#define UaEnterWriteRWLock(a) AcquireSRWLockExclusive(a)
+		#define UaLeaveWriteRWLock(a) ReleaseSRWLockExclusive(a)
+		#define UaEnterReadRWLock(a) AcquireSRWLockShared(a)
+		#define UaTryEnterWriteRWLock(a) TryAcquireSRWLockExclusive(a)
+		#define UaTryEnterReadRWLock(a) TryAcquireSRWLockShared(a)
+		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
+		#define UaKillRWLock(a)
     #else
         void UaPrepareThread();
     #endif

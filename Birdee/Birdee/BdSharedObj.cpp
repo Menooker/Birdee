@@ -7,6 +7,7 @@
 #include "BdMemcachedStorage.h"
 #include "UnportableAPI.h"
 #include "BdParameters.h"
+#include "BdDSMCache.h"
 
 extern void ExCall(BINT index);
 
@@ -127,6 +128,18 @@ public:
 		throw SO_KEY_NOT_FOUND;
 	}
 
+	SoStatus getblock(long long addr,SoVar* buf)
+	{
+		for (int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
+		{
+			if(map.find((addr & DSM_CACHE_HIGH_MASK_64)+i)!=map.end())
+				buf[i]=map[(addr & DSM_CACHE_HIGH_MASK_64)+i].var;
+			else
+				buf[i].vd=0;
+		}
+		return SoOK;
+	}
+
 	bool exists(_uint key)
 	{
 		return map.find(MAKE64(key,0))!=map.end();
@@ -162,24 +175,30 @@ public:
 		SoBackendTest,
 		SoBackendMemcached,
 	};
+	enum CacheType
+	{
+		SoNoCache,
+		SoWriteThroughCache,
+	};
 private:
 	BackendType type;
-
+	CacheType cachetype;
 public:
-	SoStorageFactory(BackendType ty)
+	SoStorageFactory(BackendType ty,CacheType cty)
 	{
-		setType(ty);
+		setType(ty,cty);
 	}
-	SoStorageFactory* setType(BackendType ty)
+	SoStorageFactory* setType(BackendType ty,CacheType cty)
 	{
 		type=ty;
+		cachetype=cty;
 		return this;
 	}
 	SoStorage* make(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
 	{
 		switch(type)
 		{
-		case SoBackendTest:
+		case SoNoCache:
 			return new SoStorageLocalTest(arr_mem_hosts, arr_mem_ports);
 			break;
 		case SoBackendMemcached:
@@ -189,24 +208,63 @@ public:
 		}
 		return NULL;
 	}
+
+	DSMCache* makecache(SoStorage* storage,std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,
+		int mcache_id,SOCKET mcontrollisten,SOCKET mdatalisten)
+	{
+		switch(cachetype)
+		{
+		case SoNoCache:
+			return new DSMNoCache(storage);
+			break;
+		case SoWriteThroughCache:
+			return new DSMDirectoryCache(storage,arr_hosts,arr_ports,mcache_id,mcontrollisten,mdatalisten);
+		default:
+			DBG_assert(0,("Var type is wrong %d\n",type));
+		}
+		return NULL;
+	}
+
 };
 
 class SharedStorage
 {
 private:
 	SoStorage* backend;
+	DSMCache* cache;
+	SOCKET controllisten; // the control socket for cache, managed by SharedStorage
+	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
 public:
-	SharedStorage(SoStorageFactory::BackendType ty,std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
+	/*
+		params :
+		arr_mem_hosts,arr_mem_ports : the list of memory server's hosts and ports
+		arr_hosts,arr_ports : the lists of node's host and ports, the port arr_ports[i]+1 is the
+			cache control port for node[i], and the port arr_ports[i]+2 is the cache data port
+			for node[i]
+		int mcache_id the node_id for the current node
+	*/
+	SharedStorage(SoStorageFactory::BackendType ty,SoStorageFactory::CacheType cachety,std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
+		std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id)
 	{
-		backend=SoStorageFactory(ty).make(arr_mem_hosts, arr_mem_ports);
+		controllisten=RcCreateListen(arr_ports[node_id]+1);
+		if(!controllisten)
+			_BreakPoint;
+		datalisten=RcCreateListen(arr_ports[node_id]+2);
+		if(!datalisten)
+			_BreakPoint;		
+		SoStorageFactory factory(ty,cachety);
+		backend=factory.make(arr_mem_hosts, arr_mem_ports);
+		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
+
 	}
 	~SharedStorage()
 	{
 		delete backend;
+		delete cache;
 	}
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
-		return backend->put(key,fldid,v);
+		return cache->put(key,fldid,v);
 	}
 
 	SoVar get(_uint key,int fldid)
@@ -214,7 +272,7 @@ public:
 		SoVar ret;
 		try
 		{
-			ret=backend->get(key,fldid);
+			ret=cache->get(key,fldid);
 
 		}
 		catch (int &a)
@@ -225,6 +283,15 @@ public:
 			}
 		}
 		return ret;
+	}
+
+	void print_stat()
+	{
+		long writes,whit,reads,rhit;
+		cache->get_stat(writes,whit,reads,rhit);
+		printf("Write Stats %d/%d=%f\n",whit,writes,1.0*whit/writes);
+		printf("Read Stats %d/%d=%f\n",rhit,reads,1.0*rhit/reads);
+		printf("Overall Stats %d/%d=%f\n",whit+rhit,writes+reads,1.0*(whit+rhit)/(writes+reads));
 	}
 
 /*	SoStatus putvar(_uint key,SoType tag,SoVar var)
@@ -399,9 +466,16 @@ SharedStorage* pstorage=NULL;
 
 
 extern std::hash_map<std::string,ExecutableEntry*> LoadedMods;
-void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
+void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
+	std::vector<std::string>& arr_hosts,std::vector<int>& arr_ports,int node_id)
 {
-	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,arr_mem_hosts,arr_mem_ports);
+	SoStorageFactory::CacheType cachety;
+	if(parameters.nocache)
+		cachety=SoStorageFactory::SoNoCache;
+	else
+		cachety=SoStorageFactory::SoWriteThroughCache;
+	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,cachety,arr_mem_hosts,arr_mem_ports,
+		arr_hosts,arr_ports,node_id);
 	if(curdvm->is_master)
 	{
 		for( ExecutableEntry* ee=curdvm->executable_entry;ee;ee=ee->next)
@@ -436,6 +510,14 @@ extern "C" double SoGetd(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vd;
 }
+
+#ifdef BD_DSM_STAT
+void SoPrintStat()
+{
+	if(pstorage)
+		pstorage->print_stat();
+}
+#endif
 
 extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 {
@@ -601,12 +683,12 @@ DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier 
 	return ret;
 }
 
-
 void SoNewArray(BINT ty,BINT dim)
 {
     DVM_TypeSpecifier *type
 		= &curthread->current_executable->executable->type_specifier[ty];
     curthread->retvar.object= SoCreateArray(curdvm, dim, type);
+	//printf("Array id=%d\n",curthread->retvar.object.data);
     return;
 }
 

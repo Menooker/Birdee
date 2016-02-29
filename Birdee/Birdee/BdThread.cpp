@@ -1,5 +1,6 @@
 #include "BdThread.h"
 #include "BdSharedObj.h"
+#include "BdParameters.h"
 extern "C"
 {
 	void ThPauseTheWorld()
@@ -69,6 +70,8 @@ extern "C"
 	extern "C" void init_memcached_this_thread();
 //#endif
 
+	extern "C" int idx_remote_thread;
+
 	void ThThreadStub(BdThread* param)
 	{
 //#ifdef BD_ON_WINDOWS
@@ -77,7 +80,11 @@ extern "C"
 		curthread=param;
         if(param->thread_obj_id)
 		{
-			param->stack.stack_pointer->int_value=param->thread_obj_id;  *param->stack.flg_sp = DVM_TRUE;
+			if(idx_remote_thread==-1)
+				idx_remote_thread  = DVM_search_class(curdvm,"Remote","RemoteThread");
+			param->stack.stack_pointer->object.data=(DVM_Object*)param->thread_obj_id;
+			param->stack.stack_pointer->object.v_table=curdvm->bclass[idx_remote_thread]->class_table;
+			*param->stack.flg_sp = DVM_TRUE;
 			param->stack.stack_pointer ++; param->stack.flg_sp++;
 		}
 
@@ -125,9 +132,8 @@ extern "C"
 		DVM_Boolean run=(DVM_Boolean)args[1].int_value;
 		DVM_ObjectRef arg=args[0].object;
 		curthread->stack.stack_pointer-=3 ;curthread->stack.flg_sp-=3;
-#ifndef BD_MULTITHREAD
-		ExSystemRaise(ExMultiThreadNotSupported);
-#endif
+		if(parameters.debug)
+			ExSystemRaise(ExMultiThreadNotSupported);
 		BINT func_idx;
 		if(del_obj.data==NULL)
 			ExNullPointerException();

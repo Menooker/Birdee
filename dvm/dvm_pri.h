@@ -14,7 +14,7 @@
 #define ExHeapFreedType 0xfeeeaeee
 typedef struct _RtlHashMap mRtlHashMap ;
 #define STACK_ALLOC_SIZE (PAGE_SIZE)
-#define HEAP_THRESHOLD_SIZE     (1024 * 256)
+#define HEAP_THRESHOLD_SIZE     (1024 * 1024)
 #define ARRAY_ALLOC_SIZE (256)
 #define NULL_STRING (L"null")
 #define TRUE_STRING (L"true")

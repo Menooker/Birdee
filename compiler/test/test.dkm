@@ -1,106 +1,176 @@
 require Remote
-dim time as int=GetClock()
-dim n as int=1000000000
-dim threads as int=2
-dim node_num as int=2
-/*
 
-single_thread()
-println( GetClock()-time)
-time=GetClock()
-*/
-
-dim hosts as string[]={"192.168.88.1","192.168.88.1"}
-dim ports as int[]={3020,3021}
+dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13020,13090}
 //dim hosts as string[]=new string[0]
 //dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"192.168.88.1"}
+dim mem_hosts as string[]={"127.0.0.1"}
 dim mem_ports as int[]={11211}
-dim nodes as RemoteNode[]=ConnectNode(hosts,ports,mem_hosts,mem_ports)
+dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
-dim partial_sum as shared double[] global=new double[node_num] global
-dim barrier as shared RemoteBarrier=new RemoteBarrier(node_num+1)
+dim threads as shared int=2
+dim node_num as shared int=2
+dim thread_num as shared int=threads*node_num
+dim n as shared int=4096*8
+dim p as shared int[] global=new int[n] global
+dim p2 as int[]=new int[n]
+dim rand_num as int =1234
 
-//dim t as RemoteThread[]=new RemoteThread[node_num*threads]
-dim i as int
-dim j as int
-for i=0;i<node_num;i++
-	for j=0;j<threads;j++
-		nodes[i].CreateThread(threadproc,i*threads+j)
+dim time as int=GetClock()
+dim ii as int
+for ii=0;ii<n;ii++
+unsafe
+	/*p[ii]=rand_num
+	p2[ii]=rand_num
+	rand_num=(rand_num*rand_num+rand_num*17+3)
+	*/
+	p[ii]=n-ii
+
+end
+
+println("Put ok " + (GetClock()-time))
+
+/*
+threadproc2(0)
+println("LOCAL OK")
+for ii=0;ii<20;ii++
+    println(p2[ii])
+end
+*/
+time=GetClock()
+
+dim barrier as shared RemoteBarrier=new RemoteBarrier(thread_num)
+dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
+
+dim tid as int
+for #i=0;#i<node_num;#i++
+    for #j=0;#j<threads;#j++
+        nodes[#i].CreateThread(threadproc,tid)
+        //CreateThread(threadproc,true,tid)
+        tid++
+    end
+end
+
+
+
+
+try
+	barrier_main.enter(-1,32)
+catch CounterOutOfBoundException err2
+	println("Error!")
+end
+println("DONE "+ (GetClock()-time))
+dim last as int=-100000000
+for ii=0;ii<20;ii++
+    println(p[ii])
+end
+for ii=0;ii<n;ii++
+unsafe
+	/*if p[ii]!=p2[ii] then
+		println("ERROR"+ii + " "+p[ii] + " "+p2[ii])
+		gets()
+	end
+	*/
+	if p[ii]!=ii+1 then
+		println("ERROR"+ (ii+1) + " "+p[ii] )
+		gets()
 	end
 end
 
-try
-	barrier.enter(-1,512)
-catch CounterOutOfBoundException err
-	println("Error!")
-end
-dim result as double
-for i=0;i<node_num;i++
-	result+=partial_sum[i]
-end
-println( GetClock()-time)
-println( result/n)
-
-dim sums as double[]
-
-dim thread_num as int
-dim done as int
-sub RemoteInitialize()
-	n=1000000000
-	threads=2
-	node_num=2
-	thread_num=node_num*threads
-	sums=new double[threads]
-	done=0
-	println("Remote Initializd")
-end
+//nodes[0].Close()
+//nodes[1].Close()
+gets()
 
 function threadproc(id as var) as int
 unsafe
-	dim localid as int=id % threads
-	dim sum as double = 0.0
-	dim ii as int
-	dim x as double
-	dim h as double
-	h= 1.0 /  n
-	for ii = 1; ii <= n; ii +=thread_num
-		x = h * (ii - 0.5)
-		sum += (4.0 / (1.0 + x*x))
-	end
-	sums[localid]=sum
-	done@+=1
-	if localid==0 then
-	unsafe
-		//first wait for other threads in the same node
-		for ;done!=threads;
-			//empty
-		end
+    println("ID="+id)
+	dim base as int
+	dim tmp as int[]=new int[n]
+    dim current_step as int
+	for current_step=2;current_step<=n;current_step*=2
+		println(current_step)
+		for base=id*current_step;base<n;base+=thread_num*current_step
+			dim start1 as int=base
+			dim start2 as int=base+current_step/2
+			dim end1 as int=start2
+			dim end2 as int=base+current_step
 
-		//sum the results of the current node
-		for ii=1;ii<threads;ii++
-			sum+=sums[ii]
+			dim i as int
+			for i=0;i<current_step;i++
+				if start1>=end1 then
+					tmp[i]=p[start2]
+					start2++
+					continue
+				end
+
+				if start2>=end2 then
+					tmp[i]=p[start1]
+					start1++
+					continue
+				end
+				if p[start1]<p[start2] then
+					tmp[i]=p[start1]
+					start1++
+				else
+					tmp[i]=p[start2]
+					start2++
+				end
+			end
+			for i=0;i<current_step;i++
+				p[base+i]=tmp[i]
+			end
 		end
-		partial_sum[id/threads]=sum
-		println("summing "+sum +" node id="+id/threads)
 		try
-			barrier.enter(0,1024)
-		catch CounterOutOfBoundException e
+			barrier.enter(-1,32)
+		catch CounterOutOfBoundException err
 			println("Error!")
 		end
+
+	end
+	try
+		barrier_main.enter(0,32)
+	catch CounterOutOfBoundException err
+		println("Error!")
 	end
 end
 
-sub single_thread()
-	dim sum as double = 0.0
-	dim ii as int
-	dim x as double
-	dim h as double
-	h= 1.0 /  n
-	for ii = 1; ii <= n; ii ++
-		x = h * (ii - 0.5)
-		sum += (4.0 / (1.0 + x*x))
+function threadproc2(id as var) as int
+	dim base as int
+	dim tmp as int[]=new int[n]
+    dim current_step as int
+	for current_step=2;current_step<=n;current_step*=2
+		for base=0;base<n;base+=current_step
+			dim start1 as int=base
+			dim start2 as int=base+current_step/2
+			dim end1 as int=start2
+			dim end2 as int=base+current_step
+
+			dim i as int
+			for i=0;i<current_step;i++
+				if start1>=end1 then
+					tmp[i]=p2[start2]
+					start2++
+					continue
+				end
+
+				if start2>=end2 then
+					tmp[i]=p2[start1]
+					start1++
+					continue
+				end
+				if p2[start1]<p2[start2] then
+					tmp[i]=p2[start1]
+					start1++
+				else
+					tmp[i]=p2[start2]
+					start2++
+				end
+			end
+			for i=0;i<current_step;i++
+				p2[base+i]=tmp[i]
+			end
+		end
 	end
-	println(sum/n)
 end
+

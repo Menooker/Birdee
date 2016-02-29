@@ -349,6 +349,8 @@ struct DVM_Executable_tag {
     DVM_ConstantPool    *constant_pool;
     int                 global_variable_count;
     DVM_Variable        *global_variable;
+    int                 shared_global_variable_count;
+    DVM_Variable        *shared_global_variable;
     int                 function_count;
     DVM_Function        *function;
     int                 type_specifier_count;

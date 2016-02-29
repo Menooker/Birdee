@@ -26,12 +26,12 @@ namespace __gnu_cxx
     template<> struct hash<const long long int>
     {
         size_t operator()(const long long int& s) const
-        {  return s%0xffffffff; } //__stl_hash_string
+        {  return (s>>4)%0xffffffff; } //__stl_hash_string
     };
     template<> struct hash<long long int>
     {
         size_t operator()(const long long int& s) const
-        {  return s%0xffffffff; } //__stl_hash_string
+        {  return (s>>4)%0xffffffff; } //__stl_hash_string
     };
 
 

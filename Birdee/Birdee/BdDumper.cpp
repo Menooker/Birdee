@@ -413,6 +413,12 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 		CpDumpVariable(&exe->global_variable[i],&buf);
 	}
 
+	CpDumpBuffer(&exe->shared_global_variable_count,sizeof(exe->shared_global_variable_count),&buf);
+	for(i=0;i<exe->shared_global_variable_count;i++)
+	{
+		CpDumpVariable(&exe->shared_global_variable[i],&buf);
+	}
+
 	CpDumpBuffer(&exe->function_count,sizeof(exe->function_count),&buf);
 	for(i=0;i<exe->function_count;i++)
 	{

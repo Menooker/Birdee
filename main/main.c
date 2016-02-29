@@ -13,12 +13,16 @@
 #include "BdParameters.h"
 
 
-struct BdParameters parameters;
+struct BdParameters parameters={0};
 void ExInitEngine();
 void BcInitLLVMCompiler();
 void SoKillStorage();
 int ExExec(char* path);
 void RcSlave(int port);
+
+
+extern void BcOpenOutputFile(char* path);
+extern void BcCloseOutputFile();
 
 int compile(char* path,char* outpath)
 {
@@ -33,48 +37,57 @@ int compile(char* path,char* outpath)
 	}
 	BcInitLLVMCompiler();
     compiler = DKC_create_compiler();
+
+	if(parameters.asm2file)
+		BcOpenOutputFile(parameters.AsmPath);
     list = DKC_compile(compiler, fp, path);
 
 	DKC_dispose_compiler(compiler);
 	CpSaveCodeToFile(outpath,list);
 	DVM_dispose_executable_list(list);
+	BcCloseOutputFile();
 	return 0;
 }
 
 
-int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
+int ParseCompilationParameters(int cur_arg,int argc,char* argv[])
 {
-	/*int mh=0;
-	int mp=0;
 	for(;cur_arg<argc;cur_arg++)
 	{
-		if(!strcmp(argv[cur_arg],"-mh"))
+		if(!strcmp(argv[cur_arg],"-disasm"))
 		{
-			if(argc-1-cur_arg==0)
+			parameters.need_disasm=1;
+		}
+		else if(!strcmp(argv[cur_arg],"-asm2file"))
+		{
+			if(argc-cur_arg<=1)
 				return 1;
-			if(strlen(argv[cur_arg+1])>254)
+			parameters.asm2file=1;
+			if(strlen(argv[cur_arg+1])>=255)
 			{
-				printf("Error: Memory Host Name too long\n");
+				printf("Path too long\n");
 				return 1;
 			}
-			strcpy(parameters.memip,argv[cur_arg+1]);
-			mh=1;
-			cur_arg+=1;
-		}
-		else if(!strcmp(argv[cur_arg],"-mp"))
-		{
-			if(argc-1-cur_arg==0)
-				return 1;
-			parameters.memport=atoi(argv[cur_arg+1]);
-			mp=1;
-			cur_arg+=1;
+			strncpy(parameters.AsmPath,argv[cur_arg+1],255);
+			cur_arg++;
 		}
 	}
+	return 0;
+}
 
-	if(!mh)
-		strcpy(parameters.memip,"127.0.0.1");
-	if(!mp)
-		parameters.memport=11211;*/
+int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
+{
+	for(;cur_arg<argc;cur_arg++)
+	{
+		if(!strcmp(argv[cur_arg],"-debug"))
+		{
+			parameters.debug=1;
+		}
+		else if(!strcmp(argv[cur_arg],"-nocache"))
+		{
+			parameters.nocache=1;
+		}
+	}
 	return 0;
 }
 
@@ -104,6 +117,8 @@ main(int argc, char* argv[])
 				parameters.isSyslib=1;
 			if(argc<4)
 				goto BAD_PARAM;
+			if(ParseCompilationParameters(4,argc,argv))
+				goto BAD_PARAM;
 			if(compile(argv[2],argv[3]))
 			{
 				printf("Error when opening input file\n");
@@ -112,6 +127,8 @@ main(int argc, char* argv[])
 			break;
 		case 'c':
 			if(argc<4)
+				goto BAD_PARAM;
+			if(ParseCompilationParameters(4,argc,argv))
 				goto BAD_PARAM;
 			if(compile(argv[2],argv[3]))
 			{
@@ -122,14 +139,16 @@ main(int argc, char* argv[])
 		case 'e':
 			if(argc<4)
 				goto BAD_PARAM;
+			if(ParseCompilationParameters(4,argc,argv))
+				goto BAD_PARAM;
+			if(ParseExecutionParameters(4,argc,argv))
+				goto BAD_PARAM;
 			if(compile(argv[2],argv[3]))
 			{
 				printf("Error when opening input file\n");
 				return 1;
 			}
 			printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-			if(ParseExecutionParameters(4,argc,argv))
-				goto BAD_PARAM;
 			ExExec(argv[3]);
 			SoKillStorage();
 			break;
@@ -149,8 +168,8 @@ main(int argc, char* argv[])
 				parameters.RemoteModulePath[len]='/';
 				parameters.RemoteModulePath[len+1]=0;
 			}
-			//if(ParseExecutionParameters(4,argc,argv))
-			//	goto BAD_PARAM;
+			if(ParseExecutionParameters(4,argc,argv))
+				goto BAD_PARAM;
 			RcSlave(atoi(argv[2]));
 			SoKillStorage();
 			break;

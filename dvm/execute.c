@@ -1956,6 +1956,10 @@ dvm_pop_object(DVM_VirtualMachine *dvm)
     return ret;
 }
 */
+
+#ifdef BD_DSM_STAT
+	extern void SoPrintStat();
+#endif
 DVM_Value
 DVM_execute(DVM_VirtualMachine *dvm)
 {
@@ -1968,7 +1972,9 @@ DVM_execute(DVM_VirtualMachine *dvm)
                      dvm->top_level->executable->top_level.need_stack_size);*/
     /*dvm_execute_i(dvm, NULL, dvm->top_level->executable->top_level.code,
                   dvm->top_level->executable->top_level.code_size, 0);*/
-
+#ifdef BD_DSM_STAT
+	SoPrintStat();
+#endif
     return ret;
 }
 

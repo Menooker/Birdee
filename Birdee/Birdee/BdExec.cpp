@@ -30,6 +30,7 @@ using namespace llvm;
 #include <setjmp.h>
 #include "BdMCJIT.h"
 #include "llvm/Support/DynamicLibrary.h"
+#include "BdParameters.h"
 
 llvm::Function* BcBuildFldPtrImp(llvm::Type *);
 llvm::Function* BcBuildArrPtrImp(llvm::Type *);
@@ -1387,23 +1388,23 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	}
 	else
 	{
-#ifndef BD_USE_MCJIT
-		MCJIT= new MCJITHelper(m,false);
-#else
-		MCJIT= new MCJITHelper(m,true);
-#endif
+		if(parameters.debug)
+			MCJIT= new MCJITHelper(m,true);
+		else
+			MCJIT= new MCJITHelper(m,false);
 		dvm->exe_engine=MCJIT;
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
 
-#ifndef BD_MULTITHREAD
-	SetNoThreadLocal(m,"bpc",TheExecutionEngine,0);
-	SetNoThreadLocal(m,"bei",TheExecutionEngine,1);
-	SetNoThreadLocal(m,"beo",TheExecutionEngine,2);
-	SetNoThreadLocal(m,"bsp",TheExecutionEngine,3);
-	SetNoThreadLocal(m,"arr_sp",TheExecutionEngine,4);
-	SetNoThreadLocal(m,"retvar",TheExecutionEngine,5);
-#endif
+	if(parameters.debug)
+	{
+		SetNoThreadLocal(m,"bpc",TheExecutionEngine,0);
+		SetNoThreadLocal(m,"bei",TheExecutionEngine,1);
+		SetNoThreadLocal(m,"beo",TheExecutionEngine,2);
+		SetNoThreadLocal(m,"bsp",TheExecutionEngine,3);
+		SetNoThreadLocal(m,"arr_sp",TheExecutionEngine,4);
+		SetNoThreadLocal(m,"retvar",TheExecutionEngine,5);
+	}
 	GlobalVariable* vglobal=m->getGlobalVariable("pstatic"); //static variable are shared
 	TheExecutionEngine->addGlobalMapping(vglobal,&(ee->static_v.variable));
 	vglobal=m->getGlobalVariable("mid"); //module id are shared
@@ -1490,7 +1491,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExFldPutd);
 	f=m->getFunction("system!FldPuto");
 	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);*/
-
+	
 
 	f=m->getFunction("system!ArrayLiteral");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrayLiteral);
@@ -1592,8 +1593,6 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("shared!dec");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoDec);
 	MCJIT->addGlobalMapping("shared!dec",(void*)SoDec);}*/
-	//m->dump();
-
 
 	FunctionPassManager* pm=new FunctionPassManager(m);
 	//mod->pass=pm;

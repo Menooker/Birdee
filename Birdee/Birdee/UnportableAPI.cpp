@@ -59,7 +59,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 #ifdef BD_ON_WINDOWS
 	DWORD dwTlsIndex;
-
+	
 	void UaInitTls()
 	{
 		dwTlsIndex = TlsAlloc();
@@ -91,6 +91,17 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
 		curdvm=vm;
 		//TlsSetValue(dwTlsIndex,vm);
+	}
+
+	THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param)
+	{
+		HANDLE h=CreateThread(0,0,proc,param,0,0);
+		return h;
+	}
+
+	void UaWaitForThread(THREAD_ID th)
+	{
+		WaitForSingleObject(th,-1);
 	}
 
 	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
@@ -205,7 +216,6 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	}
 #else
     //for linux
-
     void thread1_suspend(int dummy)
     {
         sem_wait(&curthread->suspend_lock);

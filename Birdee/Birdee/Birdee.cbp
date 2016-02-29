@@ -22,6 +22,8 @@
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_WINDOWS" />
 					<Add option="-DBD_MULTITHREAD" />
+					<Add option="-DWINVER=0x0601" />
+					<Add option="-D_WIN32_WINNT=0x0601" />
 					<Add directory="../../../include" />
 					<Add directory="../../../include3" />
 					<Add directory="$(IncludePath)" />
@@ -139,7 +141,6 @@
 		<Unit filename="../../include/DVM_code.h" />
 		<Unit filename="../../include/DVM_dev.h" />
 		<Unit filename="../../include/MEM.h" />
-		<Unit filename="../../include/share.h" />
 		<Unit filename="../../main/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -175,6 +176,7 @@
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
 		<Unit filename="BdCompile.h" />
+		<Unit filename="BdDSMCache.cpp" />
 		<Unit filename="BdDumper.cpp" />
 		<Unit filename="BdDynLdr.cpp" />
 		<Unit filename="BdDynLdr.h" />
@@ -190,6 +192,7 @@
 		<Unit filename="BdMemcachedStorage.h" />
 		<Unit filename="BdRemoteControl.cpp" />
 		<Unit filename="BdSharedObj.cpp" />
+		<Unit filename="BdSocket.cpp" />
 		<Unit filename="BdThread.cpp" />
 		<Unit filename="BdThread.h" />
 		<Unit filename="BdVarients.cpp" />

@@ -100,6 +100,7 @@
     <None Include="Exceptions.dkh" />
     <None Include="Exceptions2.dkh" />
     <None Include="list.txt" />
+    <None Include="pi.txt" />
     <None Include="ReadMe.txt" />
     <None Include="Remote.dkh" />
     <None Include="req2.dkh" />
@@ -125,6 +126,7 @@
     <ClInclude Include="..\..\include\MEM.h" />
     <ClInclude Include="..\..\include\share_dvm.h" />
     <ClInclude Include="..\..\memory\memory.h" />
+    <ClInclude Include="BdDSMCache.h" />
     <ClInclude Include="BdMCJIT.h" />
     <ClInclude Include="BdArrayCache.h" />
     <ClInclude Include="BdCompile.h" />
@@ -136,6 +138,7 @@
     <ClInclude Include="BdParameters.h" />
     <ClInclude Include="BdRemoteControl.h" />
     <ClInclude Include="BdSharedObj.h" />
+    <ClInclude Include="BdSocket.h" />
     <ClInclude Include="BdThread.h" />
     <ClInclude Include="BirdeeDef.h" />
     <ClInclude Include="Conf.h" />
@@ -180,6 +183,7 @@
     <ClCompile Include="..\..\share\opcode.c" />
     <ClCompile Include="..\..\share\util.c" />
     <ClCompile Include="..\..\share\wchar_share.c" />
+    <ClCompile Include="BdDSMCache.cpp" />
     <ClCompile Include="BdMCJIT.cpp" />
     <ClCompile Include="BdMemcachedStorage.cpp" />
     <ClCompile Include="BdArrayCache.cpp" />
@@ -189,6 +193,7 @@
     <ClCompile Include="BdExec.cpp" />
     <ClCompile Include="BdHashMap.cpp" />
     <ClCompile Include="BdRemoteControl.cpp" />
+    <ClCompile Include="BdSocket.cpp" />
     <ClCompile Include="BdThread.cpp" />
     <ClCompile Include="BdVarients.cpp" />
     <ClCompile Include="Birdee.cpp" />
