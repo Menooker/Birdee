@@ -214,7 +214,7 @@ private:
 			{
 				if(RcRecv(ths->controlsockets[target_id],&pack,sizeof(pack))!=sizeof(pack))
 				{
-					printf("Cache server socket error %d\n",WSAGetLastError());
+					printf("Cache server socket error %d\n",RcSocketLastError());
 					//_BreakPoint;
 					break;
 				}
@@ -274,7 +274,7 @@ private:
 				SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
 				if(sock==NULL)
 				{
-					printf("cache socket connect error %d!\n",WSAGetLastError());
+					printf("cache socket connect error %d!\n",RcSocketLastError());
 					_BreakPoint;
 				}
 				RcSetTCPNoDelay(sock);

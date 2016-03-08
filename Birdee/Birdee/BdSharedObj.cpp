@@ -15,11 +15,8 @@ extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DV
 
 
 
-
-
-
-
-
+BD_RWLOCK gc_lock;
+int gc_undergo=0;
 
 void SoThrowSetValueError()
 {
@@ -37,6 +34,20 @@ void SoThrowKeyError()
 {
 	_BreakPoint
 	//fix-me : implement me
+}
+
+void SoLocalGarbageCollection()
+{
+	UaEnterWriteRWLock(&gc_lock);
+	gc_undergo=1;
+
+	ThPauseTheWorld();
+
+	RcWaitForGCMarkCompletion();
+	gc_undergo=0;
+	UaLeaveWriteRWLock(&gc_lock);
+
+	ThResumeTheWorld();
 }
 
 class SoStorageLocalTest : public SoStorage
@@ -227,6 +238,8 @@ public:
 
 };
 
+
+
 class SharedStorage
 {
 private:
@@ -234,6 +247,18 @@ private:
 	DSMCache* cache;
 	SOCKET controllisten; // the control socket for cache, managed by SharedStorage
 	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
+	
+
+	void TriggerGarbageCollection()
+	{
+		if(backend->inc(0xFFFFFFFF,1,1)==1)
+		{
+			//if the current thread is the first to trigger GC
+			RcTriggerGarbageCollection();
+			SoLocalGarbageCollection();
+		}
+	}
+
 public:
 	/*
 		params :
@@ -255,10 +280,20 @@ public:
 		SoStorageFactory factory(ty,cachety);
 		backend=factory.make(arr_mem_hosts, arr_mem_ports);
 		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
-
+		if(curdvm->is_master)
+		{
+			//the remaining space of distributed heap size before next GC
+			backend->setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD); 
+			//the count of the threads triggering the current turn of GC
+			backend->setcounter(0xFFFFFFFF,1,0); 
+		}
+		UaInitRWLock(&gc_lock);
 	}
 	~SharedStorage()
 	{
+		UaKillRWLock(&gc_lock);
+		closesocket(controllisten);
+		closesocket(datalisten);
 		delete backend;
 		delete cache;
 	}
@@ -345,13 +380,15 @@ public:
 		return SoOK;
 	}
 
-	_uint allockey(SoType tag,int fld_cnt)
+	/*_uint allockey(SoType tag,int fld_cnt)
 	{
 		return allockey(tag,fld_cnt,0);
-	}
+	}*/
+
 	_uint allockey(SoType tag,int fld_cnt,int flag)
 	{
 		//nd.tag=SoInvalid;
+		UaEnterReadRWLock(&gc_lock);
 		_uint key=0;
 
 		for(int i=0;i<BD_MAX_SHARED_KEY_TRIES;i++)
@@ -359,13 +396,19 @@ public:
 			key=rand();
 			//_uint randk=rand();
 			//nd.var.vi=randk;
-			if(backend->newobj(key,tag,fld_cnt,0)==SoOK)
+			if(backend->newobj(key,tag,fld_cnt,flag)==SoOK)
 			{
 				break;
 			}
 		}
 		if(key==0)
+		{
+			UaLeaveReadRWLock(&gc_lock);
 			throw SO_KEY_NOT_FOUND;
+		}
+		if(tag==SoObject || tag== SoArray)
+			backend->dec(0xFFFFFFFF,0,fld_cnt);
+		UaLeaveReadRWLock(&gc_lock);
 		return key;
 	}
 	_uint newmodule(_uint key,int cnt)
@@ -374,13 +417,21 @@ public:
 	}
 	_uint newobj(ExecClass* cls)
 	{
-		_uint ret=allockey(SoObject,cls->field_count);
+		if(backend->getcounter(0xFFFFFFFF,0) - cls->field_count<=0)
+		{
+			TriggerGarbageCollection();
+		}
+		_uint ret=allockey(SoObject,cls->field_count,cls->class_index);
 		if(ret==0)
 			SoThrowKeyError();
 		return ret;
 	};
 	_uint newarray(int size, int isobj)
 	{
+		if(backend->getcounter(0xFFFFFFFF,0) - size<=0)
+		{
+			TriggerGarbageCollection();
+		}
 		_uint ret=allockey(SoArray,size,isobj);
 		if(ret==0)
 			SoThrowKeyError();
@@ -388,7 +439,7 @@ public:
 	};
 	_uint newstr(DVM_ObjectRef* s)
 	{
-		_uint ret=allockey(SoString,1);
+		_uint ret=allockey(SoString,1,-1);
 		if(ret==0)
 			SoThrowKeyError();
 		putstr(ret,s);
@@ -409,6 +460,9 @@ public:
 		}
 	};
 
+	/*
+	Atomic increase. Returns the increased result.
+	*/
 	int inc(_uint key,int fldid,int inc)
 	{
 		try
@@ -422,6 +476,9 @@ public:
 		}
 	}
 
+	/*
+	Atomic decrease. Returns the decreased result.
+	*/
 	int dec(_uint key,int fldid,int dec)
 	{
 		try

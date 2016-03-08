@@ -266,7 +266,7 @@ using namespace std;
 			ServerWriteReply reply;
 			if(RcRecv(datasockets[target_cache_id],&reply,sizeof(reply))!=sizeof(reply))
             {
-                printf("Write receive error %d\n",WSAGetLastError());
+                printf("Write receive error %d\n",RcSocketLastError());
                 return;
             }
 			if(reply.addr!=addr)
@@ -296,7 +296,7 @@ using namespace std;
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
 			if(RcRecv(datasockets[target_cache_id],&pack,sizeof(pack))!=sizeof(pack))
             {
-                printf("Write miss receive error %d\n",WSAGetLastError());
+                printf("Write miss receive error %d\n",RcSocketLastError());
                 return SoFail;
             }
 			UaLeaveLock(&datasocketlocks[target_cache_id]);
@@ -329,7 +329,7 @@ using namespace std;
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
 			if(RcRecv(datasockets[target_cache_id],&pack,sizeof(pack))!=sizeof(pack))
             {
-                printf("Read miss receive error %d\n",WSAGetLastError());
+                printf("Read miss receive error %d\n",RcSocketLastError());
                 return SoFail;
             }
 			UaLeaveLock(&datasocketlocks[target_cache_id]);

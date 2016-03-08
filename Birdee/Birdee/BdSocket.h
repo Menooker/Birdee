@@ -1,7 +1,11 @@
+#ifndef _H_BIRDEE_SOCKET
+#define _H_BIRDEE_SOCKET
+
 #include "BirdeeDef.h"
 #ifdef BD_ON_WINDOWS
 	#include <WinSock.h>
 	#pragma comment(lib, "WS2_32")
+	#define RcSocketLastError() WSAGetLastError()
 #endif
 #ifdef BD_ON_LINUX
     #include <arpa/inet.h>
@@ -12,6 +16,7 @@
     #define SOCKET_ERROR (-1)
     #define closesocket close
     typedef sockaddr* LPSOCKADDR;
+	#define RcSocketLastError() errno
 #endif
 
 
@@ -41,3 +46,6 @@ inline int RcCloseSocket(SOCKET s)
 {
 	return closesocket((SOCKET)s);
 }
+
+
+#endif

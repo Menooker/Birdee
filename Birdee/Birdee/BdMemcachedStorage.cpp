@@ -272,7 +272,7 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	nd.flag=flag;
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
-	long long k=MAKE64(key,0);
+	long long k=MAKE64(key,0xFFFFFFFF);
 	if(memcached_add(memc,(char*)&k,8,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
 		return SoOK;
 	return SoFail;

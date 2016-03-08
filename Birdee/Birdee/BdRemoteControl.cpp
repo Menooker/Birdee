@@ -50,6 +50,8 @@ enum RcCommand
 	RcCmdCreateThread,
 	RcCmdSuspendThread,
 	RcCmdStopThread,
+	RcCmdTriggerGC,
+	RcCmdDoGC,
 };
 
 #pragma pack(push)
@@ -93,7 +95,7 @@ void RcThrowSocketError(int err)
 
 
 int node_class_index=-1;
-
+std::vector<SOCKET> slavenodes;
 int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id);
 
 int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
@@ -104,7 +106,7 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 	{
 		return 1;
 	}
-
+	slavenodes.push_back(s);
 	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
 	obj.data->u.class_object.field[0].object = host;
 	obj.data->u.class_object.field[1].int_value=port;
@@ -122,6 +124,7 @@ void RcConnectNode(DVM_Value *args)
     DVM_Object  *ip,*port,*memhost,*memport;
 	DVM_ObjectRef arr,obj;
 	int localport;
+	slavenodes.clear();
 	localport = args[4].int_value ;
 
     ip = args[3].object.data ;
@@ -204,7 +207,7 @@ int RcSendCmd(SOCKET s,RcCommandPack* cmd)
 	if(ret==SOCKET_ERROR)
 	{
 #ifdef BD_ON_WINDOWS
-		return WSAGetLastError();
+		return RcSocketLastError();
 #else
 		return errno;
 #endif
@@ -545,6 +548,52 @@ void RcSlave(int port)
 ERR:
 		printf("Hand shaking error! %d %d\n",err,err2);
 		RcCloseSocket(s);
+	}
+}
+
+
+void RcTriggerGarbageCollection()
+{
+
+}
+
+int RcMasterListen()
+{
+	int n=slavenodes.size();
+	fd_set readfds;
+	RcCommandPack cmd;
+	for(;;)
+	{
+		FD_ZERO(&readfds);
+		for(int i=0;i<n;i++)
+		{
+			FD_SET(slavenodes[i],&readfds);
+		}
+		if(SOCKET_ERROR == select(n,&readfds,NULL,NULL,NULL))
+		{
+			printf("Select Error!%d\n",RcSocketLastError());
+			break;
+		}
+		for(int i=0;i<n;i++)
+		{
+			if (FD_ISSET(slavenodes[i],&readfds))
+			{
+				if(RcRecv(slavenodes[i],&cmd,sizeof(cmd))!=sizeof(cmd))
+				{
+					printf("Socket recv Error! %d\n",RcSocketLastError());
+					break;
+				}
+				switch(cmd.cmd)
+				{
+				case RcCmdTriggerGC:
+
+					break;
+				default:
+					printf("Bad command %d!\n");
+				}
+			}
+		}
+
 	}
 }
 
