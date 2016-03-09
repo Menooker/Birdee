@@ -8,6 +8,7 @@
 #include "UnportableAPI.h"
 #include "BdParameters.h"
 #include "BdDSMCache.h"
+#include "BdRemoteControl.h"
 
 extern void ExCall(BINT index);
 
@@ -36,18 +37,16 @@ void SoThrowKeyError()
 	//fix-me : implement me
 }
 
-void SoLocalGarbageCollection()
+void SoLocalGC()
 {
 	UaEnterWriteRWLock(&gc_lock);
 	gc_undergo=1;
 
 	ThPauseTheWorld();
 
-	RcWaitForGCMarkCompletion();
+	
 	gc_undergo=0;
 	UaLeaveWriteRWLock(&gc_lock);
-
-	ThResumeTheWorld();
 }
 
 class SoStorageLocalTest : public SoStorage
@@ -249,13 +248,14 @@ private:
 	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
 	
 
-	void TriggerGarbageCollection()
+	void TriggerGC()
 	{
 		if(backend->inc(0xFFFFFFFF,1,1)==1)
 		{
 			//if the current thread is the first to trigger GC
-			RcTriggerGarbageCollection();
-			SoLocalGarbageCollection();
+			RcTriggerGC();
+			SoLocalGC();
+			RcWaitForGCMarkCompletion();
 		}
 	}
 
@@ -282,10 +282,7 @@ public:
 		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
 		if(curdvm->is_master)
 		{
-			//the remaining space of distributed heap size before next GC
-			backend->setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD); 
-			//the count of the threads triggering the current turn of GC
-			backend->setcounter(0xFFFFFFFF,1,0); 
+			SoInitGCState();
 		}
 		UaInitRWLock(&gc_lock);
 	}
@@ -419,7 +416,7 @@ public:
 	{
 		if(backend->getcounter(0xFFFFFFFF,0) - cls->field_count<=0)
 		{
-			TriggerGarbageCollection();
+			TriggerGC();
 		}
 		_uint ret=allockey(SoObject,cls->field_count,cls->class_index);
 		if(ret==0)
@@ -430,7 +427,7 @@ public:
 	{
 		if(backend->getcounter(0xFFFFFFFF,0) - size<=0)
 		{
-			TriggerGarbageCollection();
+			TriggerGC();
 		}
 		_uint ret=allockey(SoArray,size,isobj);
 		if(ret==0)
@@ -800,7 +797,13 @@ void ExCallWriteObjBuffer(DVM_Value* val,DVM_Boolean isobj,DVM_ObjectRef buf,int
 	ExCall(idx);
 }
 
-
+void SoInitGCState()
+{
+	//the remaining space of distributed heap size before next GC
+	storage.setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD); 
+	//the count of the threads triggering the current turn of GC
+	storage.setcounter(0xFFFFFFFF,1,0); 
+}
 
 extern BdStatus CpDumpBuffer(void* pArr,BINT size,CPBuffer* pbuf);
 extern BdStatus CpDumpStringW(wchar_t* p,CPBuffer* pbuf);

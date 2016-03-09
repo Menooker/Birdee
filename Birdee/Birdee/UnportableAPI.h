@@ -118,6 +118,14 @@ TryAcquireSRWLockShared (
 		#define UaTryEnterReadRWLock(a) TryAcquireSRWLockShared(a)
 		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
 		#define UaKillRWLock(a)
+		#define BD_EVENT HANDLE
+		#define UaKillEvent(a) CloseHandle(*a)
+		#define UaSetEvent(a) SetEvent(*a)
+		#define UaResetEvent(a) ResetEvent(*a)
+		inline void UaInitEvent(BD_EVENT* pevent,int state);
+		#define UaWaitForEvent(a) WaitForSingleObject(*a,-1)
+		#define UaCloseThread(a) CloseHandle(a)
+		#define UaJoinThread(a) WaitForSingleObject(a,-1)
     #else
         void UaPrepareThread();
     #endif

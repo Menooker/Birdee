@@ -8,9 +8,19 @@
 
 using namespace std;
 
+extern BD_RWLOCK gc_lock;
+extern int gc_undergo;
 
+#define ENTER_GC_LOCK() int local_gc_undergo=gc_undergo;\
+	if(!local_gc_undergo)\
+	{\
+		UaEnterReadRWLock(&gc_lock);\
+	}
 
-
+#define LEAVE_GC_LOCK() if(!local_gc_undergo)\
+	{\
+		UaLeaveReadRWLock(&gc_lock);\
+	}
 
 
 	void DSMDirectoryCache::DSMCacheProtocal::ServerRenew(long long addr,int src_id,SoVar v)
@@ -266,6 +276,7 @@ using namespace std;
 			ServerWriteReply reply;
 			if(RcRecv(datasockets[target_cache_id],&reply,sizeof(reply))!=sizeof(reply))
             {
+				UaLeaveLock(&datasocketlocks[target_cache_id]);
                 printf("Write receive error %d\n",RcSocketLastError());
                 return;
             }
@@ -296,12 +307,15 @@ using namespace std;
 			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
 			if(RcRecv(datasockets[target_cache_id],&pack,sizeof(pack))!=sizeof(pack))
             {
+				UaLeaveLock(&datasocketlocks[target_cache_id]);
                 printf("Write miss receive error %d\n",RcSocketLastError());
                 return SoFail;
             }
 			UaLeaveLock(&datasocketlocks[target_cache_id]);
 			if(pack.kind!=MsgReplyOK)
+			{
 				return SoFail;
+			}
 			if(pack.addr!=addr)
 			{
 				printf("Write miss return a bad addr\n");
@@ -428,6 +442,7 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 	writes++;
 #endif
 	long long k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
+	ENTER_GC_LOCK();
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
 	bool found=(itr!=cache.end());
@@ -449,6 +464,7 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 		foundblock->cache[fldid & DSM_CACHE_LOW_MASK]=v;
 		protocal->Write(MAKE64(okey,fldid),v);
 		UaLeaveReadRWLock(&foundblock->lock);
+		LEAVE_GC_LOCK();
 		return SoOK;
 	}
 MISS:
@@ -466,6 +482,7 @@ MISS:
 		blk->cache[fldid & DSM_CACHE_LOW_MASK]=v;
 		protocal->Write(MAKE64(okey,fldid),v);
 		UaLeaveReadRWLock(&blk->lock);
+		LEAVE_GC_LOCK();
 		return SoOK;
 	}
 	else
@@ -479,6 +496,7 @@ MISS:
 		}
 		//blk->cache[fldid & DSM_CACHE_LOW_MASK]=v;
 		UaLeaveWriteRWLock(&blk->lock);
+		LEAVE_GC_LOCK();
 		return SoOK;
 	}
 }
@@ -490,6 +508,7 @@ SoVar DSMDirectoryCache::get(_uint okey,int fldid)
 	reads++;
 #endif
 	long long k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
+	ENTER_GC_LOCK();
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
 	bool found=(itr!=cache.end());
@@ -510,6 +529,7 @@ SoVar DSMDirectoryCache::get(_uint okey,int fldid)
 		foundblock->lru=clock();
 		ret= foundblock->cache[fldid & DSM_CACHE_LOW_MASK];
 		UaLeaveReadRWLock(&foundblock->lock);
+		LEAVE_GC_LOCK();
 		return ret;
 	}
 MISS:
@@ -526,6 +546,7 @@ MISS:
 		blk->lru=clock();
 		ret= blk->cache[fldid & DSM_CACHE_LOW_MASK];
 		UaLeaveReadRWLock(&blk->lock);
+		LEAVE_GC_LOCK();
 		return ret;
 	}
 	else
@@ -539,6 +560,7 @@ MISS:
 		}
 		ret= blk->cache[fldid & DSM_CACHE_LOW_MASK];
 		UaLeaveWriteRWLock(&blk->lock);
+		LEAVE_GC_LOCK();
 		return ret;
 	}
 }

@@ -28,5 +28,6 @@
 #define BD_MAX_SHARED_KEY_TRIES 2000
 #define BD_DSM_STAT 1
 #define BD_DSM_GC_THRESHOLD 167772160 //16M * 8Bytes = 128MB
+#define BD_MAX_NODE_NUM 64
 
 #endif

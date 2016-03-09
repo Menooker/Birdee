@@ -109,7 +109,8 @@ void SoKillStorage();
 #ifdef BD_DSM_STAT
 void SoPrintStat();
 #endif
-
+void SoInitGCState();
+void SoLocalGC();
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
