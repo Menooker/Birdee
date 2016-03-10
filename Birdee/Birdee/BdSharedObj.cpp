@@ -9,6 +9,7 @@
 #include "BdParameters.h"
 #include "BdDSMCache.h"
 #include "BdRemoteControl.h"
+#include "BdThread.h"
 
 extern void ExCall(BINT index);
 

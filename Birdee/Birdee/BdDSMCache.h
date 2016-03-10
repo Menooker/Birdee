@@ -34,6 +34,13 @@ public:
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,int fldid)=0;
+	
+	/*
+	Take a peek at the storage, get the memory block.
+	If not hit, this function will not spoil the cache locality
+	The fldid should be aligned with the block size
+	*/
+	virtual SoStatus peek(_uint key,int fldid,SoVar* out)=0;
 #ifdef BD_DSM_STAT
 	virtual void get_stat(long& mwrites,long& mwhit,long& mreads,long& mrhit)
 	{
@@ -61,6 +68,10 @@ public:
 	SoVar get(_uint key,int fldid)
 	{
 		return backend->get(key,fldid);
+	}
+	SoStatus peek(_uint key,int fldid,SoVar* out)
+	{
+		return backend->getblock(MAKE64(key,fldid),out);
 	}
 };
 
@@ -406,7 +417,8 @@ public:
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
 	}
-
+	
+	SoStatus peek(_uint key,int fldid,SoVar* out);
 	SoStatus put(_uint key,int fldid,SoVar v);
 	SoVar get(_uint key,int fldid);
 };

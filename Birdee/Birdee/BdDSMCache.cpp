@@ -436,6 +436,34 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 	return ret;
 }
 
+SoStatus DSMDirectoryCache::peek(_uint key,int fldid,SoVar* out)
+{
+	long long k=MAKE64(key,fldid);
+	ENTER_GC_LOCK();
+	UaEnterReadRWLock(&hash_lock);
+	hash_iterator itr=cache.find(k);
+	bool found=(itr!=cache.end());
+	CacheBlock* foundblock=found?itr->second:NULL;
+	UaLeaveReadRWLock(&hash_lock);
+
+	if(found)
+	{
+		UaEnterReadRWLock(&foundblock->lock);
+		if(foundblock->key!=k) //in case that the block is swapped out and reused
+		{
+			UaLeaveReadRWLock(&foundblock->lock);
+			LEAVE_GC_LOCK();
+			goto MISS;
+		}
+		memcpy(out,foundblock->cache,sizeof(foundblock->cache));
+		UaLeaveReadRWLock(&foundblock->lock);
+		LEAVE_GC_LOCK();
+		return SoOK;
+	}
+	MISS:
+	return backend->getblock(k,out);
+}
+
 SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 {
 #ifdef BD_DSM_STAT
