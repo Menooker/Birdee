@@ -47,6 +47,7 @@ typedef enum {
 #define ARRAY_METHOD_REMOVE "remove"
 #define ARRAY_METHOD_ADD "add"
 #define ARRAY_PREFIX "array#"
+#define GLOBAL_ARRAY_PREFIX "globalarray#"
 
 #define STRING_METHOD_LENGTH "length"
 #define STRING_METHOD_SUBSTR "substr"

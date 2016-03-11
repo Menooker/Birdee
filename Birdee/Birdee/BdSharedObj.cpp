@@ -16,6 +16,10 @@ extern void ExCall(BINT index);
 extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 
 
+#define SoIsSharedObjectOrArray(ref) 	(ref->v_table && \
+	(ref->v_table==curdvm->global_array_v_table || (ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)) )
+
+
 
 BD_RWLOCK gc_lock;
 int gc_undergo=0;
@@ -38,13 +42,41 @@ void SoThrowKeyError()
 	//fix-me : implement me
 }
 
-void SoLocalGC()
+void SoLocalGC(int round_id)
 {
+	DVM_ObjectRef *obj;
+    ExecutableEntry *ee_pos;
+	int i;
+
 	UaEnterWriteRWLock(&gc_lock);
 	gc_undergo=1;
 
 	ThPauseTheWorld();
 
+    for (ee_pos = curdvm->executable_entry; ee_pos; ee_pos = ee_pos->next) {
+        for (i = 0; i < ee_pos->static_v.variable_count; i++) {
+			obj=&ee_pos->static_v.variable[i].object;
+			
+            if (ee_pos->executable->global_variable[i].type->)) {
+                gc_mark();
+            }
+        }
+    }
+
+	UaEnterLock(&dvm->thread_lock);
+	th=dvm->mainvm;
+	while(th)
+	{
+		for (i = 0,j= th->stack.stack; j < th->stack.stack_pointer; j++, i++) {
+			if (th->stack.pointer_flags[i]) {
+				gc_mark(&j->object);
+			}
+		}
+		gc_mark(&th->current_exception);
+		gc_mark(&th->new_obj);
+		th=th->next;
+	}
+	UaLeaveLock(&dvm->thread_lock);
 	
 	gc_undergo=0;
 	UaLeaveWriteRWLock(&gc_lock);
@@ -253,8 +285,8 @@ private:
 	{
 		if(backend->inc(0xFFFFFFFF,1,1)==1)
 		{
-			//if the current thread is the first to trigger GC
-			RcTriggerGC();
+			//if the current thread is the first to trigger GC 
+			RcTriggerGC(storage.inc(0xFFFFFFFF,2,1));
 			SoLocalGC();
 			RcWaitForGCMarkCompletion();
 		}
@@ -283,6 +315,8 @@ public:
 		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
 		if(curdvm->is_master)
 		{
+			//the round of GC triggered
+			storage.setcounter(0xFFFFFFFF,2,0); 
 			SoInitGCState();
 		}
 		UaInitRWLock(&gc_lock);
@@ -729,11 +763,53 @@ int SoDoCreateArray(DVM_VirtualMachine *dvm, int dim, int dim_index,
     return ret;
 }
 
+
+void SoArraySize(DVM_Value *args)
+{
+	DBG_assert(args->object.v_table==curdvm->global_array_v_table, ("Bad type"));
+	curthread->retvar.int_value=storage.getsize((int)args->object.data);
+}
+
+void SoArrayTostr(DVM_Value *args)
+{
+    DVM_Object  *bthis;
+    bthis = args->object.data ;
+	DBG_assert(args->object.v_table==curdvm->global_array_v_table, ("Bad type"));
+
+	char buf[LINE_BUF_SIZE];
+    DVM_Char *wc_str;
+    sprintf(buf, "GlobalArray@%x", bthis); //improve-me : print the contents
+    wc_str = dvm_mbstowcs_alloc(curthread, buf);
+	curthread->retvar.object =  dvm_create_dvm_string_i(curdvm, wc_str);
+}
+
+
+void SoArrayUnimplementedStub(DVM_Value *args)
+{
+    _BreakPoint();
+}
+
+void SoArrayEquals(DVM_Value *args)
+{
+    DVM_Object *bobj, *bthis;
+    bobj = args->object.data ;
+	if(args->object.v_table!=curdvm->global_array_v_table)
+	{
+		curthread->retvar.int_value=DVM_FALSE;
+		return;
+	}
+    bthis = args[1].object.data ;
+    DBG_assert(bthis->type == ARRAY_OBJECT, ("bthis->type..%d", bthis->type));
+	curthread->retvar.int_value = (bobj!=bthis)?DVM_FALSE:DVM_TRUE;
+}
+
+
+
 DVM_ObjectRef SoCreateArray(DVM_VirtualMachine *dvm, int dim, DVM_TypeSpecifier *type)
 {
     DVM_ObjectRef ret;
 	ret.data= (DVM_Object*)SoDoCreateArray(dvm, dim, 0, type);
-	ret.v_table = dvm->array_v_table;//fix-me :
+	ret.v_table = dvm->global_array_v_table;
     curthread->stack.stack_pointer -= dim; curthread->stack.flg_sp -=dim;
 	return ret;
 }

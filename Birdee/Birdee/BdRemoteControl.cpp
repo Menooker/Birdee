@@ -400,7 +400,7 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 				break;
 			case RcCmdDoGC:
 				RcBeforeGC();
-				SoLocalGC();
+				SoLocalGC(cmd.param);
 				cmd.cmd=RcCmdDoneGC;
 				RcSend(s,&cmd,sizeof(cmd));
 				break;
@@ -581,8 +581,9 @@ Broadcast GC message and trigger GC's mark phase
 Only called on master
 param: src - the source of the message (index of
 		"slavenodes", -1 represents the master)
+		round_id - the round number of the current GC
 */
-void RcBroadcastGC(int src)
+void RcBroadcastGC(int src,int round_id)
 {
 	RcCommandPack sendcmd;
 	if(global_gc)
@@ -592,6 +593,7 @@ void RcBroadcastGC(int src)
 	}
 	global_gc=1;
 	sendcmd.cmd=RcCmdDoGC;
+	sendcmd.param=round_id;
 	for(int j=0;j<src;j++)
 	{
 		RcSend(slavenodes[j],&sendcmd,sizeof(sendcmd));
@@ -626,17 +628,18 @@ inline void RcWaitForGCMarkCompletion()
 Tells other nodes to StopTheWorld and do GC mark
 Can be called on master and slave
 */
-inline void RcTriggerGC()
+inline void RcTriggerGC(int round_id)
 {
 	RcBeforeGC();
 	if(curdvm->is_master)
 	{	
-		RcBroadcastGC(-1);
+		RcBroadcastGC(-1,round_id);
 	}
 	else
 	{
 		RcCommandPack cmd;
 		cmd.cmd=RcCmdTriggerGC;
+		cmd.param=round_id;
 		RcSend(masternode,&cmd,sizeof(cmd));
 	}
 
@@ -691,7 +694,7 @@ inline void RcTriggerGC()
 				case RcCmdTriggerGC:
 					RcBeforeGC();
 					gc_thread=UaCreateThreadEx(RcMasterGCProc,NULL);
-					RcBroadcastGC(i);
+					RcBroadcastGC(i,cmd.param);
 					break;
 				case RcCmdDoneGC:
 					if(!global_gc)
