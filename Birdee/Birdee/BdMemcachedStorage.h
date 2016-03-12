@@ -27,6 +27,7 @@ public:
 	SoStatus getstr(_uint key,wchar_t** str,_uint* len);
 	bool exists(_uint key);
 	SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag);
+	SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag);
 	int inc(_uint key,int fldid,int inc);
 	int dec(_uint key,int fldid,int dec);
 	int getcounter(_uint key,int fldid);

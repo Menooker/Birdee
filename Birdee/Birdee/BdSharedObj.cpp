@@ -41,11 +41,69 @@ void SoThrowKeyError()
 	//fix-me : implement me
 }
 
+/*
+the cache for the global GC mark table.
+The cache does not hold strong consistency. If some other
+node mark some of the object, the node will not immediately
+know that the object is marked. Our solution is to use a 
+counter to count the "not marked" of objects. If some object
+is found in cache not marked for 3 times, we have to take a 
+look at the DSM to find the up-to-date mark of the object.
+The hashmap is to store the "not marked" times for each 
+object. If an object is marked, the value of it is 0.
+*/
+std::hash_map<int,int> gc_mark_map;
+
+inline bool SoIsObjectMarked(int id,int round_id)
+{
+	std::hash_map<int,int>::iterator itr=gc_mark_map.find(id);
+	if(itr!=gc_mark_map.end())
+	{
+		if(itr->second==0)
+		{
+			return true;
+		}
+		int unmarked=itr->second+1;
+		if(unmarked>=3)
+		{
+			goto FETCH_STATE;
+		}
+		else
+			gc_mark_map[id]=unmarked;
+		return false;
+	}
+
+FETCH_STATE:
+	if(storage.get_with_default(id,0xFFFFFFFF,0)>=round_id)
+	{
+		gc_mark_map[id]=0;
+		return true;
+	}
+	else
+	{
+		gc_mark_map[id]=1;
+		return false;
+	}
+
+}
+
+void SoMarkObject(DVM_ObjectRef* obj,int round_id)
+{
+	int id=(int)obj->data;
+	if(SoIsObjectMarked(id,round_id))
+	{
+		return;
+	}
+	getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
+}
+
 void SoLocalGC(int round_id)
 {
 	DVM_ObjectRef *obj;
     ExecutableEntry *ee_pos;
 	int i;
+	
+	gc_mark_map.clear();
 
 	UaEnterWriteRWLock(&gc_lock);
 	gc_undergo=1;
@@ -205,15 +263,29 @@ public:
 		return map.find(MAKE64(key,0))!=map.end();
 	}
 
+	SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
+	{
+		if(map.find(MAKE64(key,0xFFFFFFFE))==map.end())
+		{
+			DataNode nd;
+			tag=map[MAKE64(key,0xFFFFFFFE)].tag;
+			flag=map[MAKE64(key,0xFFFFFFFE)].flag;
+			fld_cnt=map[MAKE64(key,0xFFFFFFFE)].cls.field_cnt;
+			return SoOK;
+		}
+		else
+			return SoFail;
+	}
+
 	SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	{
-		if(map.find(MAKE64(key,0))==map.end())
+		if(map.find(MAKE64(key,0xFFFFFFFE))==map.end())
 		{
 			DataNode nd;
 			nd.tag=tag;
 			nd.flag=flag;
 			nd.cls.field_cnt=fld_cnt;
-			map[MAKE64(key,0)]=nd;
+			map[MAKE64(key,0xFFFFFFFE)]=nd;
 			return SoOK;
 		}
 		else
@@ -303,8 +375,9 @@ private:
 		if(backend->inc(0xFFFFFFFF,1,1)==1)
 		{
 			//if the current thread is the first to trigger GC 
-			RcTriggerGC(storage.inc(0xFFFFFFFF,2,1));
-			SoLocalGC();
+			int rid=storage.inc(0xFFFFFFFF,2,1);
+			RcTriggerGC(rid);
+			SoLocalGC(rid);
 			RcWaitForGCMarkCompletion();
 		}
 	}
@@ -346,9 +419,35 @@ public:
 		delete backend;
 		delete cache;
 	}
+
+	SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
+	{
+		return backend->getinfo(key,tag,fld_cnt,flag);
+	}
+
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
 		return cache->put(key,fldid,v);
+	}
+
+	/*
+	Get integer without throwing an error.
+	Returns "vdefault" if an exception occurs.
+	*/
+	int get_with_default(_uint key,int fldid,int vdefault)
+	{
+		try
+		{
+			return cache->get(key,fldid).vi;
+
+		}
+		catch (int &a)
+		{
+			if(a==SO_KEY_NOT_FOUND)
+			{
+				return vdefault;
+			}
+		}
 	}
 
 	SoVar get(_uint key,int fldid)
@@ -378,21 +477,6 @@ public:
 		printf("Overall Stats %d/%d=%f\n",whit+rhit,writes+reads,1.0*(whit+rhit)/(writes+reads));
 	}
 
-/*	SoStatus putvar(_uint key,SoType tag,SoVar var)
-	{
-		DataNode node={tag,0};
-		node.var=var;
-		return backend->put(key,&node);
-	};
-
-	SoVar getvar(_uint key)
-	{
-		SoVar ret;
-		DataNode pnode=backend->get(key);
-		DBG_assert(isVar(pnode.tag),("Var type is wrong %d\n",pnode.tag));
-		return pnode.var;
-	};
-	*/
 	SoStatus putstr(_uint key,DVM_ObjectRef* s)
 	{
 		DataNode nd;

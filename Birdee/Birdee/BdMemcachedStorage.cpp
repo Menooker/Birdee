@@ -264,6 +264,32 @@ bool SoStorageMemcached::exists(_uint key)//fix-me : improve
 	return false;
 }
 
+SoStatus SoStorageMemcached::getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
+{
+	NodeValue* pnd;
+	unsigned long long k=MAKE64(key,0xFFFFFFFE);
+	char* mret;
+	size_t len;
+	size_t flg;
+	memcached_return rc;
+//	char ch[17];
+//	sprintf(ch,"%016llx",k);
+    mret=memcached_get(memc,(char*)&k,8,&len,&flg,&rc);
+    if (rc == MEMCACHED_SUCCESS) {
+        pnd=(NodeValue*)mret;
+		tag=pnd->tag;
+		fld_cnt=pnd->field_cnt;
+		flag=pnd->flag;
+        memcached_free2(mret);
+        return SoOK;
+    }
+    else
+    {
+        printf("Error:%d",memc->cached_errno);
+		return SoFail;
+    }
+}
+
 SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 {
 	NodeValue nd;
@@ -272,7 +298,7 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	nd.flag=flag;
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
-	long long k=MAKE64(key,0xFFFFFFFF);
+	long long k=MAKE64(key,0xFFFFFFFE);
 	if(memcached_add(memc,(char*)&k,8,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
 		return SoOK;
 	return SoFail;

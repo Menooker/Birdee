@@ -147,6 +147,7 @@ public:
 	virtual SoStatus getstr(_uint key,wchar_t** str,_uint* len)=0;
 	virtual bool exists(_uint key)=0;
 	virtual SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)=0;
+	virtual SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)=0;
 	virtual int getsize(_uint key)=0;
 	virtual SoStatus getblock(long long addr,SoVar* buf)=0;
 };
