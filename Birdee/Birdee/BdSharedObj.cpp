@@ -16,9 +16,8 @@ extern void ExCall(BINT index);
 extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 
 
-#define SoIsSharedObjectOrArray(ref) 	(ref->v_table && \
-	(ref->v_table==curdvm->global_array_v_table || (ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)) )
-
+#define SoIsSharedObject(ref)  (ref->v_table && ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)
+#define SoIsSharedArray(ref)  (ref->v_table==curdvm->global_array_v_table)
 
 
 BD_RWLOCK gc_lock;
@@ -57,9 +56,27 @@ void SoLocalGC(int round_id)
         for (i = 0; i < ee_pos->static_v.variable_count; i++) {
 			obj=&ee_pos->static_v.variable[i].object;
 			
-            if (ee_pos->executable->global_variable[i].type->)) {
+			if (SoIsSharedObject(obj))
+			{
                 gc_mark();
             }
+			else if(SoIsSharedArray(obj))
+			{
+
+			}
+        }
+
+		for (i = 0; i < ee_pos->executable->shared_global_variable_count; i++) {
+			obj=&ee_pos->static_v.variable[i].object;
+			
+			if (SoIsSharedObject(obj))
+			{
+                gc_mark();
+            }
+			else if(SoIsSharedArray(obj))
+			{
+
+			}
         }
     }
 
@@ -569,7 +586,7 @@ void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr
 	{
 		for( ExecutableEntry* ee=curdvm->executable_entry;ee;ee=ee->next)
 		{
-			SoNewModule(ee->executable->id,ee->executable->shared_count);
+			SoNewModule(ee->executable->id,ee->executable->shared_global_variable_count);
 		}
 	}
 }

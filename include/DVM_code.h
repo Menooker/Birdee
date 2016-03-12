@@ -368,7 +368,6 @@ struct DVM_Executable_tag {
 	int					isDyn;
 	char*				libname;
 	int					id;
-	int					shared_count;
 
 };
 

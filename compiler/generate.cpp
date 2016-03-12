@@ -2258,7 +2258,6 @@ dkc_generate(DKC_Compiler *compiler)
     exe->enum_definition = compiler->dvm_enum;
     exe->constant_count = compiler->dvm_constant_count;
     exe->constant_definition = compiler->dvm_constant;
-	exe->shared_count=compiler->shared_count;
 	if(compiler->package_name)
 		mod=BcNewModule(strname,compiler->path);
 	else
