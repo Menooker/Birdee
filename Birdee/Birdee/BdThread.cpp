@@ -1,6 +1,7 @@
 #include "BdThread.h"
 #include "BdSharedObj.h"
 #include "BdParameters.h"
+#include <time.h>
 extern "C"
 {
 	void ThPauseTheWorld()
@@ -77,6 +78,7 @@ extern "C"
 //#ifdef BD_ON_WINDOWS
 		init_memcached_this_thread();
 //#endif
+		srand((int)param->tid + time(NULL));
 		curthread=param;
         if(param->thread_obj_id)
 		{
