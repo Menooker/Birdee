@@ -93,6 +93,9 @@
     <None Include="pi.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="mergesort.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

@@ -1,5 +1,24 @@
 require Remote
 
+shared class ClsA
+	public a as int
+	public b as int
+	public c as ClsB
+end
+
+shared class ClsB
+	public a as double
+	public b as double
+	public c as ClsA	
+end
+
+sub assert(v as boolean, prompt as string)
+	if v==false then
+		println(prompt)
+		BreakPoint()
+	end
+end
+
 dim hosts as string[]={"127.0.0.1","127.0.0.1"}
 dim ports as int[]={13020,13090}
 //dim hosts as string[]=new string[0]
@@ -17,160 +36,64 @@ dim p as shared int[] global=new int[n] global
 dim p2 as int[]=new int[n]
 dim rand_num as int =1234
 
-dim time as int=GetClock()
-dim ii as int
-for ii=0;ii<n;ii++
-unsafe
-	/*p[ii]=rand_num
-	p2[ii]=rand_num
-	rand_num=(rand_num*rand_num+rand_num*17+3)
-	*/
-	p[ii]=n-ii
+dim a1 as ClsA=new ClsA()
+dim b1 as ClsB=new ClsB()
+a1.c=b1
+b1.c=a1
+a1=null
+b1=null
+//made a reference loop above
 
+a1=new ClsA()
+b1=new ClsB()
+a1.c=b1
+a1.a=1
+b1.a=2.0
+b1=null
+//b1.c is not initialized
+
+dim a2 as shared ClsA=new ClsA()
+dim b2 as ClsB=new ClsB()
+b2.a=12.0
+b2.b=1.0
+a2.c=b2
+b2=null
+//check if b2 is alive
+
+dim arr1 as shared int[][] global=new int[10][10] global
+for #i=0;#i<10;#i++
+    for #j=0;#j<10;#j++
+		arr1[#i][#j]=#i+#j
+	end
 end
 
-println("Put ok " + (GetClock()-time))
-
-/*
-threadproc2(0)
-println("LOCAL OK")
-for ii=0;ii<20;ii++
-    println(p2[ii])
-end
-*/
-time=GetClock()
-
-dim barrier as shared RemoteBarrier=new RemoteBarrier(thread_num)
-dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
+dim arr2 as ClsA[] global=new ClsA[10] global
+arr2[1]=new ClsA()
+arr2[1].a=12
+arr2[1].c=new ClsB()
+arr2[1].c.a=33.0
 
 dim tid as int
 for #i=0;#i<node_num;#i++
     for #j=0;#j<threads;#j++
         nodes[#i].CreateThread(threadproc,tid)
-        //CreateThread(threadproc,true,tid)
         tid++
     end
 end
 
+//check!
 
-
-
-try
-	barrier_main.enter(-1,32)
-catch CounterOutOfBoundException err2
-	println("Error!")
-end
-println("DONE "+ (GetClock()-time))
-dim last as int=-100000000
-for ii=0;ii<20;ii++
-    println(p[ii])
-end
-for ii=0;ii<n;ii++
-unsafe
-	/*if p[ii]!=p2[ii] then
-		println("ERROR"+ii + " "+p[ii] + " "+p2[ii])
-		gets()
-	end
-	*/
-	if p[ii]!=ii+1 then
-		println("ERROR"+ (ii+1) + " "+p[ii] )
-		gets()
+assert(a1.c.a==2.0,"a1.c.a==2.0")
+assert(a2.c.a==12.0,"a2.c.a==12.0")
+assert(a2.c.b==1.0,"a2.c.b==1.0")
+for #i=0;#i<10;#i++
+    for #j=0;#j<10;#j++
+		assert(arr1[#i][#j]==#i+#j,"arr1[#i][#j]==#i+#j")
 	end
 end
+assert(arr2[1].a==12,"arr2[1].a==12")
+assert(arr2[1].c.a==33.0,"arr2[1].c.a==33.0")
 
 //nodes[0].Close()
 //nodes[1].Close()
 gets()
-
-function threadproc(id as var) as int
-unsafe
-    println("ID="+id)
-	dim base as int
-	dim tmp as int[]=new int[n]
-    dim current_step as int
-	for current_step=2;current_step<=n;current_step*=2
-		println(current_step)
-		for base=id*current_step;base<n;base+=thread_num*current_step
-			dim start1 as int=base
-			dim start2 as int=base+current_step/2
-			dim end1 as int=start2
-			dim end2 as int=base+current_step
-
-			dim i as int
-			for i=0;i<current_step;i++
-				if start1>=end1 then
-					tmp[i]=p[start2]
-					start2++
-					continue
-				end
-
-				if start2>=end2 then
-					tmp[i]=p[start1]
-					start1++
-					continue
-				end
-				if p[start1]<p[start2] then
-					tmp[i]=p[start1]
-					start1++
-				else
-					tmp[i]=p[start2]
-					start2++
-				end
-			end
-			for i=0;i<current_step;i++
-				p[base+i]=tmp[i]
-			end
-		end
-		try
-			barrier.enter(-1,32)
-		catch CounterOutOfBoundException err
-			println("Error!")
-		end
-
-	end
-	try
-		barrier_main.enter(0,32)
-	catch CounterOutOfBoundException err
-		println("Error!")
-	end
-end
-
-function threadproc2(id as var) as int
-	dim base as int
-	dim tmp as int[]=new int[n]
-    dim current_step as int
-	for current_step=2;current_step<=n;current_step*=2
-		for base=0;base<n;base+=current_step
-			dim start1 as int=base
-			dim start2 as int=base+current_step/2
-			dim end1 as int=start2
-			dim end2 as int=base+current_step
-
-			dim i as int
-			for i=0;i<current_step;i++
-				if start1>=end1 then
-					tmp[i]=p2[start2]
-					start2++
-					continue
-				end
-
-				if start2>=end2 then
-					tmp[i]=p2[start1]
-					start1++
-					continue
-				end
-				if p2[start1]<p2[start2] then
-					tmp[i]=p2[start1]
-					start1++
-				else
-					tmp[i]=p2[start2]
-					start2++
-				end
-			end
-			for i=0;i<current_step;i++
-				p2[base+i]=tmp[i]
-			end
-		end
-	end
-end
-

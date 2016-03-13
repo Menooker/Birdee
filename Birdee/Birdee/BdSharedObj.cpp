@@ -1011,8 +1011,7 @@ int SoMarkObject(int id,int round_id,int class_idx)
 			}
 			if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
 			{
-				int cls_idx=ec->executable->class_table[ec->field_type[i]->u.class_t.index];
-				SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,cls_idx);
+				SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,UNKNOWN_CLASS_INDEX);
 			}
 		}
 		else if(ec->field_type[i]->derive_count > 0 
@@ -1030,7 +1029,7 @@ int SoMarkObject(int id,int round_id,int class_idx)
 			{
 				int cls_idx;
 				if(ec->field_type[i]->basic_type == DVM_CLASS_TYPE)
-					cls_idx=ec->executable->class_table[ec->field_type[i]->u.class_t.index];
+					cls_idx=UNKNOWN_CLASS_INDEX;
 				else
 					cls_idx=BASIC_CLASS_INDEX;
 				SoMarkArray(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,ec->field_type[i]->derive_count,cls_idx);
@@ -1048,8 +1047,7 @@ void SoMark(DVM_ObjectRef *obj,ExecutableEntry *ee_pos,DVM_TypeSpecifier* type,i
 		return;
 	if (SoIsSharedObject(obj))
 	{
-		int cls_idx=ee_pos->class_table[type->u.class_t.index];
-		SoMarkObject(id,round_id,cls_idx);
+		SoMarkObject(id,round_id,UNKNOWN_CLASS_INDEX);
     }
 	else if(SoIsSharedArray(obj))
 	{
@@ -1102,8 +1100,7 @@ void SoLocalGC(int round_id)
 				////////////////
 				if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
 				{
-					int cls_idx=ee_pos->class_table[type->u.class_t.index];
-					SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,cls_idx);
+					SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,UNKNOWN_CLASS_INDEX);
 				}
             }
 			else if(type->derive_count > 0 
@@ -1123,7 +1120,7 @@ void SoLocalGC(int round_id)
 				{
 					int cls_idx;
 					if(type->basic_type == DVM_CLASS_TYPE)
-						cls_idx=ee_pos->class_table[type->u.class_t.index];
+						cls_idx=UNKNOWN_CLASS_INDEX;
 					else
 						cls_idx=BASIC_CLASS_INDEX;
 					SoMarkArray(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,type->derive_count,cls_idx);
