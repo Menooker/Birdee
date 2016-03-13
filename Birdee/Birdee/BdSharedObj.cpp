@@ -16,9 +16,8 @@ extern void ExCall(BINT index);
 extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 
 
-#define SoIsSharedObject(ref)  (ref->v_table && ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)
-#define SoIsSharedArray(ref)  (ref->v_table==curdvm->global_array_v_table)
-
+#define SoIsSharedObject(ref)  ((ref)->v_table && (ref)->v_table->exec_class && (ref)->v_table->exec_class->dvm_class->is_shared)
+#define SoIsSharedArray(ref)  ((ref)->v_table==curdvm->global_array_v_table)
 
 BD_RWLOCK gc_lock;
 int gc_undergo=0;
@@ -41,121 +40,7 @@ void SoThrowKeyError()
 	//fix-me : implement me
 }
 
-/*
-the cache for the global GC mark table.
-The cache does not hold strong consistency. If some other
-node mark some of the object, the node will not immediately
-know that the object is marked. Our solution is to use a 
-counter to count the "not marked" of objects. If some object
-is found in cache not marked for 3 times, we have to take a 
-look at the DSM to find the up-to-date mark of the object.
-The hashmap is to store the "not marked" times for each 
-object. If an object is marked, the value of it is 0.
-*/
-std::hash_map<int,int> gc_mark_map;
 
-inline bool SoIsObjectMarked(int id,int round_id)
-{
-	std::hash_map<int,int>::iterator itr=gc_mark_map.find(id);
-	if(itr!=gc_mark_map.end())
-	{
-		if(itr->second==0)
-		{
-			return true;
-		}
-		int unmarked=itr->second+1;
-		if(unmarked>=3)
-		{
-			goto FETCH_STATE;
-		}
-		else
-			gc_mark_map[id]=unmarked;
-		return false;
-	}
-
-FETCH_STATE:
-	if(storage.get_with_default(id,0xFFFFFFFF,0)>=round_id)
-	{
-		gc_mark_map[id]=0;
-		return true;
-	}
-	else
-	{
-		gc_mark_map[id]=1;
-		return false;
-	}
-
-}
-
-void SoMarkObject(DVM_ObjectRef* obj,int round_id)
-{
-	int id=(int)obj->data;
-	if(SoIsObjectMarked(id,round_id))
-	{
-		return;
-	}
-	getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
-}
-
-void SoLocalGC(int round_id)
-{
-	DVM_ObjectRef *obj;
-    ExecutableEntry *ee_pos;
-	int i;
-	
-	gc_mark_map.clear();
-
-	UaEnterWriteRWLock(&gc_lock);
-	gc_undergo=1;
-
-	ThPauseTheWorld();
-
-    for (ee_pos = curdvm->executable_entry; ee_pos; ee_pos = ee_pos->next) {
-        for (i = 0; i < ee_pos->static_v.variable_count; i++) {
-			obj=&ee_pos->static_v.variable[i].object;
-			
-			if (SoIsSharedObject(obj))
-			{
-                gc_mark();
-            }
-			else if(SoIsSharedArray(obj))
-			{
-
-			}
-        }
-
-		for (i = 0; i < ee_pos->executable->shared_global_variable_count; i++) {
-			obj=&ee_pos->static_v.variable[i].object;
-			
-			if (SoIsSharedObject(obj))
-			{
-                gc_mark();
-            }
-			else if(SoIsSharedArray(obj))
-			{
-
-			}
-        }
-    }
-
-	UaEnterLock(&dvm->thread_lock);
-	th=dvm->mainvm;
-	while(th)
-	{
-		for (i = 0,j= th->stack.stack; j < th->stack.stack_pointer; j++, i++) {
-			if (th->stack.pointer_flags[i]) {
-				gc_mark(&j->object);
-			}
-		}
-		gc_mark(&th->current_exception);
-		gc_mark(&th->new_obj);
-		th=th->next;
-	}
-	UaLeaveLock(&dvm->thread_lock);
-	
-	gc_undergo=0;
-	UaLeaveWriteRWLock(&gc_lock);
-}
 
 class SoStorageLocalTest : public SoStorage
 {
@@ -430,6 +315,11 @@ public:
 		return cache->put(key,fldid,v);
 	}
 
+	SoStatus peek(_uint key,int fldid,SoVar* out)
+	{
+		return cache->peek(key,fldid,out);
+	}
+
 	/*
 	Get integer without throwing an error.
 	Returns "vdefault" if an exception occurs.
@@ -526,7 +416,9 @@ public:
 
 		for(int i=0;i<BD_MAX_SHARED_KEY_TRIES;i++)
 		{
-			key=rand();
+			while(key<BD_MAX_SHARED_MODULES)
+				key=rand();
+			
 			//_uint randk=rand();
 			//nd.var.vi=randk;
 			if(backend->newobj(key,tag,fld_cnt,flag)==SoOK)
@@ -559,13 +451,13 @@ public:
 			SoThrowKeyError();
 		return ret;
 	};
-	_uint newarray(int size, int isobj)
+	_uint newarray(int size, int dim)
 	{
 		if(backend->getcounter(0xFFFFFFFF,0) - size<=0)
 		{
 			TriggerGC();
 		}
-		_uint ret=allockey(SoArray,size,isobj);
+		_uint ret=allockey(SoArray,size,dim);
 		if(ret==0)
 			SoThrowKeyError();
 		return ret;
@@ -828,7 +720,7 @@ int SoDoCreateArray(DVM_VirtualMachine *dvm, int dim, int dim_index,
         case DVM_INT_TYPE:
         case DVM_ENUM_TYPE:
         case DVM_DOUBLE_TYPE:
-			ret = storage.newarray(size,0);
+			ret = storage.newarray(size,1);
             break;
 		case DVM_CLASS_TYPE:
         case DVM_STRING_TYPE: /* FALLTHRU */
@@ -847,7 +739,7 @@ int SoDoCreateArray(DVM_VirtualMachine *dvm, int dim, int dim_index,
     } else if (type->derive[dim_index].tag == DVM_FUNCTION_DERIVE) {
         DBG_panic(("BFunction type in barray literal.\n"));
     } else {
-        ret = storage.newarray(size,1);
+        ret = storage.newarray(size,dim-dim_index);
         if (dim_index < dim - 1) {
 			curthread->stack.stack_pointer->object.data=(DVM_Object*)ret;
 			curthread->stack.stack_pointer->object.v_table=dvm->array_v_table; //fix-me
@@ -983,67 +875,289 @@ void SoInitGCState()
 	storage.setcounter(0xFFFFFFFF,1,0); 
 }
 
-extern BdStatus CpDumpBuffer(void* pArr,BINT size,CPBuffer* pbuf);
-extern BdStatus CpDumpStringW(wchar_t* p,CPBuffer* pbuf);
-extern "C" int ExDoInstanceOf(DVM_ObjectRef* obj,BINT target_idx);
+/*
+the cache for the global GC mark table. It holds all
+object id which is known by this node to be marked.
+*/
+std::hash_map<int,int> gc_mark_map;
 
-int clsSharedObj=-1;
+/*
+Make a mark on the object. Return if the object is already marked
+*/
+inline bool SoSetMark(int id,int round_id)
+{
+	std::hash_map<int,int>::iterator itr=gc_mark_map.find(id);
+	if(itr!=gc_mark_map.end())
+	{
+		return true;
+	}
+
+	if(storage.get_with_default(id,0xFFFFFFFF,0)>=round_id)
+	{
+		gc_mark_map[id]=1;
+		return true;
+	}
+	else
+	{
+		SoVar v;
+		v.vi=round_id;
+		storage.put(id,0xFFFFFFFF,v);
+		gc_mark_map[id]=1;
+		return false;
+	}
+
+}
+
+#define UNKNOWN_CLASS_INDEX (-1)
+#define BASIC_CLASS_INDEX (-2)
+
 
 
 /*
-void SoDoDump(DVM_Object* obj,ExecClass* cls,CPBuffer* pbuf)
-{
+Mark the object and its fields.
+The parameters:
+	class_idx - the class index of the object, set to UNKNOWN_CLASS_INDEX if it is unknown
+Return the class index of the object. The return value is useful if class index is unkonwn.
+*/
+int SoMarkObject(int id,int round_id,int class_idx);
 
-	CpDumpBuffer(&cls->class_index ,sizeof(cls->class_index),pbuf); //fix-me : class index may be different in different machines
-	for(int i=0;i<cls->field_count;i++)
+/*
+Mark the array and its contents. 
+The parameters:
+	dimension - it is of no use, just for checking.
+	class_idx - the class index of the contents, set to UNKNOWN_CLASS_INDEX if it is unknown
+Return the class index of the array's content.The return value is useful if class index is
+unkonwn.
+*/
+int SoMarkArray(int id,int round_id,int dimension,int class_idx)
+{
+	DBG_assert(dimension>=1,("Bad dimension %d, expecting >=1",dimension));
+	if(SoSetMark(id,round_id))
 	{
-		DVM_Boolean isobj=DVM_FALSE;
-		if(cls->field_type[i]->derive==NULL)
+		return class_idx;
+	}
+	if(dimension==1 && class_idx==BASIC_CLASS_INDEX)
+		return;
+	SoType tag;
+	int fld_cnt,flag;
+	if(storage.getinfo(id,tag,fld_cnt,flag)!=SoOK)
+	{
+		_BreakPoint;
+	}
+	DBG_assert(tag==SoArray,("Bad tag %d, expecting SoArray",tag));
+	if(dimension!=-1)
+	{
+		DBG_assert(dimension==flag,("Bad dimension %d, expecting local dim=%d",flag,dimension));
+	}
+	else
+		dimension=flag;
+	
+	SoVar datablock[DSM_CACHE_BLOCK_SIZE];
+	for(int i=0;i<fld_cnt;i++)
+	{
+		if(i%DSM_CACHE_BLOCK_SIZE==0)
 		{
-			switch(cls->field_type[i]->basic_type)
+			if(storage.peek(id,i,datablock)!=SoOK)
 			{
-			case DVM_BOOLEAN_TYPE:
-			case DVM_INT_TYPE:
-				CpDumpBuffer(&obj->u.class_object.field[i].int_value,sizeof(BINT),pbuf);
-				break;
-			case DVM_DOUBLE_TYPE:
-				CpDumpBuffer(&obj->u.class_object.field[i].int_value,sizeof(BINT),pbuf);
-				break;
-			case DVM_STRING_TYPE:
-				//CpDumpStringW(obj.data->u.class_object.field[i].object.data->u.string.string , pbuf);
-				break;
-			case DVM_CLASS_TYPE:
-				if(clsSharedObj==-1)
+				printf("Peek error\n");
+			}	
+		}
+		int subkey=datablock[i%DSM_CACHE_BLOCK_SIZE].key;
+		if(subkey!=0)
+		{
+			if(dimension==1)
+				class_idx=SoMarkObject(subkey,round_id,class_idx);
+			else
+				class_idx=SoMarkArray(subkey,round_id,dimension-1,class_idx);
+		}
+	}
+	return class_idx;
+}
+
+int SoMarkObject(int id,int round_id,int class_idx)
+{
+	if(SoSetMark(id,round_id))
+	{
+		return class_idx;
+	}
+	if(class_idx==UNKNOWN_CLASS_INDEX)
+	{
+		SoType tag;
+		int fld_cnt;
+		if(storage.getinfo(id,tag,fld_cnt,class_idx)!=SoOK)
+		{
+			_BreakPoint;
+		}
+		if(class_idx<0 || class_idx>=curdvm->class_count)
+		{
+			printf("GC found an object with a bad class flag\n");
+			_BreakPoint;
+		}
+	}
+    ExecClass *ec = curdvm->bclass[class_idx];
+	SoVar datablock[DSM_CACHE_BLOCK_SIZE];
+	int datablock_idx=-100;
+    for (int i = 0; i < ec->field_count; i++) {
+		if(ec->field_type[i]->basic_type == DVM_CLASS_TYPE && ec->field_type[i]->derive_count==0)
+		{
+			if(i-datablock_idx>=DSM_CACHE_BLOCK_SIZE)
+			{
+				//if the fetched block is not what we want
+				datablock_idx=i>>DSM_CACHE_BITS<<DSM_CACHE_BITS;
+				if(storage.peek(id,datablock_idx,datablock)!=SoOK)
 				{
-					clsSharedObj=DVM_search_class(curdvm,"lang.diksam","SharedObject");
-					DBG_assert(clsSharedObj!=-1,("Cannot find SharedObject class!"));
+					printf("Peek error\n");
 				}
-				if(!ExDoInstanceOf(&obj->u.class_object.field[i].object,clsSharedObj))
-				{
-					int clsid;
-					ExCreateExceptionEx(curdvm,"ClassCastException",&clsid,CLASS_CAST_ERR,
-						DVM_STRING_MESSAGE_ARGUMENT, "org",obj->u.class_object.field[i].object.v_table->exec_class->name ,
-                                   DVM_STRING_MESSAGE_ARGUMENT, "target","SharedObj");
-					ExRaiseException(clsid+1);
-				}
-				CpDumpBuffer(& obj->u.class_object.field[i].object.data->u.class_object.field[0].int_value,sizeof(BINT),pbuf);
-				break;
-			default:
-				DBG_assert(0, ("Error Type %d", cls->field_type[i]->basic_type));
+			}
+			if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
+			{
+				int cls_idx=ec->executable->class_table[ec->field_type[i]->u.class_t.index];
+				SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,cls_idx);
 			}
 		}
-		else if(cls->field_type[i]->derive->tag==DVM_ARRAY_DERIVE)
+		else if(ec->field_type[i]->derive_count > 0 
+			&& ec->field_type[i]->derive[0].tag == DVM_ARRAY_DERIVE)
 		{
-			//int arrsz=0;
-			//arrsz=cls->field_type[i]->derive_count;//check if it is right
-			//ExSerializeArray(obj.data->u.class_object.field[i].object,args[0].object,cls->field_type[i]->basic_type,arrsz);
-			DBG_assert(0, ("Error Derive %d"));
+			if(i-datablock_idx>=DSM_CACHE_BLOCK_SIZE)
+			{
+				datablock_idx=i>>DSM_CACHE_BITS<<DSM_CACHE_BITS;
+				if(storage.peek(id,datablock_idx,datablock)!=SoOK)
+				{
+					printf("Peek error\n");
+				}
+			}
+			if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
+			{
+				int cls_idx;
+				if(ec->field_type[i]->basic_type == DVM_CLASS_TYPE)
+					cls_idx=ec->executable->class_table[ec->field_type[i]->u.class_t.index];
+				else
+					cls_idx=BASIC_CLASS_INDEX;
+				SoMarkArray(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,ec->field_type[i]->derive_count,cls_idx);
+			}
 		}
+    }
+	return class_idx;
+}
+
+
+void SoMark(DVM_ObjectRef *obj,ExecutableEntry *ee_pos,DVM_TypeSpecifier* type,int round_id)
+{
+	int id=(int)obj->data;
+	if(!id)
+		return;
+	if (SoIsSharedObject(obj))
+	{
+		int cls_idx=ee_pos->class_table[type->u.class_t.index];
+		SoMarkObject(id,round_id,cls_idx);
+    }
+	else if(SoIsSharedArray(obj))
+	{
+		int cls_idx;
+		if(type->basic_type == DVM_CLASS_TYPE)
+			cls_idx=ee_pos->class_table[type->u.class_t.index];
 		else
-		{
-			DBG_assert(0, ("Error Derive %d"));
-		}
-
-
+			cls_idx=-1;
+		SoMarkArray(id,round_id,type->derive_count,cls_idx);
 	}
-}*/
+}
+
+void SoLocalGC(int round_id)
+{
+	DVM_ObjectRef *obj;
+    ExecutableEntry *ee_pos;
+	int i;
+	BdThread* th;
+	SoVar datablock[DSM_CACHE_BLOCK_SIZE];
+	int datablock_idx=-100;
+
+
+	gc_mark_map.clear();
+
+	UaEnterWriteRWLock(&gc_lock);
+	gc_undergo=1;
+
+	ThPauseTheWorld();
+
+    for (ee_pos = curdvm->executable_entry; ee_pos; ee_pos = ee_pos->next) {
+        for (i = 0; i < ee_pos->static_v.variable_count; i++) {
+			obj=&ee_pos->static_v.variable[i].object;
+			SoMark(obj,ee_pos,ee_pos->executable->global_variable[i].type,round_id);
+        }
+
+		for (i = 0; i < ee_pos->executable->shared_global_variable_count; i++) {
+			DVM_TypeSpecifier* type=ee_pos->executable->shared_global_variable[i].type;
+			if (type->basic_type==DVM_CLASS_TYPE
+				&& type->derive_count==0)
+			{
+				///////////fetch the data block
+				if(i-datablock_idx>=DSM_CACHE_BLOCK_SIZE)
+				{
+					datablock_idx=i>>DSM_CACHE_BITS<<DSM_CACHE_BITS;
+					if(storage.peek(ee_pos->executable->id,datablock_idx,datablock)!=SoOK)
+					{
+						printf("Peek error\n");
+					}
+				}
+				////////////////
+				if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
+				{
+					int cls_idx=ee_pos->class_table[type->u.class_t.index];
+					SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,cls_idx);
+				}
+            }
+			else if(type->derive_count > 0 
+				&& type->derive[0].tag == DVM_ARRAY_DERIVE)
+			{
+				///////////fetch the data block
+				if(i-datablock_idx>=DSM_CACHE_BLOCK_SIZE)
+				{
+					datablock_idx=i>>DSM_CACHE_BITS<<DSM_CACHE_BITS;
+					if(storage.peek(ee_pos->executable->id,datablock_idx,datablock)!=SoOK)
+					{
+						printf("Peek error\n");
+					}
+				}
+				////////////////
+				if(datablock[i%DSM_CACHE_BLOCK_SIZE].key!=0)
+				{
+					int cls_idx;
+					if(type->basic_type == DVM_CLASS_TYPE)
+						cls_idx=ee_pos->class_table[type->u.class_t.index];
+					else
+						cls_idx=BASIC_CLASS_INDEX;
+					SoMarkArray(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,type->derive_count,cls_idx);
+				}
+			}
+        }
+    }
+
+	UaEnterLock(&curdvm->thread_lock);
+	th=curdvm->mainvm;
+	DVM_Value* j;
+	while(th)
+	{
+		for (i = 0, j= th->stack.stack; j < th->stack.stack_pointer; j++, i++) {
+			if (th->stack.pointer_flags[i]) {
+				if(j->object.data)
+				{
+					if (SoIsSharedObject(&j->object))
+					{
+						SoMarkObject((int)j->object.data,round_id,UNKNOWN_CLASS_INDEX);
+					}
+					else if(SoIsSharedArray(&j->object))
+					{
+						SoMarkArray((int)j->object.data,round_id,-1,UNKNOWN_CLASS_INDEX);
+					}
+				}
+			}
+		}
+		th=th->next;
+	}
+	UaLeaveLock(&curdvm->thread_lock);
+	
+	gc_undergo=0;
+	UaLeaveWriteRWLock(&gc_lock);
+}
+
+
