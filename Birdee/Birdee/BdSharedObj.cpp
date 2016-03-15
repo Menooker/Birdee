@@ -22,6 +22,8 @@ extern "C" DVM_ObjectRef dvm_literal_to_dvm_string_i(DVM_VirtualMachine *dvm, DV
 BD_RWLOCK gc_lock;
 int gc_undergo=0;
 
+inline bool SoIsMarked(int id,int round_id);
+
 void SoThrowSetValueError()
 {
 	_BreakPoint
@@ -64,6 +66,17 @@ public:
 	int dec(_uint key,int fldid,int dec)
 	{
 		return UaAtomicDec((long*)&map[MAKE64(key,fldid)].var.vi,dec);
+	}
+
+	SoStatus del(_uint key,unsigned int len)
+	{
+		for(int i=0;i<len;i++)
+		{
+			map.erase(MAKE64(key,i));
+		}
+		map.erase(MAKE64(key,0xFFFFFFFE));
+		map.erase(MAKE64(key,0xFFFFFFFF));
+		return SoOK;
 	}
 
 	int getcounter(_uint key,int fldid)
@@ -253,7 +266,41 @@ private:
 	DSMCache* cache;
 	SOCKET controllisten; // the control socket for cache, managed by SharedStorage
 	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
-	
+	THREAD_ID thread_sweep;
+
+	struct ObjectData
+	{
+		int key;
+		unsigned int len;
+	};
+	static BD_EVENT event_sweep_start;
+	static BD_EVENT event_sweep_done;
+	static std::vector<ObjectData> gc_obj;
+
+	BD_LOCK obj_list_lock;
+	std::vector<ObjectData> allocated_obj;
+
+
+	static THREAD_PROC(SweepProc,param)
+	{
+		int round_id=1;
+		for(;;)
+		{
+			UaWaitForEvent(&event_sweep_start);
+			std::vector<ObjectData>::iterator itr;
+			for(itr=gc_obj.begin();itr!=gc_obj.end();itr++)
+			{
+				if(!SoIsMarked(itr->key,round_id))
+				{
+					storage.del(itr->key,itr->len);
+				}
+			}
+			UaSetEvent(&event_sweep_done);
+			round_id++;
+		}
+		return NULL;
+	}
+
 
 	void TriggerGC()
 	{
@@ -291,10 +338,14 @@ public:
 		if(curdvm->is_master)
 		{
 			//the round of GC triggered
-			storage.setcounter(0xFFFFFFFF,2,0); 
+			storage.setcounter(0xFFFFFFFF,2,1); 
 			SoInitGCState();
 		}
 		UaInitRWLock(&gc_lock);
+		UaInitEvent(&event_sweep_start,0);
+		UaInitEvent(&event_sweep_done,0);
+		thread_sweep=UaCreateThreadEx(SweepProc,NULL);
+		UaInitLock(&obj_list_lock);
 	}
 	~SharedStorage()
 	{
@@ -303,6 +354,26 @@ public:
 		closesocket(datalisten);
 		delete backend;
 		delete cache;
+		UaKillEvent(&event_sweep_start,0);
+		UaKillEvent(&event_sweep_done,0);
+		UaStopThread(thread_sweep);
+		UaCloseThread(thread_sweep);
+		UaKillLock(&obj_list_lock);
+	}
+
+	inline void del(int key,unsigned int len)
+	{
+		backend->del(key,len);
+	}
+	inline void wait_for_sweep()
+	{
+		UaWaitForEvent(&event_sweep_done);
+	}
+
+	inline void sweep()
+	{
+		gc_obj=allocated_obj;
+		UaSetEvent(&event_sweep_start);
 	}
 
 	SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
@@ -432,7 +503,13 @@ public:
 			throw SO_KEY_NOT_FOUND;
 		}
 		if(tag==SoObject || tag== SoArray)
+		{
+			UaEnterLock(&obj_list_lock);
+			ObjectData data={key,fld_cnt};
+			allocated_obj.push_back(data);
+			UaLeaveLock(&obj_list_lock);
 			backend->dec(0xFFFFFFFF,0,fld_cnt);
+		}
 		UaLeaveReadRWLock(&gc_lock);
 		return key;
 	}
@@ -881,6 +958,26 @@ object id which is known by this node to be marked.
 */
 std::hash_map<int,int> gc_mark_map;
 
+inline bool SoIsMarked(int id,int round_id)
+{
+	std::hash_map<int,int>::iterator itr=gc_mark_map.find(id);
+	if(itr!=gc_mark_map.end())
+	{
+		return true;
+	}
+
+	if(storage.get_with_default(id,0xFFFFFFFF,0)>=round_id)
+	{
+		gc_mark_map[id]=1;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+
 /*
 Make a mark on the object. Return if the object is already marked
 */
@@ -1069,6 +1166,8 @@ void SoLocalGC(int round_id)
 	SoVar datablock[DSM_CACHE_BLOCK_SIZE];
 	int datablock_idx=-100;
 
+	//wait for the last sweep to be done
+	storage.wait_for_sweep();
 
 	gc_mark_map.clear();
 
@@ -1155,6 +1254,7 @@ void SoLocalGC(int round_id)
 	
 	gc_undergo=0;
 	UaLeaveWriteRWLock(&gc_lock);
-}
 
+	storage.sweep();
+}
 

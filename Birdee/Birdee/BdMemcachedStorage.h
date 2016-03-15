@@ -33,6 +33,7 @@ public:
 	int getcounter(_uint key,int fldid);
 	void setcounter(_uint key,int fldid,int n);
 	int getsize(_uint key);
+	SoStatus del(_uint key,unsigned int len);
 	~SoStorageMemcached();
 
     memcached_st *main_memc;

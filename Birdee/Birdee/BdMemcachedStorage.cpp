@@ -140,6 +140,7 @@ int SoStorageMemcached::inc(_uint key,int fldid,int inc)
 	return ret-offset;
 
 }
+
 int SoStorageMemcached::dec(_uint key,int fldid,int dec)
 {
 	return inc(key,fldid,-dec);
@@ -338,4 +339,20 @@ SoStatus SoStorageMemcached::getblock(long long addr,SoVar* buf)
 	}
 	memcached_result_free(&results_obj);
 	return ret;
+}
+
+
+SoStatus SoStorageMemcached::del(_uint key,unsigned int len)
+{
+	long long k;
+	for(int i=0;i<len;i++)
+	{
+		k=MAKE64(key,i);
+		memcached_delete(memc,(char*)&k,8,0);
+	}
+	k=(MAKE64(key,0xFFFFFFFE));
+	memcached_delete(memc,(char*)&k,8,0);
+	k=(MAKE64(key,0xFFFFFFFF));
+	memcached_delete(memc,(char*)&k,8,0);
+	return SoOK;
 }

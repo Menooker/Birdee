@@ -137,11 +137,8 @@ private:
 		};
 
 
-#ifdef BD_ON_WINDOWS
-		static DWORD __stdcall ListenSocketProc(void* param)
-#else
-		static void* ListenSocketProc(void* param)
-#endif
+
+		static THREAD_PROC(ListenSocketProc,param)
 		{
 			DSMCacheProtocal* ths=(DSMCacheProtocal*)param;
 			for(int i=0;i<ths->ths->cache_id;i++)
@@ -210,11 +207,8 @@ private:
 		void ServerWriteback(long long addr,int src_id);
 		CacheMessageKind ServerWriteMiss(long long addr,int src_id,SoVar v,SoVar* outbuf);
 		CacheMessageKind ServerReadMiss(long long addr,int src_id,SoVar* outbuf);
-#ifdef BD_ON_WINDOWS
-		static DWORD __stdcall CacheProtocalProc(void* param)
-#else
-		static void* CacheProtocalProc(void* param)
-#endif
+
+		static THREAD_PROC(CacheProtocalProc,param)
 		{
 			init_memcached_this_thread();
 			DSMCacheProtocal* ths=((Params*)param)->ths;

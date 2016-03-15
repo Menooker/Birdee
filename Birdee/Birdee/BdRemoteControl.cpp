@@ -645,22 +645,15 @@ inline void RcTriggerGC(int round_id)
 
 }
 
-#ifdef BD_ON_WINDOWS
-	static DWORD __stdcall RcMasterGCProc(void* param)
-#else
-	static void* RcMasterGCProc(void* param)
-#endif
+static THREAD_PROC(RcMasterGCProc,param)
 {
-	SoLocalGC();
+	SoLocalGC((int)param);
 	return 0;
 }
 
 
-#ifdef BD_ON_WINDOWS
-	static DWORD __stdcall RcMasterListen(void* param)
-#else
-	static void* RcMasterListen(void* param)
-#endif
+
+static THREAD_PROC(RcMasterListen,param)
 {
 	int n=slavenodes.size();
 	fd_set readfds;
@@ -693,7 +686,7 @@ inline void RcTriggerGC(int round_id)
 				{
 				case RcCmdTriggerGC:
 					RcBeforeGC();
-					gc_thread=UaCreateThreadEx(RcMasterGCProc,NULL);
+					gc_thread=UaCreateThreadEx(RcMasterGCProc,(void*)cmd.param);
 					RcBroadcastGC(i,cmd.param);
 					break;
 				case RcCmdDoneGC:

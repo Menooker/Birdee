@@ -39,7 +39,11 @@ typedef void (*BdVMFunction)(void *args, ...);
 #define BD_STACK_DEEPTH 2048
 
 
-
+#ifdef BD_ON_WINDOWS
+		#define THREAD_PROC(name,param) DWORD __stdcall name(void* param)
+#else
+		#define THREAD_PROC(name,param) void* name(void* param)
+#endif
 
 typedef long BdStatus ;
 #define BdSuccess 0
