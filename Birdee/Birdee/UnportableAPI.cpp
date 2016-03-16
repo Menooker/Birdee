@@ -36,7 +36,7 @@ void __stdcall _UaStackTrace(int StackBase, int ebp, int esp,UaTraceCallBack cb,
 
 }
 
-inline void UaInitEvent(BD_EVENT* pevent,int state)
+void UaInitEvent(BD_EVENT* pevent,int state)
 {
 	*pevent=CreateEvent(NULL,TRUE,state?TRUE:FALSE,NULL);
 }

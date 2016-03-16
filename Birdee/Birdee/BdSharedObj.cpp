@@ -257,10 +257,18 @@ public:
 
 };
 
-
+class SharedStorage;
+SharedStorage* pstorage=NULL;
+#define storage (*pstorage)
 
 class SharedStorage
 {
+public:
+	struct ObjectData
+	{
+		int key;
+		unsigned int len;
+	};
 private:
 	SoStorage* backend;
 	DSMCache* cache;
@@ -268,11 +276,6 @@ private:
 	SOCKET datalisten; //the data socket for cache, managed by SharedStorage
 	THREAD_ID thread_sweep;
 
-	struct ObjectData
-	{
-		int key;
-		unsigned int len;
-	};
 	static BD_EVENT event_sweep_start;
 	static BD_EVENT event_sweep_done;
 	static std::vector<ObjectData> gc_obj;
@@ -354,8 +357,8 @@ public:
 		closesocket(datalisten);
 		delete backend;
 		delete cache;
-		UaKillEvent(&event_sweep_start,0);
-		UaKillEvent(&event_sweep_done,0);
+		UaKillEvent(&event_sweep_start);
+		UaKillEvent(&event_sweep_done);
 		UaStopThread(thread_sweep);
 		UaCloseThread(thread_sweep);
 		UaKillLock(&obj_list_lock);
@@ -619,10 +622,9 @@ public:
 		}
 	}
 };
-#define storage (*pstorage)
-
-SharedStorage* pstorage=NULL;
-
+BD_EVENT SharedStorage::event_sweep_start;
+BD_EVENT SharedStorage::event_sweep_done;
+std::vector<SharedStorage::ObjectData> SharedStorage::gc_obj;
 
 extern std::hash_map<std::string,ExecutableEntry*> LoadedMods;
 void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports,
@@ -784,7 +786,6 @@ int SoDoCreateArray(DVM_VirtualMachine *dvm, int dim, int dim_index,
     int ret;
     int size;
     int i;
-    DVM_ObjectRef exception_dummy;
 	//fix-me : should use curthread?
 	size = (curthread->stack.stack_pointer-dim)->int_value;
 
@@ -856,7 +857,7 @@ void SoArrayTostr(DVM_Value *args)
 
 void SoArrayUnimplementedStub(DVM_Value *args)
 {
-    _BreakPoint();
+    _BreakPoint;
 }
 
 void SoArrayEquals(DVM_Value *args)
@@ -1034,7 +1035,7 @@ int SoMarkArray(int id,int round_id,int dimension,int class_idx)
 		return class_idx;
 	}
 	if(dimension==1 && class_idx==BASIC_CLASS_INDEX)
-		return;
+		return BASIC_CLASS_INDEX;
 	SoType tag;
 	int fld_cnt,flag;
 	if(storage.getinfo(id,tag,fld_cnt,flag)!=SoOK)

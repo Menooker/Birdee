@@ -14,8 +14,8 @@ int RcSendModule(SOCKET s,char* path);
 int RcRecvModule(SOCKET s,char* name,size_t len,char* path);
 void RcSlave(int port);
 void RcCloseNode(DVM_Value *args);
-inline void RcWaitForGCMarkCompletion();
-inline void RcTriggerGC(int round_id);
+void RcWaitForGCMarkCompletion();
+void RcTriggerGC(int round_id);
 #ifdef __cplusplus
 }
 #endif

@@ -337,9 +337,11 @@ int RcRecvModule(SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
+#define RcBeforeGC()
+void RcContinueFromGC();
+
 void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
 {
-	DVM_ExecutableList *list;
 	DVM_VirtualMachine *dvm;
 	BdStatus status;
 	DVM_ObjectRef paramvar;
@@ -605,7 +607,7 @@ void RcBroadcastGC(int src,int round_id)
 	}
 }
 
-#define RcBeforeGC()
+
 /*
 Set the GC mark completion event
 */
@@ -619,7 +621,7 @@ void RcContinueFromGC()
 /*
 Wait for the GC mark completion event
 */
-inline void RcWaitForGCMarkCompletion()
+void RcWaitForGCMarkCompletion()
 {
 	UaWaitForEvent(&gc_event);
 }
@@ -628,7 +630,7 @@ inline void RcWaitForGCMarkCompletion()
 Tells other nodes to StopTheWorld and do GC mark
 Can be called on master and slave
 */
-inline void RcTriggerGC(int round_id)
+void RcTriggerGC(int round_id)
 {
 	RcBeforeGC();
 	if(curdvm->is_master)
@@ -697,7 +699,8 @@ static THREAD_PROC(RcMasterListen,param)
 					}
 					gc_state[i]=1;
 					//check if all nodes mark done
-					int ok=1;
+					int ok;
+					ok=1;
 					for(int j=0;j<n;j++)
 					{
 						if(!gc_state[j])
@@ -726,18 +729,22 @@ static THREAD_PROC(RcMasterListen,param)
 					printf("Bad command %d!\n");
 				}
 			}
-			NEXT:
+NEXT:
+			int dummy;
 		}
 
 	}
 	return 0;
 }
 
-int RcBeforeClose()
+void RcBeforeClose()
 {
 	UaKillEvent(&gc_event);
 	if(MasterListenThread)
+	{
 		UaStopThread(MasterListenThread);
+		UaCloseThread(MasterListenThread);
+	}
 }
 int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
 {
