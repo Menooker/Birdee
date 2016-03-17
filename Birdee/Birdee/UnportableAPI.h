@@ -7,6 +7,8 @@
 		#include <WinBase.h>
 		typedef void* THREAD_ID;
 		#define BD_LOCK CRITICAL_SECTION
+		#define BD_EVENT HANDLE
+		#define BD_RWLOCK SRWLOCK
 		typedef DWORD (__stdcall *UaThreadProc)(PVOID p);
     #else
         #include <unistd.h>
@@ -52,6 +54,7 @@ extern "C"
 	int UaAtomicDec(long* ptr,long dec);
 	THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param);
 	void UaWaitForThread(THREAD_ID th);
+	void UaInitEvent(BD_EVENT* pevent,int state);
 	#ifdef BD_ON_WINDOWS
         #ifdef BD_ON_GCC
 typedef struct{void* PTR;} SRWLOCK, *PSRWLOCK;
@@ -109,7 +112,6 @@ TryAcquireSRWLockShared (
 
         #endif
         #define UaPrepareThread()
-		#define BD_RWLOCK SRWLOCK
 		#define UaInitRWLock(a) InitializeSRWLock(a)
 		#define UaEnterWriteRWLock(a) AcquireSRWLockExclusive(a)
 		#define UaLeaveWriteRWLock(a) ReleaseSRWLockExclusive(a)
@@ -118,11 +120,9 @@ TryAcquireSRWLockShared (
 		#define UaTryEnterReadRWLock(a) TryAcquireSRWLockShared(a)
 		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
 		#define UaKillRWLock(a)
-		#define BD_EVENT HANDLE
 		#define UaKillEvent(a) CloseHandle(*a)
 		#define UaSetEvent(a) SetEvent(*a)
 		#define UaResetEvent(a) ResetEvent(*a)
-		void UaInitEvent(BD_EVENT* pevent,int state);
 		#define UaWaitForEvent(a) WaitForSingleObject(*a,-1)
 		#define UaCloseThread(a) CloseHandle(a)
 		#define UaJoinThread(a) WaitForSingleObject(a,-1)

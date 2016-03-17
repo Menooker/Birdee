@@ -4,6 +4,7 @@ shared class ClsA
 	public a as int
 	public b as int
 	public c as ClsB
+	dim pp as int
 end
 
 shared class ClsB
@@ -28,14 +29,15 @@ dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
-dim threads as shared int=2
-dim node_num as shared int=2
+dim threads as shared int=1
+dim node_num as shared int=1
 dim thread_num as shared int=threads*node_num
 dim n as shared int=4096*8
 dim p as shared int[] global=new int[n] global
 dim p2 as int[]=new int[n]
 dim rand_num as int =1234
 
+println("To del:")
 dim a1 as ClsA=new ClsA()
 dim b1 as ClsB=new ClsB()
 a1.c=b1
@@ -44,6 +46,7 @@ a1=null
 b1=null
 //made a reference loop above
 
+println("To conserve:")
 a1=new ClsA()
 b1=new ClsB()
 a1.c=b1
@@ -91,9 +94,21 @@ for #i=0;#i<10;#i++
 		assert(arr1[#i][#j]==#i+#j,"arr1[#i][#j]==#i+#j")
 	end
 end
+
 assert(arr2[1].a==12,"arr2[1].a==12")
 assert(arr2[1].c.a==33.0,"arr2[1].c.a==33.0")
 
 //nodes[0].Close()
 //nodes[1].Close()
 gets()
+
+
+function threadproc(id as var) as int
+	dim obja as ClsA=new ClsA()
+	dim objb as ClsB=new ClsB()
+	
+	obja.c=objb
+	if id==0 then
+		dim kk as int[] global=new int[65536] global
+	end
+end

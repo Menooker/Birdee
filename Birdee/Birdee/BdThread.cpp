@@ -68,7 +68,7 @@ extern "C"
 
 
 //#ifdef BD_ON_WINDOWS
-	extern "C" void init_memcached_this_thread();
+	extern "C" void* init_memcached_this_thread();
 //#endif
 
 	extern "C" int idx_remote_thread;

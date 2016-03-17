@@ -10,7 +10,7 @@
 
 #define CACHE_HELLO_MAGIC (0x2e3a4f01)
 
-extern "C" void init_memcached_this_thread();
+extern "C" void* init_memcached_this_thread();
 
 
 #pragma pack(push)

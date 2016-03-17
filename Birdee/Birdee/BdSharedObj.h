@@ -138,12 +138,12 @@ public:
 	SoStorage(std::vector<std::string>& ,std::vector<int>&){};
 	virtual inline ~SoStorage(){};
 	virtual SoStatus putstr(_uint key,wchar_t* str,_uint len)=0;
-	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
-	virtual SoVar get(_uint key,int fldid)=0;
-	virtual int inc(_uint key,int fldid,int inc)=0;
-	virtual int dec(_uint key,int fldid,int dec)=0;
-	virtual int getcounter(_uint key,int fldid)=0;
-	virtual void setcounter(_uint key,int fldid,int n)=0;
+	virtual SoStatus put(_uint key,_uint fldid,SoVar v)=0;
+	virtual SoVar get(_uint key,_uint fldid)=0;
+	virtual int inc(_uint key,_uint fldid,int inc)=0;
+	virtual int dec(_uint key,_uint fldid,int dec)=0;
+	virtual int getcounter(_uint key,_uint fldid)=0;
+	virtual void setcounter(_uint key,_uint fldid,int n)=0;
 	virtual SoStatus getstr(_uint key,wchar_t** str,_uint* len)=0;
 	virtual bool exists(_uint key)=0;
 	virtual SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)=0;

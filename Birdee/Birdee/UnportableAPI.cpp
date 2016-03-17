@@ -36,10 +36,6 @@ void __stdcall _UaStackTrace(int StackBase, int ebp, int esp,UaTraceCallBack cb,
 
 }
 
-void UaInitEvent(BD_EVENT* pevent,int state)
-{
-	*pevent=CreateEvent(NULL,TRUE,state?TRUE:FALSE,NULL);
-}
 
 void  UaStackTrace(UaTraceCallBack cb,void* param)
 {
@@ -64,7 +60,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 #ifdef BD_ON_WINDOWS
 	DWORD dwTlsIndex;
-	
+
 	void UaInitTls()
 	{
 		dwTlsIndex = TlsAlloc();
@@ -81,6 +77,11 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		ThThreadStub((BdThread*)p);
 		return 0;
 	}
+
+    void UaInitEvent(BD_EVENT* pevent,int state)
+    {
+        *pevent=CreateEvent(NULL,TRUE,state?TRUE:FALSE,NULL);
+    }
 
 	THREAD_ID UaGetCurrentThread()
 	{

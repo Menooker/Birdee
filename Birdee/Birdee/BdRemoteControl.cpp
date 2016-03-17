@@ -13,6 +13,7 @@
 #include <string.h>
 #include "BdSharedObj.h"
 #include "BdSocket.h"
+#include "UnportableAPI.h"
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
 #define RC_MAGIC_MASTER 0x12345edf
@@ -346,7 +347,7 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 	BdStatus status;
 	DVM_ObjectRef paramvar;
 	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));
-	
+
 	masternode=s;
 	plist->list=0;plist->top_level=0;
 
@@ -430,7 +431,7 @@ ERR:
 
 void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
 {
-   
+
     // discovery client information
     struct sockaddr_in addr;
 #ifdef BD_ON_WINDOWS
@@ -439,12 +440,12 @@ void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
 	size_t addrlen = sizeof(addr);
 #endif
     if(getpeername((SOCKET)fd, (struct sockaddr*)&addr, &addrlen) == -1){
-        fprintf(stderr,"discovery client information failed, fd=%d, errno=%d(%#x).\n", fd, errno, errno);        
+        fprintf(stderr,"discovery client information failed, fd=%d, errno=%d(%#x).\n", fd, errno, errno);
         return;
     }
-	port = ntohs(addr.sin_port); 
+	port = ntohs(addr.sin_port);
 	ip=inet_ntoa(addr.sin_addr);
-	
+
     return;
 }
 
@@ -634,7 +635,7 @@ void RcTriggerGC(int round_id)
 {
 	RcBeforeGC();
 	if(curdvm->is_master)
-	{	
+	{
 		RcBroadcastGC(-1,round_id);
 	}
 	else
@@ -647,13 +648,23 @@ void RcTriggerGC(int round_id)
 
 }
 
+
+extern "C" void* init_memcached_this_thread();
+void set_memcached_this_thread(void* p);
+void free_memcached(void* p);
+struct ThreadParam
+{
+	int round_id;
+};
+
 static THREAD_PROC(RcMasterGCProc,param)
 {
-	SoLocalGC((int)param);
+	ThreadParam* p=(ThreadParam*)param;
+	void* memc=init_memcached_this_thread();
+	SoLocalGC(p->round_id);
+	free_memcached(memc);
 	return 0;
 }
-
-
 
 static THREAD_PROC(RcMasterListen,param)
 {
@@ -662,7 +673,9 @@ static THREAD_PROC(RcMasterListen,param)
 	RcCommandPack cmd;
 	RcCommandPack sendcmd;
 	int gc_state[BD_MAX_NODE_NUM]={0};
-	THREAD_ID gc_thread;
+	THREAD_ID gc_thread=0;
+	ThreadParam params;
+	void* memc=NULL;
 	for(;;)
 	{
 		FD_ZERO(&readfds);
@@ -688,7 +701,8 @@ static THREAD_PROC(RcMasterListen,param)
 				{
 				case RcCmdTriggerGC:
 					RcBeforeGC();
-					gc_thread=UaCreateThreadEx(RcMasterGCProc,(void*)cmd.param);
+					params.round_id=cmd.param;
+					gc_thread=UaCreateThreadEx(RcMasterGCProc,(void*)&params);
 					RcBroadcastGC(i,cmd.param);
 					break;
 				case RcCmdDoneGC:
@@ -712,9 +726,15 @@ static THREAD_PROC(RcMasterListen,param)
 					//if done tell all nodes to continue
 					if(ok)
 					{
-						UaJoinThread(gc_thread);
-						UaCloseThread(gc_thread);
+						if(gc_thread)
+						{
+							UaJoinThread(gc_thread);
+							UaCloseThread(gc_thread);
+							gc_thread=0;
+						}
 						global_gc=0;
+						if(!memc)
+							memc=init_memcached_this_thread();
 						SoInitGCState();
 						sendcmd.cmd=RcCmdDoneGC;
 						for(int j=0;j<n;j++)
@@ -765,7 +785,7 @@ int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& por
 
 	for(int i=1;i<host_cnt;i++)
 	{
-	    
+
 		uint32 sendl=hosts[i].size()+1;
 		if(sendl>255)
 		{
@@ -780,7 +800,7 @@ int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& por
 
 	for(int i=0;i<mem_cnt;i++)
 	{
-	    
+
 		uint32 sendl=memhosts[i].size()+1;
 		if(sendl>255)
 		{

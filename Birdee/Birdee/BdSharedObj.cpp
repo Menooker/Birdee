@@ -58,12 +58,12 @@ public:
 		return map[key].cls.field_cnt;
 	}
 
-	int inc(_uint key,int fldid,int inc)
+	int inc(_uint key,_uint fldid,int inc)
 	{
 		return UaAtomicInc((long*)&map[MAKE64(key,fldid)].var.vi,inc);
 	}
 
-	int dec(_uint key,int fldid,int dec)
+	int dec(_uint key,_uint fldid,int dec)
 	{
 		return UaAtomicDec((long*)&map[MAKE64(key,fldid)].var.vi,dec);
 	}
@@ -79,11 +79,11 @@ public:
 		return SoOK;
 	}
 
-	int getcounter(_uint key,int fldid)
+	int getcounter(_uint key,_uint fldid)
 	{
 		return atoi((char*)map[MAKE64(key,fldid)].string.str);
 	}
-	void setcounter(_uint key,int fldid,int n)
+	void setcounter(_uint key,_uint fldid,int n)
 	{
 		char* buf=(char*)malloc(65);
 		sprintf(buf,"%d",n);
@@ -131,13 +131,13 @@ public:
 			return SoKeyNotFound;
 	}
 
-	SoStatus put(_uint key,int fldid,SoVar v)
+	SoStatus put(_uint key,_uint fldid,SoVar v)
 	{
 		map[MAKE64(key,fldid)].var=v;
 		return SoOK;
 	}
 
-	SoVar get(_uint key,int fldid)
+	SoVar get(_uint key,_uint fldid)
 	{
 		if(map.find(MAKE64(key,fldid))!=map.end())
 			return map[MAKE64(key,fldid)].var;
@@ -257,6 +257,9 @@ public:
 
 };
 
+
+extern "C" void* init_memcached_this_thread();
+
 class SharedStorage;
 SharedStorage* pstorage=NULL;
 #define storage (*pstorage)
@@ -286,15 +289,18 @@ private:
 
 	static THREAD_PROC(SweepProc,param)
 	{
+		init_memcached_this_thread();
 		int round_id=1;
 		for(;;)
 		{
 			UaWaitForEvent(&event_sweep_start);
+			UaResetEvent(&event_sweep_start);				
 			std::vector<ObjectData>::iterator itr;
 			for(itr=gc_obj.begin();itr!=gc_obj.end();itr++)
 			{
 				if(!SoIsMarked(itr->key,round_id))
 				{
+					printf("GC delete object %d\n",itr->key);
 					storage.del(itr->key,itr->len);
 				}
 			}
@@ -309,8 +315,9 @@ private:
 	{
 		if(backend->inc(0xFFFFFFFF,1,1)==1)
 		{
-			//if the current thread is the first to trigger GC 
+			//if the current thread is the first to trigger GC
 			int rid=storage.inc(0xFFFFFFFF,2,1);
+			printf("GC Triggered, round_id=%d\n",rid);
 			RcTriggerGC(rid);
 			SoLocalGC(rid);
 			RcWaitForGCMarkCompletion();
@@ -334,19 +341,21 @@ public:
 			_BreakPoint;
 		datalisten=RcCreateListen(arr_ports[node_id]+2);
 		if(!datalisten)
-			_BreakPoint;		
+			_BreakPoint;
 		SoStorageFactory factory(ty,cachety);
 		backend=factory.make(arr_mem_hosts, arr_mem_ports);
 		cache=factory.makecache(backend,arr_hosts,arr_ports,node_id,controllisten,datalisten);
 		if(curdvm->is_master)
 		{
 			//the round of GC triggered
-			storage.setcounter(0xFFFFFFFF,2,1); 
-			SoInitGCState();
+			this->setcounter(0xFFFFFFFF,2,0);
+			this->setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD);
+			//the count of the threads triggering the current turn of GC
+			this->setcounter(0xFFFFFFFF,1,0);
 		}
 		UaInitRWLock(&gc_lock);
 		UaInitEvent(&event_sweep_start,0);
-		UaInitEvent(&event_sweep_done,0);
+		UaInitEvent(&event_sweep_done,1);
 		thread_sweep=UaCreateThreadEx(SweepProc,NULL);
 		UaInitLock(&obj_list_lock);
 	}
@@ -371,6 +380,7 @@ public:
 	inline void wait_for_sweep()
 	{
 		UaWaitForEvent(&event_sweep_done);
+		UaResetEvent(&event_sweep_done);
 	}
 
 	inline void sweep()
@@ -384,6 +394,12 @@ public:
 		return backend->getinfo(key,tag,fld_cnt,flag);
 	}
 
+	//directly put a value into backend
+	SoStatus directput(_uint key,int fldid,SoVar v)
+	{
+		return backend->put(key,fldid,v);
+	}
+
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
 		return cache->put(key,fldid,v);
@@ -395,22 +411,19 @@ public:
 	}
 
 	/*
-	Get integer without throwing an error.
+	Get integer without throwing an error. Directly get from backend!
 	Returns "vdefault" if an exception occurs.
 	*/
-	int get_with_default(_uint key,int fldid,int vdefault)
+	int get_with_default(_uint key,_uint fldid,int vdefault)
 	{
 		try
 		{
-			return cache->get(key,fldid).vi;
+			return backend->get(key,fldid).vi;
 
 		}
-		catch (int &a)
+		catch (int a)
 		{
-			if(a==SO_KEY_NOT_FOUND)
-			{
-				return vdefault;
-			}
+			return vdefault;
 		}
 	}
 
@@ -422,7 +435,7 @@ public:
 			ret=cache->get(key,fldid);
 
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			if(a==SO_KEY_NOT_FOUND)
 			{
@@ -481,7 +494,6 @@ public:
 	{
 		return allockey(tag,fld_cnt,0);
 	}*/
-
 	_uint allockey(SoType tag,int fld_cnt,int flag)
 	{
 		//nd.tag=SoInvalid;
@@ -492,7 +504,6 @@ public:
 		{
 			while(key<BD_MAX_SHARED_MODULES)
 				key=rand();
-			
 			//_uint randk=rand();
 			//nd.var.vi=randk;
 			if(backend->newobj(key,tag,fld_cnt,flag)==SoOK)
@@ -514,6 +525,7 @@ public:
 			backend->dec(0xFFFFFFFF,0,fld_cnt);
 		}
 		UaLeaveReadRWLock(&gc_lock);
+		printf("new key: %d\n",key);
 		return key;
 	}
 	_uint newmodule(_uint key,int cnt)
@@ -558,7 +570,7 @@ public:
 		{
 			return backend->getsize(id);
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			SoThrowKeyError();
 			return 0;
@@ -574,7 +586,7 @@ public:
 		{
 			return backend->inc(key,fldid,inc);
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			SoThrowSetValueError();
 			return 0;
@@ -590,7 +602,7 @@ public:
 		{
 			return backend->dec(key,fldid,dec);
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			SoThrowSetValueError();
 			return 0;
@@ -603,7 +615,7 @@ public:
 		{
 			backend->setcounter(key,fldid,n);
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			SoThrowSetValueError();
 		}
@@ -615,7 +627,7 @@ public:
 		{
 			return backend->getcounter(key,fldid);
 		}
-		catch (int &a)
+		catch (int a)
 		{
 			SoThrowSetValueError();
 			return 0;
@@ -948,9 +960,9 @@ void ExCallWriteObjBuffer(DVM_Value* val,DVM_Boolean isobj,DVM_ObjectRef buf,int
 void SoInitGCState()
 {
 	//the remaining space of distributed heap size before next GC
-	storage.setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD); 
+	storage.setcounter(0xFFFFFFFF,0,BD_DSM_GC_THRESHOLD);
 	//the count of the threads triggering the current turn of GC
-	storage.setcounter(0xFFFFFFFF,1,0); 
+	storage.setcounter(0xFFFFFFFF,1,0);
 }
 
 /*
@@ -966,8 +978,8 @@ inline bool SoIsMarked(int id,int round_id)
 	{
 		return true;
 	}
-
-	if(storage.get_with_default(id,0xFFFFFFFF,0)>=round_id)
+	int mark=storage.get_with_default(id,0xFFFFFFFF,0);
+	if(mark>=round_id)
 	{
 		gc_mark_map[id]=1;
 		return true;
@@ -984,6 +996,7 @@ Make a mark on the object. Return if the object is already marked
 */
 inline bool SoSetMark(int id,int round_id)
 {
+	printf("======Set mark %d,rid=%d\n",id,round_id);
 	std::hash_map<int,int>::iterator itr=gc_mark_map.find(id);
 	if(itr!=gc_mark_map.end())
 	{
@@ -999,7 +1012,7 @@ inline bool SoSetMark(int id,int round_id)
 	{
 		SoVar v;
 		v.vi=round_id;
-		storage.put(id,0xFFFFFFFF,v);
+		storage.directput(id,0xFFFFFFFF,v);
 		gc_mark_map[id]=1;
 		return false;
 	}
@@ -1020,7 +1033,7 @@ Return the class index of the object. The return value is useful if class index 
 int SoMarkObject(int id,int round_id,int class_idx);
 
 /*
-Mark the array and its contents. 
+Mark the array and its contents.
 The parameters:
 	dimension - it is of no use, just for checking.
 	class_idx - the class index of the contents, set to UNKNOWN_CLASS_INDEX if it is unknown
@@ -1049,7 +1062,7 @@ int SoMarkArray(int id,int round_id,int dimension,int class_idx)
 	}
 	else
 		dimension=flag;
-	
+
 	SoVar datablock[DSM_CACHE_BLOCK_SIZE];
 	for(int i=0;i<fld_cnt;i++)
 	{
@@ -1058,7 +1071,7 @@ int SoMarkArray(int id,int round_id,int dimension,int class_idx)
 			if(storage.peek(id,i,datablock)!=SoOK)
 			{
 				printf("Peek error\n");
-			}	
+			}
 		}
 		int subkey=datablock[i%DSM_CACHE_BLOCK_SIZE].key;
 		if(subkey!=0)
@@ -1112,7 +1125,7 @@ int SoMarkObject(int id,int round_id,int class_idx)
 				SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,UNKNOWN_CLASS_INDEX);
 			}
 		}
-		else if(ec->field_type[i]->derive_count > 0 
+		else if(ec->field_type[i]->derive_count > 0
 			&& ec->field_type[i]->derive[0].tag == DVM_ARRAY_DERIVE)
 		{
 			if(i-datablock_idx>=DSM_CACHE_BLOCK_SIZE)
@@ -1203,7 +1216,7 @@ void SoLocalGC(int round_id)
 					SoMarkObject(datablock[i%DSM_CACHE_BLOCK_SIZE].key,round_id,UNKNOWN_CLASS_INDEX);
 				}
             }
-			else if(type->derive_count > 0 
+			else if(type->derive_count > 0
 				&& type->derive[0].tag == DVM_ARRAY_DERIVE)
 			{
 				///////////fetch the data block
@@ -1252,7 +1265,7 @@ void SoLocalGC(int round_id)
 		th=th->next;
 	}
 	UaLeaveLock(&curdvm->thread_lock);
-	
+
 	gc_undergo=0;
 	UaLeaveWriteRWLock(&gc_lock);
 
