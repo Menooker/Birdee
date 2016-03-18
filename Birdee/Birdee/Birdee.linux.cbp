@@ -67,6 +67,8 @@
 		<Unit filename="BdArrayCache.h" />
 		<Unit filename="BdCompile.cpp" />
 		<Unit filename="BdCompile.h" />
+		<Unit filename="BdDSMCache.cpp" />
+		<Unit filename="BdDSMCache.h" />
 		<Unit filename="BdDumper.cpp" />
 		<Unit filename="BdDynLdr.cpp" />
 		<Unit filename="BdDynLdr.h" />
@@ -86,6 +88,7 @@
 		<Unit filename="BdRemoteControl.h" />
 		<Unit filename="BdSharedObj.cpp" />
 		<Unit filename="BdSharedObj.h" />
+		<Unit filename="BdSocket.cpp" />
 		<Unit filename="BdThread.cpp" />
 		<Unit filename="BdThread.h" />
 		<Unit filename="BdVarients.cpp" />
