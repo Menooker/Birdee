@@ -1,0 +1,807 @@
+diff --git a/Birdee/Birdee/BdExec.cpp b/Birdee/Birdee/BdExec.cpp
+index c4c6982..9bf605c 100644
+--- a/Birdee/Birdee/BdExec.cpp
++++ b/Birdee/Birdee/BdExec.cpp
+@@ -1347,7 +1347,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
+ 	}
+ 	else
+ 	{
+-#ifdef BD_USE_MCJIT
++#ifndef BD_USE_MCJIT
+ 		MCJIT= new MCJITHelper(m,false);
+ #else
+ 		MCJIT= new MCJITHelper(m,true);
+diff --git a/Birdee/Birdee/Birdee.linux.cbp b/Birdee/Birdee/Birdee.linux.cbp
+index f6bc893..5e91565 100644
+--- a/Birdee/Birdee/Birdee.linux.cbp
++++ b/Birdee/Birdee/Birdee.linux.cbp
+@@ -1,4 +1,4 @@
+-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
++<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+ <CodeBlocks_project_file>
+ 	<FileVersion major="1" minor="6" />
+ 	<Project>
+@@ -11,7 +11,7 @@
+ 				<Option object_output="obj/Debug/" />
+ 				<Option type="1" />
+ 				<Option compiler="gcc" />
+-				<Option parameters="-e ../../compiler/test/test.dkm" />
++				<Option parameters="-e ../../compiler/test/test.dkm 123.bde" />
+ 				<Compiler>
+ 					<Add option="-w" />
+ 					<Add option="-Wfatal-errors" />
+@@ -21,6 +21,8 @@
+ 					<Add option="-D__STDC_CONSTANT_MACROS" />
+ 					<Add option="-DBD_ON_GCC" />
+ 					<Add option="-DBD_ON_LINUX" />
++					<Add option="-DBD_USE_MCJIT" />
++					<Add option="-DBD_MULTITHREAD" />
+ 					<Add directory="../../../include" />
+ 					<Add directory="../../../include3" />
+ 					<Add directory="../../../" />
+@@ -62,9 +64,6 @@
+ 		<Unit filename="8Queens.txt" />
+ 		<Unit filename="ArrayCacheTest.txt" />
+ 		<Unit filename="ArrayCacheTest_Reg.txt" />
+-		<Unit filename="BdMCJIT.cpp" />
+-		<Unit filename="BdMCJIT.h" />
+-		<Unit filename="BdMemcachedStorage.cpp" />
+ 		<Unit filename="BdArrayCache.cpp" />
+ 		<Unit filename="BdArrayCache.h" />
+ 		<Unit filename="BdCompile.cpp" />
+@@ -79,6 +78,9 @@
+ 		<Unit filename="BdHashMap.cpp" />
+ 		<Unit filename="BdHashMap.h" />
+ 		<Unit filename="BdLoader.cpp" />
++		<Unit filename="BdMCJIT.cpp" />
++		<Unit filename="BdMCJIT.h" />
++		<Unit filename="BdMemcachedStorage.cpp" />
+ 		<Unit filename="BdMemcachedStorage.h" />
+ 		<Unit filename="BdParameters.h" />
+ 		<Unit filename="BdRemoteControl.cpp" />
+diff --git a/Birdee/Birdee/Birdee.linux.depend b/Birdee/Birdee/Birdee.linux.depend
+index e298dc7..236356f 100644
+--- a/Birdee/Birdee/Birdee.linux.depend
++++ b/Birdee/Birdee/Birdee.linux.depend
+@@ -31,10 +31,10 @@
+ 	<string>
+ 	<vector>
+ 
+-1450591294 /home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.h
+ 	"Conf.h"
+ 
+-1450608259 /home/menooker/Birdee/Birdee/Birdee/Birdee/Conf.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/Conf.h
+ 
+ 1384296440 /home/menooker/Birdee/include3/llvm/Analysis/Passes.h
+ 
+@@ -663,37 +663,39 @@
+ 	<libmemcached/memcached.h>
+ 	<stdlib.h>
+ 
+-1450678989 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.h
++1451569629 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.h
+ 	"BdExec.h"
++	<string>
++	<vector>
+ 
+-1450588525 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.h
+ 	"DVM.h"
+ 	"MEM.h"
+ 	"dvm_pri.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/include/DVM.h
++1450683175 /home/menooker/Birdee/Birdee/include/DVM.h
+ 	"BirdeeDef.h"
+ 
+ 1450530883 /home/menooker/Birdee/Birdee/include/MEM.h
+ 	<stdio.h>
+ 	<stdlib.h>
+ 
+-1450588679 /home/menooker/Birdee/Birdee/dvm/dvm_pri.h
++1451566076 /home/menooker/Birdee/Birdee/dvm/dvm_pri.h
+ 	"DVM_code.h"
+ 	"DVM_dev.h"
+-	"share.h"
++	"share_dvm.h"
+ 	"BdException.h"
+ 	"BirdeeDef.h"
+ 	"BdHashMap.h"
+ 	"UnportableAPI.h"
+ 	<stdarg.h>
+ 
+-1450588525 /home/menooker/Birdee/Birdee/include/DVM_code.h
++1450683175 /home/menooker/Birdee/Birdee/include/DVM_code.h
+ 	<stdio.h>
+ 	<wchar.h>
+ 	"DVM.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/include/DVM_dev.h
++1450683175 /home/menooker/Birdee/Birdee/include/DVM_dev.h
+ 	"DVM.h"
+ 	"DVM_code.h"
+ 
+@@ -702,19 +704,19 @@
+ 	"DVM_code.h"
+ 	"DKC.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/include/DKC.h
++1450683175 /home/menooker/Birdee/Birdee/include/DKC.h
+ 	<stdio.h>
+ 	"DVM_code.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdException.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdException.h
+ 	<setjmp.h>
+ 	"BirdeeDef.h"
+ 	"DVM.h"
+ 
+-1450588525 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdHashMap.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdHashMap.h
+ 	"dvm_pri.h"
+ 
+-1450588832 /home/menooker/Birdee/Birdee/Birdee/Birdee/UnportableAPI.h
++1451566076 /home/menooker/Birdee/Birdee/Birdee/Birdee/UnportableAPI.h
+ 	"Conf.h"
+ 	<Windows.h>
+ 	<unistd.h>
+@@ -722,17 +724,17 @@
+ 	<stdio.h>
+ 	"dvm_pri.h"
+ 
+-1450588003 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdMemcachedStorage.h
++1451569629 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdMemcachedStorage.h
+ 	"BdSharedObj.h"
+ 	<libmemcached/memcached.h>
+ 
+-1450588524 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdArrayCache.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdArrayCache.cpp
+ 	"BdArrayCache.h"
+ 	"DBG.h"
+ 	"dvm_pri.h"
+ 	"BdExec.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdArrayCache.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdArrayCache.h
+ 	"BirdeeDef.h"
+ 	"DVM.h"
+ 
+@@ -740,7 +742,7 @@
+ 	<stdio.h>
+ 	<stdarg.h>
+ 
+-1450678885 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.cpp
++1451613910 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.cpp
+ 	"BirdeeDef.h"
+ 	"BdCompile.h"
+ 	"DBG.h"
+@@ -765,7 +767,7 @@
+ 	<stack>
+ 	"hash_compatible.h"
+ 
+-1450587144 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdCompile.h
+ 	"llvm/IR/DerivedTypes.h"
+ 	"llvm/IR/IRBuilder.h"
+ 	"llvm/IR/LLVMContext.h"
+@@ -794,14 +796,14 @@
+ 1357778719 /home/menooker/Birdee/include3/llvm/Bitcode/ReaderWriter.h
+ 	<string>
+ 
+-1450587297 /home/menooker/Birdee/Birdee/compiler/diksamc.h
++1450683175 /home/menooker/Birdee/Birdee/compiler/diksamc.h
+ 	<stdio.h>
+ 	<setjmp.h>
+ 	<wchar.h>
+ 	"MEM.h"
+ 	"DKC.h"
+ 	"DVM_code.h"
+-	"share.h"
++	"share_dvm.h"
+ 
+ 1384817612 /home/menooker/Birdee/include3/llvm/DIBuilder.h
+ 	"llvm/ADT/ArrayRef.h"
+@@ -832,13 +834,13 @@
+ 	"llvm/Support/Compiler.h"
+ 	"llvm/Support/DataTypes.h"
+ 
+-1450530937 /home/menooker/Birdee/Birdee/Birdee/Birdee/hash_compatible.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/hash_compatible.h
+ 	"BirdeeDef.h"
+ 	<ext/hash_map>
+ 	<string>
+ 	<hash_map>
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdDumper.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdDumper.cpp
+ 	"Dumper.h"
+ 	"DVM.h"
+ 	"MEM.h"
+@@ -850,13 +852,13 @@
+ 	"llvm/Analysis/Verifier.h"
+ 	"BdParameters.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/Birdee/Birdee/Dumper.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/Dumper.h
+ 	"BirdeeDef.h"
+ 	"DKC.h"
+ 
+-1450530937 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdParameters.h
++1451569629 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdParameters.h
+ 
+-1450588625 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdDynLdr.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdDynLdr.cpp
+ 	"BdDynLdr.h"
+ 	"DBG.h"
+ 	"dvm_pri.h"
+@@ -870,14 +872,14 @@
+ 	<unistd.h>
+ 	<string.h>
+ 
+-1450588524 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdDynLdr.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdDynLdr.h
+ 	"dvm_pri.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/Birdee/Birdee/Loader.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/Loader.h
+ 	"BirdeeDef.h"
+ 	"DKC.h"
+ 
+-1450588524 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdException.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdException.cpp
+ 	"BirdeeDef.h"
+ 	"BdException.h"
+ 	"BdVarients.h"
+@@ -886,11 +888,11 @@
+ 	<string.h>
+ 	"dvm_pri.h"
+ 
+-1450676989 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.h
+ 	"BirdeeDef.h"
+ 	"DVM.h"
+ 
+-1450678964 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.cpp
++1451613910 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdExec.cpp
+ 	"BirdeeDef.h"
+ 	"BdExec.h"
+ 	"BdException.h"
+@@ -920,7 +922,7 @@
+ 	"Loader.h"
+ 	<stdlib.h>
+ 	<setjmp.h>
+-	"BcMCJIT.h"
++	"BdMCJIT.h"
+ 	"llvm/Support/DynamicLibrary.h"
+ 	"DBG.h"
+ 	"dvm_pri.h"
+@@ -940,19 +942,19 @@
+ 1357778719 /home/menooker/Birdee/include3/llvm/Support/DynamicLibrary.h
+ 	<string>
+ 
+-1450530937 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdThread.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdThread.h
+ 	"Conf.h"
+ 	"BdExec.h"
+ 	"UnportableAPI.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdHashMap.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdHashMap.cpp
+ 	"BdHashMap.h"
+ 	"Conf.h"
+ 	"hash_compatible.h"
+ 	<string>
+ 	"MEM.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdLoader.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdLoader.cpp
+ 	"Loader.h"
+ 	"llvm/Bitcode/ReaderWriter.h"
+ 	"llvm/Support/MemoryBuffer.h"
+@@ -965,7 +967,7 @@
+ 	<string>
+ 	<vector>
+ 
+-1450590506 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdRemoteControl.cpp
++1451569629 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdRemoteControl.cpp
+ 	"BdRemoteControl.h"
+ 	<stdio.h>
+ 	"BirdeeDef.h"
+@@ -988,11 +990,11 @@
+ 1450530883 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdRemoteControl.h
+ 	"BdExec.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/debug/debug.h
++1450683175 /home/menooker/Birdee/Birdee/debug/debug.h
+ 	<stdio.h>
+ 	"DBG.h"
+ 
+-1450677304 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.cpp
++1451569629 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdSharedObj.cpp
+ 	"BirdeeDef.h"
+ 	"BdExec.h"
+ 	"BdException.h"
+@@ -1001,12 +1003,13 @@
+ 	"BdSharedObj.h"
+ 	"BdMemcachedStorage.h"
+ 	"UnportableAPI.h"
++	"BdParameters.h"
+ 
+-1450584293 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdThread.cpp
++1451569629 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdThread.cpp
+ 	"BdThread.h"
+ 	"BdSharedObj.h"
+ 
+-1450677112 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdVarients.cpp
+ 	"BdVarients.h"
+ 	"BdException.h"
+ 	<stdlib.h>
+@@ -1018,16 +1021,16 @@
+ 	"dvm_pri.h"
+ 	"MEM.h"
+ 
+-1450591351 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/Birdee.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/Birdee.cpp
+ 	"stdafx.h"
+ 
+-1450591331 /home/menooker/Birdee/Birdee/Birdee/Birdee/stdafx.h
++1450683175 /home/menooker/Birdee/Birdee/Birdee/Birdee/stdafx.h
+ 	<stdio.h>
+ 	<tchar.h>
+ 
+-1450530937 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BirdeeDef.cpp
+ 
+-1450591613 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/UnportableAPI.cpp
++1451566076 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/UnportableAPI.cpp
+ 	"UnportableAPI.h"
+ 	"BirdeeDef.h"
+ 	<stdio.h>
+@@ -1042,18 +1045,18 @@
+ 1450530883 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/stdafx.cpp
+ 	"stdafx.h"
+ 
+-1450586643 source:/home/menooker/Birdee/Birdee/compiler/builtin/builtin.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/builtin/builtin.c
+ 	<stdio.h>
+ 	"diksamc.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/builtin/builtin_conv.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/builtin/builtin_conv.c
+ 	<stdio.h>
+ 	<stdlib.h>
+ 	<string.h>
+ 	"DVM.h"
+ 	"DBG.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/compiler/create.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/create.c
+ 	<string.h>
+ 	"MEM.h"
+ 	"DBG.h"
+@@ -1061,7 +1064,7 @@
+ 	"DVM_dev.h"
+ 	"BdParameters.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/compiler/error_compiler.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/error_compiler.c
+ 	<stdio.h>
+ 	<stdarg.h>
+ 	<string.h>
+@@ -1070,14 +1073,14 @@
+ 	"DBG.h"
+ 	"diksamc.h"
+ 
+-1450530937 source:/home/menooker/Birdee/Birdee/compiler/error_message_compiler.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/error_message_compiler.c
+ 	"diksamc.h"
+ 
+ 1450530883 source:/home/menooker/Birdee/Birdee/compiler/error_message_not_gcc_compiler.c
+ 	<string.h>
+ 	"diksamc.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/compiler/fix_tree.c
++1451569629 source:/home/menooker/Birdee/Birdee/compiler/fix_tree.c
+ 	<math.h>
+ 	<string.h>
+ 	"MEM.h"
+@@ -1085,7 +1088,7 @@
+ 	"diksamc.h"
+ 	"BirdeeDef.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/generate.cpp
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/generate.cpp
+ 	"BdCompile.h"
+ 	<stdio.h>
+ 	<string.h>
+@@ -1094,7 +1097,7 @@
+ 	"DBG.h"
+ 	"diksamc.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/interface.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/interface.c
+ 	<string.h>
+ 	"MEM.h"
+ 	"DBG.h"
+@@ -1102,7 +1105,7 @@
+ 	"BirdeeDef.h"
+ 	"BdParameters.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/lex.yy.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/lex.yy.c
+ 	<stdio.h>
+ 	<stdlib.h>
+ 	<unistd.h>
+@@ -1115,15 +1118,15 @@
+ 	"y.tab.h"
+ 	<stdlib.h>
+ 
+-1450530937 /home/menooker/Birdee/Birdee/compiler/y.tab.h
++1450683175 /home/menooker/Birdee/Birdee/compiler/y.tab.h
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/string.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/string.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"MEM.h"
+ 	"diksamc.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/util_compiler.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/util_compiler.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"MEM.h"
+@@ -1137,15 +1140,15 @@
+ 	"DBG.h"
+ 	"diksamc.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/compiler/wchar_compiler.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/wchar_compiler.c
+ 	<stdio.h>
+ 	<string.h>
+ 	<wchar.h>
+ 	"DBG.h"
+-	"share.h"
++	"share_dvm.h"
+ 	"diksamc.h"
+ 
+-1450530937 source:/home/menooker/Birdee/Birdee/compiler/y.tab.c
++1450683175 source:/home/menooker/Birdee/Birdee/compiler/y.tab.c
+ 	<stdio.h>
+ 	"diksamc.h"
+ 	<stddef.h>
+@@ -1156,14 +1159,14 @@
+ 	<stdlib.h>
+ 	<stdio.h>
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/debug/debug.c
++1450683175 source:/home/menooker/Birdee/Birdee/debug/debug.c
+ 	<stdio.h>
+ 	<limits.h>
+ 	<stdlib.h>
+ 	"MEM.h"
+ 	"debug.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/error_dvm.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/error_dvm.c
+ 	<stdio.h>
+ 	<stdarg.h>
+ 	<string.h>
+@@ -1180,7 +1183,7 @@
+ 	<string.h>
+ 	"dvm_pri.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/execute.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/execute.c
+ 	<math.h>
+ 	<string.h>
+ 	"MEM.h"
+@@ -1189,7 +1192,7 @@
+ 	"UnportableAPI.h"
+ 	"dvm_pri.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/heap.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/heap.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"MEM.h"
+@@ -1198,7 +1201,7 @@
+ 	"BdHashMap.h"
+ 	"UnportableAPI.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/load.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/load.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"DKC.h"
+@@ -1209,7 +1212,7 @@
+ 	"BdDynLdr.h"
+ 	"dvm_pri.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/native.c
++1451569629 source:/home/menooker/Birdee/Birdee/dvm/native.c
+ 	<string.h>
+ 	<math.h>
+ 	<stdlib.h>
+@@ -1223,7 +1226,7 @@
+ 	"BdThread.h"
+ 	"BdRemoteControl.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/nativeif.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/nativeif.c
+ 	<string.h>
+ 	"MEM.h"
+ 	"DBG.h"
+@@ -1231,14 +1234,14 @@
+ 	"dvm_pri.h"
+ 	"BdException.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/util_dvm.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/util_dvm.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"MEM.h"
+ 	"DBG.h"
+ 	"dvm_pri.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/dvm/wchar_dvm.c
++1450683175 source:/home/menooker/Birdee/Birdee/dvm/wchar_dvm.c
+ 	<stdio.h>
+ 	<string.h>
+ 	<wchar.h>
+@@ -1246,7 +1249,7 @@
+ 	"MEM.h"
+ 	"dvm_pri.h"
+ 
+-1450594090 source:/home/menooker/Birdee/Birdee/main/main.c
++1451569629 source:/home/menooker/Birdee/Birdee/main/main.c
+ 	<stdio.h>
+ 	<locale.h>
+ 	<string.h>
+@@ -1268,7 +1271,7 @@
+ 	<ctype.h>
+ 	"memory.h"
+ 
+-1450587297 /home/menooker/Birdee/Birdee/memory/memory.h
++1450683175 /home/menooker/Birdee/Birdee/memory/memory.h
+ 	"MEM.h"
+ 
+ 1450530883 source:/home/menooker/Birdee/Birdee/memory/storage.c
+@@ -1277,28 +1280,28 @@
+ 	<assert.h>
+ 	"memory.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/share/disassemble.c
++1450683175 source:/home/menooker/Birdee/Birdee/share/disassemble.c
+ 	<stdio.h>
+ 	<string.h>
+ 	"DBG.h"
+-	"share.h"
++	"share_dvm.h"
+ 
+-1450587297 source:/home/menooker/Birdee/Birdee/share/dispose.c
++1450683175 source:/home/menooker/Birdee/Birdee/share/dispose.c
+ 	"MEM.h"
+ 	"DBG.h"
+ 	"DVM_code.h"
+ 
+-1450586276 source:/home/menooker/Birdee/Birdee/share/opcode.c
+-	"share.h"
++1450683175 source:/home/menooker/Birdee/Birdee/share/opcode.c
++	"share_dvm.h"
+ 
+-1450586267 source:/home/menooker/Birdee/Birdee/share/util.c
++1450683175 source:/home/menooker/Birdee/Birdee/share/util.c
+ 	<stdlib.h>
+ 	<string.h>
+ 	"DBG.h"
+ 	"MEM.h"
+-	"share.h"
++	"share_dvm.h"
+ 
+-1450588525 source:/home/menooker/Birdee/Birdee/share/wchar_share.c
++1451547052 source:/home/menooker/Birdee/Birdee/share/wchar_share.c
+ 	<stdio.h>
+ 	<string.h>
+ 	<wchar.h>
+@@ -1307,3 +1310,46 @@
+ 	"MEM.h"
+ 	"DVM.h"
+ 
++1450683175 /home/menooker/Birdee/Birdee/include/share_dvm.h
++	<stdio.h>
++	"DVM_code.h"
++	"DKC.h"
++
++1451569629 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdMCJIT.cpp
++	"BdMCJIT.h"
++	"llvm/Analysis/Passes.h"
++	"llvm/Analysis/Verifier.h"
++	"llvm/IR/LegacyPassManager.h"
++
++1451569629 /home/menooker/Birdee/Birdee/Birdee/Birdee/BdMCJIT.h
++	"BirdeeDef.h"
++	"llvm/Analysis/Passes.h"
++	"llvm/ExecutionEngine/ExecutionEngine.h"
++	"llvm/ExecutionEngine/MCJIT.h"
++	"llvm/ExecutionEngine/ObjectCache.h"
++	"llvm/ExecutionEngine/SectionMemoryManager.h"
++	"llvm/IR/DataLayout.h"
++	"llvm/IR/DerivedTypes.h"
++	"llvm/IR/IRBuilder.h"
++	"llvm/IR/LLVMContext.h"
++	"llvm/IR/Module.h"
++	"llvm/IRReader/IRReader.h"
++	"llvm/Support/CommandLine.h"
++	"llvm/Support/FileSystem.h"
++	"llvm/Support/Path.h"
++	"llvm/Support/SourceMgr.h"
++	"llvm/Support/TargetSelect.h"
++	"llvm/Support/raw_ostream.h"
++	"llvm/Transforms/Scalar.h"
++	<cctype>
++	<cstdio>
++	<map>
++	<string>
++	<vector>
++
++1451569629 source:/home/menooker/Birdee/Birdee/Birdee/Birdee/BdMemcachedStorage.cpp
++	"BdSharedObj.h"
++	"BdMemcachedStorage.h"
++	<libmemcached/memcached.h>
++	<stdlib.h>
++
+diff --git a/Birdee/Birdee/Birdee.linux.layout b/Birdee/Birdee/Birdee.linux.layout
+index 6bad890..53ad03e 100644
+--- a/Birdee/Birdee/Birdee.linux.layout
++++ b/Birdee/Birdee/Birdee.linux.layout
+@@ -1,89 +1,55 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+ <CodeBlocks_layout_file>
+ 	<ActiveTarget name="Debug" />
+-	<File name="..\..\include\share.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BirdeeDef.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BdException.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BdExec.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="24872" topLine="838" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\dvm\dvm_pri.h" open="1" top="1" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="7042" topLine="284" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\compiler\wchar_compiler.c" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\compiler\y.tab.c" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BdSharedObj.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\compiler\create.c" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="UnportableAPI.h" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BdCompile.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\main\main.c" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="BdSharedObj.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="280" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\dvm\wchar_dvm.c" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="..\..\debug\debug.c" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="UnportableAPI.cpp" open="0" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
+-	</File>
+-	<File name="Birdee.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+-		<Cursor>
+-			<Cursor1 position="0" topLine="0" />
+-		</Cursor>
++	<File name="BdCompile.cpp" open="0" top="0" tabpos="8">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="BdException.cpp" open="0" top="0" tabpos="3">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="BdExec.cpp" open="1" top="0" tabpos="2">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="BdSharedObj.cpp" open="1" top="1" tabpos="4">
++		<Cursor position="3760" topLine="195" />
++	</File>
++	<File name="BdSharedObj.h" open="1" top="0" tabpos="1">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="Birdee.cpp" open="0" top="0" tabpos="7">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="BirdeeDef.h" open="0" top="0" tabpos="10">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="UnportableAPI.cpp" open="0" top="0" tabpos="16">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="UnportableAPI.h" open="0" top="0" tabpos="15">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../compiler/create.c" open="0" top="0" tabpos="1">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../compiler/wchar_compiler.c" open="0" top="0" tabpos="3">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../compiler/y.tab.c" open="0" top="0" tabpos="2">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../debug/debug.c" open="0" top="0" tabpos="11">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../dvm/dvm_pri.h" open="1" top="0" tabpos="3">
++		<Cursor position="275" topLine="33" />
++	</File>
++	<File name="../../dvm/wchar_dvm.c" open="0" top="0" tabpos="5">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../include/share.h" open="1" top="0" tabpos="4">
++		<Cursor position="0" topLine="0" />
++	</File>
++	<File name="../../main/main.c" open="0" top="0" tabpos="6">
++		<Cursor position="0" topLine="0" />
+ 	</File>
+ </CodeBlocks_layout_file>
+diff --git a/run_memcached.sh b/run_memcached.sh
+new file mode 100644
+index 0000000..a2b2e29
+--- /dev/null
++++ b/run_memcached.sh
+@@ -0,0 +1 @@
++memcached -d -c 1024 -m 1024 

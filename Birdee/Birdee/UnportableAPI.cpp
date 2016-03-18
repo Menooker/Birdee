@@ -263,6 +263,13 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		//TlsSetValue(dwTlsIndex,vm);
 	}
 
+    THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param)
+    {
+ 		THREAD_ID id;
+        pthread_create(&id,NULL,proc,param);
+        return id;
+    }
+
 	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
 	{
 		vm->new_obj=arg;

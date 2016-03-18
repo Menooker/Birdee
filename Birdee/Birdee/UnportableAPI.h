@@ -15,14 +15,14 @@
         #include <pthread.h>
         #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
-		struct BD_EVENT {
+		typedef struct  {
 			pthread_mutex_t mutex;
 			pthread_cond_t cond;
 			int triggered;
-		};
-		#define BD_RWLOCK pthread_rwlock_t 
+		}BD_EVENT;
+		#define BD_RWLOCK pthread_rwlock_t
         typedef pthread_t THREAD_ID;
-		typedef (void*) (*UaThreadProc)(void* p);
+		typedef void* (*UaThreadProc)(void* p);
 	#endif
 
 	#undef min
@@ -146,7 +146,7 @@ TryAcquireSRWLockShared (
 		void UaSetEvent(BD_EVENT* ev);
 		void UaResetEvent(BD_EVENT* ev);
 		void UaWaitForEvent(BD_EVENT* ev);
-		#define UaCloseThread(a) 
+		#define UaCloseThread(a)
 		#define UaJoinThread(a) pthread_join(a,NULL)
     #endif
 #ifdef __cplusplus

@@ -8,14 +8,16 @@
 	#define RcSocketLastError() WSAGetLastError()
 #endif
 #ifdef BD_ON_LINUX
+    #include <netinet/tcp.h>
     #include <arpa/inet.h>
     #include <sys/socket.h>
     #include <errno.h>
+    #include <sys/unistd.h>
     #define SOCKET int
     #define INVALID_SOCKET (-1)
     #define SOCKET_ERROR (-1)
     #define closesocket close
-    typedef sockaddr* LPSOCKADDR;
+    typedef struct sockaddr* LPSOCKADDR;
 	#define RcSocketLastError() errno
 #endif
 

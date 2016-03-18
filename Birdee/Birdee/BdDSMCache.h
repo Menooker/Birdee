@@ -34,7 +34,7 @@ public:
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,int fldid)=0;
-	
+
 	/*
 	Take a peek at the storage, get the memory block.
 	If not hit, this function will not spoil the cache locality
@@ -310,7 +310,7 @@ private:
 				}
 				datasockets[i]=sock;
 			}
-			UaWaitForThread(th);
+			UaJoinThread(th);
 			for(int i=0;i<caches;i++)
 			{
 				if(i==ths->cache_id)
@@ -411,7 +411,7 @@ public:
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
 	}
-	
+
 	SoStatus peek(_uint key,int fldid,SoVar* out);
 	SoStatus put(_uint key,int fldid,SoVar v);
 	SoVar get(_uint key,int fldid);

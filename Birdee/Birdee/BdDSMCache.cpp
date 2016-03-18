@@ -3,7 +3,7 @@
 #include "hash_compatible.h"
 #include <time.h>
 #include <assert.h>
-
+#include <string.h>
 
 
 using namespace std;

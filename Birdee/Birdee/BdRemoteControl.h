@@ -1,6 +1,7 @@
 #ifndef _H_REMOTE_CONTROL
 #define _H_REMOTE_CONTROL
 #include "BdExec.h"
+#include "BdSocket.h"
 #ifdef __cplusplus
 extern "C"
 {
