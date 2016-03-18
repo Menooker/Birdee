@@ -615,16 +615,17 @@ Set the GC mark completion event
 void RcContinueFromGC()
 {
 	UaSetEvent(&gc_event);
-	UaResetEvent(&gc_event);
 }
 
 
 /*
-Wait for the GC mark completion event
+Wait for the GC mark completion event, called by the thread triggering
+GC
 */
 void RcWaitForGCMarkCompletion()
 {
 	UaWaitForEvent(&gc_event);
+	UaResetEvent(&gc_event);
 }
 
 /*

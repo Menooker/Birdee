@@ -241,6 +241,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
         UaPrepareThread();
 		ThThreadStub((BdThread*)p);
+		pthread_exit(NULL);
 		return 0;
 	}
 
@@ -356,5 +357,40 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
 		return ;
 	}
+
+
+
+	void UaInitEvent(BD_EVENT* ev,int state) {
+		pthread_mutex_init(&ev->mutex, 0);
+		pthread_cond_init(&ev->cond, 0);
+		ev->triggered = state;
+	}
+
+	void UaSetEvent(BD_EVENT* ev) {
+		pthread_mutex_lock(&ev->mutex);
+		ev->triggered = 1;
+		pthread_cond_broadcast(&ev->cond);
+		pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaResetEvent(BD_EVENT* ev) {
+		pthread_mutex_lock(&ev->mutex);
+		ev->triggered = 0;
+		pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaWaitForEvent(BD_EVENT* ev) {
+		 pthread_mutex_lock(&ev->mutex);
+		 while (!ev->triggered)
+			 pthread_cond_wait(&ev->cond, &ev->mutex);
+		 pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaKillEvent(BD_EVENT* ev) {
+		pthread_mutex_destroy(&ev->mutex);
+		pthread_cond_destroy(&ev->cond);
+	}
+
+
 #endif //BD_ON_WINDOWS
 }

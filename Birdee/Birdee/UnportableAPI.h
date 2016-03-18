@@ -15,6 +15,12 @@
         #include <pthread.h>
         #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
+		struct BD_EVENT {
+			pthread_mutex_t mutex;
+			pthread_cond_t cond;
+			int triggered;
+		};
+		#define BD_RWLOCK pthread_rwlock_t 
         typedef pthread_t THREAD_ID;
 		typedef (void*) (*UaThreadProc)(void* p);
 	#endif
@@ -128,6 +134,20 @@ TryAcquireSRWLockShared (
 		#define UaJoinThread(a) WaitForSingleObject(a,-1)
     #else
         void UaPrepareThread();
+		#define UaInitRWLock(a) pthread_rwlock_init(a,NULL)
+		#define UaEnterWriteRWLock(a) pthread_rwlock_wrlock(a)
+		#define UaLeaveWriteRWLock(a) pthread_rwlock_unlock(a)
+		#define UaEnterReadRWLock(a) pthread_rwlock_rdlock(a)
+		#define UaTryEnterWriteRWLock(a) pthread_rwlock_trywrlock(a)
+		#define UaTryEnterReadRWLock(a) pthread_rwlock_tryrdlock(a)
+		#define UaLeaveReadRWLock(a) pthread_rwlock_unlock(a)
+		#define UaKillRWLock(a) pthread_rwlock_destroy(a)
+		void UaKillEvent(BD_EVENT* ev);
+		void UaSetEvent(BD_EVENT* ev);
+		void UaResetEvent(BD_EVENT* ev);
+		void UaWaitForEvent(BD_EVENT* ev);
+		#define UaCloseThread(a) 
+		#define UaJoinThread(a) pthread_join(a,NULL)
     #endif
 #ifdef __cplusplus
 }
