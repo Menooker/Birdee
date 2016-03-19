@@ -84,6 +84,7 @@ struct RcCommandPack
 int global_gc=0;
 std::vector<SOCKET> slavenodes;
 THREAD_ID MasterListenThread=0;
+BD_EVENT master_mark_done;
 //-------------------------
 
 //Variables for Slave node
@@ -133,6 +134,7 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 }
 
 int RcSendCmd(SOCKET s,RcCommandPack* cmd);
+static THREAD_PROC(RcMasterListen,param);
 void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip,*port,*memhost,*memport;
@@ -208,7 +210,13 @@ void RcConnectNode(DVM_Value *args)
 		//if create node success
 		arr.data->u.barray.u.object[i]=obj;
 	}
-
+	
+	if(!MasterListenThread)
+	{
+		UaInitEvent(&gc_event,0);
+		UaInitEvent(&master_mark_done,0);
+		MasterListenThread=UaCreateThreadEx(RcMasterListen,NULL); //fix-me : Remember to close the thread
+	}
 
 	SoInitStorage(memhosts,memports,hosts,ports,0);
 	curthread->retvar.object = arr;
@@ -338,7 +346,10 @@ int RcRecvModule(SOCKET s,char* name,size_t len,char* path)
 	return 0;
 }
 
-#define RcBeforeGC()
+void RcBeforeGC()
+{
+	UaResetEvent(&gc_event);
+}
 void RcContinueFromGC();
 
 void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
@@ -402,12 +413,15 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 #endif
 				break;
 			case RcCmdDoGC:
+				printf("slave receives GC Triggered signal, round_id=%d\n",cmd.param);
 				RcBeforeGC();
 				SoLocalGC(cmd.param);
 				cmd.cmd=RcCmdDoneGC;
 				RcSend(s,&cmd,sizeof(cmd));
+				printf("This node mark done\n");
 				break;
 			case RcCmdDoneGC:
+				printf("slave receives GC continue signal\n");
 				RcContinueFromGC();
 				ThResumeTheWorld();
 				break;
@@ -618,6 +632,21 @@ void RcContinueFromGC()
 }
 
 
+void SoSendMarkDone()
+{
+	if(curdvm->is_master)
+	{
+		UaSetEvent(&master_mark_done);
+	}
+	else
+	{
+		RcCommandPack cmd;
+		cmd.cmd=RcCmdDoneGC;
+		RcSend(masternode,&cmd,sizeof(cmd));
+	}
+}
+
+
 /*
 Wait for the GC mark completion event, called by the thread triggering
 GC
@@ -701,12 +730,14 @@ static THREAD_PROC(RcMasterListen,param)
 				switch(cmd.cmd)
 				{
 				case RcCmdTriggerGC:
+					printf("GC triggered by Node %d\n",i);
 					RcBeforeGC();
 					params.round_id=cmd.param;
 					gc_thread=UaCreateThreadEx(RcMasterGCProc,(void*)&params);
 					RcBroadcastGC(i,cmd.param);
 					break;
 				case RcCmdDoneGC:
+					printf("Node %d mark done\n",i);
 					if(!global_gc)
 					{
 						printf("Global GC not yet on, but GC message received.\n");
@@ -733,13 +764,20 @@ static THREAD_PROC(RcMasterListen,param)
 							UaCloseThread(gc_thread);
 							gc_thread=0;
 						}
+						else
+						{
+							UaWaitForEvent(&master_mark_done);
+							UaResetEvent(&master_mark_done);
+						}
+						memset(gc_state,0,sizeof(gc_state));
 						global_gc=0;
 						if(!memc)
 							memc=init_memcached_this_thread();
 						SoInitGCState();
-						sendcmd.cmd=RcCmdDoneGC;
+						printf("All mark done, call to continue\n");
 						for(int j=0;j<n;j++)
 						{
+							sendcmd.cmd=RcCmdDoneGC;
 							RcSend(slavenodes[j],&sendcmd,sizeof(sendcmd));
 						}
 						RcContinueFromGC();
@@ -821,8 +859,7 @@ int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& por
 		if(ret)
 			return ret+3;
 	}
-	UaInitEvent(&gc_event,0);
-	MasterListenThread=UaCreateThreadEx(RcMasterListen,NULL); //fix-me : Remember to close the thread
+
 	return 0;
 }
 

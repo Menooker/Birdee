@@ -17,7 +17,7 @@
     #define INVALID_SOCKET (-1)
     #define SOCKET_ERROR (-1)
     #define closesocket close
-    typedef struct sockaddr* LPSOCKADDR;
+	typedef struct sockaddr* LPSOCKADDR;
 	#define RcSocketLastError() errno
 #endif
 
@@ -32,6 +32,10 @@ SOCKET RcListen(int port);
 SOCKET RcCreateListen(int port);
 #ifdef __cplusplus
 }
+#endif
+
+#if defined(WIN32) && !defined(__cplusplus)
+#define inline __inline
 #endif
 
 inline int RcSend(SOCKET s,void* data,size_t len)

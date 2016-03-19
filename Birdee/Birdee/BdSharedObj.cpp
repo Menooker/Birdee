@@ -320,6 +320,7 @@ private:
 			printf("GC Triggered, round_id=%d\n",rid);
 			RcTriggerGC(rid);
 			SoLocalGC(rid);
+			SoSendMarkDone();
 			RcWaitForGCMarkCompletion();
 		}
 	}

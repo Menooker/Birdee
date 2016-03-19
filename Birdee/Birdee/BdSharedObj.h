@@ -117,6 +117,7 @@ void SoPrintStat();
 #endif
 void SoInitGCState();
 void SoLocalGC(int round_id);
+void SoSendMarkDone();
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
