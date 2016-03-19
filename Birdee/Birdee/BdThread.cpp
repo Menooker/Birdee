@@ -9,6 +9,8 @@ extern "C"
 		BdThread* self=curthread,*th;
 		UaEnterLock(&curdvm->thread_lock);
 		th=curdvm->mainvm;
+		if(!curdvm->is_master)
+            th=th->next;
 		while(th)
 		{
 			if(th!=self)
@@ -23,6 +25,8 @@ extern "C"
 		BdThread* self=curthread,*th;
 		UaEnterLock(&curdvm->thread_lock);
 		th=curdvm->mainvm;
+		if(!curdvm->is_master)
+            th=th->next;
 		while(th)
 		{
 			if(th!=self)
