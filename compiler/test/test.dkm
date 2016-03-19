@@ -20,17 +20,17 @@ sub assert(v as boolean, prompt as string)
 	end
 end
 
-dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim hosts as string[]={"192.168.88.153","192.168.88.153"}
 dim ports as int[]={13020,13090}
 //dim hosts as string[]=new string[0]
 //dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"127.0.0.1"}
+dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
 dim threads as shared int=1
-dim node_num as shared int=2
+dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
 dim n as shared int=4096*8
 dim p as shared int[] global=new int[n] global
@@ -105,12 +105,17 @@ for #i=0;#i<node_num;#i++
 end
 
 function threadproc(id as var) as int
+	Sleep(1000)
 	dim obja as ClsA=new ClsA()
 	dim objb as ClsB=new ClsB()
 	
 	obja.c=objb
 	if id==0 then
 		dim kk as int[] global=new int[65536] global
+	end
+	for #p=0;#p<10;#p++
+		Sleep(1000)
+		println("OOOOO")
 	end
 	println("Thread done")
 end

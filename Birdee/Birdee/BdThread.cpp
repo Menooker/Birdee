@@ -14,7 +14,7 @@ extern "C"
 		while(th)
 		{
 			if(th!=self)
-				UaSuspendThread(th->tid);
+				UaSuspendThread(th->tid,th);
 			th=th->next;
 		}
 		UaLeaveLock(&curdvm->thread_lock);
@@ -79,11 +79,15 @@ extern "C"
 
 	void ThThreadStub(BdThread* param)
 	{
+#ifdef BD_ON_LINUX
+		param->prepared=1;
+#endif
 //#ifdef BD_ON_WINDOWS
 		init_memcached_this_thread();
 //#endif
 		srand((int)param->tid + time(NULL));
 		curthread=param;
+
         if(param->thread_obj_id)
 		{
 			if(idx_remote_thread==-1)
@@ -123,7 +127,7 @@ extern "C"
     void ThSuspendThread(DVM_Value* args)
     {
         BdThread* th=(BdThread*)args[0].int_value;
-        UaSuspendThread(th->tid);
+        UaSuspendThread(th->tid,th);
     }
 
     void ThResumeThread(DVM_Value* args)

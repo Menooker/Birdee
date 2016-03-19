@@ -855,6 +855,7 @@ extern "C" BdThread* ExCreateThread()
 	th->thread_obj_id=0;
 #ifdef BD_ON_LINUX
     sem_init(&th->suspend_lock,0,0);
+	th->prepared=0;
 #endif
 	return th;
 }

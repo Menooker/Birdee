@@ -53,7 +53,7 @@ extern "C"
 	void UaKillLock(BD_LOCK* lc);
 	void UaEnterLock(BD_LOCK* lc);
 	void UaLeaveLock(BD_LOCK* lc);
-	void UaSuspendThread(THREAD_ID id);
+	void UaSuspendThread(THREAD_ID id,BdThread* th);
 	void UaResumeThread(THREAD_ID id,BdThread* th);
 	void UaSleep(int ms);
 	int UaAtomicInc(long* ptr,long inc);

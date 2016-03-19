@@ -117,7 +117,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		return h;
 	}
 
-	void UaSuspendThread(THREAD_ID id)
+	void UaSuspendThread(THREAD_ID id,BdThread* th)
 	{
 		SuspendThread(id);
 	}
@@ -278,8 +278,10 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
         return id;
 	}
 
-	void UaSuspendThread(THREAD_ID id)
+	void UaSuspendThread(THREAD_ID id,BdThread* th)
 	{
+		while(!th->prepared)
+			;
 		pthread_kill(id, SIGUSR1);
 	}
 

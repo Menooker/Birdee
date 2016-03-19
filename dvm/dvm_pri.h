@@ -299,6 +299,7 @@ struct _BdThread {
 	unsigned int		thread_obj_id;
 #ifdef BD_ON_LINUX
     sem_t   suspend_lock;
+	int	prepared;
 #endif
 	struct _BdThread* next;
 	struct _BdThread* prv;
