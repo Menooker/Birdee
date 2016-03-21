@@ -553,6 +553,20 @@ dkc_create_index_expression(Expression *barray, Expression *index)
 }
 
 Expression *
+dkc_create_slice_expression(Expression *barray, Expression *index_start,Expression *index_end)
+{
+    Expression *exp;
+
+    exp = dkc_alloc_expression(SLICE_EXPRESSION);
+    exp->u.slice.barray = barray;
+    exp->u.slice.index_start = index_start;
+	exp->u.slice.index_end = index_end;
+    return exp;
+}
+
+
+
+Expression *
 dkc_create_incdec_expression(Expression *operand, ExpressionKind inc_or_dec)
 {
     Expression *exp;

@@ -126,6 +126,8 @@ Function *fAtmDec;
 Function *fSharedInc;
 Function *fSharedDec;
 Function *fGlobalArrBoundaryCheck;
+Function *fCopyArray;
+//Function *fCreateSlice;
 
 GlobalVariable* bpc;//parameter count //fix-me : release it!
 GlobalVariable* bei;//exception index //fix-me : release it!
@@ -1017,6 +1019,16 @@ extern "C" void* BcNewModule(char* name,char* path)
 	std::vector<Type*> ArgsObjInt;  ArgsObjInt.push_back(Type::getInt32Ty(context));
 	nft = FunctionType::get(Type::getInt32Ty(context),ArgsObjInt, false);
 	fArrGetCh = Function::Create(nft, Function::ExternalLinkage,"system!ArrGetCh", module);
+
+
+	Type* tyCopyArray[]={Type::getInt32Ty(context),Type::getInt32Ty(context),
+		Type::getInt32Ty(context),Type::getInt32Ty(context),Type::getInt32Ty(context)};
+	nft = FunctionType::get(Type::getVoidTy(context),tyCopyArray, false);
+	fCopyArray = Function::Create(nft, Function::ExternalLinkage,"system!CopyArray", module);
+
+	/*Type* tyCreateSlice[]={Type::getInt32Ty(context),Type::getInt32Ty(context)};
+	nft = FunctionType::get(Type::getVoidTy(context),tyCreateSlice, false);
+	fCreateSlice = Function::Create(nft, Function::ExternalLinkage,"system!CreateSlice", module);*/
 
 /*	fArrGeti = Function::Create(nft, Function::ExternalLinkage,"system!ArrGeti", module);
 	//fFldGeti = Function::Create(nft, Function::ExternalLinkage,"system!FldGeti", module);
@@ -2081,6 +2093,37 @@ Value* BcGenerateAssignExpression(DVM_Executable *exe, Block *block,
 			ty=op->u.cast.type - INT_TO_VAR_CAST;
 
 		}
+		else if(expr->u.assign_expression.left->kind==SLICE_EXPRESSION )
+		{
+			if(op->kind==SLICE_EXPRESSION)
+			{
+				int dest_global=expr->u.assign_expression.left->type->derive->u.array_d.is_global;
+				int src_global=op->type->derive->u.array_d.is_global;
+				Value* dest=BcGenerateExpression(exe,block,expr->u.assign_expression.left->u.slice.barray);
+				builder.CreateCall(GetPush(2),dest);
+				Value* dstart=BcGenerateExpression(exe,block,expr->u.assign_expression.left->u.slice.index_start);
+				Value* dend=BcGenerateExpression(exe,block,expr->u.assign_expression.left->u.slice.index_end);
+				Value* src=BcGenerateExpression(exe,block,op->u.slice.barray);
+				builder.CreateCall(GetPush(2),src);
+				Value* sstart=BcGenerateExpression(exe,block,op->u.slice.index_start);
+				Value* send=BcGenerateExpression(exe,block,op->u.slice.index_end);
+
+				int ty=2;
+				if(op->u.slice.barray->type->derive->next==NULL)
+				{
+					if(op->u.slice.barray->type->basic_type==DVM_INT_TYPE)
+						ty=0;
+					else if(op->u.slice.barray->type->basic_type==DVM_DOUBLE_TYPE)
+						ty=1;
+				}
+				Value* args[]={dstart,dend,sstart,send,ConstInt(32,ty)};
+				builder.CreateCall(fCopyArray,args);
+				
+				return NULL;
+			}
+			else
+				dkc_compile_error(expr->line_number,NOT_LVALUE_ERR, MESSAGE_ARGUMENT_END);
+		}
 		else
 		{
 			retv=BcGenerateExpression(exe,block,expr->u.assign_expression.operand);
@@ -2660,8 +2703,14 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
                                 expr->u.enumerator.enumerator->value,
                                 ob);
         break;*/
-
-
+	/*case SLICE_EXPRESSION:
+		Value* src; src=BcGenerateExpression(exe,current_block,expr->u.slice.barray);
+		builder.CreateCall(GetPush(2),src);
+		Value* sstart; sstart=BcGenerateExpression(exe,current_block,expr->u.slice.index_start);
+		Value* send; send=BcGenerateExpression(exe,current_block,expr->u.slice.index_end);
+		return builder.CreateCall2(fCreateSlice,sstart,send);
+		break;
+		*/
     case EXPRESSION_KIND_COUNT_PLUS_1:  /* FALLTHRU */
     default:
         DBG_assert(0, ("expr->kind..%d", expr->kind));

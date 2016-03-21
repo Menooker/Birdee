@@ -23,14 +23,14 @@ namespace __gnu_cxx
         return ahash;
     }
 
-    template<> struct hash<const long long int>
+    template<> struct hash<const unsigned long long int>
     {
-        size_t operator()(const long long int& s) const
+        size_t operator()(const unsigned long long int& s) const
         {  return (s>>4)%0xffffffff; } //__stl_hash_string
     };
-    template<> struct hash<long long int>
+    template<> struct hash<unsigned long long int>
     {
-        size_t operator()(const long long int& s) const
+        size_t operator()(const unsigned long long int& s) const
         {  return (s>>4)%0xffffffff; } //__stl_hash_string
     };
 

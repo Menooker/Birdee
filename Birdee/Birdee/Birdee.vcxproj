@@ -97,6 +97,7 @@
     <None Include="backup.txt" />
     <None Include="barriertest.txt" />
     <None Include="Bubbles.txt" />
+    <None Include="DGC.txt" />
     <None Include="Exceptions.dkh" />
     <None Include="Exceptions2.dkh" />
     <None Include="list.txt" />

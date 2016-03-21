@@ -607,7 +607,7 @@ char *yytext;
 #define YY_INPUT(buf, result, max_size) (result = my_yyinput(buf, max_size))
 #include <stdio.h>
 #include <string.h>
-#include "DBG.h"
+#include "..\include\DBG.h"
 #include "diksamc.h"
 #include "y.tab.h"
 

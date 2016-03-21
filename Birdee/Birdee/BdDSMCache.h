@@ -32,15 +32,17 @@ public:
 
 	DSMCache(){}
 	//no cache on atomic counters and strings
-	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
-	virtual SoVar get(_uint key,int fldid)=0;
-
+	virtual SoStatus put(_uint key,_uint fldid,SoVar v)=0;
+	virtual SoVar get(_uint key,_uint fldid)=0;
+	virtual SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)=0;
+	virtual SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)=0;
+	virtual SoStatus get_chunk(_uint key,_uint fldid,_uint len,BINT* v)=0;
 	/*
 	Take a peek at the storage, get the memory block.
-	If not hit, this function will not spoil the cache locality
-	The fldid should be aligned with the block size
+	If not hit, this function will not spoil the cache locality.
+	The fldid should be aligned with the block size.
 	*/
-	virtual SoStatus peek(_uint key,int fldid,SoVar* out)=0;
+	virtual SoStatus peek(_uint key,_uint fldid,SoVar* out)=0;
 #ifdef BD_DSM_STAT
 	virtual void get_stat(long& mwrites,long& mwhit,long& mreads,long& mrhit)
 	{
@@ -61,17 +63,36 @@ private:
 public:
 	DSMNoCache(SoStorage* back):backend(back)
 	{}
-	SoStatus put(_uint key,int fldid,SoVar v)
+	SoStatus put(_uint key,_uint fldid,SoVar v)
 	{
 		return backend->put(key,fldid,v);
 	}
-	SoVar get(_uint key,int fldid)
+	SoVar get(_uint key,_uint fldid)
 	{
 		return backend->get(key,fldid);
 	}
-	SoStatus peek(_uint key,int fldid,SoVar* out)
+	SoStatus peek(_uint key,_uint fldid,SoVar* out)
 	{
 		return backend->getblock(MAKE64(key,fldid),out);
+	}
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)
+	{
+		_uint i;
+		SoStatus ret=SoOK;
+		for(i=0;i<len;i++)
+		{
+			if(backend->put(key,i+fldid,v[i])!=SoOK)
+				ret=SoFail;
+		}
+		return ret;
+	}
+	SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)
+	{
+		return backend->getchunk(key,fldid,len,v);
+	}
+	SoStatus get_chunk(_uint key,_uint fldid,_uint len,BINT* v)
+	{
+		return backend->getchunk(key,fldid,len,v);
 	}
 };
 
@@ -90,10 +111,10 @@ private:
 	Every cache block has 16 entries.
 	*/
 
-	typedef std::hash_map<long long,CacheBlock*>::iterator hash_iterator;
+	typedef std::hash_map<_uint64,CacheBlock*>::iterator hash_iterator;
 	CacheBlock block_cache[DSM_CACHE_SIZE];
 	std::queue<CacheBlock*> block_queue;
-	std::hash_map<long long,CacheBlock*> cache;
+	std::hash_map<_uint64,CacheBlock*> cache;
 	BD_LOCK queue_lock;
 	BD_RWLOCK hash_lock;
 
@@ -109,9 +130,9 @@ private:
 	class DSMCacheProtocal
 	{
 	private:
-		std::hash_map<long long,long long> directory;
+		std::hash_map<_uint64,_uint64> directory;
 		BD_RWLOCK dir_lock;
-		typedef std::hash_map<long long,long long>::iterator dir_iterator;
+		typedef std::hash_map<_uint64,_uint64>::iterator dir_iterator;
 
 		SOCKET* controlsockets;
 		SOCKET* datasockets;
@@ -128,6 +149,8 @@ private:
 			MsgWrite,
 			MsgRenew,
 			MsgWriteback,
+			MsgWriteChunk,
+			MsgRenewChunk,
 		};
 
 		struct Params
@@ -193,20 +216,20 @@ private:
 		struct DataPack
 		{
 			CacheMessageKind kind;
-			long long addr;
+			_uint64 addr;
 			SoVar buf[DSM_CACHE_BLOCK_SIZE];
 		};
 		struct ServerWriteReply
 		{
-			long long addr;
+			_uint64 addr;
 		};
 #pragma pack(pop)
 
-		void ServerRenew(long long addr,int src_id,SoVar v);
-		void ServerWrite(long long addr,int src_id,SoVar v);
-		void ServerWriteback(long long addr,int src_id);
-		CacheMessageKind ServerWriteMiss(long long addr,int src_id,SoVar v,SoVar* outbuf);
-		CacheMessageKind ServerReadMiss(long long addr,int src_id,SoVar* outbuf);
+		void ServerRenew(_uint64 addr,int src_id,SoVar v);
+		void ServerWrite(_uint64 addr,int src_id,SoVar v);
+		void ServerWriteback(_uint64 addr,int src_id);
+		CacheMessageKind ServerWriteMiss(_uint64 addr,int src_id,SoVar v,SoVar* outbuf);
+		CacheMessageKind ServerReadMiss(_uint64 addr,int src_id,SoVar* outbuf);
 
 		static THREAD_PROC(CacheProtocalProc,param)
 		{
@@ -247,8 +270,8 @@ private:
 			return 0;
 		}
 	public:
-		void Writeback(long long addr);
-		void Write(long long addr,SoVar v);
+		void Writeback(_uint64 addr);
+		void Write(_uint64 addr,SoVar v);
 
 		/*
 		Send a write message and fetch the written block
@@ -257,8 +280,8 @@ private:
 			v : the new value
 			blk : the fetched block will be store here
 		*/
-		SoStatus WriteMiss(long long addr,SoVar v,CacheBlock* blk);
-		SoStatus ReadMiss(long long addr,CacheBlock* blk);
+		SoStatus WriteMiss(_uint64 addr,SoVar v,CacheBlock* blk);
+		SoStatus ReadMiss(_uint64 addr,CacheBlock* blk);
 
 
 		DSMCacheProtocal(DSMDirectoryCache* t) : ths(t)
@@ -344,7 +367,7 @@ private:
 	//end of class DSMCacheProtocal
 
 
-	inline void mapput(long long key,CacheBlock* blk)
+	inline void mapput(_uint64 key,CacheBlock* blk)
 	{
 		UaEnterWriteRWLock(&hash_lock);
 		cache[key]=blk;
@@ -365,7 +388,7 @@ private:
 				and the block's lock is held. RELEASE it when
 				the block is ready!!!!
 	*/
-	CacheBlock* getblock(long long k,bool& is_pending);
+	CacheBlock* getblock(_uint64 k,bool& is_pending);
 
 	inline void freeblock(CacheBlock* blk)
 	{
@@ -410,6 +433,20 @@ public:
 		}
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
+	}
+
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)
+	{
+
+	}
+
+	SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)
+	{
+		return backend->getchunk(key,fldid,len,v);
+	}
+	SoStatus get_chunk(_uint key,_uint fldid,_uint len,BINT* v)
+	{
+		return backend->getchunk(key,fldid,len,v);
 	}
 
 	SoStatus peek(_uint key,int fldid,SoVar* out);

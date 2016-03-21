@@ -9,6 +9,7 @@ typedef void (*BdVMFunction)(void *args, ...);
 		typedef int BINT ;
 		typedef unsigned long BdIntPtr; // vc + x86
 		typedef unsigned long _uint; // vc + x86
+		typedef unsigned long long _uint64; // vc + x86
 	#endif
 	#ifdef BD_ON_GCC
 		#define sprintf_s snprintf
@@ -21,6 +22,7 @@ typedef void (*BdVMFunction)(void *args, ...);
 		#endif
 		typedef int BINT ;
 		typedef unsigned long _uint;
+		typedef unsigned long long _uint64;
 		typedef unsigned long BdIntPtr; // gcc + x86
 	#endif
 

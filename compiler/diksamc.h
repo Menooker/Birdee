@@ -215,6 +215,7 @@ typedef enum {
     ARRAY_CREATION_EXPRESSION,
     ENUMERATOR_EXPRESSION,
 	AUTOVAR_EXPRESSION,
+	SLICE_EXPRESSION,
     EXPRESSION_KIND_COUNT_PLUS_1
 } ExpressionKind;
 
@@ -472,6 +473,12 @@ typedef struct {
     Expression  *index;
 } IndexExpression;
 
+typedef struct {
+    Expression  *barray;
+    Expression  *index_start;
+    Expression  *index_end;
+} SliceExpression;
+
 typedef struct MemberDeclaration_tag MemberDeclaration;
 typedef struct FunctionDefinition_tag FunctionDefinition;
 
@@ -586,6 +593,7 @@ struct Expression_tag {
         NewExpression           new_e;
         ArrayCreation           array_creation;
         EnumeratorExpression    enumerator;
+		SliceExpression			slice;
     } u;
 };
 

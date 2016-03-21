@@ -572,6 +572,97 @@ void ExGetClock(DVM_Value* v)
 }
 
 
+extern "C" void  ExCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty)
+{
+	DVM_ObjectRef* dest=&(curthread->stack.stack_pointer-2)->object;
+	DVM_ObjectRef* src=&(curthread->stack.stack_pointer-1)->object;
+	if(!dest->data || !src->data)
+		ExNullPointerException();
+	int len1=dend-dstart;
+	int len2=s_end-sstart;
+
+	if(dstart<0 || dend<0 || sstart<0 || s_end<0 
+		|| dstart>dend || sstart>s_end || len1!=len2)
+		ExArrayOutOfBoundException();
+	int dest_global,src_global;
+	if(dest->v_table==curdvm->global_array_v_table)
+		dest_global=1;
+	else if(dest->v_table==curdvm->array_v_table)
+		dest_global=0;
+	else
+	{	
+		printf("CopyArray encounters an unkown type\n");
+		_BreakPoint;
+	}
+
+	if(src->v_table==curdvm->global_array_v_table)
+		src_global=1;
+	else if(src->v_table==curdvm->array_v_table)
+		src_global=0;
+	else
+	{	
+		printf("CopyArray encounters an unkown type\n");
+		_BreakPoint;
+	}
+	int len;
+	if(!dest_global)
+		len=dest->data->u.barray.size;
+	else
+		len=SoGlobalArrGetSize((int)dest->data);
+	if(dstart>=len || dend>=len)
+		ExArrayOutOfBoundException();
+
+	if(!src_global)
+		len=src->data->u.barray.size;
+	else
+		len=SoGlobalArrGetSize((int)src->data);
+	if(sstart>=len || s_end>=len)
+		ExArrayOutOfBoundException();
+
+	unsigned int sz;
+	switch(ty)
+	{
+	case 0:
+		sz=sizeof(int);
+		break;
+	case 1:
+		sz=sizeof(double);
+		break;
+	case 2:
+		sz=sizeof(DVM_ObjectRef);
+		break;
+	}
+	if(!dest_global )
+	{//if dest is local
+		if(!src_global)
+		{
+			char* vdest=(char*)dest->data->u.barray.u.int_array + dstart * sz;
+			char* vsrc= (char*)src->data->u.barray.u.int_array + sstart * sz;
+			memcpy(vdest,vsrc,sz*len1);
+		}
+		else
+		{
+
+		}
+	}
+	else
+	{//if dest is global
+		if(!src_global)
+		{
+			
+		}
+		else
+		{
+
+		}
+	}
+	curthread->stack.stack_pointer-=2;
+	curthread->stack.flg_sp-=2;
+}
+
+
+
+
 extern "C" void  ExDoInvoke(BINT transindex)
 {
 	DVM_Value* oldsp=curthread->stack.stack_pointer;
@@ -1586,6 +1677,10 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	f=m->getFunction("system!AtmDec");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)UaAtomicDec);
 	MCJIT->addGlobalMapping("system!AtmDec",(void*)UaAtomicDec);}
+
+	f=m->getFunction("system!CopyArray");
+	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)ExCopyArray);
+	MCJIT->addGlobalMapping("system!CopyArray",(void*)ExCopyArray);}
 
 /*	f=m->getFunction("shared!inc");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoInc);

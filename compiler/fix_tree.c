@@ -958,7 +958,7 @@ fix_assign_expression(Block *current_block, Expression *expr,
                               MESSAGE_ARGUMENT_END);
         }
     }
-	else if (left->kind ==AUTOVAR_EXPRESSION)
+	else if (left->kind ==AUTOVAR_EXPRESSION || left->kind == SLICE_EXPRESSION)
 	{
 	}
 	else if (left->kind == MEMBER_EXPRESSION
@@ -972,7 +972,7 @@ fix_assign_expression(Block *current_block, Expression *expr,
                               ->u.field.name,
                               MESSAGE_ARGUMENT_END);
         }
-    } else if (left->kind != INDEX_EXPRESSION) {
+    } else if (left->kind != INDEX_EXPRESSION ) {
         dkc_compile_error(left->line_number,
                           NOT_LVALUE_ERR, MESSAGE_ARGUMENT_END);
     }
@@ -2271,6 +2271,52 @@ fix_index_expression(Block *current_block, Expression *expr,
 }
 
 static Expression *
+fix_slice_expression(Block *current_block, Expression *expr,
+                     ExceptionList **el_p)
+{
+	SliceExpression *ie = &expr->u.slice;
+
+    ie->barray = fix_expression(current_block, ie->barray, expr, el_p);
+    ie->index_start = fix_expression(current_block, ie->index_start, expr, el_p);
+	ie->index_end = fix_expression(current_block, ie->index_end, expr, el_p);
+
+    if (ie->barray->type->derive != NULL
+        && ie->barray->type->derive->tag == ARRAY_DERIVE) {
+        expr->type = dkc_alloc_type_specifier2(ie->barray->type);
+    }  else {
+        dkc_compile_error(expr->line_number,
+                          INDEX_LEFT_OPERAND_NOT_ARRAY_ERR,
+                          MESSAGE_ARGUMENT_END);
+    }
+
+    if (!dkc_is_int(ie->index_start->type)) {
+		if(dkc_is_var(ie->index_start->type))
+		{
+			ie->index_start=alloc_cast_expression(VAR_TO_INT_CAST,ie->index_start);
+		}
+		else
+		{
+			dkc_compile_error(expr->line_number,
+							  INDEX_NOT_INT_ERR,
+							  MESSAGE_ARGUMENT_END);
+		}
+    }
+    if (!dkc_is_int(ie->index_end->type)) {
+		if(dkc_is_var(ie->index_end->type))
+		{
+			ie->index_end=alloc_cast_expression(VAR_TO_INT_CAST,ie->index_end);
+		}
+		else
+		{
+			dkc_compile_error(expr->line_number,
+							  INDEX_NOT_INT_ERR,
+							  MESSAGE_ARGUMENT_END);
+		}
+    }
+    return expr;
+}
+
+static Expression *
 fix_inc_dec_expression(Block *current_block, Expression *expr,
                        ExceptionList **el_p)
 {
@@ -2600,6 +2646,9 @@ fix_expression(Block *current_block, Expression *expr, Expression *parent,
         break;
     case INDEX_EXPRESSION:
         expr = fix_index_expression(current_block, expr, el_p);
+        break;
+	case SLICE_EXPRESSION:
+        expr = fix_slice_expression(current_block, expr, el_p);
         break;
     case INCREMENT_EXPRESSION:  /* FALLTHRU */
     case DECREMENT_EXPRESSION:

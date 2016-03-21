@@ -48,7 +48,7 @@ class SoStorageLocalTest : public SoStorage
 {
 private:
 
-	std::hash_map<long long,DataNode> map;
+	std::hash_map<_uint64,DataNode> map;
 public:
 	SoStorageLocalTest(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports){};
 	SoStorageLocalTest(){};
@@ -95,7 +95,7 @@ public:
 
 	SoStatus putstr(_uint key,wchar_t* str,_uint len)
 	{
-		long long k=MAKE64(key,1);
+		_uint64 k=MAKE64(key,1);
 		DataNode nd;
 		DataNode nd2;
 
@@ -110,7 +110,7 @@ public:
 
 	SoStatus getstr(_uint key,wchar_t** str,_uint* len)
 	{
-		long long k1,k2;
+		_uint64 k1,k2;
 		k1=MAKE64(key,0);
 		k2=MAKE64(key,1);
 		if(map.find(k1)!=map.end())
@@ -144,7 +144,33 @@ public:
 		throw SO_KEY_NOT_FOUND;
 	}
 
-	SoStatus getblock(long long addr,SoVar* buf)
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf)
+	{
+		_uint64 k=MAKE64(key,fldid);
+		for (_uint i=0;i<len;i++)
+		{
+			if(map.find(k+i)!=map.end())
+				buf[i]=map[k+i].var.vd;
+			else
+				buf[i]=0;
+		}
+		return SoOK;
+	}
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
+	{
+		_uint64 k=MAKE64(key,fldid);
+		for (_uint i=0;i<len;i++)
+		{
+			if(map.find(k+i)!=map.end())
+				buf[i]=map[k+i].var.vi;
+			else
+				buf[i]=0;
+		}
+		return SoOK;
+	}
+
+
+	SoStatus getblock(_uint64 addr,SoVar* buf)
 	{
 		for (int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
 		{
@@ -913,6 +939,11 @@ extern "C" void SoGlobalArrBoundaryCheck(BINT arr,BINT idx)
 	{
 		ExSystemRaise(ExArrayIndexOutOfBoundErr);
 	}
+}
+
+extern "C" int SoGlobalArrGetSize(BINT arr)
+{
+	return storage.getsize(arr);
 }
 
 

@@ -11,9 +11,9 @@ extern "C"
 #define DSM_CACHE_BLOCK_SIZE (1<<DSM_CACHE_BITS)
 #define DSM_CACHE_HIGH_MASK (0xffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
 #define DSM_CACHE_LOW_MASK (~DSM_CACHE_HIGH_MASK)
-#define DSM_CACHE_HIGH_MASK_64 ((long long)0xffffffffffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
+#define DSM_CACHE_HIGH_MASK_64 ((_uint64)0xffffffffffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
 #define DSM_CACHE_LOW_MASK_64 (~DSM_CACHE_HIGH_MASK_64)
-#define DSM_CACHE_BAD_KEY  ((long long) DSM_CACHE_LOW_MASK)
+#define DSM_CACHE_BAD_KEY  ((_uint64) DSM_CACHE_LOW_MASK)
 #define DSM_CACHE_SIZE 1024
 
 #define RC_THREAD_CREATING 0
@@ -84,7 +84,7 @@ struct CacheBlock
 {
 	SoVar cache[1<<DSM_CACHE_BITS];
 	unsigned long lru;
-	long long key;
+	_uint64 key;
 	BD_RWLOCK lock;
 };
 
@@ -105,6 +105,7 @@ void SoSetCounter(DVM_Value* args);
 void SoGetCounter(DVM_Value* args);
 void SoNewArray(BINT ty,BINT dim);
 void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
+int SoGlobalArrGetSize(BINT arr);
 void SoKillStorage();
 
 void SoArraySize(DVM_Value *args);
@@ -150,7 +151,9 @@ public:
 	virtual SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)=0;
 	virtual SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)=0;
 	virtual int getsize(_uint key)=0;
-	virtual SoStatus getblock(long long addr,SoVar* buf)=0;
+	virtual SoStatus getblock(_uint64 addr,SoVar* buf)=0;
+	virtual SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf)=0;
+	virtual SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)=0;
 	virtual SoStatus del(_uint key,unsigned int len)=0;
 };
 #endif

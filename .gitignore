@@ -9,3 +9,4 @@ Birdee/Birdee/libmemcached.dll
 *.depend
 *.layout
 *~
+compiler/y.output

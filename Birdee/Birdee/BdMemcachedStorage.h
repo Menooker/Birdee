@@ -20,7 +20,7 @@ private:
 	//memcached_st *memc;
 #endif
 public:
-	SoStatus getblock(long long addr,SoVar* buf);
+	SoStatus getblock(_uint64 addr,SoVar* buf);
 	SoStatus putstr(_uint key,wchar_t* str,_uint len);
 	SoStatus put(_uint key,_uint fldid,SoVar v);
 	SoVar get(_uint key,_uint fldid);
@@ -33,6 +33,8 @@ public:
 	int getcounter(_uint key,_uint fldid);
 	void setcounter(_uint key,_uint fldid,int n);
 	int getsize(_uint key);
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf);
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf);
 	SoStatus del(_uint key,unsigned int len);
 	~SoStorageMemcached();
 

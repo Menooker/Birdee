@@ -70,7 +70,7 @@ struct RcCommandPack
 			int32 param3;
 			int32 param4;
 		};
-		long long param34;
+		_uint64 param34;
 	};
 };
 #pragma pack(pop)

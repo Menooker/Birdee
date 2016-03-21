@@ -23,7 +23,7 @@ extern int gc_undergo;
 	}
 
 
-	void DSMDirectoryCache::DSMCacheProtocal::ServerRenew(long long addr,int src_id,SoVar v)
+	void DSMDirectoryCache::DSMCacheProtocal::ServerRenew(_uint64 addr,int src_id,SoVar v)
 	{
 
 
@@ -53,10 +53,10 @@ extern int gc_undergo;
 	}
 
 
-	void DSMDirectoryCache::DSMCacheProtocal::ServerWrite(long long addr,int src_id,SoVar v)
+	void DSMDirectoryCache::DSMCacheProtocal::ServerWrite(_uint64 addr,int src_id,SoVar v)
 	{
 		bool islocal= (src_id==ths->cache_id);
-		long long baddr=addr & DSM_CACHE_HIGH_MASK_64;
+		_uint64 baddr=addr & DSM_CACHE_HIGH_MASK_64;
 		if(!islocal &&  ((addr>>DSM_CACHE_BITS) % caches!=ths->cache_id))
 		{
 			//RcSend(datasockets[src_id],&status,sizeof(status));
@@ -68,7 +68,7 @@ extern int gc_undergo;
 		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
 		UaEnterReadRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
-		long long old=0;
+		_uint64 old=0;
 		if(itr!=directory.end())
 		{
 			old=itr->second;
@@ -103,7 +103,7 @@ extern int gc_undergo;
 		UaLeaveReadRWLock(&dir_lock);
 	}
 
-	void DSMDirectoryCache::DSMCacheProtocal::ServerWriteback(long long addr,int src_id)
+	void DSMDirectoryCache::DSMCacheProtocal::ServerWriteback(_uint64 addr,int src_id)
 	{
 		if(((addr>>DSM_CACHE_BITS) % caches!=ths->cache_id))
 		{
@@ -114,9 +114,9 @@ extern int gc_undergo;
 		dir_iterator itr=directory.find(addr);
 		if(itr!=directory.end())
 		{
-			long long old;
+			_uint64 old;
 			old=itr->second;
-			long long newv = old & ~( ((long long)1)<< src_id);
+			_uint64 newv = old & ~( ((_uint64)1)<< src_id);
 			if(newv)
 				directory[addr]=newv;
 			else
@@ -128,10 +128,10 @@ extern int gc_undergo;
 	}
 
 
-	DSMDirectoryCache::DSMCacheProtocal::CacheMessageKind DSMDirectoryCache::DSMCacheProtocal::ServerWriteMiss(long long addr,int src_id,SoVar v,SoVar* outbuf)
+	DSMDirectoryCache::DSMCacheProtocal::CacheMessageKind DSMDirectoryCache::DSMCacheProtocal::ServerWriteMiss(_uint64 addr,int src_id,SoVar v,SoVar* outbuf)
 	{
 		bool islocal= (src_id==ths->cache_id);
-		long long baddr=addr & DSM_CACHE_HIGH_MASK_64;
+		_uint64 baddr=addr & DSM_CACHE_HIGH_MASK_64;
 		CacheMessageKind status=MsgReplyOK;
 		if(!islocal &&  ((addr>>DSM_CACHE_BITS) % caches!=ths->cache_id))
 		{
@@ -144,12 +144,12 @@ extern int gc_undergo;
 
 		UaEnterWriteRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
-		long long old=0;
+		_uint64 old=0;
 		if(itr!=directory.end())
 		{
 			old=itr->second;
 		}
-		long long newv = old | ( ((long long)1)<< src_id);
+		_uint64 newv = old | ( ((_uint64)1)<< src_id);
 		directory[baddr]=newv;
 
 		if(old)
@@ -200,7 +200,7 @@ extern int gc_undergo;
 		return status;
 	}
 
-	DSMDirectoryCache::DSMCacheProtocal::CacheMessageKind DSMDirectoryCache::DSMCacheProtocal::ServerReadMiss(long long addr,int src_id,SoVar* outbuf)
+	DSMDirectoryCache::DSMCacheProtocal::CacheMessageKind DSMDirectoryCache::DSMCacheProtocal::ServerReadMiss(_uint64 addr,int src_id,SoVar* outbuf)
 	{
 		bool islocal= (src_id==ths->cache_id);
 		CacheMessageKind status=MsgReplyOK;
@@ -211,12 +211,12 @@ extern int gc_undergo;
 		}
 		UaEnterWriteRWLock(&dir_lock);
 		dir_iterator itr=directory.find(addr);
-		long long old=0;
+		_uint64 old=0;
 		if(itr!=directory.end())
 		{
 			old=itr->second;
 		}
-		long long newv = old | ( ((long long)1)<< src_id);
+		_uint64 newv = old | ( ((_uint64)1)<< src_id);
 		directory[addr]=newv;
 
 		if(islocal)
@@ -244,7 +244,7 @@ extern int gc_undergo;
 	}
 
 
-	void DSMDirectoryCache::DSMCacheProtocal::Writeback(long long addr)
+	void DSMDirectoryCache::DSMCacheProtocal::Writeback(_uint64 addr)
 	{
 		//printf("WriteBack %lld\n",addr);
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
@@ -260,7 +260,7 @@ extern int gc_undergo;
 	}
 
 
-	void DSMDirectoryCache::DSMCacheProtocal::Write(long long addr,SoVar v)
+	void DSMDirectoryCache::DSMCacheProtocal::Write(_uint64 addr,SoVar v)
 	{
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
@@ -291,7 +291,7 @@ extern int gc_undergo;
 	}
 
 
-	SoStatus DSMDirectoryCache::DSMCacheProtocal::WriteMiss(long long addr,SoVar v,CacheBlock* blk)
+	SoStatus DSMDirectoryCache::DSMCacheProtocal::WriteMiss(_uint64 addr,SoVar v,CacheBlock* blk)
 	{
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
@@ -328,7 +328,7 @@ extern int gc_undergo;
 	}
 
 
-	SoStatus DSMDirectoryCache::DSMCacheProtocal::ReadMiss(long long addr,CacheBlock* blk)
+	SoStatus DSMDirectoryCache::DSMCacheProtocal::ReadMiss(_uint64 addr,CacheBlock* blk)
 	{
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
 		if(target_cache_id==ths->cache_id)
@@ -366,7 +366,7 @@ extern int gc_undergo;
 
 
 
-CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
+CacheBlock* DSMDirectoryCache::getblock(_uint64 k,bool& is_pending)
 {
 	UaEnterLock(&queue_lock);
 
@@ -406,7 +406,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 		//acquire the control over the block and swap it out
 		UaEnterWriteRWLock(&block_cache[mini].lock);
 
-		long long oldkey=block_cache[mini].key;
+		_uint64 oldkey=block_cache[mini].key;
 		block_cache[mini].key=DSM_CACHE_BAD_KEY;
 		block_cache[mini].lru=0xffffffff;
 		UaEnterWriteRWLock(&hash_lock);
@@ -438,7 +438,7 @@ CacheBlock* DSMDirectoryCache::getblock(long long k,bool& is_pending)
 
 SoStatus DSMDirectoryCache::peek(_uint key,int fldid,SoVar* out)
 {
-	long long k=MAKE64(key,fldid);
+	_uint64 k=MAKE64(key,fldid);
 	ENTER_GC_LOCK();
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
@@ -469,7 +469,7 @@ SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
 #ifdef BD_DSM_STAT
 	writes++;
 #endif
-	long long k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
+	_uint64 k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
 	ENTER_GC_LOCK();
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);
@@ -535,7 +535,7 @@ SoVar DSMDirectoryCache::get(_uint okey,int fldid)
 #ifdef BD_DSM_STAT
 	reads++;
 #endif
-	long long k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
+	_uint64 k=MAKE64(okey,fldid & DSM_CACHE_HIGH_MASK);
 	ENTER_GC_LOCK();
 	UaEnterReadRWLock(&hash_lock);
 	hash_iterator itr=cache.find(k);

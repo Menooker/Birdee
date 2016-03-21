@@ -41,6 +41,7 @@ void ExUncaughtException();
 void ExRaiseException(BINT eindex);
 void ExLeaveTry();
 void ExNullPointerException();
+void ExArrayOutOfBoundException();
 void ExStackTrace(DVM_ObjectRef e);
 void ExSystemRaise(enum ExExceptions e);
 void ExReraiseException();

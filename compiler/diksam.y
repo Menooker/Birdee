@@ -552,6 +552,15 @@ primary_no_new_array
             Expression *identifier = dkc_create_identifier_expression($1);
             $$ = dkc_create_index_expression(identifier, $3);
         }
+		| IDENTIFIER LB expression COLON expression RB
+		{
+			Expression *identifier = dkc_create_identifier_expression($1);
+			$$ = dkc_create_slice_expression(identifier,$3,$5);
+		}
+		| primary_no_new_array LB expression COLON expression RB
+		{
+			$$ = dkc_create_slice_expression($1,$3,$5);
+		}
         | primary_expression DOT IDENTIFIER
         {
             $$ = dkc_create_member_expression($1, $3);
