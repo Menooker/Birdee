@@ -106,10 +106,18 @@ void SoGetCounter(DVM_Value* args);
 void SoNewArray(BINT ty,BINT dim);
 void SoGlobalArrBoundaryCheck(BINT arr,BINT idx);
 void SoKillStorage();
+
+void SoArraySize(DVM_Value *args);
+void SoArrayTostr(DVM_Value *args);
+void SoArrayUnimplementedStub(DVM_Value *args);
+void SoArrayEquals(DVM_Value *args);
+
 #ifdef BD_DSM_STAT
 void SoPrintStat();
 #endif
-
+void SoInitGCState();
+void SoLocalGC(int round_id);
+void SoSendMarkDone();
 #define MAKE64(a,b) (unsigned long long)( ((unsigned long long)a)<<32 | (unsigned long long)b)
 
 
@@ -131,17 +139,19 @@ public:
 	SoStorage(std::vector<std::string>& ,std::vector<int>&){};
 	virtual inline ~SoStorage(){};
 	virtual SoStatus putstr(_uint key,wchar_t* str,_uint len)=0;
-	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
-	virtual SoVar get(_uint key,int fldid)=0;
-	virtual int inc(_uint key,int fldid,int inc)=0;
-	virtual int dec(_uint key,int fldid,int dec)=0;
-	virtual int getcounter(_uint key,int fldid)=0;
-	virtual void setcounter(_uint key,int fldid,int n)=0;
+	virtual SoStatus put(_uint key,_uint fldid,SoVar v)=0;
+	virtual SoVar get(_uint key,_uint fldid)=0;
+	virtual int inc(_uint key,_uint fldid,int inc)=0;
+	virtual int dec(_uint key,_uint fldid,int dec)=0;
+	virtual int getcounter(_uint key,_uint fldid)=0;
+	virtual void setcounter(_uint key,_uint fldid,int n)=0;
 	virtual SoStatus getstr(_uint key,wchar_t** str,_uint* len)=0;
 	virtual bool exists(_uint key)=0;
 	virtual SoStatus newobj(_uint key,SoType tag,int fld_cnt,int flag)=0;
+	virtual SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)=0;
 	virtual int getsize(_uint key)=0;
 	virtual SoStatus getblock(long long addr,SoVar* buf)=0;
+	virtual SoStatus del(_uint key,unsigned int len)=0;
 };
 #endif
 

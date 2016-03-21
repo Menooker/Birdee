@@ -12,6 +12,12 @@
 #include "BdRemoteControl.h"
 //#include "BdSharedObj.h"
 
+
+void SoArraySize(DVM_Value *args);
+void SoArrayTostr(DVM_Value *args);
+void SoArrayUnimplementedStub(DVM_Value *args);
+void SoArrayEquals(DVM_Value *args);
+
 //extern DVM_VirtualMachine *curdvm;
 static void file_finalizer(DVM_VirtualMachine *dvm, DVM_Object* obj);
 
@@ -775,6 +781,10 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"array#equals",ExArrayEquals, 1, DVM_TRUE);
     DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"array#tostr",ExArrayTostr, 0, DVM_TRUE);
 
+	DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"globalarray#hash",SoArrayUnimplementedStub, 0, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"globalarray#equals",SoArrayEquals, 1, DVM_TRUE);
+    DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"globalarray#tostr",SoArrayTostr, 0, DVM_TRUE);
+	DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"globalarray#size",SoArraySize, 0, DVM_TRUE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);

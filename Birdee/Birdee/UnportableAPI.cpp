@@ -36,6 +36,7 @@ void __stdcall _UaStackTrace(int StackBase, int ebp, int esp,UaTraceCallBack cb,
 
 }
 
+
 void  UaStackTrace(UaTraceCallBack cb,void* param)
 {
     // iceboy's stack trace
@@ -59,7 +60,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 #ifdef BD_ON_WINDOWS
 	DWORD dwTlsIndex;
-	
+
 	void UaInitTls()
 	{
 		dwTlsIndex = TlsAlloc();
@@ -76,6 +77,11 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		ThThreadStub((BdThread*)p);
 		return 0;
 	}
+
+    void UaInitEvent(BD_EVENT* pevent,int state)
+    {
+        *pevent=CreateEvent(NULL,TRUE,state?TRUE:FALSE,NULL);
+    }
 
 	THREAD_ID UaGetCurrentThread()
 	{
@@ -111,7 +117,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		return h;
 	}
 
-	void UaSuspendThread(THREAD_ID id)
+	void UaSuspendThread(THREAD_ID id,BdThread* th)
 	{
 		SuspendThread(id);
 	}
@@ -235,6 +241,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
         UaPrepareThread();
 		ThThreadStub((BdThread*)p);
+		pthread_exit(NULL);
 		return 0;
 	}
 
@@ -256,6 +263,13 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		//TlsSetValue(dwTlsIndex,vm);
 	}
 
+    THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param)
+    {
+ 		THREAD_ID id;
+        pthread_create(&id,NULL,proc,param);
+        return id;
+    }
+
 	THREAD_ID UaCreateThread(BdThread* vm,int go,DVM_ObjectRef arg)
 	{
 		vm->new_obj=arg;
@@ -264,8 +278,10 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
         return id;
 	}
 
-	void UaSuspendThread(THREAD_ID id)
+	void UaSuspendThread(THREAD_ID id,BdThread* th)
 	{
+		while(!th->prepared)
+			;
 		pthread_kill(id, SIGUSR1);
 	}
 
@@ -350,5 +366,40 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	{
 		return ;
 	}
+
+
+
+	void UaInitEvent(BD_EVENT* ev,int state) {
+		pthread_mutex_init(&ev->mutex, 0);
+		pthread_cond_init(&ev->cond, 0);
+		ev->triggered = state;
+	}
+
+	void UaSetEvent(BD_EVENT* ev) {
+		pthread_mutex_lock(&ev->mutex);
+		ev->triggered = 1;
+		pthread_cond_broadcast(&ev->cond);
+		pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaResetEvent(BD_EVENT* ev) {
+		pthread_mutex_lock(&ev->mutex);
+		ev->triggered = 0;
+		pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaWaitForEvent(BD_EVENT* ev) {
+		 pthread_mutex_lock(&ev->mutex);
+		 while (!ev->triggered)
+			 pthread_cond_wait(&ev->cond, &ev->mutex);
+		 pthread_mutex_unlock(&ev->mutex);
+	}
+
+	void UaKillEvent(BD_EVENT* ev) {
+		pthread_mutex_destroy(&ev->mutex);
+		pthread_cond_destroy(&ev->cond);
+	}
+
+
 #endif //BD_ON_WINDOWS
 }

@@ -38,12 +38,18 @@ struct NodeValue
 	};
 };
 
-
-void init_memcached_this_thread()
+void set_memcached_this_thread(void* p)
+{
+		_memc=p;
+}
+void* init_memcached_this_thread()
 {
         //_memc=(memcached_st*)memcached_create(NULL);
         if(sto)
             _memc=memcached_clone(memc,sto->main_memc);
+		else
+			return NULL;
+		return _memc;
 /*		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
 		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
 		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
@@ -61,6 +67,10 @@ void init_memcached_this_thread()
 		memcached_server_free(servers);*/
 }
 
+void free_memcached(void* p)
+{
+	memcached_free((memcached_st*)p);
+}
 memcached_return memcached_put(memcached_st* memca,unsigned long long k,void* v,size_t len)
 {
 	//char ch[17];
@@ -80,7 +90,7 @@ int SoStorageMemcached::getsize(_uint key)
 {
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
-	long long k=MAKE64(key,0);
+	long long k=MAKE64(key,0xFFFFFFFE);
 	size_t return_key_length=8;
 	size_t return_value_length;
 	uint32_t flags;
@@ -92,7 +102,7 @@ int SoStorageMemcached::getsize(_uint key)
 	return node->field_cnt;
 }
 
-int SoStorageMemcached::getcounter(_uint key,int fldid)
+int SoStorageMemcached::getcounter(_uint key,_uint fldid)
 {
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,fldid));
@@ -107,7 +117,7 @@ int SoStorageMemcached::getcounter(_uint key,int fldid)
 	long long ret=atoll(return_value);
 	return ret-offset;
 }
-void SoStorageMemcached::setcounter(_uint key,int fldid,int n)
+void SoStorageMemcached::setcounter(_uint key,_uint fldid,int n)
 {
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,fldid));
@@ -124,7 +134,7 @@ void SoStorageMemcached::setcounter(_uint key,int fldid,int n)
 		throw 1;
 }
 
-int SoStorageMemcached::inc(_uint key,int fldid,int inc)
+int SoStorageMemcached::inc(_uint key,_uint fldid,int inc)
 {
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,fldid));
@@ -140,7 +150,8 @@ int SoStorageMemcached::inc(_uint key,int fldid,int inc)
 	return ret-offset;
 
 }
-int SoStorageMemcached::dec(_uint key,int fldid,int dec)
+
+int SoStorageMemcached::dec(_uint key,_uint fldid,int dec)
 {
 	return inc(key,fldid,-dec);
 }
@@ -212,7 +223,7 @@ SoStatus SoStorageMemcached::getstr(_uint key,wchar_t** str,_uint* len)
 		return SoKeyNotFound;
 }
 
-SoStatus SoStorageMemcached::put(_uint key,int fldid,SoVar v)
+SoStatus SoStorageMemcached::put(_uint key,_uint fldid,SoVar v)
 {
 	memcached_return rc=memcached_put(memc,MAKE64(key,fldid),&v,sizeof(v));
 	if(rc==MEMCACHED_SUCCESS)
@@ -220,7 +231,7 @@ SoStatus SoStorageMemcached::put(_uint key,int fldid,SoVar v)
 	return SoFail;
 }
 
-SoVar SoStorageMemcached::get(_uint key,int fldid)
+SoVar SoStorageMemcached::get(_uint key,_uint fldid)
 {
 	SoVar ret;
 	unsigned long long k=MAKE64(key,fldid);
@@ -238,7 +249,7 @@ SoVar SoStorageMemcached::get(_uint key,int fldid)
     }
     else
     {
-        printf("Error:%d",memc->cached_errno);
+        printf("Memc Error:%d",memc->cached_errno);
         throw SO_KEY_NOT_FOUND;
     }
 
@@ -264,6 +275,32 @@ bool SoStorageMemcached::exists(_uint key)//fix-me : improve
 	return false;
 }
 
+SoStatus SoStorageMemcached::getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
+{
+	NodeValue* pnd;
+	unsigned long long k=MAKE64(key,0xFFFFFFFE);
+	char* mret;
+	size_t len;
+	size_t flg;
+	memcached_return rc;
+//	char ch[17];
+//	sprintf(ch,"%016llx",k);
+    mret=memcached_get(memc,(char*)&k,8,&len,&flg,&rc);
+    if (rc == MEMCACHED_SUCCESS) {
+        pnd=(NodeValue*)mret;
+		tag=pnd->tag;
+		fld_cnt=pnd->field_cnt;
+		flag=pnd->flag;
+        memcached_free2(mret);
+        return SoOK;
+    }
+    else
+    {
+        printf("Error:%d",memc->cached_errno);
+		return SoFail;
+    }
+}
+
 SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 {
 	NodeValue nd;
@@ -272,9 +309,15 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 	nd.flag=flag;
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
-	long long k=MAKE64(key,0);
+	long long k=MAKE64(key,0xFFFFFFFE);
+	SoVar v;
+	v.vi=0;
 	if(memcached_add(memc,(char*)&k,8,(char*)&nd,sizeof(nd),(time_t)0,0)==MEMCACHED_SUCCESS)
+	{
+		if(memcached_put(memc,MAKE64(key,0xFFFFFFFF),&v,sizeof(v))!=MEMCACHED_SUCCESS)
+			_BreakPoint;
 		return SoOK;
+	}
 	return SoFail;
 }
 
@@ -295,11 +338,11 @@ SoStatus SoStorageMemcached::getblock(long long addr,SoVar* buf)
 
 	memset(buf,0,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
     memcached_return rc = memcached_mget(memc, (char**)keys, key_length, DSM_CACHE_BLOCK_SIZE);
-	
+
 	SoStatus ret= (rc==MEMCACHED_SUCCESS)?SoOK:SoFail;
 	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
 	{
-	
+
 		if(rc == MEMCACHED_SUCCESS)
 		{
 			long long* pkey;
@@ -307,9 +350,25 @@ SoStatus SoStorageMemcached::getblock(long long addr,SoVar* buf)
 			pkey=(long long*)memcached_result_key_value(results);
 			pvalue=(SoVar*)memcached_result_value(results);
 			//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
-			buf[ (*pkey) & DSM_CACHE_LOW_MASK_64]= *pvalue; 
+			buf[ (*pkey) & DSM_CACHE_LOW_MASK_64]= *pvalue;
 		}
 	}
 	memcached_result_free(&results_obj);
 	return ret;
+}
+
+
+SoStatus SoStorageMemcached::del(_uint key,unsigned int len)
+{
+	long long k;
+	for(int i=0;i<len;i++)
+	{
+		k=MAKE64(key,i);
+		memcached_delete(memc,(char*)&k,8,0);
+	}
+	k=(MAKE64(key,0xFFFFFFFE));
+	memcached_delete(memc,(char*)&k,8,0);
+	k=(MAKE64(key,0xFFFFFFFF));
+	memcached_delete(memc,(char*)&k,8,0);
+	return SoOK;
 }

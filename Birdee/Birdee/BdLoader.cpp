@@ -404,7 +404,6 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 	LdLoadVar(exe->is_required,&buf);
 	LdString(&exe->path,&buf);
 	LdString(&exe->libname ,&buf);
-	LdLoadVar(exe->shared_count,&buf);
 	LdArray(exe->constant_pool_count,exe->constant_pool,DVM_ConstantPool,&buf);
 	for(i=0;i<exe->constant_pool_count;i++)
 	{

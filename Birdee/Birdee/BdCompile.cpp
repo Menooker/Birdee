@@ -1644,7 +1644,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				//}
 
 				builder.CreateStore(BcBitToInt(v),builder.CreateBitCast(t1,TypeSwitch[ty]));
-				if(dkc_is_array(decl->type))//Full_arr_chk
+				if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global)//Full_arr_chk
 				{
 					if(isArrayAddressSet(decl->variable_index,1))
 					{

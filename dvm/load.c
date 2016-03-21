@@ -871,6 +871,18 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
     }
 }
 
+static VTableItem st_global_array_method_v_table[] = {
+	{GLOBAL_ARRAY_PREFIX "hash", FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX "equals", FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX "tostr", FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX ARRAY_METHOD_SIZE, FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX ARRAY_METHOD_RESIZE, FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX ARRAY_METHOD_INSERT, FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX ARRAY_METHOD_REMOVE, FUNCTION_NOT_FOUND},
+    {GLOBAL_ARRAY_PREFIX ARRAY_METHOD_ADD, FUNCTION_NOT_FOUND}
+};
+
+
 static VTableItem st_array_method_v_table[] = {
 	{ARRAY_PREFIX "hash", FUNCTION_NOT_FOUND},
     {ARRAY_PREFIX "equals", FUNCTION_NOT_FOUND},
@@ -911,14 +923,14 @@ set_built_in_methods(DVM_VirtualMachine *dvm)
     dvm->array_v_table = array_v_table;
 
 	global_array_v_table= alloc_v_table(NULL);
-    array_v_table->table_size = ARRAY_SIZE(st_array_method_v_table);
-    array_v_table->table = MEM_malloc(sizeof(VTableItem)
-                                      * array_v_table->table_size);
-    for (i = 0; i < array_v_table->table_size; i++) {
-        array_v_table->table[i] = st_array_method_v_table[i];
-        array_v_table->table[i].index
+    global_array_v_table->table_size = ARRAY_SIZE(st_global_array_method_v_table);
+    global_array_v_table->table = MEM_malloc(sizeof(VTableItem)
+                                      * global_array_v_table->table_size);
+    for (i = 0; i < global_array_v_table->table_size; i++) {
+        global_array_v_table->table[i] = st_global_array_method_v_table[i];
+        global_array_v_table->table[i].index
             = dvm_search_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,
-                                  array_v_table->table[i].name);
+                                  global_array_v_table->table[i].name);
     }
 	dvm->global_array_v_table = global_array_v_table;
 

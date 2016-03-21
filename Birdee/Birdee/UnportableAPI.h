@@ -7,14 +7,22 @@
 		#include <WinBase.h>
 		typedef void* THREAD_ID;
 		#define BD_LOCK CRITICAL_SECTION
+		#define BD_EVENT HANDLE
+		#define BD_RWLOCK SRWLOCK
 		typedef DWORD (__stdcall *UaThreadProc)(PVOID p);
     #else
         #include <unistd.h>
         #include <pthread.h>
         #include <semaphore.h>
         #define BD_LOCK pthread_spinlock_t
+		typedef struct  {
+			pthread_mutex_t mutex;
+			pthread_cond_t cond;
+			int triggered;
+		}BD_EVENT;
+		#define BD_RWLOCK pthread_rwlock_t
         typedef pthread_t THREAD_ID;
-		typedef (void*) (*UaThreadProc)(void* p);
+		typedef void* (*UaThreadProc)(void* p);
 	#endif
 
 	#undef min
@@ -45,13 +53,14 @@ extern "C"
 	void UaKillLock(BD_LOCK* lc);
 	void UaEnterLock(BD_LOCK* lc);
 	void UaLeaveLock(BD_LOCK* lc);
-	void UaSuspendThread(THREAD_ID id);
+	void UaSuspendThread(THREAD_ID id,BdThread* th);
 	void UaResumeThread(THREAD_ID id,BdThread* th);
 	void UaSleep(int ms);
 	int UaAtomicInc(long* ptr,long inc);
 	int UaAtomicDec(long* ptr,long dec);
 	THREAD_ID UaCreateThreadEx(UaThreadProc proc,void* param);
 	void UaWaitForThread(THREAD_ID th);
+	void UaInitEvent(BD_EVENT* pevent,int state);
 	#ifdef BD_ON_WINDOWS
         #ifdef BD_ON_GCC
 typedef struct{void* PTR;} SRWLOCK, *PSRWLOCK;
@@ -109,7 +118,6 @@ TryAcquireSRWLockShared (
 
         #endif
         #define UaPrepareThread()
-		#define BD_RWLOCK SRWLOCK
 		#define UaInitRWLock(a) InitializeSRWLock(a)
 		#define UaEnterWriteRWLock(a) AcquireSRWLockExclusive(a)
 		#define UaLeaveWriteRWLock(a) ReleaseSRWLockExclusive(a)
@@ -118,8 +126,28 @@ TryAcquireSRWLockShared (
 		#define UaTryEnterReadRWLock(a) TryAcquireSRWLockShared(a)
 		#define UaLeaveReadRWLock(a) ReleaseSRWLockShared(a)
 		#define UaKillRWLock(a)
+		#define UaKillEvent(a) CloseHandle(*a)
+		#define UaSetEvent(a) SetEvent(*a)
+		#define UaResetEvent(a) ResetEvent(*a)
+		#define UaWaitForEvent(a) WaitForSingleObject(*a,-1)
+		#define UaCloseThread(a) CloseHandle(a)
+		#define UaJoinThread(a) WaitForSingleObject(a,-1)
     #else
         void UaPrepareThread();
+		#define UaInitRWLock(a) pthread_rwlock_init(a,NULL)
+		#define UaEnterWriteRWLock(a) pthread_rwlock_wrlock(a)
+		#define UaLeaveWriteRWLock(a) pthread_rwlock_unlock(a)
+		#define UaEnterReadRWLock(a) pthread_rwlock_rdlock(a)
+		#define UaTryEnterWriteRWLock(a) pthread_rwlock_trywrlock(a)
+		#define UaTryEnterReadRWLock(a) pthread_rwlock_tryrdlock(a)
+		#define UaLeaveReadRWLock(a) pthread_rwlock_unlock(a)
+		#define UaKillRWLock(a) pthread_rwlock_destroy(a)
+		void UaKillEvent(BD_EVENT* ev);
+		void UaSetEvent(BD_EVENT* ev);
+		void UaResetEvent(BD_EVENT* ev);
+		void UaWaitForEvent(BD_EVENT* ev);
+		#define UaCloseThread(a)
+		#define UaJoinThread(a) pthread_join(a,NULL)
     #endif
 #ifdef __cplusplus
 }

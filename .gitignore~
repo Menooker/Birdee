@@ -6,6 +6,3 @@ Lib/Exceptions.bdl
 *.bde
 Lib/Exceptions.bdl
 Birdee/Birdee/libmemcached.dll
-*.depend
-*.layout
-*~

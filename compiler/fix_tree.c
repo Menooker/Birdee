@@ -324,6 +324,7 @@ static void check_global_array_type(TypeSpecifier *type)
 		case DVM_CLASS_TYPE:
 			if(!type->u.class_ref.class_definition->is_shared)
 				goto err;
+			break;
 		default:
 			err:
                 dkc_compile_error(type->line_number,

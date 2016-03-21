@@ -10,7 +10,7 @@
 
 #define CACHE_HELLO_MAGIC (0x2e3a4f01)
 
-extern "C" void init_memcached_this_thread();
+extern "C" void* init_memcached_this_thread();
 
 
 #pragma pack(push)
@@ -34,6 +34,13 @@ public:
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,int fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,int fldid)=0;
+
+	/*
+	Take a peek at the storage, get the memory block.
+	If not hit, this function will not spoil the cache locality
+	The fldid should be aligned with the block size
+	*/
+	virtual SoStatus peek(_uint key,int fldid,SoVar* out)=0;
 #ifdef BD_DSM_STAT
 	virtual void get_stat(long& mwrites,long& mwhit,long& mreads,long& mrhit)
 	{
@@ -61,6 +68,10 @@ public:
 	SoVar get(_uint key,int fldid)
 	{
 		return backend->get(key,fldid);
+	}
+	SoStatus peek(_uint key,int fldid,SoVar* out)
+	{
+		return backend->getblock(MAKE64(key,fldid),out);
 	}
 };
 
@@ -126,11 +137,8 @@ private:
 		};
 
 
-#ifdef BD_ON_WINDOWS
-		static DWORD __stdcall ListenSocketProc(void* param)
-#else
-		static void* ListenSocketProc(void* param)
-#endif
+
+		static THREAD_PROC(ListenSocketProc,param)
 		{
 			DSMCacheProtocal* ths=(DSMCacheProtocal*)param;
 			for(int i=0;i<ths->ths->cache_id;i++)
@@ -199,11 +207,8 @@ private:
 		void ServerWriteback(long long addr,int src_id);
 		CacheMessageKind ServerWriteMiss(long long addr,int src_id,SoVar v,SoVar* outbuf);
 		CacheMessageKind ServerReadMiss(long long addr,int src_id,SoVar* outbuf);
-#ifdef BD_ON_WINDOWS
-		static DWORD __stdcall CacheProtocalProc(void* param)
-#else
-		static void* CacheProtocalProc(void* param)
-#endif
+
+		static THREAD_PROC(CacheProtocalProc,param)
 		{
 			init_memcached_this_thread();
 			DSMCacheProtocal* ths=((Params*)param)->ths;
@@ -214,7 +219,7 @@ private:
 			{
 				if(RcRecv(ths->controlsockets[target_id],&pack,sizeof(pack))!=sizeof(pack))
 				{
-					printf("Cache server socket error %d\n",WSAGetLastError());
+					printf("Cache server socket error %d\n",RcSocketLastError());
 					//_BreakPoint;
 					break;
 				}
@@ -274,7 +279,7 @@ private:
 				SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
 				if(sock==NULL)
 				{
-					printf("cache socket connect error %d!\n",WSAGetLastError());
+					printf("cache socket connect error %d!\n",RcSocketLastError());
 					_BreakPoint;
 				}
 				RcSetTCPNoDelay(sock);
@@ -305,7 +310,7 @@ private:
 				}
 				datasockets[i]=sock;
 			}
-			UaWaitForThread(th);
+			UaJoinThread(th);
 			for(int i=0;i<caches;i++)
 			{
 				if(i==ths->cache_id)
@@ -407,6 +412,7 @@ public:
 		UaKillRWLock(&hash_lock);
 	}
 
+	SoStatus peek(_uint key,int fldid,SoVar* out);
 	SoStatus put(_uint key,int fldid,SoVar v);
 	SoVar get(_uint key,int fldid);
 };

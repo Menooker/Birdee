@@ -1,6 +1,7 @@
 #include "BdThread.h"
 #include "BdSharedObj.h"
 #include "BdParameters.h"
+#include <time.h>
 extern "C"
 {
 	void ThPauseTheWorld()
@@ -8,10 +9,12 @@ extern "C"
 		BdThread* self=curthread,*th;
 		UaEnterLock(&curdvm->thread_lock);
 		th=curdvm->mainvm;
+		if(!curdvm->is_master)
+            th=th->next;
 		while(th)
 		{
 			if(th!=self)
-				UaSuspendThread(th->tid);
+				UaSuspendThread(th->tid,th);
 			th=th->next;
 		}
 		UaLeaveLock(&curdvm->thread_lock);
@@ -22,6 +25,8 @@ extern "C"
 		BdThread* self=curthread,*th;
 		UaEnterLock(&curdvm->thread_lock);
 		th=curdvm->mainvm;
+		if(!curdvm->is_master)
+            th=th->next;
 		while(th)
 		{
 			if(th!=self)
@@ -67,17 +72,22 @@ extern "C"
 
 
 //#ifdef BD_ON_WINDOWS
-	extern "C" void init_memcached_this_thread();
+	extern "C" void* init_memcached_this_thread();
 //#endif
 
 	extern "C" int idx_remote_thread;
 
 	void ThThreadStub(BdThread* param)
 	{
+#ifdef BD_ON_LINUX
+		param->prepared=1;
+#endif
 //#ifdef BD_ON_WINDOWS
 		init_memcached_this_thread();
 //#endif
+		srand((int)param->tid + time(NULL));
 		curthread=param;
+
         if(param->thread_obj_id)
 		{
 			if(idx_remote_thread==-1)
@@ -117,7 +127,7 @@ extern "C"
     void ThSuspendThread(DVM_Value* args)
     {
         BdThread* th=(BdThread*)args[0].int_value;
-        UaSuspendThread(th->tid);
+        UaSuspendThread(th->tid,th);
     }
 
     void ThResumeThread(DVM_Value* args)
