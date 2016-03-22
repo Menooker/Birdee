@@ -1594,6 +1594,20 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoCopyArray);
 	MCJIT->addGlobalMapping("system!CopyArray",(void*)SoCopyArray);}
 
+	f=m->getFunction("shared!vgeti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SovGeti);
+	MCJIT->addGlobalMapping("shared!vgeti",(void*)SovGeti);
+	f=m->getFunction("shared!vgetd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SovGetd);
+	MCJIT->addGlobalMapping("shared!vgetd",(void*)SovGetd);
+
+	f=m->getFunction("shared!vseti");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SovSeti);
+	MCJIT->addGlobalMapping("shared!vseti",(void*)SovSeti);
+	f=m->getFunction("shared!vsetd");
+	TheExecutionEngine->addGlobalMapping(f,(void*)SovSetd);
+	MCJIT->addGlobalMapping("shared!vsetd",(void*)SovSetd);
+
 /*	f=m->getFunction("shared!inc");
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoInc);
 	MCJIT->addGlobalMapping("shared!inc",(void*)SoInc);}

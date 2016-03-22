@@ -90,10 +90,14 @@ struct CacheBlock
 
 BINT SoGeti(_uint key,_uint fldid);
 double SoGetd(_uint key,_uint fldid);
+BINT SovGeti(_uint key,_uint fldid);
+double SovGetd(_uint key,_uint fldid);
 void SoGeto(_uint key,_uint fldid,int idx_in_exe);
 void SoGets(_uint key,_uint fldid);
 void SoSeti(_uint key,_uint fldid,BINT v);
 void SoSetd(_uint key,_uint fldid,double v);
+void SovSeti(_uint key,_uint fldid,BINT v);
+void SovSetd(_uint key,_uint fldid,double v);
 void SoSeto(_uint key,_uint fldid,_uint v);
 void SoSets(_uint key,_uint fldid,DVM_ObjectRef v);
 void SoNewModule(_uint key,int cnt);

@@ -398,6 +398,7 @@ typedef struct {
     DVM_Boolean is_local;
 	DVM_Boolean is_param;
 	DVM_Boolean is_shared;
+	DVM_Boolean is_volatile;
 } Declaration;
 
 typedef struct DeclarationList_tag {
@@ -1102,7 +1103,8 @@ Statement *dkc_create_declaration_statement(DVM_Boolean is_final,
                                             TypeSpecifier *type,
                                             char *identifier,
                                             Expression *initializer,
-											DVM_Boolean isShared);
+											DVM_Boolean isShared,
+											DVM_Boolean isVolitile);
 void
 dkc_start_class_definition(int is_shared,ClassOrMemberModifierList *modifier,
                            DVM_ClassOrInterface class_or_interface,

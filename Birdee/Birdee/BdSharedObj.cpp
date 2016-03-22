@@ -439,6 +439,11 @@ public:
 		return backend->put(key,fldid,v);
 	}
 
+	SoStatus vput(_uint key,int fldid,SoVar v)
+	{
+		return backend->put(key,fldid,v);
+	}
+
 	SoStatus put(_uint key,int fldid,SoVar v)
 	{
 		return cache->put(key,fldid,v);
@@ -466,6 +471,22 @@ public:
 		}
 	}
 
+	SoVar vget(_uint key,int fldid)
+	{
+		SoVar ret;
+		try
+		{
+			ret=backend->get(key,fldid);
+
+		}
+		catch (int a)
+		{
+			SoThrowKeyError();
+		}
+		return ret;
+	}
+
+
 	SoVar get(_uint key,int fldid)
 	{
 		SoVar ret;
@@ -476,10 +497,7 @@ public:
 		}
 		catch (int a)
 		{
-			if(a==SO_KEY_NOT_FOUND)
-			{
-				SoThrowKeyError();
-			}
+			SoThrowKeyError();
 		}
 		return ret;
 	}
@@ -713,6 +731,14 @@ inline _uint TranslateKey(_uint key)
 	return key+id*BD_MAX_SHARED_STATIC_PER_MODULE;
 }
 
+#ifdef BD_DSM_STAT
+void SoPrintStat()
+{
+	if(pstorage)
+		pstorage->print_stat();
+}
+#endif
+
 extern "C" BINT SoGeti(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vi;
@@ -722,14 +748,6 @@ extern "C" double SoGetd(_uint key,_uint fldid)
 {
 	return storage.get(key,fldid).vd;
 }
-
-#ifdef BD_DSM_STAT
-void SoPrintStat()
-{
-	if(pstorage)
-		pstorage->print_stat();
-}
-#endif
 
 extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 {
@@ -745,6 +763,16 @@ extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 	obj.data=(DVM_Object*)ret;
 	curthread->retvar.object=obj;
 	return ;
+}
+
+extern "C" BINT SovGeti(_uint key,_uint fldid)
+{
+	return storage.vget(key,fldid).vi;
+}
+
+extern "C" double SovGetd(_uint key,_uint fldid)
+{
+	return storage.vget(key,fldid).vd;
 }
 
 extern "C" void SoGets(_uint key,_uint fldid)
@@ -781,6 +809,26 @@ extern "C" void SoSeto(_uint key,_uint fldid,_uint v)
 {
 	SoVar var={v};
 	if(storage.put(key,fldid,var)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+}
+
+extern "C" void SovSeti(_uint key,_uint fldid,BINT v)
+{
+	SoVar var={v};
+	if(storage.vput(key,fldid,var)!=SoOK)
+	{
+		SoThrowGetValueError();
+	}
+
+}
+
+extern "C" void SovSetd(_uint key,_uint fldid,double v)
+{
+	SoVar var;
+	var.vd=v;
+	if(storage.vput(key,fldid,var)!=SoOK)
 	{
 		SoThrowGetValueError();
 	}

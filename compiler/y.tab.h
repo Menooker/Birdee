@@ -143,8 +143,9 @@
      SAFE = 359,
      SHARED = 360,
      GLOBAL = 361,
-     ATM_ADD_ASSIGN_T = 362,
-     ATM_SUB_ASSIGN_T = 363
+     VOLATILE = 362,
+     ATM_ADD_ASSIGN_T = 363,
+     ATM_SUB_ASSIGN_T = 364
    };
 #endif
 /* Tokens.  */
@@ -252,8 +253,9 @@
 #define SAFE 359
 #define SHARED 360
 #define GLOBAL 361
-#define ATM_ADD_ASSIGN_T 362
-#define ATM_SUB_ASSIGN_T 363
+#define VOLATILE 362
+#define ATM_ADD_ASSIGN_T 363
+#define ATM_SUB_ASSIGN_T 364
 
 
 
@@ -297,7 +299,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 301 "y.tab.h"
+#line 303 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

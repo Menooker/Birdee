@@ -215,8 +215,8 @@ extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset_shared(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
 Type* TypeSwitch[3];
-Function* SharedPutSwitch[4];
-Function* SharedGetSwitch[4];
+Function* SharedPutSwitch[2][4];
+Function* SharedGetSwitch[2][4];
 //Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
 //Function* FunStoreStaicSwitch[3];
 
@@ -962,8 +962,10 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fObjectRefPtr=0;
 	//FldGet[0]=0;FldGet[1]=0;FldGet[2]=0;
 	//FldPut[0]=0;FldPut[1]=0;FldPut[2]=0;
-	SharedGetSwitch[0]=0;SharedGetSwitch[1]=0;SharedGetSwitch[2]=0;SharedGetSwitch[3]=0;
-	SharedPutSwitch[0]=0;SharedPutSwitch[1]=0;SharedPutSwitch[2]=0;SharedPutSwitch[3]=0;
+	SharedGetSwitch[0][0]=0;SharedGetSwitch[0][1]=0;SharedGetSwitch[0][2]=0;SharedGetSwitch[0][3]=0;
+	SharedGetSwitch[1][0]=0;SharedGetSwitch[1][1]=0;SharedGetSwitch[1][2]=0;SharedGetSwitch[1][3]=0;
+	SharedPutSwitch[0][0]=0;SharedPutSwitch[0][1]=0;SharedPutSwitch[0][2]=0;SharedPutSwitch[0][3]=0;
+	SharedPutSwitch[1][0]=0;SharedPutSwitch[1][1]=0;SharedPutSwitch[1][2]=0;SharedPutSwitch[1][3]=0;
 	//BcBuildArrPtr(Type::getInt32Ty(context)->getPointerTo());
 	//builder.set
 
@@ -1125,9 +1127,11 @@ extern "C" void* BcNewModule(char* name,char* path)
 	mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));mArg.push_back(Type::getInt32Ty(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSeti=Function::Create(nft, Function::ExternalLinkage,"shared!seti", module);
-	SharedPutSwitch[0]=fSharedSeti;
+	SharedPutSwitch[1][0]=Function::Create(nft, Function::ExternalLinkage,"shared!vseti", module);
+	SharedPutSwitch[0][0]=fSharedSeti;
 	fSharedSeto=Function::Create(nft, Function::ExternalLinkage,"shared!seto", module);
-	SharedPutSwitch[2]=fSharedSeto;
+	SharedPutSwitch[1][2]=fSharedSeto;
+	SharedPutSwitch[0][2]=fSharedSeto;
 
 	//fSharedInc=Function::Create(nft, Function::ExternalLinkage,"shared!inc", module);
 	//fSharedDec=Function::Create(nft, Function::ExternalLinkage,"shared!dec", module);
@@ -1135,31 +1139,37 @@ extern "C" void* BcNewModule(char* name,char* path)
 	mArg.pop_back(); mArg.push_back(Type::getDoubleTy(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSetd=Function::Create(nft, Function::ExternalLinkage,"shared!setd", module);
-	SharedPutSwitch[1]=fSharedSetd;
-
+	SharedPutSwitch[1][1]=Function::Create(nft, Function::ExternalLinkage,"shared!vsetd", module);
+	SharedPutSwitch[0][1]=fSharedSetd;
+	
 	mArg.pop_back(); mArg.push_back(TyObjectRef);
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSets=Function::Create(nft, Function::ExternalLinkage,"shared!sets", module);
-	SharedPutSwitch[3]=fSharedSets;
+	SharedPutSwitch[0][3]=fSharedSets;
+	SharedPutSwitch[1][3]=fSharedSets;
 
 
 	mArg.pop_back();
 	nft=FunctionType::get(Type::getInt32Ty(context),mArg, false);
 	fSharedGeti=Function::Create(nft, Function::ExternalLinkage,"shared!geti", module);
-	SharedGetSwitch[0]=fSharedGeti;
+	SharedGetSwitch[1][0]=Function::Create(nft, Function::ExternalLinkage,"shared!vgeti", module);
+	SharedGetSwitch[0][0]=fSharedGeti;
 
 	nft=FunctionType::get(Type::getDoubleTy(context),mArg, false);
 	fSharedGetd=Function::Create(nft, Function::ExternalLinkage,"shared!getd", module);
-	SharedGetSwitch[1]=fSharedGetd;
+	SharedGetSwitch[1][1]=Function::Create(nft, Function::ExternalLinkage,"shared!vgetd", module);
+	SharedGetSwitch[0][1]=fSharedGetd;
 
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedGets=Function::Create(nft, Function::ExternalLinkage,"shared!gets", module);
-	SharedGetSwitch[3]=fSharedGets;
+	SharedGetSwitch[1][3]=fSharedGets;
+	SharedGetSwitch[0][3]=fSharedGets;
 
 	mArg.push_back(Type::getInt32Ty(context));
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedGeto=Function::Create(nft, Function::ExternalLinkage,"shared!geto", module);
-	SharedGetSwitch[2]=fSharedGeto;
+	SharedGetSwitch[1][2]=fSharedGeto;
+	SharedGetSwitch[0][2]=fSharedGeto;
 
 	if(!strcmp(name,"diksam.lang"))
 	{
@@ -1432,21 +1442,21 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 
     if (decl->is_local) {
 		BcParameter& p=bparameters[decl->variable_index];
-		if(!p.v)
+		if(!p.v || decl->is_volatile)
 		{
 			switch(get_opcode_type_offset(decl->type))
 			{
 			case 2://var is string or obj
 				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
-				p.v=builder.CreateLoad(t1); //pointer variable should not use 'registers'?
+				p.v=builder.CreateLoad(t1,decl->is_volatile); //pointer variable should not use 'registers'?
 				return p.v;
 			case 0:
 				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
-				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getInt32PtrTy(context)));
+				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getInt32PtrTy(context)),decl->is_volatile);
 				return p.v;
 			case 1:
 				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
-				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getDoublePtrTy(context)));
+				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getDoublePtrTy(context)),decl->is_volatile);
 				return p.v;
 			}
 		}
@@ -1463,21 +1473,21 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			switch(ty)
 			{
 			case 2: //object
-				builder.CreateCall3(SharedGetSwitch[ty],
+				builder.CreateCall3(SharedGetSwitch[decl->is_volatile][ty],
 					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,decl->type->u.class_ref.class_index));
                 return builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
             case 3: //string
-                builder.CreateCall2(SharedGetSwitch[ty],
+                builder.CreateCall2(SharedGetSwitch[decl->is_volatile][ty],
 					cached_mid,ConstInt(32,decl->variable_index));
                 return builder.CreateLoad(builder.CreateLoad(bretvar));
 			case 4: //array
-				builder.CreateCall3(SharedGetSwitch[2],
+				builder.CreateCall3(SharedGetSwitch[decl->is_volatile][2],
 					cached_mid,ConstInt(32,decl->variable_index),ConstInt(32,-1));
                 return builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
-				return builder.CreateCall2(SharedGetSwitch[ty],
+				return builder.CreateCall2(SharedGetSwitch[decl->is_volatile][ty],
 					cached_mid,ConstInt(32,decl->variable_index));
 			}
 		}
@@ -1489,7 +1499,7 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 				//if(!psta)
 				psta=builder.CreateGEP(builder.CreateLoad(pstatic),ConstInt(32,decl->variable_index));
 				Value* p2=builder.CreateBitCast(psta,TypeSwitch[get_opcode_type_offset(decl->type)]);
-				p2=builder.CreateLoad(p2,true);
+				p2=builder.CreateLoad(p2,decl->is_volatile);
 				//ps.v = (get_opcode_type_offset(decl->type)==2)? 0:p2;//pointer variable should not use 'registers'?
 				//ps.v=p2;
 				return p2;
@@ -1655,7 +1665,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				bparameters[decl->variable_index].violated=1;
 				//}
 
-				builder.CreateStore(BcBitToInt(v),builder.CreateBitCast(t1,TypeSwitch[ty]));
+				builder.CreateStore(BcBitToInt(v),builder.CreateBitCast(t1,TypeSwitch[ty]),decl->is_volatile);
 				if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global)//Full_arr_chk
 				{
 					if(isArrayAddressSet(decl->variable_index,1))
@@ -1688,7 +1698,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				v=builder.CreateCall(GetObjrefPtr(),v);
 				ty=2;
 			}
-			builder.CreateCall3(SharedPutSwitch[ty],
+			builder.CreateCall3(SharedPutSwitch[decl->is_volatile][ty],
 				cached_mid,ConstInt(32,decl->variable_index),v);
 		}
 		else
@@ -1710,7 +1720,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 					//bstatic[decl->variable_index].v=v;
 					//bstatic[decl->variable_index].violated=1;
 					//}
-					builder.CreateStore(v,p2);
+					builder.CreateStore(v,p2,decl->is_volatile);
 					if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global) //Full_arr_chk
 					{
 						if(isArrayAddressSet(decl->variable_index,0))
@@ -1789,7 +1799,7 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 				else
 					v=builder.CreateCall(GetObjrefPtr(),v);
 			}
-			builder.CreateCall3(SharedPutSwitch[ty2],obj,ConstInt(32,member->u.field.field_index),v);
+			builder.CreateCall3(SharedPutSwitch[0][ty2],obj,ConstInt(32,member->u.field.field_index),v);
 		}
 		else
 		{
@@ -1885,7 +1895,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 				{}
 				else
 					builder.CreateCall2(fGlobalArrBoundaryCheck,id,idx);
-				builder.CreateCall3(SharedPutSwitch[vty],id,idx,v);
+				builder.CreateCall3(SharedPutSwitch[0][vty],id,idx,v);
 			}
 			else
 			{
@@ -2318,21 +2328,21 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 			switch(ty)
 			{
 			case 2: //object
-				builder.CreateCall3(SharedGetSwitch[ty],obj,idx,
+				builder.CreateCall3(SharedGetSwitch[0][ty],obj,idx,
 					ConstInt(32,expr->type->u.class_ref.class_index));
                 p=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
             case 3:
-                builder.CreateCall2(SharedGetSwitch[ty],obj,idx);
+                builder.CreateCall2(SharedGetSwitch[0][ty],obj,idx);
                 p=builder.CreateLoad(builder.CreateLoad(bretvar));
                 break;
 			case 4: //array
-				builder.CreateCall3(SharedGetSwitch[2],obj,idx,
+				builder.CreateCall3(SharedGetSwitch[0][2],obj,idx,
 					ConstInt(32,-1));
                 p=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
-				p= builder.CreateCall2(SharedGetSwitch[ty],obj,idx);
+				p= builder.CreateCall2(SharedGetSwitch[0][ty],obj,idx);
 			}
 		}
 		else
@@ -2406,20 +2416,20 @@ Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *
 			switch(ty)
 			{
 			case 2: //object
-				builder.CreateCall3(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index),
+				builder.CreateCall3(SharedGetSwitch[0][ty],obj,ConstInt(32,member->u.field.field_index),
 					ConstInt(32,expr->type->u.class_ref.class_index));
                 ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
             case 3: //string
-                builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
+                builder.CreateCall2(SharedGetSwitch[0][ty],obj,ConstInt(32,member->u.field.field_index));
                 ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 			case 4: //array
-				builder.CreateCall3(SharedGetSwitch[2],obj,ConstInt(32,member->u.field.field_index),
+				builder.CreateCall3(SharedGetSwitch[0][2],obj,ConstInt(32,member->u.field.field_index),
 					ConstInt(32,-1));
                 ret=builder.CreateLoad(builder.CreateLoad(bretvar));
 				break;
 			default:
-				ret= builder.CreateCall2(SharedGetSwitch[ty],obj,ConstInt(32,member->u.field.field_index));
+				ret= builder.CreateCall2(SharedGetSwitch[0][ty],obj,ConstInt(32,member->u.field.field_index));
 			}
 		}
 		else

@@ -179,6 +179,7 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"safe"          return SAFE;
 <INITIAL>"shared"        return SHARED;
 <INITIAL>"global"        return GLOBAL;
+<INITIAL>"volatile"      return VOLATILE;
 
 <INITIAL>"{"          {return LC;}
 <INITIAL>"}"          {return RC;}

@@ -25,9 +25,9 @@ unsafe
 	p2[ii]=rand_num
 	rand_num=(rand_num*rand_num+rand_num*17+3)
 	*/
-	p[ii]=n-ii
-
+	p2[ii]=n-ii
 end
+p[0:n]=p2[0:n]
 
 println("Put ok " + (GetClock()-time))
 
@@ -117,9 +117,10 @@ unsafe
 					start2++
 				end
 			end
-			for i=0;i<current_step;i++
+			/*for i=0;i<current_step;i++
 				p[base+i]=tmp[i]
-			end
+			end*/
+			p[base:current_step+base]=tmp[0:current_step]
 		end
 		try
 			barrier.enter(-1,32)
@@ -173,4 +174,3 @@ function threadproc2(id as var) as int
 		end
 	end
 end
-

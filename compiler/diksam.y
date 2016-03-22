@@ -52,11 +52,12 @@
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
         DOWN_CAST_BEGIN DOWN_CAST_END DELEGATE FINAL ENUM CONST
 		FUNCTION AS THEN DIM END CR DECLARE BSUB APOSTROPHE LIB UNSAFE SAFE SHARED
-		GLOBAL
+		GLOBAL VOLATILE
 		ATM_ADD_ASSIGN_T ATM_SUB_ASSIGN_T 
 %type   <intval> apostrophe
 %type   <intval> unsafe
 %type   <intval> shared
+%type   <intval> volatile
 %type   <intval> global
 %type   <package_name> package_name
 %type   <require_list> require_list require_declaration
@@ -903,21 +904,21 @@ throw_statement
         }
         ;
 declaration_statement
-        : DIM  IDENTIFIER AS shared type_specifier CR
+        : DIM volatile IDENTIFIER AS shared type_specifier CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $5, $2, NULL,$4);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $6, $3, NULL,$5,$2);
         }
-        | DIM  IDENTIFIER AS shared type_specifier ASSIGN_T expression CR
+        | DIM volatile IDENTIFIER AS shared type_specifier ASSIGN_T expression CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $5, $2, $7,$4);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $6, $3, $8,$5,$2);
         }
         |  FINAL IDENTIFIER AS type_specifier CR
         {
-            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, NULL,DVM_FALSE);
+            $$ = dkc_create_declaration_statement(DVM_FALSE, $4, $2, NULL,DVM_FALSE,DVM_FALSE);
         }
         | FINAL  IDENTIFIER AS type_specifier ASSIGN_T expression CR
         {
-            $$ = dkc_create_declaration_statement(DVM_TRUE, $4, $2, $6,DVM_FALSE);
+            $$ = dkc_create_declaration_statement(DVM_TRUE, $4, $2, $6,DVM_FALSE,DVM_FALSE);
         }
         ;
 block
@@ -1250,6 +1251,16 @@ shared
 			$$=0;
 		}
 		| SHARED
+		{
+			$$=1;
+		}
+		;
+volatile
+		: //empty
+		{
+			$$=0;
+		}
+		| VOLATILE
 		{
 			$$=1;
 		}

@@ -1117,7 +1117,7 @@ dkc_create_throw_statement(Expression *expression)
 Statement *
 dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
                                  char *identifier,
-                                 Expression *initializer,DVM_Boolean isShared)
+                                 Expression *initializer,DVM_Boolean isShared,DVM_Boolean isVolatile)
 {
     Statement *st;
     Declaration *decl;
@@ -1135,6 +1135,7 @@ dkc_create_declaration_statement(DVM_Boolean is_final, TypeSpecifier *type,
 
     decl->initializer = initializer;
 	decl->is_shared=isShared;
+	decl->is_volatile=isVolatile;
     st->u.declaration_s = decl;
 
     return st;
