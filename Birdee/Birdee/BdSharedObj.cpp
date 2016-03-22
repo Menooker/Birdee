@@ -1366,7 +1366,7 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 		len=dest->data->u.barray.size;
 	else
 		len=SoGlobalArrGetSize((int)dest->data);
-	if(dstart>len || dend>len)
+	if(dstart>=len || dend>len)
 		ExArrayOutOfBoundException();
 
 	if(!src_global)

@@ -64,7 +64,7 @@ extern int gc_undergo;
 			if(UaTryEnterReadRWLock(&blk->lock))
 			{
 				if(blk->key== (addr & DSM_CACHE_HIGH_MASK_64))
-					memcpy(blk->cache,v,sizeof(SoVar)*DSM_CACHE_SIZE);
+					memcpy(blk->cache,v,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
 				else
 					printf("Discard write changed key : [%lld->%lld]=%d->\n",addr &0xffffffff,blk->key,blk->cache[addr & DSM_CACHE_LOW_MASK]);
 				UaLeaveReadRWLock(&blk->lock);
@@ -92,7 +92,7 @@ extern int gc_undergo;
 		{
 			ths->backend->put(addr>>32,(addr & 0xffffffff)+i,v[i]);
 		}
-		
+
 		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
 		UaEnterReadRWLock(&dir_lock);
 		dir_iterator itr=directory.find(baddr);
@@ -718,7 +718,7 @@ CacheBlock* DSMDirectoryCache::find_block(_uint64 k)
 			return NULL;
 		}
 		foundblock->lru=clock();
-		
+
 		return foundblock;
 	}
 	return NULL;
@@ -731,7 +731,7 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,double* v
 
 	k_tail=k+len;
 	if(k & DSM_CACHE_LOW_MASK_64)
-		k_start= k & DSM_CACHE_HIGH_MASK_64 + DSM_CACHE_BLOCK_SIZE;
+		k_start= (k & DSM_CACHE_HIGH_MASK_64) + DSM_CACHE_BLOCK_SIZE;
 	else
 		k_start=k;
 
@@ -744,8 +744,9 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,double* v
 	_uint idx=0,j;
 	_uint64 i;
 
-	for(i=k;i<k_start;i++)
+	for(i=k;i<k_start && i<k_tail;i++)
 	{
+		//printf("PUT %llx=%d\n",i,v[idx]);
 		var[0].vd=v[idx];
 		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
 			ret=SoFail;
@@ -767,18 +768,24 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,double* v
 		protocal->WriteChunk(i,buf);
 		if(foundblock)
 			UaLeaveReadRWLock(&foundblock->lock);
-		
+
 	}
-	for(i=k_end;i<k_tail;i++)
+	if(i<=k_end)
 	{
-		var[0].vd=v[idx];
-		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
-			ret=SoFail;
-		idx++;
+		for(i=k_end;i<k_tail;i++)
+		{
+			//printf("PUT %llx=%d\n",i,v[idx]);
+			var[0].vd=v[idx];
+			if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
+				ret=SoFail;
+			idx++;
+		}
 	}
 	LEAVE_GC_LOCK();
 	return ret;
 }
+
+
 SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,BINT* v)
 {
 	_uint64 k=MAKE64(okey,fldid);
@@ -801,7 +808,7 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,BINT* v)
 
 	for(i=k;i<k_start && i<k_tail;i++)
 	{
-		printf("PUT %llx=%d\n",i,v[idx]);
+		//printf("PUT %llx=%d\n",i,v[idx]);
 		var[0].vi=v[idx];
 		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
 			ret=SoFail;
@@ -823,13 +830,13 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,BINT* v)
 		protocal->WriteChunk(i,buf);
 		if(foundblock)
 			UaLeaveReadRWLock(&foundblock->lock);
-		
+
 	}
 	if(i<=k_end)
 	{
 		for(i=k_end;i<k_tail;i++)
 		{
-			printf("PUT %llx=%d\n",i,v[idx]);
+			//printf("PUT %llx=%d\n",i,v[idx]);
 			var[0].vi=v[idx];
 			if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
 				ret=SoFail;
