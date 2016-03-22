@@ -9,6 +9,7 @@
 #include <string>
 
 #define CACHE_HELLO_MAGIC (0x2e3a4f01)
+#define CACHE_MAX_CHUNK 4096
 
 extern "C" void* init_memcached_this_thread();
 
@@ -34,7 +35,8 @@ public:
 	//no cache on atomic counters and strings
 	virtual SoStatus put(_uint key,_uint fldid,SoVar v)=0;
 	virtual SoVar get(_uint key,_uint fldid)=0;
-	virtual SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)=0;
+	virtual SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v)=0;
+	virtual SoStatus put_chunk(_uint key,_uint fldid,_uint len,BINT* v)=0;
 	virtual SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)=0;
 	virtual SoStatus get_chunk(_uint key,_uint fldid,_uint len,BINT* v)=0;
 	/*
@@ -75,17 +77,34 @@ public:
 	{
 		return backend->getblock(MAKE64(key,fldid),out);
 	}
-	SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v)
 	{
 		_uint i;
 		SoStatus ret=SoOK;
+		SoVar var;
 		for(i=0;i<len;i++)
 		{
-			if(backend->put(key,i+fldid,v[i])!=SoOK)
+			var.vd=v[i];
+			if(backend->put(key,i+fldid,var)!=SoOK)
 				ret=SoFail;
 		}
 		return ret;
 	}
+
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,BINT* v)
+	{
+		_uint i;
+		SoStatus ret=SoOK;
+		SoVar var;
+		for(i=0;i<len;i++)
+		{
+			var.vi=v[i];
+			if(backend->put(key,i+fldid,var)!=SoOK)
+				ret=SoFail;
+		}
+		return ret;
+	}
+
 	SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)
 	{
 		return backend->getchunk(key,fldid,len,v);
@@ -123,6 +142,7 @@ private:
 	int cache_id;
 	SOCKET controllisten;
 	SOCKET datalisten;
+	CacheBlock* find_block(_uint64 key);
 
 	class DSMCacheProtocal;
 	DSMCacheProtocal* protocal;
@@ -225,6 +245,8 @@ private:
 		};
 #pragma pack(pop)
 
+		void ServerRenewChunk(_uint64 addr,int src_id,SoVar* v);
+		void ServerWriteChunk(_uint64 addr,int src_id,SoVar* v);
 		void ServerRenew(_uint64 addr,int src_id,SoVar v);
 		void ServerWrite(_uint64 addr,int src_id,SoVar v);
 		void ServerWriteback(_uint64 addr,int src_id);
@@ -263,6 +285,12 @@ private:
 				case MsgWriteback:
 					ths->ServerWriteback(pack.addr,target_id);
 					break;
+				case MsgWriteChunk:
+					ths->ServerWriteChunk(pack.addr,target_id,pack.buf);
+					break;
+				case MsgRenewChunk:
+					ths->ServerRenewChunk(pack.addr,target_id,pack.buf);
+					break;
 				default:
 					printf("Bad cache server message %d\n",pack.kind);
 				}
@@ -272,6 +300,7 @@ private:
 	public:
 		void Writeback(_uint64 addr);
 		void Write(_uint64 addr,SoVar v);
+		void WriteChunk(_uint64 addr,SoVar* v);
 
 		/*
 		Send a write message and fetch the written block
@@ -434,11 +463,9 @@ public:
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
 	}
-
-	SoStatus put_chunk(_uint key,_uint fldid,_uint len,SoVar* v)
-	{
-
-	}
+	
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v);
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,BINT* v);
 
 	SoStatus get_chunk(_uint key,_uint fldid,_uint len,double* v)
 	{
@@ -449,9 +476,9 @@ public:
 		return backend->getchunk(key,fldid,len,v);
 	}
 
-	SoStatus peek(_uint key,int fldid,SoVar* out);
-	SoStatus put(_uint key,int fldid,SoVar v);
-	SoVar get(_uint key,int fldid);
+	SoStatus peek(_uint key,_uint fldid,SoVar* out);
+	SoStatus put(_uint key,_uint fldid,SoVar v);
+	SoVar get(_uint key,_uint fldid);
 };
 
 

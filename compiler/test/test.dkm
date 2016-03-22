@@ -1,10 +1,36 @@
-dim p as double[]=new double[10]
-dim k as double[]=new double[10]
-for #i=0;#i<10;#i++
+require Remote
+dim p as int[]=new int[1024]
+dim k as int[]=new int[10]
+for #i=0;#i<1024;#i++
 	p[#i]=#i
 end
 
-k[0:4]=p[1:5]
-for #i=0;#i<10;#i++
-	println(k[#i])
+dim hosts as string[]={"127.0.0.1"}
+dim ports as int[]={13020}
+//dim hosts as string[]=new string[0]
+//dim ports as int[]=new int[0]
+dim mem_hosts as string[]={"192.168.88.1"}
+dim mem_ports as int[]={11211}
+dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
+
+
+dim arr as shared int[] global=new int[1024] global
+
+arr[0:1024]=p[0:1024]
+nodes[0].CreateThread(threadproc,0)
+gets()
+arr[1:3]=k[1:3]
+gets()
+nodes[0].Close()
+
+function threadproc(id as var) as int
+	dim i as int
+	dim marr as int[] global=arr
+	for i=0;i<10;i++
+		println(marr[i])
+	end
+	gets()
+	for i=0;i<10;i++
+		println(marr[i])
+	end
 end

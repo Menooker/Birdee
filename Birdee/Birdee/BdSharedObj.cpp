@@ -416,6 +416,18 @@ public:
 		UaSetEvent(&event_sweep_start);
 	}
 
+	template<typename T>
+	SoStatus put_chunk(_uint key,_uint fldid,_uint len,T* v)
+	{
+		return cache->put_chunk(key,fldid,len,v);
+	}
+
+	template<typename T>
+	SoStatus get_chunk(_uint key,_uint fldid,_uint len,T* v)
+	{
+		return cache->get_chunk(key,fldid,len,v);
+	}
+
 	SoStatus getinfo(_uint key,SoType& tag,int& fld_cnt,int& flag)
 	{
 		return backend->getinfo(key,tag,fld_cnt,flag);
@@ -729,7 +741,7 @@ extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 		obj.v_table = curdvm->bclass[class_index]->class_table;
 	}
 	else
-		obj.v_table=curdvm->array_v_table;
+		obj.v_table=curdvm->global_array_v_table;
 	obj.data=(DVM_Object*)ret;
 	curthread->retvar.object=obj;
 	return ;
@@ -1304,3 +1316,109 @@ void SoLocalGC(int round_id)
 	storage.sweep();
 }
 
+template<typename T>
+SoStatus SoPutChunk(_uint key,_uint fldid,_uint len,T* v)
+{
+	return storage.put_chunk(key,fldid,len,v);
+}
+
+template<typename T>
+SoStatus SoGetChunk(_uint key,_uint fldid,_uint len,T* v)
+{
+	return storage.get_chunk(key,fldid,len,v);
+}
+
+
+extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty)
+{
+	DVM_ObjectRef* dest=&(curthread->stack.stack_pointer-2)->object;
+	DVM_ObjectRef* src=&(curthread->stack.stack_pointer-1)->object;
+	if(!dest->data || !src->data)
+		ExNullPointerException();
+	int len1=dend-dstart;
+	int len2=s_end-sstart;
+
+	if(dstart<0 || dend<0 || sstart<0 || s_end<0 
+		|| dstart>=dend || sstart>=s_end || len1!=len2)
+		ExArrayOutOfBoundException();
+	int dest_global,src_global;
+	if(dest->v_table==curdvm->global_array_v_table)
+		dest_global=1;
+	else if(dest->v_table==curdvm->array_v_table)
+		dest_global=0;
+	else
+	{	
+		printf("CopyArray encounters an unkown type\n");
+		_BreakPoint;
+	}
+
+	if(src->v_table==curdvm->global_array_v_table)
+		src_global=1;
+	else if(src->v_table==curdvm->array_v_table)
+		src_global=0;
+	else
+	{	
+		printf("CopyArray encounters an unkown type\n");
+		_BreakPoint;
+	}
+	int len;
+	if(!dest_global)
+		len=dest->data->u.barray.size;
+	else
+		len=SoGlobalArrGetSize((int)dest->data);
+	if(dstart>len || dend>len)
+		ExArrayOutOfBoundException();
+
+	if(!src_global)
+		len=src->data->u.barray.size;
+	else
+		len=SoGlobalArrGetSize((int)src->data);
+	if(sstart>=len || s_end>len)
+		ExArrayOutOfBoundException();
+
+	unsigned int sz;
+	switch(ty)
+	{
+	case 0:
+		sz=sizeof(int);
+		break;
+	case 1:
+		sz=sizeof(double);
+		break;
+	case 2:
+		sz=sizeof(DVM_ObjectRef);
+		break;
+	}
+	if(!dest_global )
+	{//if dest is local
+		if(!src_global)
+		{
+			char* vdest=(char*)dest->data->u.barray.u.int_array + dstart * sz;
+			char* vsrc= (char*)src->data->u.barray.u.int_array + sstart * sz;
+			memcpy(vdest,vsrc,sz*len1);
+		}
+		else
+		{
+			if(ty==0)
+				SoGetChunk((_uint)src->data,sstart,len1,dest->data->u.barray.u.int_array + dstart);
+			else
+				SoGetChunk((_uint)src->data,sstart,len1,dest->data->u.barray.u.double_array + dstart);
+		}
+	}
+	else
+	{//if dest is global
+		if(!src_global)
+		{
+			if(ty==0)
+				SoPutChunk((_uint)dest->data,dstart,len1,src->data->u.barray.u.int_array + sstart);
+			else
+				SoPutChunk((_uint)dest->data,dstart,len1,src->data->u.barray.u.double_array + sstart);			
+		}
+		else
+		{
+
+		}
+	}
+	curthread->stack.stack_pointer-=2;
+	curthread->stack.flg_sp-=2;
+}

@@ -52,6 +52,84 @@ extern int gc_undergo;
 		}
 	}
 
+	void DSMDirectoryCache::DSMCacheProtocal::ServerRenewChunk(_uint64 addr,int src_id,SoVar* v)
+	{
+		UaEnterReadRWLock(&ths->hash_lock);
+		hash_iterator itr=ths->cache.find(addr & DSM_CACHE_HIGH_MASK_64);
+		bool found=(itr!=ths->cache.end());
+		CacheBlock* blk=found?itr->second:NULL;
+		UaLeaveReadRWLock(&ths->hash_lock);
+		if(found)
+		{
+			if(UaTryEnterReadRWLock(&blk->lock))
+			{
+				if(blk->key== (addr & DSM_CACHE_HIGH_MASK_64))
+					memcpy(blk->cache,v,sizeof(SoVar)*DSM_CACHE_SIZE);
+				else
+					printf("Discard write changed key : [%lld->%lld]=%d->\n",addr &0xffffffff,blk->key,blk->cache[addr & DSM_CACHE_LOW_MASK]);
+				UaLeaveReadRWLock(&blk->lock);
+			}
+			else
+            {
+                printf("Discard write : [%lld]=%d-\n",addr &0xffffffff,blk->cache[addr & DSM_CACHE_LOW_MASK]);
+            }
+			//printf("Renew!!! index=%llx,value=%d\n",addr ,v.vi);
+		}
+	}
+
+	void DSMDirectoryCache::DSMCacheProtocal::ServerWriteChunk(_uint64 addr,int src_id,SoVar* v)
+	{
+		bool islocal= (src_id==ths->cache_id);
+		_uint64 baddr=addr & DSM_CACHE_HIGH_MASK_64;
+		if(!islocal &&  ((addr>>DSM_CACHE_BITS) % caches!=ths->cache_id))
+		{
+			//RcSend(datasockets[src_id],&status,sizeof(status));
+			printf("Cache server bad address!!!%llx\n",addr);
+			_BreakPoint;
+			return;
+		}
+		for(int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
+		{
+			ths->backend->put(addr>>32,(addr & 0xffffffff)+i,v[i]);
+		}
+		
+		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
+		UaEnterReadRWLock(&dir_lock);
+		dir_iterator itr=directory.find(baddr);
+		_uint64 old=0;
+		if(itr!=directory.end())
+		{
+			old=itr->second;
+		}
+		if(old)
+		{
+			DataPack sendpack;
+			sendpack.kind=MsgRenewChunk;
+			sendpack.addr=addr;
+			memcpy(sendpack.buf,v,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+			for(int i=0;i<caches;i++)
+			{
+				if((old & 1) && src_id!=i)
+				{
+					if(i==ths->cache_id)
+					{
+						ServerRenewChunk(addr,i,v);
+					}
+					else
+					{
+						RcSend(controlsockets[i],&sendpack,sizeof(sendpack));
+					}
+				}
+				old=old>>1;
+			}
+		}
+		if(!islocal)
+		{
+			ServerWriteReply reply={addr};
+			RcSend(datasockets[src_id],&reply,sizeof(reply));
+		}
+		UaLeaveReadRWLock(&dir_lock);
+	}
 
 	void DSMDirectoryCache::DSMCacheProtocal::ServerWrite(_uint64 addr,int src_id,SoVar v)
 	{
@@ -260,6 +338,36 @@ extern int gc_undergo;
 	}
 
 
+	void DSMDirectoryCache::DSMCacheProtocal::WriteChunk(_uint64 addr,SoVar* v)
+	{
+		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
+		if(target_cache_id==ths->cache_id)
+		{
+			ServerWriteChunk(addr,ths->cache_id,v);
+		}
+		else
+		{
+			UaEnterLock(&datasocketlocks[target_cache_id]);
+			DataPack pack={MsgWriteChunk,addr};
+			memcpy(pack.buf,v,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+			RcSend(controlsockets[target_cache_id],&pack,sizeof(pack));
+			ServerWriteReply reply;
+			if(RcRecv(datasockets[target_cache_id],&reply,sizeof(reply))!=sizeof(reply))
+            {
+				UaLeaveLock(&datasocketlocks[target_cache_id]);
+                printf("Write chunk receive error %d\n",RcSocketLastError());
+                return;
+            }
+			if(reply.addr!=addr)
+            {
+                printf("Write return a bad address\n");
+				_BreakPoint;
+                return;
+            }
+			UaLeaveLock(&datasocketlocks[target_cache_id]);
+		}
+	}
+
 	void DSMDirectoryCache::DSMCacheProtocal::Write(_uint64 addr,SoVar v)
 	{
 		int target_cache_id=(addr>>DSM_CACHE_BITS) % caches;
@@ -436,7 +544,7 @@ CacheBlock* DSMDirectoryCache::getblock(_uint64 k,bool& is_pending)
 	return ret;
 }
 
-SoStatus DSMDirectoryCache::peek(_uint key,int fldid,SoVar* out)
+SoStatus DSMDirectoryCache::peek(_uint key,_uint fldid,SoVar* out)
 {
 	_uint64 k=MAKE64(key,fldid);
 	ENTER_GC_LOCK();
@@ -464,7 +572,7 @@ SoStatus DSMDirectoryCache::peek(_uint key,int fldid,SoVar* out)
 	return backend->getblock(k,out);
 }
 
-SoStatus DSMDirectoryCache::put(_uint okey,int fldid,SoVar v)
+SoStatus DSMDirectoryCache::put(_uint okey,_uint fldid,SoVar v)
 {
 #ifdef BD_DSM_STAT
 	writes++;
@@ -529,7 +637,7 @@ MISS:
 	}
 }
 
-SoVar DSMDirectoryCache::get(_uint okey,int fldid)
+SoVar DSMDirectoryCache::get(_uint okey,_uint fldid)
 {
 	SoVar ret;
 #ifdef BD_DSM_STAT
@@ -593,3 +701,141 @@ MISS:
 	}
 }
 
+CacheBlock* DSMDirectoryCache::find_block(_uint64 k)
+{
+	UaEnterReadRWLock(&hash_lock);
+	hash_iterator itr=cache.find(k);
+	bool found=(itr!=cache.end());
+	CacheBlock* foundblock=found?itr->second:NULL;
+	UaLeaveReadRWLock(&hash_lock);
+
+	if(found)
+	{
+		UaEnterReadRWLock(&foundblock->lock);
+		if(foundblock->key!=k) //in case that the block is swapped out and reused
+		{
+			UaLeaveReadRWLock(&foundblock->lock);
+			return NULL;
+		}
+		foundblock->lru=clock();
+		
+		return foundblock;
+	}
+	return NULL;
+}
+
+SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,double* v)
+{
+	_uint64 k=MAKE64(okey,fldid);
+	_uint64 k_start,k_end,k_tail;
+
+	k_tail=k+len;
+	if(k & DSM_CACHE_LOW_MASK_64)
+		k_start= k & DSM_CACHE_HIGH_MASK_64 + DSM_CACHE_BLOCK_SIZE;
+	else
+		k_start=k;
+
+	k_end= k_tail & DSM_CACHE_HIGH_MASK_64;
+	SoStatus ret;
+	CacheBlock* foundblock=NULL;
+	ENTER_GC_LOCK();
+	SoVar var[DSM_CACHE_BLOCK_SIZE];
+	SoVar* buf;
+	_uint idx=0,j;
+	_uint64 i;
+
+	for(i=k;i<k_start;i++)
+	{
+		var[0].vd=v[idx];
+		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
+			ret=SoFail;
+		idx++;
+	}
+
+	for(i=k_start;i<k_end;i+=DSM_CACHE_BLOCK_SIZE)
+	{
+		foundblock=find_block(i);
+		if(foundblock)
+			buf=foundblock->cache;
+		else
+			buf=var;
+		for(j=0;j<DSM_CACHE_BLOCK_SIZE;j++)
+		{
+			buf[j].vd=v[idx];
+			idx++;
+		}
+		protocal->WriteChunk(i,buf);
+		if(foundblock)
+			UaLeaveReadRWLock(&foundblock->lock);
+		
+	}
+	for(i=k_end;i<k_tail;i++)
+	{
+		var[0].vd=v[idx];
+		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
+			ret=SoFail;
+		idx++;
+	}
+	LEAVE_GC_LOCK();
+	return ret;
+}
+SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,BINT* v)
+{
+	_uint64 k=MAKE64(okey,fldid);
+	_uint64 k_start,k_end,k_tail;
+
+	k_tail=k+len;
+	if(k & DSM_CACHE_LOW_MASK_64)
+		k_start= (k & DSM_CACHE_HIGH_MASK_64) + DSM_CACHE_BLOCK_SIZE;
+	else
+		k_start=k;
+
+	k_end= k_tail & DSM_CACHE_HIGH_MASK_64;
+	SoStatus ret;
+	CacheBlock* foundblock=NULL;
+	ENTER_GC_LOCK();
+	SoVar var[DSM_CACHE_BLOCK_SIZE];
+	SoVar* buf;
+	_uint idx=0,j;
+	_uint64 i;
+
+	for(i=k;i<k_start && i<k_tail;i++)
+	{
+		printf("PUT %llx=%d\n",i,v[idx]);
+		var[0].vi=v[idx];
+		if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
+			ret=SoFail;
+		idx++;
+	}
+
+	for(i=k_start;i<k_end;i+=DSM_CACHE_BLOCK_SIZE)
+	{
+		foundblock=find_block(i);
+		if(foundblock)
+			buf=foundblock->cache;
+		else
+			buf=var;
+		for(j=0;j<DSM_CACHE_BLOCK_SIZE;j++)
+		{
+			buf[j].vi=v[idx];
+			idx++;
+		}
+		protocal->WriteChunk(i,buf);
+		if(foundblock)
+			UaLeaveReadRWLock(&foundblock->lock);
+		
+	}
+	if(i<=k_end)
+	{
+		for(i=k_end;i<k_tail;i++)
+		{
+			printf("PUT %llx=%d\n",i,v[idx]);
+			var[0].vi=v[idx];
+			if(put(okey,i & 0xFFFFFFFF,var[0])!=SoOK)
+				ret=SoFail;
+			idx++;
+		}
+	}
+	LEAVE_GC_LOCK();
+	return ret;
+}

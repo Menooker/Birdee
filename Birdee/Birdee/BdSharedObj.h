@@ -112,6 +112,7 @@ void SoArraySize(DVM_Value *args);
 void SoArrayTostr(DVM_Value *args);
 void SoArrayUnimplementedStub(DVM_Value *args);
 void SoArrayEquals(DVM_Value *args);
+void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty);
 
 #ifdef BD_DSM_STAT
 void SoPrintStat();
@@ -156,6 +157,7 @@ public:
 	virtual SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)=0;
 	virtual SoStatus del(_uint key,unsigned int len)=0;
 };
+
 #endif
 
 #endif

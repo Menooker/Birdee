@@ -1027,6 +1027,8 @@ Expression *dkc_create_bit_not_expression(Expression *operand);
 Expression *dkc_create_index_expression(Expression *barray, Expression *index);
 Expression *dkc_create_incdec_expression(Expression *operand,
                                          ExpressionKind inc_or_dec);
+Expression *
+dkc_create_slice_expression(Expression *barray, Expression *index_start,Expression *index_end);
 Expression *dkc_create_instanceof_expression(Expression *operand,
                                              TypeSpecifier *type);
 Expression *dkc_create_identifier_expression(char *identifier);

@@ -814,10 +814,11 @@ create_to_string_cast(Expression *src)
 
 
 
-
+static Expression *
+create_assign_cast(Expression *src, TypeSpecifier *dest);
 //added var
 static Expression *
-create_assign_cast(Expression *src, TypeSpecifier *dest)
+create_assign_cast2(Expression *src, TypeSpecifier *dest,Expression *deste)
 {
     Expression *cast_expr;
 
@@ -931,9 +932,37 @@ create_assign_cast(Expression *src, TypeSpecifier *dest)
 			return src;
 		}
 	}
+	else if(deste->kind==SLICE_EXPRESSION && dkc_is_array(src->type))
+	{
+		TypeDerive* d1,*d2;
+		if(dest->basic_type != dest->basic_type)
+			goto MISS_MATCH;
+		for (d1 = dest->derive, d2 = src->type->derive;
+			 d1 && d2; d1 = d1->next, d2 = d2->next) {
+			if (d1->tag != d2->tag) {
+				goto MISS_MATCH;
+			}
+			if (d1->tag == FUNCTION_DERIVE) {
+				goto MISS_MATCH;
+			}
+		}
+		if (d1 || d2) {
+			goto MISS_MATCH;
+		}
+		return src;
+	}
+MISS_MATCH:
+
 	cast_mismatch_error(src->line_number, src->type, dest);
     return NULL; /* make compiler happy. */
 }
+
+static Expression *
+create_assign_cast(Expression *src, TypeSpecifier *dest)
+{
+    return create_assign_cast2(src,dest,NULL);
+}
+
 
 static Expression *
 fix_assign_expression(Block *current_block, Expression *expr,
@@ -979,7 +1008,7 @@ fix_assign_expression(Block *current_block, Expression *expr,
     operand = fix_expression(current_block, expr->u.assign_expression.operand,
                              expr, el_p);
     expr->u.assign_expression.operand
-        = create_assign_cast(operand, expr->u.assign_expression.left->type);
+        = create_assign_cast2(operand, expr->u.assign_expression.left->type,left);
     expr->type = left->type;
 
     return expr;

@@ -323,7 +323,8 @@ SoStatus SoStorageMemcached::newobj(_uint key,SoType tag,int fld_cnt,int flag)
 
 static SoStatus fetchchunk(_uint64 k,_uint len)
 {
-	char** keys=new (char**)[len];
+	typedef char* _PCHAR;
+	char** keys=new _PCHAR[len];
 	size_t* key_length=new size_t[len];
 	_uint64* maddr=new _uint64[len];
 	
@@ -340,7 +341,7 @@ static SoStatus fetchchunk(_uint64 k,_uint len)
 	delete []maddr;
 	return (rc==MEMCACHED_SUCCESS)?SoOK:SoFail;
 }
-SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
+SoStatus SoStorageMemcached::getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
 {
 	_uint64 k=MAKE64(key,fldid);
 	memcached_result_st results_obj;
@@ -366,7 +367,7 @@ SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
 	return ret;
 }
 
-SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf)
+SoStatus SoStorageMemcached::getchunk(_uint key,_uint fldid,_uint len,double* buf)
 {
 	_uint64 k=MAKE64(key,fldid);
 	memcached_result_st results_obj;

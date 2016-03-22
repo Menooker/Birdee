@@ -10,3 +10,4 @@ Birdee/Birdee/libmemcached.dll
 *.layout
 *~
 compiler/y.output
+Birdee/Birdee/out.txt
