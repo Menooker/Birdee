@@ -1,16 +1,16 @@
 require Remote
 
-dim hosts as string[]={"127.0.0.1"}
-dim ports as int[]={13020}
+dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13020,13090}
 dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
 dim threads as shared int=2
-dim node_num as shared int=1
+dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
-dim n as shared int=256
+dim n as shared int=400
 
 dim n2 as int=n*n
 dim m1 as shared double[] global=new double[n2] global
