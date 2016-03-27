@@ -1,53 +1,135 @@
 require Remote
-/*dim p as int[]=new int[1024]
-dim k as int[]=new int[32]
-for #i=0;#i<1024;#i++
-	p[#i]=#i
-end
-k[16:32]=p[0:16]
+
 dim hosts as string[]={"127.0.0.1"}
 dim ports as int[]={13020}
-//dim hosts as string[]=new string[0]
-//dim ports as int[]=new int[0]
 dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
-dim arr as shared int[] global=new int[1024] global
+dim threads as shared int=2
+dim node_num as shared int=1
+dim thread_num as shared int=threads*node_num
+dim n as shared int=256
 
-arr[0:32]=p[0:32]
-nodes[0].CreateThread(threadproc,0)
-gets()
-arr[15:32]=k[15:32]
-gets()
-nodes[0].Close()
+dim n2 as int=n*n
+dim m1 as shared double[] global=new double[n2] global
+dim m2 as shared double[] global=new double[n2] global
+dim result as shared double[] global=new double[n2] global
+dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
 
-function threadproc(id as var) as int
+dim time as int=GetClock()
+dim mlocal as double[]=new double[n2]
+
+dim ii as int
+dim jj as int
+
+
+dim threadid as int=CreateThread(putproc,true,1)
+function putproc(id as var) as int
+	dim mlocal2 as double[]=new double[n2]
 	dim i as int
-	dim marr as int[] global=arr
-	for i=0;i<32;i++
-		println(marr[i])
+	for i=0;i<n2;i++
+	unsafe
+		mlocal2[i]=n2-i
 	end
-	gets()
-	for i=0;i<32;i++
-		println(marr[i])
+	println("to put2")
+	m2[0:n2]=mlocal[0:n2]
+	println("put ok2")
+end
+
+
+for ii=0;ii<n2;ii++
+unsafe
+	mlocal[ii]=ii
+end
+println("to put1")
+m1[0:n2]=mlocal[0:n2]
+println("put ok1")
+JoinThread(threadid)
+
+dim time2 as int=GetClock()
+
+dim ttid as int=0
+for ii=0;ii<node_num;ii++
+	for jj=0;jj<threads;jj++
+		nodes[ii].CreateThread(threadproc,ttid)
+		ttid++
 	end
-end*/
+end
 
+try
+	barrier_main.enter(-1,32)
+catch CounterOutOfBoundException err2
+	println("Error!")
+end
+println("time1 "+ (GetClock()-time))
+println("time2 "+ (GetClock()-time2))
+//print_matrix(m1)
+//print_matrix(m2)
+//print_matrix(result)
+gets()
 
-dim hosts as string[]=new string[0]
-dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"192.168.88.1"}
-dim mem_ports as int[]={11211}
-dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
-dim volatile p as int
-p=1024
-println(p)
+sub print_matrix(arr as double[] global)
+	dim i as int
+	dim j as int
+	for i=0;i<n;i++
+		for j=0;j<n;j++
+			print(arr[i*n+j])
+			print(" ")
+		end
+		print("\n")
+	end
+end
 
-dim volatile k as shared int
-k=1111
-println(k)
+dim mym1 as double[]
+dim mym2 as double[]
+dim volatile sync2 as int
+function threadproc(id as var) as int
+unsafe
+	dim tid as int=id
+	dim i as int
+	dim j as int
+	dim k as int
+	dim myn as int = n
+	dim myn2 as int =n*n
+	dim st as int=id % threads
+	dim ths as int=threads
 
+	mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
+	mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
+	sync2@+=1
+	for ;;
+		if sync2==ths then
+			break
+		end
+	end
+	dim mythreads as int=thread_num
+	dim sum as double
+	dim line as double[]=new double[myn]
+	dim col as double[]=new double[myn]
+	for i=tid;i<myn;i+=mythreads
+		println(i)
+		col[0:myn]=mym1[i*myn : i*myn+myn]
+		for j=0;j<myn;j++
+			sum=0
+			for k=0;k<myn;k++
+				sum+=col[k] * mym2[myn*j + k]
+			end
+			line[j]=sum
+		end
+		result[i*myn : i*myn+myn]=line[0:myn]
+	end
+	try
+		barrier_main.enter(-1,32)
+	catch CounterOutOfBoundException err
+		println("Error!")
+	end
+end
 
+sub RemoteInitialize()
 
+	mym1=new double[n*n]
+	mym2=new double[n*n]
+	println("init ok,size "+ n*n)
+end

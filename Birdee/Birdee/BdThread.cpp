@@ -136,6 +136,12 @@ extern "C"
         UaResumeThread(th->tid,th);
     }
 
+	void ThJoinThread(DVM_Value* args)
+	{
+        BdThread* th=(BdThread*)args[0].int_value;
+        UaJoinThread(th->tid);
+	}
+
 	void ThCreateThread(DVM_Value* args)
 	{
 		DVM_ObjectRef del_obj=args[2].object;

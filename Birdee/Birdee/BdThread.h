@@ -16,6 +16,7 @@ extern "C"
 	int ThDoCreateThread(int func,DVM_ObjectRef arg,unsigned int thread_object_id);
 	void ThSuspendThread(DVM_Value* args);
 	void ThResumeThread(DVM_Value* args);
+	void ThJoinThread(DVM_Value* args);
 #ifdef __cplusplus
 }
 #endif

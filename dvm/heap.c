@@ -373,7 +373,7 @@ gc_mark(DVM_ObjectRef *ref)
 {
     int i;
 
-	if(ref->v_table && ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared)
+	if(ref->v_table && (ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared || ref->v_table==curdvm->global_array_v_table))
 		return;
 
 

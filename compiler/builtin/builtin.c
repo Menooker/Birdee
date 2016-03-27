@@ -12,6 +12,7 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"declare function CreateThread(proc as thread_proc,run_now as boolean,arg as var) as int\n",
 	"declare sub SuspendThread(tid as int)\n",
 	"declare sub ResumeThread(tid as int)\n",
+	"declare sub JoinThread(tid as int)\n",
 	"declare sub Sleep(ms as int)\n",
     "sub println(str as string) \n",
     "    print(str )\n",
