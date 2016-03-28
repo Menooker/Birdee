@@ -32,6 +32,10 @@ using namespace llvm;
 #include "llvm/Support/DynamicLibrary.h"
 #include "BdParameters.h"
 
+#ifdef BD_ON_LINUX
+#include <sys/time.h>
+#endif
+
 llvm::Function* BcBuildFldPtrImp(llvm::Type *);
 llvm::Function* BcBuildArrPtrImp(llvm::Type *);
 llvm::Function* BcBuildArrPtrSafeImp(llvm::Type *);
@@ -566,10 +570,19 @@ char* ExConvertAndAllocWchar(wchar_t* WStr)
 }
 
 
+
+
 void ExGetClock(DVM_Value* v)
 {
-	curthread->retvar.int_value=clock()*1000/CLOCKS_PER_SEC;
+#ifdef BD_ON_WINDOWS
+	curthread->retvar.int_value=clock()/(CLOCKS_PER_SEC/1000);
+#else
+    struct timeval t;
+    gettimeofday(&t,NULL);
+    curthread->retvar.int_value=t.tv_sec*1000+t.tv_usec/1000;
+#endif
 }
+
 
 
 
@@ -1495,7 +1508,7 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExFldPutd);
 	f=m->getFunction("system!FldPuto");
 	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);*/
-	
+
 
 	f=m->getFunction("system!ArrayLiteral");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrayLiteral);

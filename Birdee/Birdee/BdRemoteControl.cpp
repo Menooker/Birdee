@@ -178,7 +178,10 @@ void RcConnectNode(DVM_Value *args)
 	    wcstombs(buf,memhost->u.barray.u.object[i].data->u.string.string,255);
 		if(memhost->u.barray.u.object[i].data->u.string.length>=254)
 			printf("Warning : host name %ws too long\n",memhost->u.barray.u.object[i].data->u.string.string);
-		memhosts.push_back(std::string(buf));
+		if(buf[0]==-17 && buf[1]==-69 && buf[2]==-65)
+            memhosts.push_back(std::string(buf+3));
+        else
+            memhosts.push_back(std::string(buf));
 		memports.push_back(memport->u.barray.u.int_array[i]);
 	}
 
@@ -189,7 +192,10 @@ void RcConnectNode(DVM_Value *args)
 	    wcstombs(buf,ip->u.barray.u.object[i].data->u.string.string,255);
 		if(ip->u.barray.u.object[i].data->u.string.length>=254)
 			printf("Warning : host name %ws too long\n",ip->u.barray.u.object[i].data->u.string.string);
-		hosts.push_back(std::string(buf));
+		if(buf[0]==-17 && buf[1]==-69 && buf[2]==-65)
+            hosts.push_back(std::string(buf+3));
+        else
+            hosts.push_back(std::string(buf));
 		ports.push_back(port->u.barray.u.int_array[i]);
 	}
 	for(int i=0;i<ip->u.barray.size;i++)
@@ -210,7 +216,7 @@ void RcConnectNode(DVM_Value *args)
 		//if create node success
 		arr.data->u.barray.u.object[i]=obj;
 	}
-	
+
 	if(!MasterListenThread)
 	{
 		UaInitEvent(&gc_event,0);

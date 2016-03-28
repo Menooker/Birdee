@@ -1,5 +1,6 @@
 #include "BdSocket.h"
 #include <stdio.h>
+#include <string.h>
 //fix-me : close all sockets when closing the dvm
 //fix-me : close the sockets when GC
 #ifdef BD_ON_WINDOWS

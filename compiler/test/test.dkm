@@ -1,24 +1,27 @@
 require Remote
 
-dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13020,13090}
+dim hosts as string[]={"127.0.0.1"}
+dim ports as int[]={13080}
 dim mem_hosts as string[]={"192.168.88.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 
 dim threads as shared int=2
-dim node_num as shared int=hosts.size()
+dim node_num as shared int=1
 dim thread_num as shared int=threads*node_num
-dim n as shared int=400
+dim n as shared int=128
 
+//dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
+dim counter as shared AtomicCounter=new AtomicCounter(0)
 dim n2 as int=n*n
 dim m1 as shared double[] global=new double[n2] global
 dim m2 as shared double[] global=new double[n2] global
 dim result as shared double[] global=new double[n2] global
-dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
+
 
 dim time as int=GetClock()
+println("Start time "+time)
 dim mlocal as double[]=new double[n2]
 
 dim ii as int
@@ -49,7 +52,7 @@ println("put ok1")
 JoinThread(threadid)
 
 dim time2 as int=GetClock()
-
+println("time2 "+time2)
 dim ttid as int=0
 for ii=0;ii<node_num;ii++
 	for jj=0;jj<threads;jj++
@@ -58,11 +61,10 @@ for ii=0;ii<node_num;ii++
 	end
 end
 
-try
-	barrier_main.enter(-1,32)
-catch CounterOutOfBoundException err2
-	println("Error!")
+for ;counter.Get()<thread_num;
+	Sleep(32)
 end
+println("end time "+GetClock())
 println("time1 "+ (GetClock()-time))
 println("time2 "+ (GetClock()-time2))
 //print_matrix(m1)
@@ -120,16 +122,12 @@ unsafe
 		end
 		result[i*myn : i*myn+myn]=line[0:myn]
 	end
-	try
-		barrier_main.enter(-1,32)
-	catch CounterOutOfBoundException err
-		println("Error!")
-	end
+	counter.Inc(1)
 end
 
 sub RemoteInitialize()
 
-	mym1=new double[n*n]
-	mym2=new double[n*n]
-	println("init ok,size "+ n*n)
+	mym1=new double[256*256]
+	mym2=new double[256*256]
+	println("init ok,size "+ 256*256)
 end

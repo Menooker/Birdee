@@ -328,12 +328,23 @@ private:
 			THREAD_ID th=UaCreateThreadEx(ListenSocketProc,this);
 			for(int i=ths->cache_id+1;i<caches;i++)
 			{
-				SOCKET sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
-				if(sock==NULL)
-				{
-					printf("cache socket connect error %d!\n",RcSocketLastError());
-					_BreakPoint;
-				}
+			    SOCKET sock;
+			    for(int j=0;j<3;j++)
+			    {
+                    sock=RcConnect((char*)ths->hosts[i].c_str(),ths->ports[i]+1);
+                    if(sock==NULL)
+                    {
+                        printf("cache socket connect error %d!\n",RcSocketLastError());
+                        UaSleep(500);
+                    }
+                    else
+                        break;
+			    }
+                if(sock==NULL)
+                {
+                    printf("cache socket connect error %d!\n",RcSocketLastError());
+                    _BreakPoint;
+                }
 				RcSetTCPNoDelay(sock);
 				CacheHelloPackage pack={CACHE_HELLO_MAGIC,ths->cache_id};
 				RcSend(sock,&pack,sizeof(pack));
@@ -463,7 +474,7 @@ public:
 		UaKillLock(&queue_lock);
 		UaKillRWLock(&hash_lock);
 	}
-	
+
 	SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v);
 	SoStatus put_chunk(_uint key,_uint fldid,_uint len,BINT* v);
 
