@@ -1,8 +1,0 @@
-# git ignore file
-*.o
-Birdee/Birdee/123
-Lib/Exceptions.bdl
-*.bdl
-*.bde
-Lib/Exceptions.bdl
-Birdee/Birdee/libmemcached.dll
