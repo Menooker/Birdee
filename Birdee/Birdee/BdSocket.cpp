@@ -33,6 +33,7 @@ SOCKET RcConnect(char* ip,int port)
 	}
 
 	sockaddr_in serAddr;
+	memset(&serAddr,0,sizeof(serAddr));
 	serAddr.sin_family = AF_INET;
 	serAddr.sin_port = htons(port);
 #ifdef BD_ON_WINDOWS
@@ -59,6 +60,7 @@ SOCKET RcCreateListen(int port)
 
     //绑定IP和端口
     sockaddr_in sin;
+	memset(&sin,0,sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
 #ifdef BD_ON_WINDOWS
@@ -92,6 +94,7 @@ SOCKET RcListen(int port)
 
     //绑定IP和端口
     sockaddr_in sin;
+	memset(&sin,0,sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
 #ifdef BD_ON_WINDOWS
