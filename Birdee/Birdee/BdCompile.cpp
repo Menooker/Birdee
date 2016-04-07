@@ -987,7 +987,6 @@ extern "C" void* BcNewModule(char* name,char* path)
 	FunctionType* FT3 = FunctionType::get(TyObjectRef,Args3, false);//temp : to del
 	FunctionType* FT32 = FunctionType::get(Type::getVoidTy(context), false);
 	fChainString = Function::Create(FT32, Function::ExternalLinkage,"string!ChainString", module);
-
 	std::vector<Type*> Args4(2,TyObjectRef);//temp : to del
 	FunctionType* FT4 = FunctionType::get(Type::getInt32Ty(context), false);
 	fCmpString = Function::Create(FT4, Function::ExternalLinkage,"string!CompareString", module);
