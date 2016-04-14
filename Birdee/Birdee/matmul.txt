@@ -1,30 +1,20 @@
-require Remote
 
-dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13080,13090}
-dim mem_hosts as string[]={"192.168.88.1"}
-dim mem_ports as int[]={11211}
+dim round as int = 1
+dim cur_round as int
+dim time_total as int
+dim time_calc as int
+dim hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
+dim ports as int[]={13070,13070,13070,13070}
+dim mem_hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
+dim mem_ports as int[]={11211,11211,11211,11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
-
-dim threads as shared int=1
+println("working")
+dim threads as shared int=2
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
-dim n as shared int=128
-/*
-dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
-function threadproc(id as var) as int
-	gets()
-	barrier_main.Enter(-1)
-	println("OK")
-end
-nodes[0].CreateThread(threadproc,0)
-nodes[1].CreateThread(threadproc,1)
-barrier_main.Enter(-1)
-gets()
-nodes[0].Close()
-nodes[1].Close()
-*/
+dim n as shared int=200
+
 //dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
 dim counter as shared AtomicCounter=new AtomicCounter(0)
 dim n2 as int=n*n
@@ -33,56 +23,64 @@ dim m2 as shared double[] global=new double[n2] global
 dim result as shared double[] global=new double[n2] global
 
 
-dim time as int=GetClock()
-println("Start time "+time)
 dim mlocal as double[]=new double[n2]
-
-dim ii as int
-dim jj as int
-
-
-dim threadid as int=CreateThread(putproc,true,1)
+dim mlocal2 as double[]=new double[n2]
 function putproc(id as var) as int
-unsafe
-	dim mlocal2 as double[]=new double[n2]
 	dim i as int
 	for i=0;i<n2;i++
+	unsafe
 		mlocal2[i]=n2-i
 	end
 	println("to put2")
-	m2[0:n2]=mlocal[0:n2]
+	m2[0:n2]=mlocal2[0:n2]
 	println("put ok2")
 end
 
 
-for ii=0;ii<n2;ii++
-unsafe
-	mlocal[ii]=ii
-end
-println("to put1")
-m1[0:n2]=mlocal[0:n2]
-println("put ok1")
-JoinThread(threadid)
+for cur_round=0;cur_round<round;cur_round++
+	dim time as int=GetClock()
+	dim ii as int
+	dim jj as int
 
-dim time2 as int=GetClock()
-println("time2 "+time2)
-dim ttid as int=0
-for ii=0;ii<node_num;ii++
-	for jj=0;jj<threads;jj++
-		nodes[ii].CreateThread(threadproc,ttid)
-		ttid++
+
+	dim threadid as int=CreateThread(putproc,true,1)
+
+	for ii=0;ii<n2;ii++
+	unsafe
+		mlocal[ii]=ii
 	end
-end
+	println("to put1")
+	m1[0:n2]=mlocal[0:n2]
+	println("put ok1")
+	JoinThread(threadid)
 
-for ;counter.Get()<thread_num;
-	Sleep(32)
+	dim time2 as int=GetClock()
+	//println("time2 "+time2)
+	dim ttid as int=0
+	for ii=0;ii<node_num;ii++
+		for jj=0;jj<threads;jj++
+			nodes[ii].CreateThread(threadproc,ttid)
+			ttid++
+		end
+	end
+
+	for ;counter.Get()<thread_num;
+		Sleep(8)
+	end
+	dim t as int
+	t=GetClock()-time
+	println("time1 "+ t)
+	time_total+=t
+	t=GetClock()-time2
+	println("time2 "+ t)
+	time_calc+=t
+	counter.Set(0)
 end
-println("end time "+GetClock())
-println("time1 "+ (GetClock()-time))
-println("time2 "+ (GetClock()-time2))
 //print_matrix(m1)
 //print_matrix(m2)
 //print_matrix(result)
+println("total time: "+time_total)
+println("calc time: "+time_calc)
 gets()
 
 sub print_matrix(arr as double[] global)
@@ -111,7 +109,7 @@ unsafe
 	dim st as int=id % threads
 	dim ths as int=threads
 
-	mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
+	//mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
 	mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
 	sync2@+=1
 	for ;;
@@ -124,8 +122,8 @@ unsafe
 	dim line as double[]=new double[myn]
 	dim col as double[]=new double[myn]
 	for i=tid;i<myn;i+=mythreads
-		println(i)
-		col[0:myn]=mym1[i*myn : i*myn+myn]
+		//println(i)
+		col[0:myn]=m1[i*myn : i*myn+myn]
 		for j=0;j<myn;j++
 			sum=0
 			for k=0;k<myn;k++
@@ -135,6 +133,7 @@ unsafe
 		end
 		result[i*myn : i*myn+myn]=line[0:myn]
 	end
+	sync2=0
 	counter.Inc(1)
 end
 

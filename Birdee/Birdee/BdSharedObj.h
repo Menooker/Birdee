@@ -116,7 +116,7 @@ void SoArraySize(DVM_Value *args);
 void SoArrayTostr(DVM_Value *args);
 void SoArrayUnimplementedStub(DVM_Value *args);
 void SoArrayEquals(DVM_Value *args);
-void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty);
+void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty,BINT unsafe);
 
 #ifdef BD_DSM_STAT
 void SoPrintStat();

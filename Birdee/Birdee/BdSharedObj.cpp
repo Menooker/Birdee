@@ -1376,7 +1376,7 @@ SoStatus SoGetChunk(_uint key,_uint fldid,_uint len,T* v)
 }
 
 
-extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty)
+extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty,BINT unsafe)
 {
 	DVM_ObjectRef* dest=&(curthread->stack.stack_pointer-2)->object;
 	DVM_ObjectRef* src=&(curthread->stack.stack_pointer-1)->object;
@@ -1408,21 +1408,23 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 		printf("CopyArray encounters an unkown type\n");
 		_BreakPoint;
 	}
-	int len;
-	if(!dest_global)
-		len=dest->data->u.barray.size;
-	else
-		len=SoGlobalArrGetSize((int)dest->data);
-	if(dstart>=len || dend>len)
-		ExArrayOutOfBoundException();
+	if(!unsafe)
+	{
+		int len;
+		if(!dest_global)
+			len=dest->data->u.barray.size;
+		else
+			len=SoGlobalArrGetSize((int)dest->data);
+		if(dstart>=len || dend>len)
+			ExArrayOutOfBoundException();
 
-	if(!src_global)
-		len=src->data->u.barray.size;
-	else
-		len=SoGlobalArrGetSize((int)src->data);
-	if(sstart>=len || s_end>len)
-		ExArrayOutOfBoundException();
-
+		if(!src_global)
+			len=src->data->u.barray.size;
+		else
+			len=SoGlobalArrGetSize((int)src->data);
+		if(sstart>=len || s_end>len)
+			ExArrayOutOfBoundException();
+	}
 	unsigned int sz;
 	switch(ty)
 	{

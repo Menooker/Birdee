@@ -456,7 +456,7 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 				ThResumeTheWorld();
 				break;
 			case RcCmdWakeSync:
-				printf("slave receives wake signal\n");
+				//printf("slave receives wake signal\n");
 				RcDoWakeThread(cmd.param34);
 				break;
 			default:

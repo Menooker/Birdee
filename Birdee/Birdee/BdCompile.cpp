@@ -194,7 +194,7 @@ class myfile_ostream : public raw_ostream {
   virtual uint64_t current_pos()const { return pos; }  LLVM_OVERRIDE;
 
 public:
-  myfile_ostream(char* path)  
+  myfile_ostream(char* path)
   {
 	  f=fopen(path,"w");
 	  if(!f)
@@ -1023,7 +1023,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 
 
 	Type* tyCopyArray[]={Type::getInt32Ty(context),Type::getInt32Ty(context),
-		Type::getInt32Ty(context),Type::getInt32Ty(context),Type::getInt32Ty(context)};
+		Type::getInt32Ty(context),Type::getInt32Ty(context),Type::getInt32Ty(context),Type::getInt32Ty(context)};
 	nft = FunctionType::get(Type::getVoidTy(context),tyCopyArray, false);
 	fCopyArray = Function::Create(nft, Function::ExternalLinkage,"system!CopyArray", module);
 
@@ -1140,7 +1140,7 @@ extern "C" void* BcNewModule(char* name,char* path)
 	fSharedSetd=Function::Create(nft, Function::ExternalLinkage,"shared!setd", module);
 	SharedPutSwitch[1][1]=Function::Create(nft, Function::ExternalLinkage,"shared!vsetd", module);
 	SharedPutSwitch[0][1]=fSharedSetd;
-	
+
 	mArg.pop_back(); mArg.push_back(TyObjectRef);
 	nft=FunctionType::get(Type::getVoidTy(context),mArg, false);
 	fSharedSets=Function::Create(nft, Function::ExternalLinkage,"shared!sets", module);
@@ -2125,9 +2125,9 @@ Value* BcGenerateAssignExpression(DVM_Executable *exe, Block *block,
 					else if(op->u.slice.barray->type->basic_type==DVM_DOUBLE_TYPE)
 						ty=1;
 				}
-				Value* args[]={dstart,dend,sstart,send,ConstInt(32,ty)};
+				Value* args[]={dstart,dend,sstart,send,ConstInt(32,ty),block?ConstInt(32,block->unsafe):ConstInt(32,0)};
 				builder.CreateCall(fCopyArray,args);
-				
+
 				return NULL;
 			}
 			else
