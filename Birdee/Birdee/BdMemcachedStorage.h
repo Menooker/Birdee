@@ -53,9 +53,11 @@ public:
 		memcached_server_st *servers;
         _memc=(memcached_st*)memcached_create(NULL);
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
-		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 1); 
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
+		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 1);
+		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NOREPLY, 1);
+#ifndef BD_ON_WINDOWS
+		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_TCP_KEEPALIVE, 1);
+#endif
 //		memc->call_malloc=(memcached_malloc_function)malloc;
 //		memc->call_free=(memcached_free_function)free;
 //		memc->call_realloc=(memcached_realloc_function)realloc;
