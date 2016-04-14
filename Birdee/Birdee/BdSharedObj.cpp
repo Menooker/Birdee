@@ -70,7 +70,7 @@ public:
 
 	SoStatus del(_uint key,unsigned int len)
 	{
-		for(int i=0;i<len;i++)
+		for(_uint i=0;i<len;i++)
 		{
 			map.erase(MAKE64(key,i));
 		}
@@ -191,7 +191,6 @@ public:
 	{
 		if(map.find(MAKE64(key,0xFFFFFFFE))==map.end())
 		{
-			DataNode nd;
 			tag=map[MAKE64(key,0xFFFFFFFE)].tag;
 			flag=map[MAKE64(key,0xFFFFFFFE)].flag;
 			fld_cnt=map[MAKE64(key,0xFFFFFFFE)].cls.field_cnt;

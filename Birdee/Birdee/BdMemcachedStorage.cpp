@@ -181,7 +181,6 @@ SoStatus SoStorageMemcached::getstr(_uint key,wchar_t** str,_uint* len)
 	_uint64 k1,k2;
 	k1=MAKE64(key,0);
 	k2=MAKE64(key,1);
-	char ch1[17],ch2[17];
 	//sprintf(ch1,"%016llx",k1);
 	//sprintf(ch2,"%016llx",k2);
 	char *keys[]= {(char*)&k1,(char*)&k2};
@@ -328,7 +327,7 @@ static SoStatus fetchchunk(_uint64 k,_uint len)
 	size_t* key_length=new size_t[len];
 	_uint64* maddr=new _uint64[len];
 	
-	for (int i=0;i<len;i++)
+	for (_uint i=0;i<len;i++)
 	{
 		maddr[i]= k+i;
 		keys[i]=(char*) &maddr[i];
@@ -433,7 +432,7 @@ SoStatus SoStorageMemcached::getblock(_uint64 addr,SoVar* buf)
 SoStatus SoStorageMemcached::del(_uint key,unsigned int len)
 {
 	_uint64 k;
-	for(int i=0;i<len;i++)
+	for(_uint i=0;i<len;i++)
 	{
 		k=MAKE64(key,i);
 		memcached_delete(memc,(char*)&k,8,0);

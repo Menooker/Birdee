@@ -301,6 +301,7 @@ struct _BdThread {
     sem_t   suspend_lock;
 	int	prepared;
 #endif
+	BD_EVENT remote_event;
 	struct _BdThread* next;
 	struct _BdThread* prv;
 };

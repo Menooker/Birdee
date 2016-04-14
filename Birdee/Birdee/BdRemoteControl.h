@@ -17,6 +17,7 @@ void RcSlave(int port);
 void RcCloseNode(DVM_Value *args);
 void RcWaitForGCMarkCompletion();
 void RcTriggerGC(int round_id);
+void RcEnterBarrier(DVM_Value *args);
 #ifdef __cplusplus
 }
 #endif

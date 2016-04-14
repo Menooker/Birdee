@@ -395,6 +395,30 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 		 pthread_mutex_unlock(&ev->mutex);
 	}
 
+	int UaWaitForEventEx(BD_EVENT* ev,int timeout) {
+		if(timeout<0)
+		{
+			UaWaitForEvent(ev);
+			return 0;
+		}
+		struct timespec timeToWait;
+		struct timeval now;
+		int rt;
+
+		gettimeofday(&now,NULL);
+		timeToWait.tv_sec = now.tv_sec;
+		timeToWait.tv_nsec = (now.tv_usec+1000UL*timeout)*1000UL;
+		 pthread_mutex_lock(&ev->mutex);
+		 while (!ev->triggered)
+		 {
+			 rt=pthread_cond_timedwait(&ev->cond, &ev->mutex,&timeToWait);
+			 if(!rt)
+				 break;
+		 }
+		 pthread_mutex_unlock(&ev->mutex);
+		 return rt;
+	}
+
 	void UaKillEvent(BD_EVENT* ev) {
 		pthread_mutex_destroy(&ev->mutex);
 		pthread_cond_destroy(&ev->cond);

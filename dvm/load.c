@@ -760,7 +760,6 @@ ExecutableEntry *
 add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
                       DVM_Boolean is_top_level)
 {
-    int i;
     ExecutableEntry *ee_pos;
     ExecutableEntry *new_entry;
 

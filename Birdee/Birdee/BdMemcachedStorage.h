@@ -61,9 +61,8 @@ public:
 //		memc->call_malloc=(memcached_malloc_function)malloc;
 //		memc->call_free=(memcached_free_function)free;
 //		memc->call_realloc=(memcached_realloc_function)realloc;
-		char buf[255];
 		servers=NULL;
-		for(int i=0;i<sto->mem_hosts.size();i++)
+		for(_uint i=0;i<sto->mem_hosts.size();i++)
 		{
 			servers = memcached_server_list_append(servers, sto->mem_hosts[i].c_str(),sto->mem_ports[i], &rc);
 		}
