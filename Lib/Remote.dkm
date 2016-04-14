@@ -98,7 +98,7 @@ shared public class RBarrier
 	constructor initialize(count as int)
 		cnt=count
 	end
-	public declare sub enter(max_wait as int)
+	public declare sub Enter(max_wait as int)
 end
 
 shared public class RemoteBarrier

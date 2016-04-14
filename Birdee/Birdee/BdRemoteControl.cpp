@@ -285,7 +285,8 @@ void RcCreateThread(DVM_Value *args)
 void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id);
 void RcEnterBarrier(DVM_Value *args)
 {
-	_uint bid=(_uint)args->object.data;
+	_uint bid=(_uint)args[1].object.data;
+	UaResetEvent(&curthread->remote_event);
 	if(curdvm->is_master)
 	{
 		RcBarrierMsg(-1,bid,(_uint64)curthread);
@@ -298,8 +299,8 @@ void RcEnterBarrier(DVM_Value *args)
 		cmd.param34=(_uint64)curthread;
 		RcSend(masternode,&cmd,sizeof(cmd));
 	}
-	UaWaitForEvent(&curthread->remote_event);
-	UaResetEvent(&curthread->remote_event);
+	curthread->retvar.int_value=UaWaitForEventEx(&curthread->remote_event,args[0].int_value);
+	
 }
 
 int RcSendModule(SOCKET s,char* path)
@@ -455,6 +456,7 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 				ThResumeTheWorld();
 				break;
 			case RcCmdWakeSync:
+				//printf("slave receives wake signal\n");
 				RcDoWakeThread(cmd.param34);
 				break;
 			default:
@@ -787,13 +789,14 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 		node=new SyncNode;
 		node->data=SoGeti(b_id,0);
 		node->val=0;
+		sync_data[b_id]=node;
 	}
 	else
 	{
 		node=itr->second;
 	}
 	node->val++;
-	if(node->data>=node->val)
+	if(node->val>=node->data)
 	{
 		node->val=0;
 		RcWakeRemoteThread(src,thread_id);

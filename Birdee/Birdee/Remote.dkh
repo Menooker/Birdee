@@ -51,6 +51,7 @@ lib Remote
 	end
 
 	shared public class RBarrier
-		public declare sub enter(max_wait as int)
+		public declare constructor initialize(count as int)
+		public declare sub Enter(max_wait as int)
 	end
 end
