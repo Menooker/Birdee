@@ -300,7 +300,7 @@ void RcEnterBarrier(DVM_Value *args)
 		RcSend(masternode,&cmd,sizeof(cmd));
 	}
 	curthread->retvar.int_value=UaWaitForEventEx(&curthread->remote_event,args[0].int_value);
-	
+
 }
 
 int RcSendModule(SOCKET s,char* path)
@@ -456,7 +456,7 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 				ThResumeTheWorld();
 				break;
 			case RcCmdWakeSync:
-				//printf("slave receives wake signal\n");
+				printf("slave receives wake signal\n");
 				RcDoWakeThread(cmd.param34);
 				break;
 			default:
@@ -770,11 +770,11 @@ void RcWakeRemoteThread(int dest,_uint64 thread_id)
 	RcCommandPack cmd;
 	cmd.cmd=RcCmdWakeSync;
 	cmd.param34=thread_id;
-	RcSend(slavenodes[dest],&cmd,sizeof(cmd));	
+	RcSend(slavenodes[dest],&cmd,sizeof(cmd));
 }
 
 /*
-Process the barrier message, may call the nodes to 
+Process the barrier message, may call the nodes to
 continue, called on master
 param: src - the source of the message (index of
 		"slavenodes", -1 represents the master)
@@ -833,12 +833,23 @@ static THREAD_PROC(RcMasterGCProc,param)
 static THREAD_PROC(RcMasterListen,param)
 {
 	int n=slavenodes.size();
+	int maxfd;
 	fd_set readfds;
 	RcCommandPack cmd;
 	RcCommandPack sendcmd;
 	int gc_state[BD_MAX_NODE_NUM]={0};
 	THREAD_ID gc_thread=0;
 	ThreadParam params;
+	if(n>0)
+        maxfd=slavenodes[0];
+#ifdef BD_ON_LINUX
+	for(int i=1;i<n;i++)
+	{
+        if(slavenodes[i]>maxfd)
+            maxfd=slavenodes[i];
+	}
+	maxfd++;
+#endif
 	void* memc=NULL;
 	for(;;)
 	{
@@ -847,7 +858,7 @@ static THREAD_PROC(RcMasterListen,param)
 		{
 			FD_SET(slavenodes[i],&readfds);
 		}
-		if(SOCKET_ERROR == select(n,&readfds,NULL,NULL,NULL))
+		if(SOCKET_ERROR == select(maxfd,&readfds,NULL,NULL,NULL))
 		{
 			printf("Select Error!%d\n",RcSocketLastError());
 			break;
