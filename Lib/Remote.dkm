@@ -93,6 +93,14 @@ shared public class RemoteSpinLock
 	end
 end
 
+shared public class RBarrier
+	dim cnt as int
+	constructor initialize(count as int)
+		cnt=count
+	end
+	public declare sub enter(max_wait as int)
+end
+
 shared public class RemoteBarrier
 	dim cnt as AtomicCounter
 	dim go0 as int

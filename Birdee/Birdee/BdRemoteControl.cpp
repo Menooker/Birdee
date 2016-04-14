@@ -14,6 +14,7 @@
 #include "BdSharedObj.h"
 #include "BdSocket.h"
 #include "UnportableAPI.h"
+#include "hash_compatible.h"
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
 #define RC_MAGIC_MASTER 0x12345edf
@@ -54,6 +55,8 @@ enum RcCommand
 	RcCmdTriggerGC,
 	RcCmdDoGC,
 	RcCmdDoneGC,
+	RcCmdWakeSync,
+	RcCmdEnterBarrier,
 };
 
 #pragma pack(push)
@@ -279,6 +282,25 @@ void RcCreateThread(DVM_Value *args)
 	return ;
 }
 
+void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id);
+void RcEnterBarrier(DVM_Value *args)
+{
+	_uint bid=(_uint)args->object.data;
+	if(curdvm->is_master)
+	{
+		RcBarrierMsg(-1,bid,(_uint64)curthread);
+	}
+	else
+	{
+		RcCommandPack cmd;
+		cmd.cmd=RcCmdEnterBarrier;
+		cmd.param=bid;
+		cmd.param34=(_uint64)curthread;
+		RcSend(masternode,&cmd,sizeof(cmd));
+	}
+	UaWaitForEvent(&curthread->remote_event);
+	UaResetEvent(&curthread->remote_event);
+}
 
 int RcSendModule(SOCKET s,char* path)
 {
@@ -356,8 +378,9 @@ void RcBeforeGC()
 {
 	UaResetEvent(&gc_event);
 }
-void RcContinueFromGC();
 
+void RcContinueFromGC();
+void RcDoWakeThread(_uint64 thread_id);
 void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& mem_hosts,std::vector<int>& mem_ports,int node_id)
 {
 	DVM_VirtualMachine *dvm;
@@ -430,6 +453,9 @@ void RcSlaveMainLoop(char* path,SOCKET s,std::vector<std::string>& hosts,std::ve
 				printf("slave receives GC continue signal\n");
 				RcContinueFromGC();
 				ThResumeTheWorld();
+				break;
+			case RcCmdWakeSync:
+				RcDoWakeThread(cmd.param34);
 				break;
 			default:
 				printf("Unknown command %d\n",cmd.cmd);
@@ -561,7 +587,7 @@ void RcSlave(int port)
 			printf("%s:%d\n",buf,port);
 		}
 
-		for(int i=0;i<mi.mod_cnt;i++)
+		for(_uint i=0;i<mi.mod_cnt;i++)
 		{
 			FileHeader fh;
 			cnt=RcRecv(s,&fh,sizeof(fh));
@@ -622,7 +648,7 @@ void RcBroadcastGC(int src,int round_id)
 		RcSend(slavenodes[j],&sendcmd,sizeof(sendcmd));
 	}
 	//skip i, because "i" is the source of the GC message
-	for(int j=src+1;j<slavenodes.size();j++)
+	for(_uint j=src+1;j<slavenodes.size();j++)
 	{
 		RcSend(slavenodes[j],&sendcmd,sizeof(sendcmd));
 	}
@@ -684,6 +710,105 @@ void RcTriggerGC(int round_id)
 
 }
 
+//////////////////////////////////////////////////
+// for Sync code
+//////////////////////////////////////////////////
+
+//fix-me : Delete the sync node when GC!
+struct SyncThreadNode
+{
+	int machine;
+	_uint64 thread_id;
+};
+struct SyncNode
+{
+	int val;
+	int data;
+	std::vector<SyncThreadNode> waitlist;
+};
+std::hash_map<_uint,SyncNode*> sync_data;
+typedef std::hash_map<_uint,SyncNode*>::iterator sync_itr;
+
+
+
+/*
+Do the actual wake-up
+*/
+void RcDoWakeThread(_uint64 thread_id)
+{
+	BdThread* th=(BdThread*)thread_id;
+	bool found=false;
+	UaEnterLock(&curdvm->thread_lock);
+	BdThread* t=curdvm->mainvm;
+	while(t) //first make sure the thread is alive
+	{
+		if(t==th)
+		{
+			found=true;
+			break;
+		}
+		t=t->next;
+	}
+	if(found)
+		UaSetEvent(&th->remote_event);
+	UaLeaveLock(&curdvm->thread_lock);
+
+}
+
+/*
+Wake up a remote thread from sync. Called on master
+*/
+void RcWakeRemoteThread(int dest,_uint64 thread_id)
+{
+	if(dest==-1)
+	{
+		RcDoWakeThread(thread_id);
+		return;
+	}
+	RcCommandPack cmd;
+	cmd.cmd=RcCmdWakeSync;
+	cmd.param34=thread_id;
+	RcSend(slavenodes[dest],&cmd,sizeof(cmd));	
+}
+
+/*
+Process the barrier message, may call the nodes to 
+continue, called on master
+param: src - the source of the message (index of
+		"slavenodes", -1 represents the master)
+		b_id - barrier id
+*/
+void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
+{
+	sync_itr itr=sync_data.find(b_id);
+	SyncNode* node;
+	if(itr==sync_data.end())
+	{
+		node=new SyncNode;
+		node->data=SoGeti(b_id,0);
+		node->val=0;
+	}
+	else
+	{
+		node=itr->second;
+	}
+	node->val++;
+	if(node->data>=node->val)
+	{
+		node->val=0;
+		RcWakeRemoteThread(src,thread_id);
+		for(_uint i=0;i<node->waitlist.size();i++)
+		{
+			SyncThreadNode& th=node->waitlist[i];
+			RcWakeRemoteThread(th.machine,th.thread_id);
+		}
+	}
+	else
+	{
+		SyncThreadNode th={src,thread_id};
+		node->waitlist.push_back(th);
+	}
+}
 
 extern "C" void* init_memcached_this_thread();
 void set_memcached_this_thread(void* p);
@@ -789,6 +914,11 @@ static THREAD_PROC(RcMasterListen,param)
 						RcContinueFromGC();
 						ThResumeTheWorld();
 					}
+					break;
+				case RcCmdEnterBarrier:
+					if(!memc)
+						memc=init_memcached_this_thread();
+					RcBarrierMsg(i,cmd.param,cmd.param34);
 					break;
 				default:
 					printf("Bad command %d!\n");

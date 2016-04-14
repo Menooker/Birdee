@@ -178,7 +178,6 @@ void ExDownCast(BINT index)
             DVM_Boolean is_interface;
             int interface_idx;
             DVM_ErrorStatus status;
-            DVM_ObjectRef exception;
 			int classid;
             do {
                 if (is_null_pointer(&obj)) {
@@ -254,7 +253,7 @@ void ExStringLength(DVM_Value *args)
 BINT BKDRHash(char *str,size_t len)
 {
     size_t hash = 0;
-	for(int i=0;i<len; i++,str++)
+	for(_uint i=0;i<len; i++,str++)
     {
 		size_t ch=*str;
         hash = hash * 131 + ch;
@@ -731,7 +730,7 @@ void  ExGetFunction(DVM_Value* v)
 {
 	if( !is_null_pointer(&(v)->object) && (v)->object.data->type==STRING_OBJECT)
 	{
-		int bpc,popnum=0;
+		int popnum=0;
 		char* mod;
 		if(is_null_pointer(&(v+1)->object))
 			mod=0;
@@ -873,6 +872,7 @@ extern "C" BdThread* ExCreateThread()
     sem_init(&th->suspend_lock,0,0);
 	th->prepared=0;
 #endif
+	UaInitEvent(&th->remote_event,0);
 	return th;
 }
 
@@ -885,6 +885,8 @@ extern "C" BdThread* ExFreeThread(BdThread* t)
 #ifdef BD_ON_LINUX
     sem_destroy(&t->suspend_lock);
 #endif
+	UaKillEvent(&t->remote_event);
+	UaCloseThread(t->tid);
 	BdThread* r=t->next;
 	MEM_free(t);
 	return r;
@@ -1112,6 +1114,8 @@ DVM_ObjectRef ExFldGeto(BINT index)
             } else {
 				return obj.data->u.class_object.field[index].object ;
             }
+			
+	return dvm_null_object_ref;
 
 }
 void ExFldPuti(BINT index,int value)
@@ -1728,7 +1732,6 @@ void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
 
 int ExExec(char* path)
 {
-    DVM_ExecutableList *list;
     DVM_VirtualMachine *dvm;
 	BdStatus status;
 	DVM_ExecutableList* plist=(DVM_ExecutableList*)MEM_malloc(sizeof(DVM_ExecutableList));

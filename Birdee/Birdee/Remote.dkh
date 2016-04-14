@@ -49,4 +49,8 @@ lib Remote
 		public declare sub printstat()
 		public declare sub enter(timeout as int,maxinterval as int) throws CounterOutOfBoundException
 	end
+
+	shared public class RBarrier
+		public declare sub enter(max_wait as int)
+	end
 end

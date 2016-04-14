@@ -806,6 +806,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Dec", SoDec, 1,DVM_TRUE);
 	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Set", SoSetCounter, 1,DVM_TRUE);
 	DVM_add_native_function(dvm, "Remote", "AtomicCounter#Get", SoGetCounter, 0,DVM_TRUE);
+	DVM_add_native_function(dvm, "Remote", "RBarrier#enter", RcEnterBarrier,0,DVM_TRUE);
     //DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,STRING_PREFIX STRING_METHOD_SUBSTR, nv_string_substr_proc, 2, DVM_TRUE, DVM_FALSE);
 /*    DVM_add_native_function(dvm, "diksam.lang", "__fopen", nv_fopen_proc, 2,
                             DVM_FALSE, DVM_TRUE);

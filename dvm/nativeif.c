@@ -53,7 +53,7 @@ DVM_ErrorStatus
 DVM_array_get_double(DVM_VirtualMachine *dvm, DVM_ObjectRef barray,
                      int index, double *value, DVM_ObjectRef *exception_p)
 {
-    DVM_ErrorStatus status;
+    //DVM_ErrorStatus status;
 	/*
     status = check_array(dvm, barray, index,
                          dvm->current_executable->executable,

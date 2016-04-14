@@ -1509,6 +1509,7 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 			//}
 		}
     }
+	return NULL;
 }
 
 Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expression *expr)
@@ -1532,6 +1533,7 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
     default:
         DBG_panic(("bad default. kind..%d", expr->u.identifier.kind));
     }
+	return NULL;
 }
 
 int BcGeneratePushArgument(DVM_Executable *exe, Block *block,ArgumentList *arg_list)
@@ -1758,7 +1760,6 @@ void BcGenerateSaveToMember(DVM_Executable *exe, Block *block,Expression *expr,V
 	Value* obj=BcGenerateExpression(exe, block, expr->u.member_expression.expression);
 	ExpressionKind kind=expr->u.member_expression.expression->kind;
 	bool needpush=false;
-	Value* ret;
 	if(kind!=IDENTIFIER_EXPRESSION && kind!=MEMBER_EXPRESSION && kind!=INDEX_EXPRESSION && kind!=THIS_EXPRESSION)
 	{
 		needpush=true;
@@ -1864,7 +1865,6 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 
 			ExpressionKind kind=expr->u.index_expression.barray->kind;
 			bool needpush=false;
-			Value* ret;
 			if(kind!=IDENTIFIER_EXPRESSION && kind!=MEMBER_EXPRESSION && kind!=INDEX_EXPRESSION && kind!=THIS_EXPRESSION)
 			{
 				needpush=true;
@@ -2228,6 +2228,7 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
     default:
         DBG_assert(0, ("expr->u.cast.type..%d", expr->u.cast.type));
     }
+	return NULL;
 }
 
 
@@ -2377,7 +2378,6 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 Value* BcGenerateMemberExpression(DVM_Executable *exe, Block *block,Expression *expr)
 {
     MemberDeclaration *member;
-    int method_index;
 
     member = expr->u.member_expression.declaration;
 
@@ -2724,6 +2724,7 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
     default:
         DBG_assert(0, ("expr->kind..%d", expr->kind));
     }
+	return NULL;
 }
 
 
@@ -2840,12 +2841,8 @@ void BcGenerateTryStatement(DVM_Executable *exe, Block *block,Statement *stateme
 {
     TryStatement *try_s = &statement->u.try_s;
     CatchClause *catch_pos;
-    DVM_Try dvm_try;
     int catch_count = 0;
     int catch_index;
-    DVM_CatchClause *dvm_catch;
-    int after_finally_label;
-    int finally_label_backup;
 
     for (catch_pos = try_s->catch_clause; catch_pos;
          catch_pos = catch_pos->next) {
@@ -2951,10 +2948,6 @@ void BcGenerateSwitchStatement(DVM_Executable *exe, Block *block,
     SwitchStatement *switch_s = &statement->u.switch_s;
     CaseList *case_pos;
     ExpressionList *expr_pos;
-    int offset;
-    int case_start_label;
-    int next_case_label;
-    int end_label;
     int line_number;
 	int cnt=0;
 	for (case_pos = switch_s->case_list; case_pos;case_pos = case_pos->next)
@@ -2988,7 +2981,6 @@ void BcGenerateSwitchStatement(DVM_Executable *exe, Block *block,
 
 void BcGenerateForStatement(DVM_Executable *exe, Block *block,Statement *statement,BasicBlock* blk)
 {
-    int loop_label;
     ForStatement *for_s = &statement->u.for_s;
 	BasicBlock* bcond=BasicBlock::Create(context,"cond",curfun);
 	BasicBlock* bb=BasicBlock::Create(context,"for",curfun);
@@ -3296,7 +3288,6 @@ extern "C" void BcGenerateFieldInitializer(DVM_Executable *exe,ClassDefinition *
 
     ClassDefinition *cd_pos;
     MemberDeclaration *member_pos;
-	Value* v,*ths;
     for (cd_pos = cd; cd_pos; cd_pos = cd_pos->super_class) {
         for (member_pos = cd_pos->member; member_pos;
              member_pos = member_pos->next) {
