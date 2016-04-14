@@ -147,7 +147,7 @@ TryAcquireSRWLockShared (
 		void UaSetEvent(BD_EVENT* ev);
 		void UaResetEvent(BD_EVENT* ev);
 		void UaWaitForEvent(BD_EVENT* ev);
-		int UaWaitForEventEx(BD_EVENT* ev,_uint timeout);
+		int UaWaitForEventEx(BD_EVENT* ev,int timeout);
 		#define UaCloseThread(a)
 		#define UaJoinThread(a) pthread_join(a,NULL)
     #endif

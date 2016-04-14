@@ -6,6 +6,7 @@
 #else
     #include <sys/mman.h>
     #include <signal.h>
+    #include <sys/time.h>
 #endif
 #include <stdlib.h>
 extern "C" thread_local BdThread* curthread;
@@ -407,7 +408,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 
 		gettimeofday(&now,NULL);
 		timeToWait.tv_sec = now.tv_sec;
-		timeToWait.tv_nsec = (now.tv_usec+1000UL*timeout)*1000UL;
+        timeToWait.tv_nsec = (now.tv_usec+1000UL*timeout)*1000UL;
 		 pthread_mutex_lock(&ev->mutex);
 		 while (!ev->triggered)
 		 {
