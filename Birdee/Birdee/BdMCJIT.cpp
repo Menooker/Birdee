@@ -113,7 +113,7 @@ void *HelpingMemoryManager::getPointerToNamedFunction(const std::string &Name,
   if(pfn)
 	  return pfn;
 
-  pfn = MasterHelper->getPointerToNamedFunctionForModule(Name,Mod); 
+  pfn = MasterHelper->getPointerToNamedFunctionForModule(Name,Mod);
   if (!pfn && AbortOnFailure)
     report_fatal_error("Program used external function '" + Name +
                         "' which could not be resolved!");
@@ -153,7 +153,7 @@ void OptimizeMod(ExecutionEngine * EE,Module* M)
 	// Provide basic AliasAnalysis support for GVN.
 	FPM->add(createBasicAliasAnalysisPass());
 	// Promote allocas to registers.
-	//FPM->add(createPromoteMemoryToRegisterPass());
+	FPM->add(createPromoteMemoryToRegisterPass());
 	// Do simple "peephole" optimizations and bit-twiddling optzns.
 	//FPM->add(createInstructionCombiningPass());
 	// Reassociate expressions.
@@ -241,7 +241,7 @@ void MCJITHelper::addGlobalMapping(const std::string& Name,void* p)
 ExecutionEngine *MCJITHelper::compileModule(Module *M) {
 
 
-	
+
   std::string ErrStr;
   EngineBuilder eb(M);
   TargetMachine* tm=eb.selectTarget();
@@ -252,16 +252,16 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
 				   //tm->setOptLevel(CodeGenOpt::Level::Less  );
 											eb .setUseMCJIT(this->mUseMC)
                                             .setErrorStr(&ErrStr);
-                                            
-                                            
-  	
+
+
+
   if(mUseMC)
   {
 		eb.setMCJITMemoryManager(new HelpingMemoryManager(this,M));
   }
-  
+
   ExecutionEngine *NewEngine =eb.create();
-  
+
   if (!NewEngine) {
     fprintf(stderr, "Could not create ExecutionEngine: %s\n", ErrStr.c_str());
     exit(1);
@@ -287,12 +287,12 @@ void *MCJITHelper::getPointerToFunction(Function* F)
 		if (P)
 			return P;
 	}
-	
+
 	return NULL;
 }
 /*
 {
-	
+
   // Look for this function in an existing module
   ModuleVector::iterator begin = Modules.begin();
   ModuleVector::iterator end = Modules.end();
@@ -354,9 +354,9 @@ void *MCJITHelper::getPointerToNamedFunctionForModule(const std::string &Name,Mo
 	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(m);
 	void* P;
     if (F && !F->empty() ) {
-      
+
       if (eeIt != EngineMap.end()) {
-		
+
         P = eeIt->second->getPointerToFunction(F);
         if (P)
           return P;
@@ -382,9 +382,9 @@ void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
 	std::map<Module*, ExecutionEngine*>::iterator eeIt = EngineMap.find(*it);
 	void* P;
     if (F && !F->empty() ) {
-      
+
       if (eeIt != EngineMap.end()) {
-		
+
         P = eeIt->second->getPointerToFunction(F);
         if (P)
           return P;
@@ -396,7 +396,7 @@ void *MCJITHelper::getPointerToNamedFunction(const std::string &Name)
           return P;
       }
     }
-	
+
   }
   return NULL;
 }

@@ -111,7 +111,7 @@ unsafe
 	dim st as int=id % threads
 	dim ths as int=threads
 
-	mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
+	//mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
 	mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
 	sync2@+=1
 	for ;;
@@ -125,7 +125,7 @@ unsafe
 	dim col as double[]=new double[myn]
 	for i=tid;i<myn;i+=mythreads
 		println(i)
-		col[0:myn]=mym1[i*myn : i*myn+myn]
+		col[0:myn]=m1[i*myn : i*myn+myn]
 		for j=0;j<myn;j++
 			sum=0
 			for k=0;k<myn;k++
