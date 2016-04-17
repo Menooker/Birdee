@@ -49,9 +49,32 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-w" />
+					<Add option="-fno-rtti" />
+					<Add option="-D__STDC_LIMIT_MACROS" />
+					<Add option="-D__STDC_CONSTANT_MACROS" />
+					<Add option="-DBD_ON_GCC" />
+					<Add option="-DBD_ON_LINUX" />
+					<Add option="-DBD_MULTITHREAD" />
+					<Add directory="../../../include" />
+					<Add directory="../../../include3" />
+					<Add directory="../../../" />
+					<Add directory="." />
+					<Add directory="../../compiler" />
+					<Add directory="../../debug" />
+					<Add directory="../../dvm" />
+					<Add directory="../../include" />
+					<Add directory="../../memory" />
+					<Add directory="../../require" />
+					<Add directory="../../shared" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="../../../libLLVMLite.a" />
+					<Add library="pthread" />
+					<Add library="memcached" />
+					<Add library="dl" />
+					<Add library="ncurses" />
 				</Linker>
 			</Target>
 		</Build>
