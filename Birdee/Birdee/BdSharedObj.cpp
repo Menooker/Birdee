@@ -319,7 +319,7 @@ private:
 		for(;;)
 		{
 			UaWaitForEvent(&event_sweep_start);
-			UaResetEvent(&event_sweep_start);				
+			UaResetEvent(&event_sweep_start);
 			std::vector<ObjectData>::iterator itr;
 			for(itr=gc_obj.begin();itr!=gc_obj.end();itr++)
 			{
@@ -1385,7 +1385,7 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 	int len1=dend-dstart;
 	int len2=s_end-sstart;
 
-	if(dstart<0 || dend<0 || sstart<0 || s_end<0 
+	if(dstart<0 || dend<0 || sstart<0 || s_end<0
 		|| dstart>=dend || sstart>=s_end || len1!=len2)
 		ExArrayOutOfBoundException();
 	int dest_global,src_global;
@@ -1394,7 +1394,7 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 	else if(dest->v_table==curdvm->array_v_table)
 		dest_global=0;
 	else
-	{	
+	{
 		printf("CopyArray encounters an unkown type\n");
 		_BreakPoint;
 	}
@@ -1404,7 +1404,7 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 	else if(src->v_table==curdvm->array_v_table)
 		src_global=0;
 	else
-	{	
+	{
 		printf("CopyArray encounters an unkown type\n");
 		_BreakPoint;
 	}
@@ -1461,7 +1461,7 @@ extern "C" void SoCopyArray(BINT dstart,BINT dend,BINT sstart,BINT s_end,BINT ty
 			if(ty==0)
 				SoPutChunk((_uint)dest->data,dstart,len1,src->data->u.barray.u.int_array + sstart);
 			else
-				SoPutChunk((_uint)dest->data,dstart,len1,src->data->u.barray.u.double_array + sstart);			
+				SoPutChunk((_uint)dest->data,dstart,len1,src->data->u.barray.u.double_array + sstart);
 		}
 		else
 		{
