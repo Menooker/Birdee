@@ -79,15 +79,20 @@ public:
 	}
 	SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v)
 	{
+		SoStatus ret;
+#ifdef BD_ON_X86
+		ret=backend->putchunk(key,fldid,len,(SoVar*)v);
+#else
 		SoVar* buf=new SoVar[len];
 		_uint i;
-		SoStatus ret;
+		
 		for(i=0;i<len;i++)
 		{
 			buf[i].vd=v[i];
 		}
 		ret=backend->putchunk(key,fldid,len,buf);
 		delete []buf;
+#endif
 		return ret;
 	}
 
