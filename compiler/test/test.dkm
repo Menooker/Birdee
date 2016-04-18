@@ -10,22 +10,8 @@ dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 dim threads as shared int=1
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
-dim n as shared int=128
-/*
-dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
-function threadproc(id as var) as int
-	gets()
-	barrier_main.Enter(-1)
-	println("OK")
-end
-nodes[0].CreateThread(threadproc,0)
-nodes[1].CreateThread(threadproc,1)
-barrier_main.Enter(-1)
-gets()
-nodes[0].Close()
-nodes[1].Close()
-*/
-//dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
+dim n as shared int=192
+
 dim counter as shared AtomicCounter=new AtomicCounter(0)
 dim n2 as int=n*n
 dim m1 as shared double[] global=new double[n2] global

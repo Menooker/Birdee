@@ -1,5 +1,6 @@
+require Remote
 
-dim round as int = 1
+dim round as int = 9
 dim cur_round as int
 dim time_total as int
 dim time_calc as int
@@ -15,11 +16,13 @@ dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
 dim n as shared int=200
 
-//dim barrier_main as shared RemoteBarrier=new RemoteBarrier(thread_num+1)
-dim counter as shared AtomicCounter=new AtomicCounter(0)
+dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
+//dim counter as shared AtomicCounter=new AtomicCounter(0)
 dim n2 as int=n*n
 dim m1 as shared double[] global=new double[n2] global
 dim m2 as shared double[] global=new double[n2] global
+dim m3 as shared double[] global=new double[n2] global
+dim m4 as shared double[] global=new double[n2] global
 dim result as shared double[] global=new double[n2] global
 
 
@@ -32,41 +35,49 @@ function putproc(id as var) as int
 		mlocal2[i]=n2-i
 	end
 	println("to put2")
-	m2[0:n2]=mlocal2[0:n2]
+	if cur_round % 2==0 then
+		m2[0:n2]=mlocal2[0:n2]
+	else
+		m4[0:n2]=mlocal2[0:n2]
+	end
 	println("put ok2")
 end
 
-
-for cur_round=0;cur_round<round;cur_round++
-	dim time as int=GetClock()
-	dim ii as int
-	dim jj as int
-
-
+sub put_matrix()
 	dim threadid as int=CreateThread(putproc,true,1)
-
-	for ii=0;ii<n2;ii++
+	dim i as int
+	for i=0;ii<n2;i++
 	unsafe
 		mlocal[ii]=ii
 	end
 	println("to put1")
-	m1[0:n2]=mlocal[0:n2]
+	if cur_round % 2==0 then
+		m1[0:n2]=mlocal[0:n2]
+	else
+		m3[0:n2]=mlocal[0:n2]
+	end
 	println("put ok1")
-	JoinThread(threadid)
-
+	JoinThread(threadid)	
+end
+dim time as int=GetClock()
+put_matrix()
+dim ttid as int=0
+for ii=0;ii<node_num;ii++
+	for jj=0;jj<threads;jj++
+		nodes[ii].CreateThread(threadproc,ttid)
+		ttid++
+	end
+end
+for cur_round=0;cur_round<round;cur_round++
+	dim ii as int
+	dim jj as int
 	dim time2 as int=GetClock()
-	//println("time2 "+time2)
-	dim ttid as int=0
-	for ii=0;ii<node_num;ii++
-		for jj=0;jj<threads;jj++
-			nodes[ii].CreateThread(threadproc,ttid)
-			ttid++
-		end
+
+	if cur_round!= round-1 then
+		put_matrix()
 	end
 
-	for ;counter.Get()<thread_num;
-		Sleep(8)
-	end
+	barrier_main.Enter(-1)	
 	dim t as int
 	t=GetClock()-time
 	println("time1 "+ t)
@@ -74,7 +85,9 @@ for cur_round=0;cur_round<round;cur_round++
 	t=GetClock()-time2
 	println("time2 "+ t)
 	time_calc+=t
-	counter.Set(0)
+
+	time=GetClock()
+	//counter.Set(0)
 end
 //print_matrix(m1)
 //print_matrix(m2)
@@ -108,38 +121,48 @@ unsafe
 	dim myn2 as int =n*n
 	dim st as int=id % threads
 	dim ths as int=threads
-
-	//mym1[myn2*st/threads:myn2*(st+1)/threads]=m1[myn2*st/threads:myn2*(st+1)/threads]
-	mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
-	sync2@+=1
-	for ;;
-		if sync2==ths then
-			break
-		end
-	end
-	dim mythreads as int=thread_num
-	dim sum as double
+	dim mround as int
 	dim line as double[]=new double[myn]
 	dim col as double[]=new double[myn]
-	for i=tid;i<myn;i+=mythreads
-		//println(i)
-		col[0:myn]=m1[i*myn : i*myn+myn]
-		for j=0;j<myn;j++
-			sum=0
-			for k=0;k<myn;k++
-				sum+=col[k] * mym2[myn*j + k]
-			end
-			line[j]=sum
+	for ;;
+		if mround % 2==0 then
+			mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
+		else
+			mym2[myn2*st/threads:myn2*(st+1)/threads]=m4[myn2*st/threads:myn2*(st+1)/threads]
 		end
-		result[i*myn : i*myn+myn]=line[0:myn]
+		sync2@+=1
+		for ;;
+			if sync2==ths then
+				break
+			end
+		end
+		dim mythreads as int=thread_num
+		dim sum as double
+		for i=tid;i<myn;i+=mythreads
+			//println(i)
+			if mround % 2==0 then
+				col[0:myn]=m1[i*myn : i*myn+myn]
+			else
+				col[0:myn]=m3[i*myn : i*myn+myn]
+			end
+			for j=0;j<myn;j++
+				sum=0
+				for k=0;k<myn;k++
+					sum+=col[k] * mym2[myn*j + k]
+				end
+				line[j]=sum
+			end
+			result[i*myn : i*myn+myn]=line[0:myn]
+		end
+		sync2=0
+		mround++
+		barrier_main.Enter(-1)
 	end
-	sync2=0
-	counter.Inc(1)
 end
 
 sub RemoteInitialize()
 
 	mym1=new double[256*256]
-	mym2=new double[256*256]
+	//mym2=new double[256*256]
 	println("init ok,size "+ 256*256)
 end

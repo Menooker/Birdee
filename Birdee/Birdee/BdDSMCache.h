@@ -79,29 +79,29 @@ public:
 	}
 	SoStatus put_chunk(_uint key,_uint fldid,_uint len,double* v)
 	{
+		SoVar* buf=new SoVar[len];
 		_uint i;
-		SoStatus ret=SoOK;
-		SoVar var;
+		SoStatus ret;
 		for(i=0;i<len;i++)
 		{
-			var.vd=v[i];
-			if(backend->put(key,i+fldid,var)!=SoOK)
-				ret=SoFail;
+			buf[i].vd=v[i];
 		}
+		ret=backend->putchunk(key,fldid,len,buf);
+		delete []buf;
 		return ret;
 	}
 
 	SoStatus put_chunk(_uint key,_uint fldid,_uint len,BINT* v)
 	{
+		SoVar* buf=new SoVar[len];
 		_uint i;
-		SoStatus ret=SoOK;
-		SoVar var;
+		SoStatus ret;
 		for(i=0;i<len;i++)
 		{
-			var.vi=v[i];
-			if(backend->put(key,i+fldid,var)!=SoOK)
-				ret=SoFail;
+			buf[i].vi=v[i];
 		}
+		ret=backend->putchunk(key,fldid,len,buf);
+		delete []buf;
 		return ret;
 	}
 

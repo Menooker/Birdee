@@ -6,7 +6,7 @@
 #define memc ((memcached_st *)_memc)
 extern thread_local void *_memc;
 class SoStorageMemcached;
-extern SoStorageMemcached* sto;
+extern memcached_st * sto;
 
 extern "C" void* init_memcached_this_thread();
 
@@ -36,6 +36,7 @@ public:
 	SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf);
 	SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf);
 	SoStatus del(_uint key,unsigned int len);
+	SoStatus putchunk(_uint key,_uint fldid,_uint len,SoVar* buf);
 	~SoStorageMemcached();
 
     memcached_st *main_memc;
@@ -48,10 +49,10 @@ public:
 		offset=2147483647;
 		mem_hosts=arr_mem_hosts;
 		mem_ports=arr_mem_ports;
-		sto=this;
         memcached_return rc;
 		memcached_server_st *servers;
         _memc=(memcached_st*)memcached_create(NULL);
+		sto=memc;
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
 
 #ifndef BD_ON_WINDOWS
@@ -63,41 +64,36 @@ public:
 //		memc->call_free=(memcached_free_function)free;
 //		memc->call_realloc=(memcached_realloc_function)realloc;
 		servers=NULL;
-		for(_uint i=0;i<sto->mem_hosts.size();i++)
+		for(_uint i=0;i<mem_hosts.size();i++)
 		{
-			servers = memcached_server_list_append(servers, sto->mem_hosts[i].c_str(),sto->mem_ports[i], &rc);
+			servers = memcached_server_list_append(servers, mem_hosts[i].c_str(),mem_ports[i], &rc);
 		}
 
 		rc = memcached_server_push((memcached_st*)_memc, servers);
 		memcached_server_free(servers);
 		main_memc=memc;
 	}
-/*#else
-	SoStorageMemcached(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports)
-	{
-		offset=2147483647;
-		memcached_return rc;
-		memcached_server_st *servers;
-		memc = memcached_create(NULL);
-		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
-//		memc->call_malloc=(memcached_malloc_function)malloc;
-//		memc->call_free=(memcached_free_function)free;
-//		memc->call_realloc=(memcached_realloc_function)realloc;
-		char buf[255];
-		servers=NULL;
-		for(int i=0;i<arr_mem_hosts.size();i++)
-		{
-			servers = memcached_server_list_append(servers, arr_mem_hosts[i].c_str(),arr_mem_ports[i], &rc);
-		}
 
-		rc = memcached_server_push(memc, servers);
-		memcached_server_free(servers);
-	}
-#endif*/
 };
 
+
+
+class SoStorageChunkMemcached : public SoStorageMemcached
+{
+public:
+	SoStatus getblock(_uint64 addr,SoVar* buf);
+	SoStatus put(_uint key,_uint fldid,SoVar v);
+	SoVar get(_uint key,_uint fldid);
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf);
+	SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf);
+	SoStatus putchunk(_uint key,_uint fldid,_uint len,SoVar* buf);
+	~SoStorageChunkMemcached(){}
+
+	SoStorageChunkMemcached(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports):SoStorageMemcached(arr_mem_hosts,arr_mem_ports)
+	{
+		
+	}
+};
 
 
 #endif

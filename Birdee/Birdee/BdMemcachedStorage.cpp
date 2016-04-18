@@ -11,7 +11,7 @@
 #endif
 
 
-SoStorageMemcached* sto=NULL;
+memcached_st * sto=NULL;
 #pragma pack(4)
 struct NodeValue
 {
@@ -46,25 +46,10 @@ void* init_memcached_this_thread()
 {
         //_memc=(memcached_st*)memcached_create(NULL);
         if(sto)
-            _memc=memcached_clone(memc,sto->main_memc);
+            _memc=memcached_clone(memc,sto);
 		else
 			return NULL;
 		return _memc;
-/*		memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BUFFER_REQUESTS, 1);
-		//memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_SUPPORT_CAS, 1);
-//		memc->call_malloc=(memcached_malloc_function)malloc;
-//		memc->call_free=(memcached_free_function)free;
-//		memc->call_realloc=(memcached_realloc_function)realloc;
-		char buf[255];
-		servers=NULL;
-		for(int i=0;i<sto->mem_hosts.size();i++)
-		{
-			servers = memcached_server_list_append(servers, sto->mem_hosts[i].c_str(),sto->mem_ports[i], &rc);
-		}
-
-		rc = memcached_server_push(memc, servers);
-		memcached_server_free(servers);*/
 }
 
 void free_memcached(void* p)
@@ -264,7 +249,7 @@ bool SoStorageMemcached::exists(_uint key)//fix-me : improve
 	memcached_return rc;
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
-	_uint64 k=MAKE64(key,0);
+	_uint64 k=MAKE64(key,0xFFFFFFFE);
 	char* r= memcached_get(memc,(char*)&k,8,&outlen,&flg,&rc);
 	if(rc==MEMCACHED_SUCCESS)
 	{
@@ -392,6 +377,18 @@ SoStatus SoStorageMemcached::getchunk(_uint key,_uint fldid,_uint len,double* bu
 	return ret;
 }
 
+SoStatus SoStorageMemcached::putchunk(_uint key,_uint fldid,_uint len,SoVar* buf)
+{
+	_uint k=fldid;
+	SoStatus ret;
+	for(_uint i=0;i<len;i++,k++)
+	{
+		if(put(key,k,buf[i])!=SoOK)
+			ret=SoFail;
+	}
+	return ret;
+}
+
 SoStatus SoStorageMemcached::getblock(_uint64 addr,SoVar* buf)
 {
 	char* keys[DSM_CACHE_BLOCK_SIZE];
@@ -443,3 +440,198 @@ SoStatus SoStorageMemcached::del(_uint key,unsigned int len)
 	memcached_delete(memc,(char*)&k,8,0);
 	return SoOK;
 }
+
+/////////////////////////////////////////////////////////////////
+//SoStorageChunkMemcached
+/////////////////////////////////////////////////////////////////
+SoStatus SoStorageChunkMemcached::put(_uint key,_uint fldid,SoVar v)
+{
+	return putchunk(key,fldid,1,&v);
+}
+
+SoVar SoStorageChunkMemcached::get(_uint key,_uint fldid)
+{
+	_uint64 k=MAKE64(key,fldid);
+	SoVar buf[DSM_CACHE_BLOCK_SIZE];
+	getblock(k,buf);
+	
+	return buf[k & DSM_CACHE_LOW_MASK_64];
+
+}
+
+
+
+static SoStatus fetchchunk2(_uint64 k,_uint len)
+{
+	_uint true_len=len/DSM_CACHE_BLOCK_SIZE + ((len%DSM_CACHE_BLOCK_SIZE)?1:0);
+	typedef char* _PCHAR;
+	char** keys=new _PCHAR[true_len];
+	size_t* key_length=new size_t[true_len];
+	_uint64* maddr=new _uint64[true_len];
+	
+	for (_uint i=0;i<true_len;i++)
+	{
+		maddr[i]= k+i;
+		keys[i]=(char*) &maddr[i];
+		key_length[i]=8;
+	}
+
+    memcached_return rc = memcached_mget(memc, (char**)keys, key_length, true_len);
+	delete []keys;
+	delete []key_length;
+	delete []maddr;
+	return (rc==MEMCACHED_SUCCESS)?SoOK:SoFail;
+}
+
+
+
+
+SoStatus SoStorageChunkMemcached::putchunk(_uint key,_uint fldid,_uint len,SoVar* buf)
+{
+	_uint k=fldid;
+	_uint k_start,k_end,k_tail;
+
+	k_tail=k+len;
+	if(k & DSM_CACHE_LOW_MASK)
+		k_start= (k & DSM_CACHE_HIGH_MASK) + DSM_CACHE_BLOCK_SIZE;
+	else
+		k_start=k;
+
+	k_end= k_tail & DSM_CACHE_HIGH_MASK;
+	SoStatus ret=SoOK;
+	SoVar var[DSM_CACHE_BLOCK_SIZE];
+	_uint idx=0;
+	_uint i=k;
+
+	if(k<k_start)
+	{
+		getblock(MAKE64(key,k),var);
+		for(i=k;i<k_start && i<k_tail;i++)
+		{
+			var[i & DSM_CACHE_LOW_MASK]=buf[idx];
+			idx++;
+		}
+		memcached_return rc=memcached_put(memc,MAKE64(key,k/DSM_CACHE_BLOCK_SIZE),var,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+		if(rc!=MEMCACHED_SUCCESS)
+			ret= SoFail;
+	}
+
+
+	for(i=k_start;i<k_end;i+=DSM_CACHE_BLOCK_SIZE)
+	{
+		memcached_return rc=memcached_put(memc,MAKE64(key,i/DSM_CACHE_BLOCK_SIZE),buf + idx,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+		if(rc!=MEMCACHED_SUCCESS)
+			ret= SoFail;
+		idx+=DSM_CACHE_BLOCK_SIZE;
+	}
+	if(idx<len && k_end!=k_tail)
+	{
+		int kkk=k_end/DSM_CACHE_BLOCK_SIZE;
+		getblock(MAKE64(key,k_end),var);
+		for(;i<k_tail;i++)
+		{
+			var[i & DSM_CACHE_LOW_MASK]=buf[idx];
+			idx++;
+		}
+		memcached_return rc=memcached_put(memc,MAKE64(key,k_end/DSM_CACHE_BLOCK_SIZE),var,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+		if(rc!=MEMCACHED_SUCCESS)
+			ret= SoFail;
+	}
+	return ret;
+}
+
+
+
+SoStatus SoStorageChunkMemcached::getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
+{
+	_uint64 k=MAKE64(key,fldid/DSM_CACHE_BLOCK_SIZE);
+	memcached_result_st results_obj;
+	memcached_result_st* results;
+	results= memcached_result_create(memc, &results_obj);
+	memset(buf,0,sizeof(BINT)*len);
+
+	_uint offset=fldid % DSM_CACHE_BLOCK_SIZE;
+	memcached_return rc;
+	SoStatus ret=fetchchunk2(k,len + offset);
+	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	{
+		if(rc == MEMCACHED_SUCCESS)
+		{
+			_uint64* pkey;
+			SoVar* pvalue;
+			pkey=(_uint64*)memcached_result_key_value(results);
+			pvalue=(SoVar*)memcached_result_value(results);
+			_uint idx=(*pkey) - k;
+			_uint i= (idx == 0)?offset:0;
+			_uint j= idx*DSM_CACHE_BLOCK_SIZE+i -offset;
+			for(;i<DSM_CACHE_BLOCK_SIZE,j<len;i++,j++)
+			{	
+				buf[j]= pvalue[i].vi;
+			}
+		}
+	}
+	memcached_result_free(&results_obj);
+	return ret;
+}
+
+
+SoStatus SoStorageChunkMemcached::getchunk(_uint key,_uint fldid,_uint len,double* buf)
+{
+	_uint64 k=MAKE64(key,fldid/DSM_CACHE_BLOCK_SIZE);
+	memcached_result_st results_obj;
+	memcached_result_st* results;
+	results= memcached_result_create(memc, &results_obj);
+	memset(buf,0,sizeof(double)*len);
+
+	_uint offset=fldid % DSM_CACHE_BLOCK_SIZE;
+	memcached_return rc;
+	SoStatus ret=fetchchunk2(k,len + offset);
+	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	{
+		if(rc == MEMCACHED_SUCCESS)
+		{
+			_uint64* pkey;
+			SoVar* pvalue;
+			pkey=(_uint64*)memcached_result_key_value(results);
+			pvalue=(SoVar*)memcached_result_value(results);
+			_uint idx=(*pkey) - k;
+			_uint i= (idx == 0)?offset:0;
+			_uint j= idx*DSM_CACHE_BLOCK_SIZE+i -offset;
+			for(;i<DSM_CACHE_BLOCK_SIZE && j<len;i++,j++)
+			{	
+				buf[j]= pvalue[i].vd;
+			}
+		}
+	}
+	memcached_result_free(&results_obj);
+	return ret;
+}
+
+SoStatus SoStorageChunkMemcached::getblock(_uint64 addr,SoVar* buf)
+{
+	_uint64 k=(addr & 0xffffffff00000000) | ((addr & 0xffffffff)/DSM_CACHE_BLOCK_SIZE);
+	memcached_result_st results_obj;
+	memcached_result_st* results;
+	results= memcached_result_create(memc, &results_obj);
+	memset(buf,0,sizeof(SoVar)*DSM_CACHE_BLOCK_SIZE);
+
+	memcached_return rc;
+	SoStatus ret=fetchchunk2(k,DSM_CACHE_BLOCK_SIZE);
+	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	{
+		if(rc == MEMCACHED_SUCCESS)
+		{
+			_uint64* pkey;
+			SoVar* pvalue;
+			pkey=(_uint64*)memcached_result_key_value(results);
+			pvalue=(SoVar*)memcached_result_value(results);
+			for(_uint i= 0;i<DSM_CACHE_BLOCK_SIZE;i++)
+			{	
+				buf[i]= pvalue[i];
+			}
+		}
+	}
+	memcached_result_free(&results_obj);
+	return ret;
+}
+

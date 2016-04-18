@@ -144,6 +144,16 @@ public:
 		throw SO_KEY_NOT_FOUND;
 	}
 
+	SoStatus putchunk(_uint key,_uint fldid,_uint len,SoVar* buf)
+	{
+		_uint64 k=MAKE64(key,fldid);
+		for (_uint i=0;i<len;i++)
+		{
+			map[k+i].var=buf[i];
+		}
+		return SoOK;
+	}
+
 	SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf)
 	{
 		_uint64 k=MAKE64(key,fldid);
@@ -257,7 +267,7 @@ public:
 			return new SoStorageLocalTest(arr_mem_hosts, arr_mem_ports);
 			break;
 		case SoBackendMemcached:
-			return new SoStorageMemcached(arr_mem_hosts, arr_mem_ports);
+			return new SoStorageChunkMemcached(arr_mem_hosts, arr_mem_ports);
 		default:
 			DBG_assert(0,("Var type is wrong %d\n",type));
 		}

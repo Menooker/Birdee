@@ -88,10 +88,11 @@ extern int gc_undergo;
 			_BreakPoint;
 			return;
 		}
-		for(int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
-		{
-			ths->backend->put(addr>>32,(addr & 0xffffffff)+i,v[i]);
-		}
+		//for(int i=0;i<DSM_CACHE_BLOCK_SIZE;i++)
+		//{
+		//	ths->backend->put(addr>>32,(addr & 0xffffffff)+i,v[i]);
+		//}
+		ths->backend->putchunk(addr>>32,(addr & 0xffffffff),DSM_CACHE_BLOCK_SIZE,v);
 
 		//printf("WRITE!!!!! [%llx]=%d\n",addr,v.vi);
 		UaEnterReadRWLock(&dir_lock);
@@ -770,7 +771,7 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,double* v
 			UaLeaveReadRWLock(&foundblock->lock);
 
 	}
-	if(i<=k_end)
+	if(idx<len)
 	{
 		for(i=k_end;i<k_tail;i++)
 		{
@@ -832,7 +833,7 @@ SoStatus DSMDirectoryCache::put_chunk(_uint okey,_uint fldid,_uint len,BINT* v)
 			UaLeaveReadRWLock(&foundblock->lock);
 
 	}
-	if(i<=k_end)
+	if(idx<len)
 	{
 		for(i=k_end;i<k_tail;i++)
 		{

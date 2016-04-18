@@ -160,6 +160,7 @@ public:
 	virtual SoStatus getchunk(_uint key,_uint fldid,_uint len,double* buf)=0;
 	virtual SoStatus getchunk(_uint key,_uint fldid,_uint len,BINT* buf)=0;
 	virtual SoStatus del(_uint key,unsigned int len)=0;
+	virtual SoStatus putchunk(_uint key,_uint fldid,_uint len,SoVar* buf)=0;
 };
 
 #endif
