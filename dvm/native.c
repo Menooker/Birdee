@@ -787,6 +787,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, BUILT_IN_METHOD_PACKAGE_NAME,"globalarray#size",SoArraySize, 0, DVM_TRUE);
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
+	DVM_add_native_function(dvm, "math", "exp", ExExp, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "Invoke", ExInvokeByName, 2,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "GetFunction", ExGetFunction, 3,DVM_FALSE);
@@ -798,6 +799,11 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, "diksam.lang", "SuspendThread", ThSuspendThread, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "ResumeThread", ThResumeThread, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "JoinThread", ThJoinThread, 1,DVM_FALSE);
+
+	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#initialize", ExCSVReaderInit, 1,DVM_TRUE);
+	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#ReadLine", ExCSVReaderReadLine, 2,DVM_TRUE);
+	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#Close", ExCSVReaderClose, 0,DVM_TRUE);
+
 	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 5,DVM_FALSE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#CreateThread", RcCreateThread, 2,DVM_TRUE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#Close", RcCloseNode, 0,DVM_TRUE);

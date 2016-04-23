@@ -932,7 +932,7 @@ create_assign_cast2(Expression *src, TypeSpecifier *dest,Expression *deste)
 			return src;
 		}
 	}
-	else if(deste->kind==SLICE_EXPRESSION && dkc_is_array(src->type))
+	else if(deste && deste->kind==SLICE_EXPRESSION && dkc_is_array(src->type))
 	{
 		TypeDerive* d1,*d2;
 		if(dest->basic_type != dest->basic_type)
@@ -3822,9 +3822,9 @@ fix_constant_list(DKC_Compiler *compiler)
          cd_pos = cd_pos->next) {
         reserve_constant_index(compiler, cd_pos, DVM_TRUE);
         if (cd_pos->type == NULL) {
-            cd_pos->type = cd_pos->initializer->type;
             cd_pos->initializer = fix_expression(NULL, cd_pos->initializer,
                                                  NULL, &el);
+			cd_pos->type = cd_pos->initializer->type;
             cd_pos->initializer = create_assign_cast(cd_pos->initializer,
                                                      cd_pos->type);
         }

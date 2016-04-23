@@ -7,7 +7,7 @@ extern "C"
 {
 #endif
 
-#define DSM_CACHE_BITS 4
+#define DSM_CACHE_BITS 5
 #define DSM_CACHE_BLOCK_SIZE (1<<DSM_CACHE_BITS)
 #define DSM_CACHE_HIGH_MASK (0xffffffff >> DSM_CACHE_BITS << DSM_CACHE_BITS)
 #define DSM_CACHE_LOW_MASK (~DSM_CACHE_HIGH_MASK)

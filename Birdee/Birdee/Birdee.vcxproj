@@ -101,6 +101,7 @@
     <None Include="Exceptions.dkh" />
     <None Include="Exceptions2.dkh" />
     <None Include="list.txt" />
+    <None Include="logistic_regression.txt" />
     <None Include="matmul.txt" />
     <None Include="mergesort.txt" />
     <None Include="pi.txt" />

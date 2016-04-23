@@ -102,6 +102,9 @@
     <None Include="matmul.txt">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="logistic_regression.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

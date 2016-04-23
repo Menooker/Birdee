@@ -322,7 +322,78 @@ BINT ExGetArrayTypeSize(DVM_ArrayType type)
 	return size;
 }
 
+void ExExp(DVM_Value *args)
+{
+	curthread->retvar.double_value=exp(args->double_value);
+}
 
+void ExCSVReaderInit(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[1].object;
+	ths.data->u.class_object.field[0].object=args[0].object;
+	char buf[255];
+	char* str;
+	wcstombs(buf,args[0].object.data->u.string.string,255);
+	if(args[0].object.data->u.string.length>=254)
+		printf("Warning : file name %ws too long\n",args[0].object.data->u.string.string);
+	if(buf[0]==-17 && buf[1]==-69 && buf[2]==-65)
+		str=buf+3;
+    else
+		str=buf;
+	FILE* f=fopen(str,"r");
+	ths.data->u.class_object.field[1].int_value=(int)f;
+}
+
+void ExCSVReaderReadLine(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[2].object;
+	DVM_ObjectRef arr=args[1].object;
+	int idx=args[0].int_value;
+	int len=arr.data->u.barray.size;
+	double* parr=arr.data->u.barray.u.double_array;
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	if(f==NULL)
+	{
+		curthread->retvar.int_value=-1;
+		return;
+	}
+	char buf[2048];
+	buf[0]=0;
+	fgets(buf,2048,f);
+	char* last=buf,*p=buf;
+	int cnt=0;
+	while(*p && p<buf+2048)
+	{
+		if(*p==',')
+		{
+			*p=0;
+			if(idx+cnt>len)
+			{
+				curthread->retvar.int_value=-1;
+				return;
+			}
+			parr[idx+cnt]=atof(last);
+			cnt++;
+			last=p+1;
+		}
+		p++;
+	}
+	if(idx+cnt>len)
+	{
+		curthread->retvar.int_value=-1;
+		return;
+	}
+	parr[idx+cnt]=atof(last);
+	cnt++;
+	curthread->retvar.int_value=cnt;
+}
+
+void ExCSVReaderClose(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[0].object;
+	fclose((FILE*)ths.data->u.class_object.field[1].int_value);
+	ths.data->u.class_object.field[1].int_value=0;
+}
 
 void ExArrayHash(DVM_Value *args)
 {

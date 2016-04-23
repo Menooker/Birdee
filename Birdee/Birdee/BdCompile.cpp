@@ -592,7 +592,7 @@ Function* BcBuildArrPtrImp(Type* ty)
 	llvm::IRBuilderBase::InsertPoint IP=builder.saveIP();
 	std::vector<Type*> Args2;
 	Args2.push_back(TyObjectRef);
-	Args2.push_back(Type::getInt32Ty(context));
+	//Args2.push_back(Type::getInt32Ty(context));
 	Type* ty2=ty->getPointerTo()->getPointerTo();
 	FunctionType* FT8 = FunctionType::get(ty,Args2, false);
 	Function* fArrAddr=Function::Create(FT8, Function::LinkOnceAnyLinkage  ,"systemi!ArrAddrImp", module);

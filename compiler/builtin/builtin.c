@@ -18,16 +18,14 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
     "    print(str )\n",
 	"	print( \"\\n\")\n",
     "end\n",
-/*	"public class RemoteNode\n",
-	"	public host as string\n",
-	"	public port as int\n",
-	"	dim socket as int\n",
-	"	dim closed as int\n",
-	"	dim connected as int\n",
-	"	public declare function CreateThread(del as thread_proc,param as int) as RemoteThread\n",
+	"public class CSVReader\n",
+	"	public _path as string\n",
+	"	dim fd as int\n",
+	"	public declare constructor initialize(path as string)\n",
+	"	public declare function ReadLine(arr as double[],idx as int) as int\n",
 	"	public declare sub Close()\n",
 	"end\n",
-	"shared public class RemoteThread\n",
+/*	"shared public class RemoteThread\n",
 	"	public final tid as int\n",
 	"	dim state as int\n",
 	"	public function getState() as int\n",
@@ -234,6 +232,7 @@ char *st_diksam_lang_dkm_text[] ={"require diksam.lang;\n",
     NULL
 };*/
 char *st_diksam_math_dkh_text[] ={
+	"declare function exp(v as double) as double\n",
 	"declare function rand(max as int) as int\n\n",
 	0
 	};/* {
