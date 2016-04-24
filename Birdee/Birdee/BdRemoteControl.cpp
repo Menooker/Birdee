@@ -762,6 +762,7 @@ Wake up a remote thread from sync. Called on master
 */
 void RcWakeRemoteThread(int dest,_uint64 thread_id)
 {
+	//printf("Wake %d.%d\n",dest,thread_id);
 	if(dest==-1)
 	{
 		RcDoWakeThread(thread_id);
