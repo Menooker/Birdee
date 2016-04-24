@@ -391,7 +391,18 @@ void ExCSVReaderReadLine(DVM_Value *args)
 void ExCSVReaderClose(DVM_Value *args)
 {
 	DVM_ObjectRef ths=args[0].object;
-	fclose((FILE*)ths.data->u.class_object.field[1].int_value);
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	if(f)
+		fclose(f);
+	ths.data->u.class_object.field[1].int_value=0;
+}
+
+void ExCSVReaderReset(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[0].object;
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	if(f)
+		rewind(f);
 	ths.data->u.class_object.field[1].int_value=0;
 }
 

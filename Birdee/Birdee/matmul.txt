@@ -1,6 +1,6 @@
 require Remote
 
-dim round as int = 9
+dim round as int = 1
 dim cur_round as int
 dim time_total as int
 dim time_calc as int
@@ -8,13 +8,14 @@ dim hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
 dim ports as int[]={13070,13070,13070,13070}
 dim mem_hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
 dim mem_ports as int[]={11211,11211,11211,11211}
+
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 println("working")
 dim threads as shared int=2
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads*node_num
-dim n as shared int=200
+dim n as shared int=192
 
 dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
 //dim counter as shared AtomicCounter=new AtomicCounter(0)
@@ -30,6 +31,7 @@ dim mlocal as double[]=new double[n2]
 dim mlocal2 as double[]=new double[n2]
 function putproc(id as var) as int
 	dim i as int
+	threads=threads
 	for i=0;i<n2;i++
 	unsafe
 		mlocal2[i]=n2-i
@@ -45,10 +47,11 @@ end
 
 sub put_matrix()
 	dim threadid as int=CreateThread(putproc,true,1)
+	threads=threads
 	dim i as int
-	for i=0;ii<n2;i++
+	for i=0;i<n2;i++
 	unsafe
-		mlocal[ii]=ii
+		mlocal[i]=i
 	end
 	println("to put1")
 	if cur_round % 2==0 then
@@ -61,6 +64,8 @@ sub put_matrix()
 end
 dim time as int=GetClock()
 put_matrix()
+dim ii as int
+dim jj as int
 dim ttid as int=0
 for ii=0;ii<node_num;ii++
 	for jj=0;jj<threads;jj++
@@ -69,8 +74,7 @@ for ii=0;ii<node_num;ii++
 	end
 end
 for cur_round=0;cur_round<round;cur_round++
-	dim ii as int
-	dim jj as int
+
 	dim time2 as int=GetClock()
 
 	if cur_round!= round-1 then
@@ -124,11 +128,21 @@ unsafe
 	dim mround as int
 	dim line as double[]=new double[myn]
 	dim col as double[]=new double[myn]
+	dim mm1 as double[] global=m1
+	dim mm2 as double[] global=m2
+	dim mm3 as double[] global=m3
+	dim mm4 as double[] global=m4
+	dim mresult as double[] global=result
+	dim mthreads as int=threads
+	dim mythreads as int=thread_num
+	col[0]=0
+	line[0]=0
+	mym2[0]=0
 	for ;;
 		if mround % 2==0 then
-			mym2[myn2*st/threads:myn2*(st+1)/threads]=m2[myn2*st/threads:myn2*(st+1)/threads]
+			mym2[myn2*st/mthreads:myn2*(st+1)/mthreads]=mm2[myn2*st/mthreads:myn2*(st+1)/mthreads]
 		else
-			mym2[myn2*st/threads:myn2*(st+1)/threads]=m4[myn2*st/threads:myn2*(st+1)/threads]
+			mym2[myn2*st/mthreads:myn2*(st+1)/mthreads]=mm4[myn2*st/mthreads:myn2*(st+1)/mthreads]
 		end
 		sync2@+=1
 		for ;;
@@ -136,14 +150,13 @@ unsafe
 				break
 			end
 		end
-		dim mythreads as int=thread_num
 		dim sum as double
 		for i=tid;i<myn;i+=mythreads
 			//println(i)
 			if mround % 2==0 then
-				col[0:myn]=m1[i*myn : i*myn+myn]
+				col[0:myn]=mm1[i*myn : i*myn+myn]
 			else
-				col[0:myn]=m3[i*myn : i*myn+myn]
+				col[0:myn]=mm3[i*myn : i*myn+myn]
 			end
 			for j=0;j<myn;j++
 				sum=0
@@ -152,7 +165,7 @@ unsafe
 				end
 				line[j]=sum
 			end
-			result[i*myn : i*myn+myn]=line[0:myn]
+			mresult[i*myn : i*myn+myn]=line[0:myn]
 		end
 		sync2=0
 		mround++
@@ -162,7 +175,7 @@ end
 
 sub RemoteInitialize()
 
-	mym1=new double[256*256]
-	//mym2=new double[256*256]
+	//mym1=new double[256*256]
+	mym2=new double[256*256]
 	println("init ok,size "+ 256*256)
 end

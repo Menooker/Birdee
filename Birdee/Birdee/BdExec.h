@@ -90,7 +90,7 @@ void ExExp(DVM_Value *args);
 void ExCSVReaderInit(DVM_Value *args);
 void ExCSVReaderReadLine(DVM_Value *args);
 void ExCSVReaderClose(DVM_Value *args);
-
+void ExCSVReaderReset(DVM_Value *args);
 
 #ifdef __cplusplus
 }

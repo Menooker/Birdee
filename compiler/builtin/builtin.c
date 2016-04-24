@@ -23,6 +23,7 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"	dim fd as int\n",
 	"	public declare constructor initialize(path as string)\n",
 	"	public declare function ReadLine(arr as double[],idx as int) as int\n",
+	"	public declare sub Reset()\n",
 	"	public declare sub Close()\n",
 	"end\n",
 /*	"shared public class RemoteThread\n",
