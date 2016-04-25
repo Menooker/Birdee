@@ -804,6 +804,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#ReadLine", ExCSVReaderReadLine, 2,DVM_TRUE);
 	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#Reset", ExCSVReaderReset, 0,DVM_TRUE);
 	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#Close", ExCSVReaderClose, 0,DVM_TRUE);
+	DVM_add_native_function(dvm, "diksam.lang", "CSVReader#Skip", ExCSVReaderSkip, 1,DVM_TRUE);
 
 	DVM_add_native_function(dvm, "Remote", "ConnectNode", RcConnectNode, 5,DVM_FALSE);
 	DVM_add_native_function(dvm, "Remote", "RemoteNode#CreateThread", RcCreateThread, 2,DVM_TRUE);

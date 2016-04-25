@@ -388,6 +388,26 @@ void ExCSVReaderReadLine(DVM_Value *args)
 	curthread->retvar.int_value=cnt;
 }
 
+
+void ExCSVReaderSkip(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[1].object;
+	int lines=args[0].int_value;
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	if(f==NULL)
+	{
+		curthread->retvar.int_value=-1;
+		return;
+	}
+	char buf[2048];
+	buf[0]=0;
+	for(int i=0;i<lines;i++)
+	{
+		fgets(buf,2048,f);
+	}
+	
+}
+
 void ExCSVReaderClose(DVM_Value *args)
 {
 	DVM_ObjectRef ths=args[0].object;
