@@ -437,11 +437,13 @@ BINT CpDumpExecutable(DVM_Executable* exe,FILE* f)
 		CpDumpEnum(&exe->enum_definition[i],&buf);
 	}
 
-	CpDumpVar(exe->constant_pool_count,&buf);
+	int dummy=0;
+	CpDumpVar(dummy,&buf); //not dump contant yet
+	/*CpDumpVar(exe->constant_pool_count,&buf);
 	for(i=0;i<exe->constant_count;i++)
 	{
 		CpDumpConstant(&exe->constant_definition[i],&buf);
-	}
+	}*/
 
 	CpDumpCodeBlock(&exe->top_level,&buf);
 	CpDumpCodeBlock(&exe->constant_initializer,&buf);

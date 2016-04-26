@@ -146,7 +146,6 @@ reserve_constant_index(DKC_Compiler *compiler, ConstantDefinition *src,
         dest = &compiler->dvm_constant[compiler->dvm_constant_count];
         dest_idx = compiler->dvm_constant_count;
         compiler->dvm_constant_count++;
-
         dest->package_name = src_package_name;
         dest->name = MEM_strdup(src->name);
         dest->is_defined = is_defined;
@@ -3828,6 +3827,8 @@ fix_constant_list(DKC_Compiler *compiler)
             cd_pos->initializer = create_assign_cast(cd_pos->initializer,
                                                      cd_pos->type);
         }
+		
+		compiler->dvm_constant[constant_count].type=dkc_copy_type_specifier(cd_pos->type);
         cd_pos->index = constant_count;
         constant_count++;
     }

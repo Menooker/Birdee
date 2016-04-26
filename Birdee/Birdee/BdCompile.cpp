@@ -1523,6 +1523,16 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
 		//DBG_panic(("FUNCTION_IDENTIFIER not implemented.."));
         break;
     case CONSTANT_IDENTIFIER:
+		ConstantDefinition* def;
+		def=expr->u.identifier.u.constant.constant_definition;
+		if(def->initializer->kind==INT_EXPRESSION)
+		{
+			return ConstInt(32,def->initializer->u.int_value);
+		}
+		else if(def->initializer->kind==DOUBLE_EXPRESSION)
+		{
+			return ConstantFP::get(context,APFloat(def->initializer->u.double_value));
+		}
 /*        generate_code(ob, expr->line_number,
                       DVM_PUSH_CONSTANT_INT
                       + get_opcode_type_offset(expr->u.identifier.u.constant

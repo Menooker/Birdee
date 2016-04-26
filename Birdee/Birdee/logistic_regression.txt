@@ -1,17 +1,21 @@
 require Remote
 require math
 
-dim round as int = 5
+dim round as int = 10
 dim verify_round as int = 1
 dim sample_num as int= 20000
 
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
-dim hosts as string[]={"127.0.0.1","127.0.0.1","127.0.0.1","127.0.0.1"}
-dim ports as int[]={13060,13070,13080,13090}
+dim hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
+dim ports as int[]={13070,13070,13070,13070}
+dim mem_hosts as string[]={"10.0.3.16","10.0.3.20","10.0.3.21","10.0.3.22"}
+dim mem_ports as int[]={11211,11211,11211,11211}
+/*dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13070,13080}
 dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}
+dim mem_ports as int[]={11211}*/
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 println("working")
@@ -32,6 +36,7 @@ end
 
 dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
 dim barrier_internal as shared RBarrier=new RBarrier(thread_num)
+dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
 dim global_verify_miss_count as shared AtomicCounter=new AtomicCounter(0)
 dim verify_miss_count as AtomicCounter=global_verify_miss_count
 
@@ -40,17 +45,19 @@ dim n2 as int=feature_len * thread_num * sample_num
 dim global_gradient as shared double[] global = new double[feature_len * node_num] global
 dim data_set as shared double[] global =new double[n2] global
 
-dim mlocal as double[]=new double[feature_len*1000]
-dim file as CSVReader=new CSVReader("/home/menooker/data.csv")
 
 
-sub put_matrix()
-	dim tm as int=GetClock()
+
+function putproc(id as var) as int
+	dim mlocal as double[]=new double[feature_len*1000]
+	dim file as CSVReader=new CSVReader("/home/menooker/data.csv")
 	dim fl as int=feature_len
 	dim ds as double[] global=data_set
 	dim i as int
 	dim j as int
-	for i=0;i<sample_num;i+=1000
+	dim chunk_size as int=sample_num/node_num
+	file.Skip(chunk_size*id)
+	for i=chunk_size*id;i<chunk_size*(id+1);i+=1000
 		for j=0;j<1000;j++
 			if(file.ReadLine(mlocal,j*fl)<0) then
 				file.Reset()
@@ -59,6 +66,17 @@ sub put_matrix()
 		end
 		ds[i*fl: (i+1000)*fl]=mlocal[0:fl*1000]
 	end
+	file.Close()
+	barrier_put.Enter(-1)
+end
+
+sub put_matrix()
+	dim tm as int=GetClock()
+	dim i as int
+	for i=0;i<node_num;i++
+		nodes[i].CreateThread(putproc,i)
+	end
+	barrier_put.Enter(-1)
 	println("Put time"+(GetClock()-tm))
 end
 
@@ -95,7 +113,7 @@ end
 
 println(verify_miss_count.Get()*1.0/1000/thread_num)
 println("total time: "+ (GetClock()-time_total))
-file.Close()
+//file.Close()
 gets()
 
 
