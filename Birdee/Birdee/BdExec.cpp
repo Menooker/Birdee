@@ -358,25 +358,39 @@ void ExCSVReaderReadLine(DVM_Value *args)
 		return;
 	}
 	char buf[2048];
-	buf[0]=0;
-	fgets(buf,2048,f);
-	char* last=buf,*p=buf;
 	int cnt=0;
-	while(*p && p<buf+2048)
+	buf[0]=0;
+	char* st;
+	_uint lagacy=0;
+	char* last;
+	for(;;)
 	{
-		if(*p==',')
+		st=buf+lagacy;
+		fgets(st,2048-lagacy,f);
+		char *p=st;
+		last=buf;
+		while(*p)
 		{
-			*p=0;
-			if(idx+cnt>len)
+			if(*p==',')
 			{
-				curthread->retvar.int_value=-1;
-				return;
+				*p=0;
+				if(idx+cnt>len)
+				{
+					curthread->retvar.int_value=-1;
+					return;
+				}
+				parr[idx+cnt]=atof(last);
+				cnt++;
+				last=p+1;
 			}
-			parr[idx+cnt]=atof(last);
-			cnt++;
-			last=p+1;
+			p++;
 		}
-		p++;
+		if(p<=buf || *(p-1)=='\n' || feof(f))
+		{
+			break;
+		}
+		lagacy=2047-(last-buf);
+		memmove(buf,last,lagacy);
 	}
 	if(idx+cnt>len)
 	{
@@ -403,7 +417,13 @@ void ExCSVReaderSkip(DVM_Value *args)
 	buf[0]=0;
 	for(int i=0;i<lines;i++)
 	{
-		fgets(buf,2048,f);
+		for(;;)
+		{
+			buf[2046]=0;
+			fgets(buf,2048,f);
+			if(feof(f) || buf[2046]==0 || buf[2046]=='\n')
+				break;
+		}
 	}
 	
 }
