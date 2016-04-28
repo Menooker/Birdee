@@ -402,7 +402,7 @@ get_require_input(RequireList *req, char *found_path,
     }
     MEM_free(package_name);
 
-    search_path = getenv("DKM_REQUIRE_SEARCH_PATH");
+    search_path = getenv("DKH_LOAD_SEARCH_PATH");
     if (search_path == NULL) {
         search_path = ".";
     }
