@@ -799,7 +799,7 @@ get_dynamic_load_input(char *package_name, char *found_path,
         return SEARCH_FILE_SUCCESS;
     }
 
-    search_path = getenv("DKM_LOAD_SEARCH_PATH");
+    search_path = getenv("DKH_LOAD_SEARCH_PATH");
     if (search_path == NULL) {
         search_path = ".";
     }

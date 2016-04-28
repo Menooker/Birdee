@@ -24,11 +24,11 @@
 					<Add option="-DBD_MULTITHREAD" />
 					<Add option="-DWINVER=0x0601" />
 					<Add option="-D_WIN32_WINNT=0x0601" />
-					<Add directory="../../../include" />
-					<Add directory="../../../include3" />
+					<Add directory="../../../../include" />
+					<Add directory="../../../../include3" />
 					<Add directory="$(IncludePath)" />
 					<Add directory="C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Include" />
-					<Add directory="../../../" />
+					<Add directory="../../../../" />
 					<Add directory="." />
 					<Add directory="../../dvm" />
 					<Add directory="../../share" />
@@ -38,9 +38,9 @@
 					<Add directory="../../memory" />
 				</Compiler>
 				<Linker>
-					<Add library="..\..\..\libLLVMLite.a" />
+					<Add library="..\..\..\..\libLLVMLite.a" />
 					<Add library="C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\DbgHelp.Lib" />
-					<Add library="..\..\..\libmemcached.a" />
+					<Add library="..\..\..\..\libmemcached.a" />
 					<Add library="C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib\WS2_32.lib" />
 				</Linker>
 			</Target>

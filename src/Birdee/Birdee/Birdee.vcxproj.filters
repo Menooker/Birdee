@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="资源文件\Tests">
+      <UniqueIdentifier>{2cadd590-42e6-4656-9438-c500181173fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\Examples">
+      <UniqueIdentifier>{b8f6bf77-c4ce-4775-800e-88beaa343954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\Libraries">
+      <UniqueIdentifier>{8b71ede4-7c4f-4186-880d-e3e5a5a14e82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -31,79 +40,73 @@
     <None Include="ab.dkh">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="backup.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="vartest.dkm">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="test_delegate.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="8Queens.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="ArrayCacheTest.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="Bubbles.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="ArrayCacheTest_Reg.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="req2.dkh">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="ab.dkm">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="template_test.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="list.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="thread.txt">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="Exceptions2.dkh">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="Exceptions.dkh">
       <Filter>资源文件</Filter>
     </None>
     <None Include="ToDoList.txt" />
     <None Include="..\..\README.md" />
-    <None Include="Remote.dkh">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\ArrayCacheTest.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="..\..\Lib\Remote.dkm">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\ArrayCacheTest_Reg.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="SharedObjTests.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\barriertest.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="SharedArrayTest.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\DGC.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="barriertest.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\SharedArrayTest.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="pi.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\SharedObjTests.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="mergesort.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\template_test.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="DGC.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\test_delegate.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="matmul.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\thread.txt">
+      <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="logistic_regression.txt">
-      <Filter>资源文件</Filter>
+    <None Include="..\..\..\test\vartest.dkm">
+      <Filter>资源文件\Tests</Filter>
+    </None>
+    <None Include="..\..\..\example\8Queens.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\Bubbles.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\list.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\logistic_regression.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\matmul.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\mergesort.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\pi.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\lib\Exceptions.dkm">
+      <Filter>资源文件\Libraries</Filter>
+    </None>
+    <None Include="..\..\..\lib\Remote.dkm">
+      <Filter>资源文件\Libraries</Filter>
+    </None>
+    <None Include="..\..\..\lib\Exceptions.dkh">
+      <Filter>资源文件\Libraries</Filter>
+    </None>
+    <None Include="..\..\..\lib\Remote.dkh">
+      <Filter>资源文件\Libraries</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

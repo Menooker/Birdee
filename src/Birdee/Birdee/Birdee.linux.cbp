@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
@@ -22,9 +22,9 @@
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_LINUX" />
 					<Add option="-DBD_MULTITHREAD" />
-					<Add directory="../../../include" />
-					<Add directory="../../../include3" />
-					<Add directory="../../../" />
+					<Add directory="../../../../include" />
+					<Add directory="../../../../include3" />
+					<Add directory="../../../../" />
 					<Add directory="." />
 					<Add directory="../../compiler" />
 					<Add directory="../../debug" />
@@ -35,7 +35,7 @@
 					<Add directory="../../shared" />
 				</Compiler>
 				<Linker>
-					<Add library="../../../libLLVMLite.a" />
+					<Add library="../../../../libLLVMLite.a" />
 					<Add library="pthread" />
 					<Add library="memcached" />
 					<Add library="dl" />
@@ -56,9 +56,9 @@
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_LINUX" />
 					<Add option="-DBD_MULTITHREAD" />
-					<Add directory="../../../include" />
-					<Add directory="../../../include3" />
-					<Add directory="../../../" />
+					<Add directory="../../../../include" />
+					<Add directory="../../../../include3" />
+					<Add directory="../../../../" />
 					<Add directory="." />
 					<Add directory="../../compiler" />
 					<Add directory="../../debug" />
@@ -70,7 +70,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="../../../libLLVMLite.a" />
+					<Add library="../../../../libLLVMLite.a" />
 					<Add library="pthread" />
 					<Add library="memcached" />
 					<Add library="dl" />
