@@ -1,13 +1,21 @@
 # How to compile
 Birdee can be compiled by two different IDEs, while both ways differ slightly.
 
+##Requirements and Dependencies
+ * [LLVM (version 3.4.2)](http://llvm.org/releases/)
+ * Visual Studio 2010 or later (recommended for browsering this project on Windows)
+ * Code::Blocks (recommended for building this project on Windows and Linux)
+ * libmemcached
+ * memcached (if you are doing distributed computation. Otherwise, not needed)
+ 
 ##First thing first
+If you are using Windows,
  * The distributed memory system of Birdee is based on libmemcached. You should first build the libmemcached library. In windows, a ready-to-compile Visual Studio libmemcached project file is available (FIX-ME : add URL). After compiling the project, you can have the files "libmemcached.lib","libmemcached.dll" and "libmemcached.def".
  * Collect all the header files of libmemcached. Create a folder called libmemcached at the parent folder of the root folder of Birdee project. Copy all ".h" files to the newly created folder. Create a folder called "memcached" in folder "libmemcached", put "protocol_binary.h" into it.
  * Link/Copy the file "inttypes.h" (which you can find in the libmemcached VS project) into the parent folder of the root folder of Birdee project.
  * Link/Copy the files "libmemcached.lib","libmemcached.dll" and "libmemcached.def" at the folder above.
  * (If you are going to compile Birdee with mingw/Codeblocks) You can find "dlltool" at "mingw/bin". Use the tool by the command "dlltool --dllname libmemcached.dll --def libmemcached.def --output-lib libmemcached.a" at the folder above to create gcc style static lib.
-
+ 
 ## Build Birdee with Visual Studio
 You should first fetch and compile LLVM (version 3.4.2). Here is a tutorial for compiling a static LLVM library which is needed by Birdee. 
 [a tutorial for compiling LLVM into a  static lib(Chinese)](http://blog.csdn.net/myjisgreat/article/details/46486723)
@@ -96,7 +104,7 @@ After the static library is obtained, a few more steps should be done to compile
  * Link/Copy the directory "c:\llvm_cb\include" in the project directory to the same diectory above, re-naming as 'include3'.
  * Link/Copy the static library "libLLVMLite.a" to the to the same diectory above.
 
-Then open "\Birdee\Birdee\Birdee.cbp", and everything should be okay to build Birdee!
+Then open "\Birdee\Birdee\Birdee.cbp" if you are using Windows (or "\Birdee\Birdee\Birdee.linux.cbp" if you are using Linux), and everything should be okay to build Birdee!
 
 ##Install Birdee into your system
 If you are using Birdee on Linux,
