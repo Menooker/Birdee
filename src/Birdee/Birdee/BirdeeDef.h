@@ -2,9 +2,9 @@
 #ifndef _H_BIRDEE_DEF
 #define _H_BIRDEE_DEF
 typedef void (*BdVMFunction)(void *args, ...);
+typedef int int32;
+typedef unsigned int uint32;
 #ifdef BD_ON_X86
-	typedef int int32;
-	typedef unsigned int uint32;
 	#ifdef BD_ON_VC
 		typedef int BINT ;
 		typedef unsigned long BdIntPtr; // vc + x86
@@ -25,7 +25,13 @@ typedef void (*BdVMFunction)(void *args, ...);
 		typedef unsigned long long _uint64;
 		typedef unsigned long BdIntPtr; // gcc + x86
 	#endif
-
+#else
+	#ifdef BD_ON_VC
+		typedef int BINT ;
+		typedef unsigned long long BdIntPtr; // vc + x64
+		typedef unsigned long _uint; // vc + x64
+		typedef unsigned long long _uint64; // vc + x64
+	#endif
 #endif
 #ifdef BD_ON_VC // for MSVC
 	#define forceinline __forceinline
@@ -92,8 +98,19 @@ BdNFunInvoke,
 BdNFunGetFunction,
 };
 
+typedef void(__stdcall *ptDbgBreakPoint)(void);
 #ifdef BD_ON_VC
-#define _BreakPoint __asm int 3
+	
+	#ifdef BD_ON_X86
+		#define _BreakPoint __asm int 3
+	#else
+		//#include <Windows.h>
+		#ifdef __cplusplus
+			extern "C"
+		#endif 
+		ptDbgBreakPoint DbgBreakPoint;
+		#define _BreakPoint DbgBreakPoint();
+	#endif
 #else
 #define _BreakPoint __asm__("int $3");
 #endif

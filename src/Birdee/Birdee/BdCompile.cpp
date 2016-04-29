@@ -1192,7 +1192,7 @@ extern "C" void BcInitLLVMCompiler()
 #ifdef BD_ON_X86
 	std::vector<Type*> types(2,Type::getInt32Ty(context));//TypInt);
 #else
-	_BreakPoint;
+	std::vector<Type*> types(2,Type::getInt64Ty(context));
 #endif
 	ArrayRef<Type*> typesRef(types);
 	TyObjectRef = StructType::create(context,typesRef,"Stack");

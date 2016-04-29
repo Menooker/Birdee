@@ -54,7 +54,7 @@ void  UaStackTrace(UaTraceCallBack cb,void* param)
 #endif
 #endif
 
-#if (defined(BD_ON_GCC) & defined(BD_ON_X86))
+#if (defined(BD_ON_GCC) || defined(BD_ON_X64))
 void  UaStackTrace(UaTraceCallBack cb,void* param){};
 #endif
 
@@ -148,7 +148,6 @@ void  UaStackTrace(UaTraceCallBack cb,void* param){};
 	}
 
 #if (defined(BD_ON_GCC) & defined(BD_ON_X86))
-	typedef void(__stdcall *ptDbgBreakPoint)(void);
 	ptDbgBreakPoint _DbgBreakPoint = (ptDbgBreakPoint)GetProcAddress(GetModuleHandleW(L"NTDLL.DLL"), "DbgBreakPoint");
 #endif //BD_ON_VC | BD_ON_X86
 	void UaBreakPoint()

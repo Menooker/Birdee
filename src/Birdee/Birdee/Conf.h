@@ -15,7 +15,6 @@
 
 #endif
 
-#define BD_ON_X86
 //#define BD_ON_VC
 #define BD_USE_STL_HASH_MAP
 

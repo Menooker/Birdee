@@ -1,3 +1,23 @@
+require math
+dim p as double=exp(1)
+println(p)
+println(funca(3))
+println(funca(4))
+//BreakPoint()
+CreateThread(threadproc,true,4)
+CreateThread(threadproc,true,3)
+
+function threadproc(a as var) as int
+	println("RET "+ funca(a) + "\n")
+end
+
+function funca(a as int) as int
+	if a>0 then
+		return funca(a-1)+1
+	end
+	return 0
+end
+/*
 require Remote
 require math
 
@@ -248,3 +268,4 @@ sub RemoteInitialize()
 	gradient=new double[ths][myfeature_len]
 	myparam=new double[myfeature_len]
 end
+*/

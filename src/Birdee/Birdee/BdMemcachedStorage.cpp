@@ -220,8 +220,13 @@ SoVar SoStorageMemcached::get(_uint key,_uint fldid)
 	SoVar ret;
 	_uint64 k=MAKE64(key,fldid);
 	char* mret;
+
 	size_t len;
+#ifdef BD_ON_X64
+	uint32_t flg;
+#else
 	size_t flg;
+#endif
 	memcached_return rc;
 //	char ch[17];
 //	sprintf(ch,"%016llx",k);
@@ -245,7 +250,11 @@ SoVar SoStorageMemcached::get(_uint key,_uint fldid)
 bool SoStorageMemcached::exists(_uint key)//fix-me : improve
 {
 	size_t outlen;
+#ifdef BD_ON_X64
+	uint32_t flg;
+#else
 	size_t flg;
+#endif
 	memcached_return rc;
 	//char ch[17];
 	//sprintf(ch,"%016llx",MAKE64(key,0));
@@ -265,7 +274,11 @@ SoStatus SoStorageMemcached::getinfo(_uint key,SoType& tag,int& fld_cnt,int& fla
 	_uint64 k=MAKE64(key,0xFFFFFFFE);
 	char* mret;
 	size_t len;
+#ifdef BD_ON_X64
+	uint32_t flg;
+#else
 	size_t flg;
+#endif
 	memcached_return rc;
 //	char ch[17];
 //	sprintf(ch,"%016llx",k);
