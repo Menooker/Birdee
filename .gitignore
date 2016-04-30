@@ -13,4 +13,4 @@ compiler/y.output
 Birdee/Birdee/out.txt
 *.vsp
 Lib/Exceptions.bdl
-src/Birdee/Birdee/out.txt
+*/out.txt

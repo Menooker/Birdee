@@ -1189,11 +1189,7 @@ extern "C" void BcInitLLVMCompiler()
     ///////////
 	//Create the ObjectRef type (used in stack)
 	TypInt=Type::getInt32Ty(context)->getPointerTo();
-#ifdef BD_ON_X86
-	std::vector<Type*> types(2,Type::getInt32Ty(context));//TypInt);
-#else
-	std::vector<Type*> types(2,Type::getInt64Ty(context));
-#endif
+	std::vector<Type*> types(2,Type::getInt32PtrTy(context));
 	ArrayRef<Type*> typesRef(types);
 	TyObjectRef = StructType::create(context,typesRef,"Stack");
 
