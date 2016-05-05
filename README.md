@@ -3,6 +3,9 @@ Birdee is a new programming language based on LLVM, aiming to support cross-plat
 To build or browse Birdee's source code, Visual Studio or Code::Blocks are recommended (both of them can be obtained for free by the official).
 "/Birdee/Birdee.sln" is the Visual Studio solution file. And "/Birdee/Birdee/Birdee.cbp" and "/Birdee/Birdee/Birdee_linux.cbp" are the Code::Blocks project files. Both kinds of project files can generate Birdee's executable file, but some features (such as multithreading) are only available when Birdee is compiled by MinGW (or GCC on Linux).
 
+## Pre-built binary
+See [Wiki](https://github.com/Menooker/Birdee/wiki)
+
 ## How to build
 See How_to_build_me.md
 
