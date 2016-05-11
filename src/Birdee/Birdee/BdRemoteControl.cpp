@@ -809,6 +809,7 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 			SyncThreadNode& th=node->waitlist[i];
 			RcWakeRemoteThread(th.machine,th.thread_id);
 		}
+		node->waitlist.clear();
 	}
 	else
 	{
