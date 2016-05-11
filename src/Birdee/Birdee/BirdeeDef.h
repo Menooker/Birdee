@@ -98,16 +98,19 @@ BdNFunInvoke,
 BdNFunGetFunction,
 };
 
+#ifdef BD_ON_WINDOWS
 typedef void(__stdcall *ptDbgBreakPoint)(void);
+#endif
+
 #ifdef BD_ON_VC
-	
+
 	#ifdef BD_ON_X86
 		#define _BreakPoint __asm int 3
 	#else
 		//#include <Windows.h>
 		#ifdef __cplusplus
 			extern "C"
-		#endif 
+		#endif
 		ptDbgBreakPoint DbgBreakPoint;
 		#define _BreakPoint DbgBreakPoint();
 	#endif
