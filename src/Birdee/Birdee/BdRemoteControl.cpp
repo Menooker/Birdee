@@ -88,6 +88,7 @@ int global_gc=0;
 std::vector<SOCKET> slavenodes;
 THREAD_ID MasterListenThread=0;
 BD_EVENT master_mark_done;
+BD_LOCK master_bar_lock;
 //-------------------------
 
 //Variables for Slave node
@@ -224,6 +225,7 @@ void RcConnectNode(DVM_Value *args)
 	{
 		UaInitEvent(&gc_event,0);
 		UaInitEvent(&master_mark_done,0);
+		UaInitLock(&master_bar_lock);
 		MasterListenThread=UaCreateThreadEx(RcMasterListen,NULL); //fix-me : Remember to close the thread
 	}
 
@@ -783,6 +785,7 @@ param: src - the source of the message (index of
 */
 void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 {
+	UaEnterLock(&master_bar_lock);
 	sync_itr itr=sync_data.find(b_id);
 	SyncNode* node;
 	if(itr==sync_data.end())
@@ -812,6 +815,7 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 		SyncThreadNode th={src,thread_id};
 		node->waitlist.push_back(th);
 	}
+	UaLeaveLock(&master_bar_lock);
 }
 
 extern "C" void* init_memcached_this_thread();

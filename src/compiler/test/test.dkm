@@ -1,29 +1,9 @@
-require math
-dim p as double=exp(1)
-println(p)
-println(funca(3))
-println(funca(4))
-//BreakPoint()
-CreateThread(threadproc,true,4)
-CreateThread(threadproc,true,3)
-
-function threadproc(a as var) as int
-	println("RET "+ funca(a) + "\n")
-end
-
-function funca(a as int) as int
-	if a>0 then
-		return funca(a-1)+1
-	end
-	return 0
-end
-/*
 require Remote
 require math
 
-dim round as int = 5
-dim verify_round as int = 1
-
+const round = 100
+const verify_round = 1
+const threads_per_node =2
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
@@ -34,11 +14,9 @@ dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 println("working")
-dim threads_per_node as shared int=4
+
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads_per_node*node_num
-dim global_round as shared int= round
-dim global_verify_round as int = verify_round
 
 dim features as shared int=100
 dim step_size as shared double =0.05
@@ -50,7 +28,7 @@ else
 end
 
 dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
-dim barrier_internal as shared RBarrier=new RBarrier(thread_num)
+dim barrier_internal as shared RBarrier=new RBarrier(node_num)
 dim global_verify_miss_count as shared AtomicCounter=new AtomicCounter(0)
 dim verify_miss_count as AtomicCounter=global_verify_miss_count
 
@@ -61,10 +39,11 @@ dim data_set1 as shared double[] global =new double[n2] global
 dim data_set2 as shared double[] global =new double[n2] global
 
 dim mlocal as double[]=new double[feature_len*1000]
-dim file as CSVReader=new CSVReader("C:\\Users\\Menooker\\Downloads")
+dim file as CSVReader=new CSVReader("d:\\lr\\data.csv")
 
 
 sub put_matrix()
+unsafe
 	dim fl as int=feature_len
 	dim ds as double[] global
 	if cur_round % 2==0 then
@@ -103,7 +82,7 @@ for cur_round=0;cur_round<round;cur_round++
 	barrier_main.Enter(-1)
 	dim t as int
 	t=GetClock()-time
-	println("time1 "+ t)
+	println("time1 "+ t + " " +cur_round)
 	time=GetClock()
 end
 
@@ -130,6 +109,12 @@ dim myfeature_len as int
 dim ths as int
 dim mystep_size as double
 dim mythreads as int
+dim myglobal_gradient as double[] global
+dim ds1 as double[] global
+dim ds2 as double[] global
+dim global_param as double[] global
+dim mybarrier_internal as RBarrier
+dim mybarrier_main as RBarrier
 
 sub zero_gradient(idx as int)
 	dim i as int
@@ -147,7 +132,6 @@ unsafe
 	dim st as int=tid % ths
 	dim mround as int
 	dim node_id as int=tid/ths
-	dim gr as int =global_round
 	dim mydata_set as double[] =new double[myfeature_len * 1000]
 	mydata_set[0]=0
 	gradient[0][0]=0
@@ -156,7 +140,7 @@ unsafe
 	for mround=0;mround<round;mround++
 		//phase 1: copy the parameter vector
 		//println("K1 "+mround+" "+st)
-		myparam[myfeature_len*st/ths : myfeature_len*(st+1)/ths]=param[myfeature_len*st/ths : myfeature_len*(st+1)/ths]
+		myparam[myfeature_len*st/ths : myfeature_len*(st+1)/ths]=global_param[myfeature_len*st/ths : myfeature_len*(st+1)/ths]
 		sync2@+=1
 		for ;;
 			if sync2 % ths==0 then
@@ -166,9 +150,9 @@ unsafe
 		//phase 2: copy the data set
 		//println("K2 "+mround+" "+st)
 		if mround % 2==0 then
-			mydata_set[0:myfeature_len * 1000]=data_set1[tid*1000*myfeature_len : (tid+1)*1000*myfeature_len]
+			mydata_set[0:myfeature_len * 1000]=ds1[tid*1000*myfeature_len : (tid+1)*1000*myfeature_len]
 		else
-			mydata_set[0:myfeature_len * 1000]=data_set2[tid*1000*myfeature_len : (tid+1)*1000*myfeature_len]
+			mydata_set[0:myfeature_len * 1000]=ds2[tid*1000*myfeature_len : (tid+1)*1000*myfeature_len]
 		end
 
 		zero_gradient(st)
@@ -198,27 +182,29 @@ unsafe
 					gradient[0][j]+=gradient[i][j]
 				end
 			end
-			global_gradient[node_id * myfeature_len : (node_id+1) * myfeature_len]=gradient[0][0:myfeature_len]
+			myglobal_gradient[node_id * myfeature_len : (node_id+1) * myfeature_len]=gradient[0][0:myfeature_len]
+            mybarrier_internal.Enter(-1)
 		end
-		
-		barrier_internal.Enter(-1)	
+
+
 		//phase 5: (only on thread 0), sum over the global gradient, calculate the new parameter vector
 		//println("K5 "+mround+" "+st)
 		if tid==0 then
-			mydata_set[0: myfeature_len * mythreads/ths]=global_gradient[0: myfeature_len * mythreads/ths]
+			mydata_set[0: myfeature_len * mythreads/ths]=myglobal_gradient[0: myfeature_len * mythreads/ths]
 			for i=0;i<mythreads/ths;i++
 				for j=0;j<myfeatures;j++
 					myparam[j]+=mydata_set[i*myfeature_len + j]
 				end
 			end
-			param[0: myfeature_len]=myparam[0: myfeature_len]
+			global_param[0: myfeature_len]=myparam[0: myfeature_len]
 		end
-		barrier_main.Enter(-1)
-		
+		//println("K6 "+mround+" "+st)
+		mybarrier_main.Enter(-1)
+
 	end
 
 
-	myparam[feature_len*st/ths : feature_len*(st+1)/ths]=param[feature_len*st/ths : feature_len*(st+1)/ths]
+	myparam[feature_len*st/ths : feature_len*(st+1)/ths]=global_param[feature_len*st/ths : feature_len*(st+1)/ths]
 	sync2@+=1
 	for ;;
 		if sync2 % ths==0 then
@@ -252,20 +238,23 @@ unsafe
 			end
 			base+=myfeature_len
 		end
-		barrier_main.Enter(-1)
+		mybarrier_main.Enter(-1)
 	end
 end
 
 sub RemoteInitialize()
 	verify_miss_count=global_verify_miss_count
-	verify_round = 1
 	myfeatures = features
 	myfeature_len = feature_len
 	ths =threads_per_node
 	mystep_size=step_size
 	mythreads=thread_num
-	round=global_round
 	gradient=new double[ths][myfeature_len]
 	myparam=new double[myfeature_len]
+	myglobal_gradient=global_gradient
+	mybarrier_internal=barrier_internal
+	mybarrier_main=barrier_main
+	global_param=param
+	ds1=data_set1
+	ds2=data_set2
 end
-*/

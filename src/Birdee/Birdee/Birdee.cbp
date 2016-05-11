@@ -21,6 +21,7 @@
 					<Add option="-D__STDC_CONSTANT_MACROS" />
 					<Add option="-DBD_ON_GCC" />
 					<Add option="-DBD_ON_WINDOWS" />
+					<Add option="-DBD_ON_X86" />
 					<Add option="-DBD_MULTITHREAD" />
 					<Add option="-DWINVER=0x0601" />
 					<Add option="-D_WIN32_WINNT=0x0601" />
