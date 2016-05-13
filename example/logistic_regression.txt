@@ -1,9 +1,12 @@
 require Remote
 require math
 
-dim round as int = 10
-dim verify_round as int = 1
-dim sample_num as int= 20000
+const round  = 10
+const verify_round = 1
+const sample_num = 20000
+const threads_per_node =2
+const features =100
+const step_size =0.05
 
 dim cur_round as int
 dim time_total as int=GetClock()
@@ -19,14 +22,10 @@ dim mem_ports as int[]={11211}*/
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 println("working")
-dim threads_per_node as shared int=2
+
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads_per_node*node_num
-dim global_round as shared int= round
-dim global_verify_round as int = verify_round
 
-dim features as shared int=100
-dim step_size as shared double =0.05
 dim feature_len as shared int
 if (features+1) % 32 == 0 then
 	feature_len = (features+1) / 32 * 32
@@ -132,6 +131,10 @@ dim myfeature_len as int
 dim ths as int
 dim mystep_size as double
 dim mythreads as int
+dim gparam as double[] global
+dim gdata_set as double[] global
+dim b_main as RBarrier
+dim b_int as RBarrier
 
 sub zero_gradient(idx as int)
 	dim i as int
@@ -149,9 +152,8 @@ unsafe
 	dim st as int=tid % ths
 	dim mround as int
 	dim node_id as int=tid/ths
-	dim gr as int =global_round
 	dim mydata_set as double[] =new double[myfeature_len * 1000]
-	mydata_set[0]=0
+	mydata_set[0]=feature_len
 	gradient[0][0]=0
 	dim dot as double
 	dim h as double
@@ -159,7 +161,7 @@ unsafe
 	for mround=0;mround<round;mround++
 		//phase 1: copy the parameter vector
 		//println("K1 "+mround+" "+st)
-		myparam[myfeature_len*st/ths : myfeature_len*(st+1)/ths]=param[myfeature_len*st/ths : myfeature_len*(st+1)/ths]
+		myparam[myfeature_len*st/ths : myfeature_len*(st+1)/ths]=gparam[myfeature_len*st/ths : myfeature_len*(st+1)/ths]
 		sync2@+=1
 		for ;;
 			if sync2 % ths==0 then
@@ -169,7 +171,7 @@ unsafe
 		//phase 2: copy the data set
 		//println("K2 "+mround+" "+st)
 		ran=myrand()
-		mydata_set[0:myfeature_len * 1000]=data_set[ran*myfeature_len : (ran+1000)*myfeature_len]
+		mydata_set[0:myfeature_len * 1000]=gdata_set[ran*myfeature_len : (ran+1000)*myfeature_len]
 		
 
 		zero_gradient(st)
@@ -202,7 +204,7 @@ unsafe
 			global_gradient[node_id * myfeature_len : (node_id+1) * myfeature_len]=gradient[0][0:myfeature_len]
 		end
 		
-		barrier_internal.Enter(-1)	
+		b_int.Enter(-1)	
 		//phase 5: (only on thread 0), sum over the global gradient, calculate the new parameter vector
 		//println("K5 "+mround+" "+st)
 		if tid==0 then
@@ -212,14 +214,14 @@ unsafe
 					myparam[j]+=mydata_set[i*myfeature_len + j]
 				end
 			end
-			param[0: myfeature_len]=myparam[0: myfeature_len]
+			gparam[0: myfeature_len]=myparam[0: myfeature_len]
 		end
-		barrier_main.Enter(-1)
+		b_main.Enter(-1)
 		
 	end
 
 
-	myparam[feature_len*st/ths : feature_len*(st+1)/ths]=param[feature_len*st/ths : feature_len*(st+1)/ths]
+	myparam[feature_len*st/ths : feature_len*(st+1)/ths]=gparam[feature_len*st/ths : feature_len*(st+1)/ths]
 	sync2@+=1
 	for ;;
 		if sync2 % ths==0 then
@@ -228,11 +230,10 @@ unsafe
 	end
 
 	//now verify the parameter vector
-	dim total_round as int=verify_round+round
-	for ;mround<total_round;mround++
+	for mround=0;mround<verify_round;mround++
 		//phase 1: copy the data set
 		ran=myrand()
-		mydata_set[0:myfeature_len * 1000]=data_set[ran*myfeature_len : (ran+1000)*myfeature_len]
+		mydata_set[0:myfeature_len * 1000]=gdata_set[ran*myfeature_len : (ran+1000)*myfeature_len]
 
 		//phase 2: calculate the misses on the set of data
 		dim base as int
@@ -250,20 +251,19 @@ unsafe
 			end
 			base+=myfeature_len
 		end
-		barrier_main.Enter(-1)
+		b_main.Enter(-1)
 	end
 end
 
 sub RemoteInitialize()
-	sample_num=20000
 	verify_miss_count=global_verify_miss_count
-	verify_round = 1
-	myfeatures = features
 	myfeature_len = feature_len
 	ths =threads_per_node
-	mystep_size=step_size
 	mythreads=thread_num
-	round=global_round
 	gradient=new double[ths][myfeature_len]
 	myparam=new double[myfeature_len]
+	b_int=barrier_internal
+	b_main=barrier_main
+	gparam=param
+	gdata_set=data_set
 end

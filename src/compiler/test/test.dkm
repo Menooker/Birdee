@@ -1,7 +1,7 @@
 require Remote
 require math
 
-const round = 100
+const round = 10
 const verify_round = 1
 const threads_per_node =2
 dim cur_round as int
