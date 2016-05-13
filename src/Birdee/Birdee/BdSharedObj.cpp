@@ -238,6 +238,7 @@ public:
 	enum BackendType
 	{
 		SoBackendTest,
+		SoBackendChunkMemcached,
 		SoBackendMemcached,
 	};
 	enum CacheType
@@ -263,11 +264,12 @@ public:
 	{
 		switch(type)
 		{
-		case SoNoCache:
+		case SoBackendTest:
 			return new SoStorageLocalTest(arr_mem_hosts, arr_mem_ports);
-			break;
-		case SoBackendMemcached:
+		case SoBackendChunkMemcached:
 			return new SoStorageChunkMemcached(arr_mem_hosts, arr_mem_ports);
+		case SoBackendMemcached:
+			return new SoStorageMemcached(arr_mem_hosts, arr_mem_ports);
 		default:
 			DBG_assert(0,("Var type is wrong %d\n",type));
 		}
@@ -713,7 +715,17 @@ void SoInitStorage(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr
 		cachety=SoStorageFactory::SoNoCache;
 	else
 		cachety=SoStorageFactory::SoWriteThroughCache;
-	pstorage=new SharedStorage(SoStorageFactory::SoBackendMemcached,cachety,arr_mem_hosts,arr_mem_ports,
+	SoStorageFactory::BackendType memty;
+	switch(parameters.mem_backend)
+	{
+	case 0:
+		memty=SoStorageFactory::SoBackendChunkMemcached;
+		break;
+	case 1:
+		memty=SoStorageFactory::SoBackendMemcached;
+		break;
+	}
+	pstorage=new SharedStorage(memty,cachety,arr_mem_hosts,arr_mem_ports,
 		arr_hosts,arr_ports,node_id);
 	if(curdvm->is_master)
 	{

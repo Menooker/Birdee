@@ -11,6 +11,8 @@ struct BdParameters
 	int asm2file;
 	char AsmPath[255];
 	int nocache;
+	int mem_backend;
+	int optmization;
 	//int memport;
 	//char memip[255];
 };

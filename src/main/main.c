@@ -87,6 +87,47 @@ int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
 		{
 			parameters.nocache=1;
 		}
+		else if(!strcmp(argv[cur_arg],"-opt"))
+		{
+			if(cur_arg+1<argc)
+			{
+				parameters.optmization=atoi(argv[cur_arg+1]);
+				if(parameters.optmization<0 || parameters.optmization>3)
+				{
+					printf("opt level should be between 0 and 3\n");
+					return 1;
+				}
+				cur_arg++;
+			}
+			else
+			{
+				printf("No operand found after \'-opt\'\n");
+				return 1;
+			}
+		}
+		else if(!strcmp(argv[cur_arg],"-mem"))
+		{
+			if(cur_arg+1<argc)
+			{
+				if(!strcmp(argv[cur_arg+1],"cmemcached"))
+				{
+					parameters.mem_backend=0;
+				}
+				else if(!strcmp(argv[cur_arg+1],"memcached"))
+				{
+					parameters.mem_backend=1;
+				}
+				else
+				{
+					printf("unknown memory backend %s\n",argv[cur_arg+1]);
+				}
+			}
+			else
+			{
+				printf("No operand found after \'-mem\'\n");
+				return 1;
+			}
+		}
 	}
 	return 0;
 }
@@ -103,6 +144,7 @@ main(int argc, char* argv[])
 
 	parameters.isLib=0;
 	parameters.isSyslib=0;
+	parameters.optmization=2;
 
 	setlocale(LC_CTYPE, "");
 	if(argc<2)

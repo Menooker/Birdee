@@ -1,5 +1,5 @@
 #include "BdMCJIT.h"
-
+#include "BdParameters.h"
 
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/Verifier.h"
@@ -247,11 +247,12 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   TargetMachine* tm=eb.selectTarget();
   tm->setMCUseDwarfDirectory(true);
   tm->setMCUseLoc(true);
-                   tm->Options.NoFramePointerElim=1;
+  tm->Options.NoFramePointerElim=1;
+  tm->setOptLevel((CodeGenOpt::Level)(CodeGenOpt::None+parameters.optmization));
 
-				   //tm->setOptLevel(CodeGenOpt::Level::Less  );
-											eb .setUseMCJIT(this->mUseMC)
-                                            .setErrorStr(&ErrStr);
+  eb.setUseMCJIT(this->mUseMC)
+    .setErrorStr(&ErrStr)
+	.setOptLevel((CodeGenOpt::Level)(CodeGenOpt::None+parameters.optmization));
 
 
 
