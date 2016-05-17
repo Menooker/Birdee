@@ -42,6 +42,10 @@ There are some more options to choose by appending extra arguments to the argume
   Enable MCJIT of LLVM. Makes GDB see you own program's symbols and line numbers. However, this argument also disables multithreading because MCJIT dosen't work well with TLS. 
  * "-nocache"
   Disable distributed memory cache when accessing shared memory. Note that the cache is enabled by default. Moreover, master nodes and slave nodes should use the same cache argument.
+ * "-mem BACKEND"
+  Select the distributed shared memory backend. Replace "BACKEND" with "memcached" or "cmemcached" in the command. If "memcached" is chosen, the fine-grained memcached backend (one key for one value/variable in Birdee) is selected. If "cmemcached" is chosen, the coarse-grained memcached backend (one key for multiple value/variable in Birdee, fast in chunk operation) is selected. "cmemcached" is the default selection.
+ * "-opt N"
+  Select the optimization level. N is in [0,3], corresponds to -O0 to -03 of GCC.
 
 #### Extra Arguments available under compilation mode ("-e","-c","-l","-ls")
  * "-disasm"
