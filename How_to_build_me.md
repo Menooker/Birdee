@@ -9,7 +9,7 @@ Birdee can be compiled by two different IDEs, while both ways differ slightly.
  * memcached (if you are doing distributed computation. Otherwise, not needed)
 
 Fortunately, we provide a pre-built static library pack with LLVM and libmemcached (x86 and x64) on Windows for MingW and Visual Studio. [Here](http://pan.baidu.com/s/1o7WMQs6), click "下载(33.3M)" to download.
-If you are using Linux, [here]http://pan.baidu.com/s/1bKuKnO) is the static library of LLVM.
+If you are using Linux, [here](http://pan.baidu.com/s/1bKuKnO) is the static library of LLVM.
  
 ##First thing first
 On the cluster nodes that Birdee runs on, you should run an instance of memcached.
