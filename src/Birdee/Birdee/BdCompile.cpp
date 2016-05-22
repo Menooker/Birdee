@@ -332,6 +332,19 @@ bool isArrayAddressSet(int index,int isLocal)
 	return barrays.find(cacheindex)!=barrays.end();
 }
 
+Value* GetModuleId()
+{
+	if(!cached_mid)
+	{
+		IRBuilderBase::InsertPoint ip=builder.saveIP();
+		if(ip.getBlock()!=mainblock)
+			builder.SetInsertPoint(mainblock->begin());
+		cached_mid=builder.CreateLoad(m_id);
+		builder.restoreIP(ip);
+	}
+	return cached_mid;
+}
+
 Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 {
 	int cacheindex=index;
@@ -1462,8 +1475,7 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
     } else {
 		if(decl->is_shared)
 		{//if the variable is a shared var
-			if(!cached_mid)
-				cached_mid=builder.CreateLoad(m_id);
+			GetModuleId();
 			int ty=get_opcode_type_offset_shared(decl->type);
 			switch(ty)
 			{
@@ -1697,8 +1709,7 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 	{//if it is a static variable
 		if(decl->is_shared)
 		{
-			if(!cached_mid)
-				cached_mid=builder.CreateLoad(m_id);
+			GetModuleId();
 			int ty=get_opcode_type_offset_shared(decl->type);
 			if(ty==2 || ty==4)
 			{
