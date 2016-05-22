@@ -25,6 +25,8 @@ lib Remote
 	end
 
 	declare function ConnectNode(localport as int,host as String[],port as int[],mem_host as String[],mem_port as int[]) as RemoteNode[]
+	declare function StartNodesEx(localport as int,nodes as string,mem as string) as RemoteNode[]
+	declare function StartNodes(localport as int) as RemoteNode[]
 
 	shared public class AtomicCounter
 		public declare sub Set(n as int)

@@ -1,7 +1,6 @@
 public class CounterOutOfBoundException
 end
 
-
 public class RemoteNode
 		public host as string
 		public port as int
@@ -11,6 +10,8 @@ public class RemoteNode
 		public declare function CreateThread(del as thread_proc,param as int) as RemoteThread
 		public declare sub Close()
 end
+
+declare function ConnectNode(localport as int,host as String[],port as int[],mem_host as String[],mem_port as int[]) as RemoteNode[]
 
 shared public class RemoteThread
 	public final tid as int
@@ -47,7 +48,6 @@ shared public class ThisNodeThread: RemoteThread
 	end
 end
 
-declare function ConnectNode(host as String,port as int) as RemoteNode
 
 shared public class AtomicCounter
 		public declare sub Set(n as int)
@@ -170,3 +170,49 @@ shared public class RemoteBarrier
 	end
 end
 
+function StartNodesEx(localport as int,nodes as string,mem as string) as RemoteNode[]
+	dim file_nodes as CSVReader=new CSVReader(nodes)
+	dim file_mem as CSVReader=new CSVReader(mem)
+	dim ret as int=1
+	dim i as int
+	dim line as string[]=new string[2]
+	dim ip as string[]=new string[32]
+	dim port as int[]=new int[32]
+	dim v as var
+	for i=0; ;i++
+		ret=file_nodes.ReadLineString(line,0)
+		if ret==2 then
+			ip[i]=line[0]
+			v=line[1]
+			port[i]=v
+		else
+			break
+		end
+	end
+	dim nodes_ip as string[]=new string[i]
+	nodes_ip[0:i]=ip[0:i]
+	dim nodes_port as int[]=new int[i]
+	nodes_port[0:i]=port[0:i]
+	file_nodes.Close()
+
+	for i=0; ;i++
+		ret=file_mem.ReadLineString(line,0)
+		if ret==2 then
+			ip[i]=line[0]
+			v=line[1]
+			port[i]=v
+		else
+			break
+		end
+	end
+	dim mem_ip as string[]=new string[i]
+	mem_ip[0:i]=ip[0:i]
+	dim mem_port as int[]=new int[i]
+	mem_port[0:i]=port[0:i]
+	file_mem.Close()
+	return ConnectNode(localport,nodes_ip,nodes_port,mem_ip,mem_port)
+end
+
+function StartNodes(localport as int) as RemoteNode[]
+	return StartNodesEx(localport,"slaves.txt","memory.txt")
+end

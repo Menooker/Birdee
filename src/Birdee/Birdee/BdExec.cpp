@@ -403,6 +403,68 @@ void ExCSVReaderReadLine(DVM_Value *args)
 }
 
 
+void ExCSVReaderReadLineString(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[2].object;
+	DVM_ObjectRef arr=args[1].object;
+	int idx=args[0].int_value;
+	int len=arr.data->u.barray.size;
+	DVM_ObjectRef* parr=arr.data->u.barray.u.object;
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	if(f==NULL)
+	{
+		curthread->retvar.int_value=-1;
+		return;
+	}
+	wchar_t buf[2048];
+	int cnt=0;
+	buf[0]=0;
+	wchar_t* st;
+	_uint lagacy=0;
+	wchar_t* last;
+	for(;;)
+	{
+		st=buf+lagacy;
+		fgetws(st,2048-lagacy,f);
+		wchar_t *p=st;
+		last=buf;
+		while(*p)
+		{
+			if(*p==',')
+			{
+				*p=0;
+				if(idx+cnt>len)
+				{
+					curthread->retvar.int_value=-1;
+					return;
+				}
+				DVM_Char* newbuf=(DVM_Char*)MEM_malloc(sizeof(DVM_Char)*(wcslen(last)+1));
+				wcscpy(newbuf,last);
+				parr[idx+cnt]=dvm_create_dvm_string_i(curdvm,newbuf);
+				cnt++;
+				last=p+1;
+			}
+			p++;
+		}
+		if(p<=buf || *(p-1)=='\n' || feof(f))
+		{
+			break;
+		}
+		lagacy=2047-(last-buf);
+		memmove(buf,last,lagacy*sizeof(wchar_t));
+	}
+	if(idx+cnt>len)
+	{
+		curthread->retvar.int_value=-1;
+		return;
+	}
+	DVM_Char* newbuf=(DVM_Char*)MEM_malloc(sizeof(DVM_Char)*(wcslen(last)+1));
+	wcscpy(newbuf,last);
+	parr[idx+cnt]=dvm_create_dvm_string_i(curdvm,newbuf);
+	cnt++;
+	curthread->retvar.int_value=cnt;
+}
+
 void ExCSVReaderSkip(DVM_Value *args)
 {
 	DVM_ObjectRef ths=args[1].object;
@@ -1869,6 +1931,7 @@ int ExExec(char* path)
 	}
 	else
 	{
+		ExSetCurrentDVM(dvm);
 		DVM_set_executable(dvm, plist); //modified
 		DVM_execute(dvm);
 		MEM_check_all_blocks();
