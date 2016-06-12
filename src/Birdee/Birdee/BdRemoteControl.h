@@ -18,6 +18,8 @@ void RcCloseNode(DVM_Value *args);
 void RcWaitForGCMarkCompletion();
 void RcTriggerGC(int round_id);
 void RcEnterBarrier(DVM_Value *args);
+void RcEnterSemaphore(DVM_Value *args);
+void RcLeaveSemaphore(DVM_Value *args);
 #ifdef __cplusplus
 }
 #endif

@@ -108,6 +108,9 @@
     <None Include="..\..\..\lib\Remote.dkh">
       <Filter>资源文件\Libraries</Filter>
     </None>
+    <None Include="Semaphore.txt">
+      <Filter>资源文件\Tests</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

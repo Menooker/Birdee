@@ -14,7 +14,23 @@ dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
 println("working")
+dim sem as shared RSemaphore=new RSemaphore(1)
+sem.Acquire(-1)
+nodes[0].CreateThread(threadproc,0)
+nodes[1].CreateThread(threadproc,1)
+gets()
+sem.Release()
+gets()
 
+function threadproc(param as var) as int
+	Sleep(500)
+	sem.Acquire(-1)
+	println("Thread "+ param +" Enters")
+	Sleep(1000)
+	println("Thread "+ param +" Leaves")
+	sem.Release()
+end
+/*
 dim node_num as shared int=hosts.size()
 dim thread_num as shared int=threads_per_node*node_num
 
@@ -258,4 +274,4 @@ sub RemoteInitialize()
 	ds1=data_set1
 	ds2=data_set2
 end
-
+*/

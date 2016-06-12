@@ -15,6 +15,7 @@
 #include "BdSocket.h"
 #include "UnportableAPI.h"
 #include "hash_compatible.h"
+#include <queue>
 
 #define RC_MAGIC_FILE_HEADER 0xea12ff08
 #define RC_MAGIC_MASTER 0x12345edf
@@ -57,6 +58,8 @@ enum RcCommand
 	RcCmdDoneGC,
 	RcCmdWakeSync,
 	RcCmdEnterBarrier,
+	RcCmdEnterSemaphore,
+	RcCmdLeaveSemaphore,
 };
 
 #pragma pack(push)
@@ -728,7 +731,11 @@ struct SyncNode
 {
 	int val;
 	int data;
-	std::vector<SyncThreadNode> waitlist;
+	union
+	{
+		std::vector<SyncThreadNode>* waitlist;
+		std::queue<SyncThreadNode>* waitqueue;
+	};
 };
 std::hash_map<_uint,SyncNode*> sync_data;
 typedef std::hash_map<_uint,SyncNode*>::iterator sync_itr;
@@ -793,6 +800,7 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 		node=new SyncNode;
 		node->data=SoGeti(b_id,0);
 		node->val=0;
+		node->waitlist=new std::vector<SyncThreadNode>;
 		sync_data[b_id]=node;
 	}
 	else
@@ -804,19 +812,127 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 	{
 		node->val=0;
 		RcWakeRemoteThread(src,thread_id);
-		for(_uint i=0;i<node->waitlist.size();i++)
+		for(_uint i=0;i<node->waitlist->size();i++)
 		{
-			SyncThreadNode& th=node->waitlist[i];
+			SyncThreadNode& th=(*node->waitlist)[i];
 			RcWakeRemoteThread(th.machine,th.thread_id);
 		}
-		node->waitlist.clear();
+		node->waitlist->clear();
 	}
 	else
 	{
 		SyncThreadNode th={src,thread_id};
-		node->waitlist.push_back(th);
+		node->waitlist->push_back(th);
 	}
 	UaLeaveLock(&master_bar_lock);
+}
+
+/*
+Process the semaphore message, may call the nodes to
+continue, called on master
+param: src - the source of the message (index of
+		"slavenodes", -1 represents the master)
+		b_id - semaphore id
+*/
+void RcSemaphoreMsg(int src,_uint b_id,_uint64 thread_id)
+{
+	UaEnterLock(&master_bar_lock);
+	sync_itr itr=sync_data.find(b_id);
+	SyncNode* node;
+	if(itr==sync_data.end())
+	{
+		node=new SyncNode;
+		node->data=SoGeti(b_id,0);
+		node->val=node->data;
+		node->waitqueue=new std::queue<SyncThreadNode>;
+		sync_data[b_id]=node;
+	}
+	else
+	{
+		node=itr->second;
+	}
+	node->val--;
+	if(node->val>=0)
+	{
+		RcWakeRemoteThread(src,thread_id);
+	}
+	else
+	{
+		SyncThreadNode th={src,thread_id};
+		node->waitqueue->push(th);
+	}
+	UaLeaveLock(&master_bar_lock);
+}
+
+/*
+Process the semaphore release message, may call the nodes to
+continue, called on master
+param: src - the source of the message (index of
+		"slavenodes", -1 represents the master)
+		b_id - semaphore id
+*/
+void RcSemaphoreLeaveMsg(int src,_uint b_id,_uint64 thread_id)
+{
+	UaEnterLock(&master_bar_lock);
+	sync_itr itr=sync_data.find(b_id);
+	SyncNode* node;
+	if(itr==sync_data.end())
+	{
+		node=new SyncNode;
+		node->data=SoGeti(b_id,0);
+		node->val=node->data;
+		node->waitqueue=new std::queue<SyncThreadNode>;
+		sync_data[b_id]=node;
+	}
+	else
+	{
+		node=itr->second;
+	}
+	node->val++;
+	if(node->val<=0)
+	{
+		SyncThreadNode& th=node->waitqueue->front();
+		RcWakeRemoteThread(th.machine,th.thread_id);
+		node->waitqueue->pop();
+	}
+	UaLeaveLock(&master_bar_lock);
+}
+
+
+void RcEnterSemaphore(DVM_Value *args)
+{
+	_uint bid=(_uint)args[1].object.data;
+	UaResetEvent(&curthread->remote_event);
+	if(curdvm->is_master)
+	{
+		RcSemaphoreMsg(-1,bid,(_uint64)curthread);
+	}
+	else
+	{
+		RcCommandPack cmd;
+		cmd.cmd=RcCmdEnterSemaphore;
+		cmd.param=bid;
+		cmd.param34=(_uint64)curthread;
+		RcSend(masternode,&cmd,sizeof(cmd));
+	}
+	curthread->retvar.int_value=UaWaitForEventEx(&curthread->remote_event,args[0].int_value);
+}
+
+void RcLeaveSemaphore(DVM_Value *args)
+{
+	_uint bid=(_uint)args[0].object.data;
+	if(curdvm->is_master)
+	{
+		RcSemaphoreLeaveMsg(-1,bid,(_uint64)curthread);
+	}
+	else
+	{
+		RcCommandPack cmd;
+		cmd.cmd=RcCmdLeaveSemaphore;
+		cmd.param=bid;
+		cmd.param34=(_uint64)curthread;
+		RcSend(masternode,&cmd,sizeof(cmd));
+	}
 }
 
 extern "C" void* init_memcached_this_thread();
@@ -939,6 +1055,16 @@ static THREAD_PROC(RcMasterListen,param)
 					if(!memc)
 						memc=init_memcached_this_thread();
 					RcBarrierMsg(i,cmd.param,cmd.param34);
+					break;
+				case RcCmdEnterSemaphore:
+					if(!memc)
+						memc=init_memcached_this_thread();
+					RcSemaphoreMsg(i,cmd.param,cmd.param34);
+					break;
+				case RcCmdLeaveSemaphore:
+					if(!memc)
+						memc=init_memcached_this_thread();
+					RcSemaphoreLeaveMsg(i,cmd.param,cmd.param34);
 					break;
 				default:
 					printf("Bad command %d!\n");

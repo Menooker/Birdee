@@ -98,7 +98,16 @@ shared public class RBarrier
 	constructor initialize(count as int)
 		cnt=count
 	end
-	public declare sub Enter(max_wait as int)
+	public declare function Enter(max_wait as int) as int
+end
+
+shared public class RSemaphore
+	dim cnt as int
+	constructor initialize(count as int)
+		cnt=count
+	end
+	public declare function Acquire(max_wait as int) as int
+	public declare sub Release()
 end
 
 shared public class RemoteBarrier

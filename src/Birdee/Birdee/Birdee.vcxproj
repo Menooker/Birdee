@@ -182,6 +182,7 @@
     <None Include="ab.dkh" />
     <None Include="ab.dkm" />
     <None Include="ReadMe.txt" />
+    <None Include="Semaphore.txt" />
     <None Include="ToDoList.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -54,6 +54,13 @@ lib Remote
 
 	shared public class RBarrier
 		public declare constructor initialize(count as int)
-		public declare sub Enter(max_wait as int)
+		public declare function Enter(max_wait as int) as int
 	end
+
+	shared public class RSemaphore
+		public declare constructor initialize(count as int)
+		public declare function Acquire(max_wait as int) as int
+		public declare sub Release()
+	end
+
 end

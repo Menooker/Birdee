@@ -1,0 +1,25 @@
+require Remote
+
+dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13080,13090}
+dim mem_hosts as string[]={"127.0.0.1"}
+dim mem_ports as int[]={11211}
+dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
+
+println("working")
+dim sem as shared RSemaphore=new RSemaphore(1)
+sem.Acquire(-1)
+nodes[0].CreateThread(threadproc,0)
+nodes[1].CreateThread(threadproc,1)
+gets()
+sem.Release()
+gets()
+
+function threadproc(param as var) as int
+	Sleep(500)
+	sem.Acquire(-1)
+	println("Thread "+ param +" Enters")
+	Sleep(1000)
+	println("Thread "+ param +" Leaves")
+	sem.Release()
+end
