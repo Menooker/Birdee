@@ -1017,7 +1017,31 @@ void ExCall(BINT index)
             }
 }
 
+void ExRegisterNativeFunction(char* name,void* func,int argc,DVM_Boolean is_method)
+{
+	DVM_add_native_function(curdvm,"Native",name,(BdVMFunction)func,argc,is_method);
+}
 
+typedef int (*InitFunc)(void*);
+void ExLoadNativeLibrary(DVM_Value* v)
+{
+	char path[255];
+	wcstombs(path,v->object.data->u.string.string,255);
+	if(v->object.data->u.string.length>=254)
+			printf("Warning : Lib path %ws too long\n",v->object.data->u.string.string);
+	int success;
+	llvm::sys::DynamicLibrary lib=llvm::sys::DynamicLibrary::getPermanentLibrary(path);
+	success=lib.isValid();
+	if(success)
+	{
+		InitFunc func=(InitFunc)lib.getAddressOfSymbol("BirdeeLibInit");
+		if(func)
+			success= !func(ExRegisterNativeFunction);
+		else
+			success=0;
+	}
+	curthread->retvar.int_value=success;
+}
 
 extern "C" void ExInitExeEngine()
 {
@@ -1971,3 +1995,5 @@ int ExGetMethodIndex(ExecClass *ec, char *method_name)
 	int tmp=0;
 	return ExDoGetMethodIndex(ec,method_name,&tmp);
 }
+
+

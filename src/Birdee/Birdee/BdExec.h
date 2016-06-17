@@ -93,6 +93,7 @@ void ExCSVReaderClose(DVM_Value *args);
 void ExCSVReaderReset(DVM_Value *args);
 void ExCSVReaderSkip(DVM_Value *args);
 void ExCSVReaderReadLineString(DVM_Value *args);
+void ExLoadNativeLibrary(DVM_Value* v);
 #ifdef __cplusplus
 }
 #endif

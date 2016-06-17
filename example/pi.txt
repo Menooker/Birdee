@@ -11,7 +11,7 @@ time=GetClock()
 */
 
 dim hosts as string[]={"192.168.88.1","192.168.88.1"}
-dim ports as int[]={3020,3030}
+dim ports as int[]={13080,13090}
 //dim hosts as string[]=new string[0]
 //dim ports as int[]=new int[0]
 dim mem_hosts as string[]={"192.168.88.1"}
@@ -40,13 +40,14 @@ dim result as double
 for i=0;i<node_num;i++
 	result+=partial_sum[i]
 end
-println( GetClock()-time)
-println( result/n)
+println("Time = "+ (GetClock()-time))
+println("pi = "+ result/n)
+gets()
 
 dim sums as double[]
 
 dim thread_num as int
-dim done as int
+dim volatile done as int
 sub RemoteInitialize()
 	n=1000000000
 	threads=2

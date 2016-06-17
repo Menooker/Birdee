@@ -28,6 +28,7 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"	public declare sub Close()\n",
 	"	public declare sub Skip(lines as int)\n",
 	"end\n",
+	"declare function LoadNativeLibrary(path as string) as boolean\n",
 /*	"shared public class RemoteThread\n",
 	"	public final tid as int\n",
 	"	dim state as int\n",

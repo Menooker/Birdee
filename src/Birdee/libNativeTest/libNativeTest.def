@@ -1,0 +1,3 @@
+LIBRARY libNativeTest
+EXPORTS
+BirdeeLibInit @ 4
