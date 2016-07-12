@@ -1,0 +1,57 @@
+require Remote
+
+const threads_per_node = 2
+const node_num = 2
+const thread_num = 4
+const n = 192
+dim nodes as RemoteNode[]=StartNodes(5060)
+
+dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
+dim n2 as int=n*n
+dim m1 as shared double[] global=new double[n2] global
+dim m2 as shared double[] global=new double[n2] global
+dim result as shared double[] global=new double[n2] global
+
+sub put_matrix()
+	dim i as int
+	for i=0;i<n2;i++
+		m1[i]=rand(100)
+		m2[i]=rand(100)
+	end
+end
+
+put_matrix()
+dim ii as int
+dim jj as int
+dim tid as int=0
+for ii=0;ii<node_num;ii++
+	for jj=0;jj<threads_per_node;jj++
+		nodes[ii].CreateThread(threadproc,tid)
+		tid++
+	end
+end
+barrier_main.Enter(-1)
+
+function threadproc(id as var) as int
+	dim i as int
+	dim j as int
+	dim k as int
+	dim line as double[]=new double[n]
+	dim col as double[]=new double[n]
+	for ;;
+		dim sum as double
+		for i=id;i<n;i+=threads_per_node
+			col[0:n]=m1[i*n : i*n+n]
+			for j=0;j<n;j++
+				sum=0
+				for k=0;k<n;k++
+					sum+=col[k] * m2[n*j + k]
+				end
+				line[j]=sum
+			end
+			result[i*n : i*n+n]=line[0:n]
+		end
+		barrier_main.Enter(-1)
+	end
+end
+

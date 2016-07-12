@@ -44,7 +44,6 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="ToDoList.txt" />
-    <None Include="..\..\README.md" />
     <None Include="..\..\..\test\ArrayCacheTest.txt">
       <Filter>资源文件\Tests</Filter>
     </None>
@@ -111,6 +110,10 @@
     <None Include="Semaphore.txt">
       <Filter>资源文件\Tests</Filter>
     </None>
+    <None Include="..\..\..\example\matmul_simple.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
