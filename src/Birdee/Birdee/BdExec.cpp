@@ -487,7 +487,7 @@ void ExCSVReaderSkip(DVM_Value *args)
 				break;
 		}
 	}
-	
+
 }
 
 void ExCSVReaderClose(DVM_Value *args)
@@ -923,7 +923,11 @@ void  ExGetFunction(DVM_Value* v)
 		else
 			ExSystemRaise(ExBadParameterType);
 		char* fun=ExConvertAndAllocWchar((v)->object.data->u.string.string);
+		#ifdef BD_ON_LINUX
+		int index=ExFindFunctionByName(mod+3,fun+3);
+		#else
 		int index=ExFindFunctionByName(mod,fun);
+		#endif
 		if(mod)
 			free(mod);
 		free(fun);
@@ -1021,22 +1025,39 @@ void ExRegisterNativeFunction(char* name,void* func,int argc,DVM_Boolean is_meth
 {
 	DVM_add_native_function(curdvm,"Native",name,(BdVMFunction)func,argc,is_method);
 }
-
+#ifdef BD_ON_LINUX
+#include <dlfcn.h>
+#endif
 typedef int (*InitFunc)(void*);
 void ExLoadNativeLibrary(DVM_Value* v)
 {
 	char path[255];
+	char* mypath;
 	wcstombs(path,v->object.data->u.string.string,255);
 	if(v->object.data->u.string.length>=254)
 			printf("Warning : Lib path %ws too long\n",v->object.data->u.string.string);
+    if(path[0]==-17 && path[1]==-69 && path[2]==-65)
+        mypath=path+3;
+    else
+        mypath=path;
 	int success;
+	#ifndef BD_ON_LINUX
 	llvm::sys::DynamicLibrary lib=llvm::sys::DynamicLibrary::getPermanentLibrary(path);
 	success=lib.isValid();
+	#else
+	void* handle = dlopen(mypath, RTLD_LAZY);
+	success= (handle!=NULL);
+	#endif
+
 	if(success)
 	{
+    	#ifndef BD_ON_LINUX
 		InitFunc func=(InitFunc)lib.getAddressOfSymbol("BirdeeLibInit");
+		#else
+		InitFunc func=(InitFunc)dlsym(handle, "BirdeeLibInit");
+		#endif
 		if(func)
-			success= !func(ExRegisterNativeFunction);
+			success= !func((void*)ExRegisterNativeFunction);
 		else
 			success=0;
 	}
@@ -1322,7 +1343,7 @@ DVM_ObjectRef ExFldGeto(BINT index)
             } else {
 				return obj.data->u.class_object.field[index].object ;
             }
-			
+
 	return dvm_null_object_ref;
 
 }
