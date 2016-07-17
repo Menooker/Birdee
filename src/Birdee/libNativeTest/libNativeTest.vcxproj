@@ -46,7 +46,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>BD_ON_VC;BD_ON_X86;BD_ON_WINDOWS;WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNATIVETEST_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>

@@ -1,18 +1,15 @@
 // libNativeTest.cpp : 定义 DLL 应用程序的导出函数。
 //
-#include "DVM.h"
-#include <stdio.h>
 
 #ifdef _WIN32
-#include "stdafx.h"
 #include <Windows.h>
 #define DLL_EXPORT __declspec(dllexport)
-
 #else
 #define DLL_EXPORT __attribute__ ((visibility("default")))
 #endif
 #include "dvm_pri.h"
-
+#include "DVM.h"
+#include <stdio.h>
 extern "C"
 {
 typedef void (*pExRegisterNativeFunction)(const char* name,void* func,int argc,int is_method);
