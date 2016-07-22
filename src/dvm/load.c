@@ -843,7 +843,6 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
     for (pos = list->list; pos; pos = pos->next) {
 		if(pos->executable->is_required)
 		{
-			printf("required, pos->executable->package_name=%s\n",pos->executable->package_name);
 			if( !LdGetLoadedRequiredModule(pos->executable->package_name)) // makes sure every require executes for one time
 			{
 				ee = add_executable_to_dvm(dvm, pos->executable,
