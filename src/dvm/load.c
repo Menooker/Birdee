@@ -775,7 +775,6 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
 		}
 		return LdGetLoadedModule(executable->package_name);
 	}
-
     new_entry = MEM_malloc(sizeof(ExecutableEntry));
     new_entry->executable = executable;
     new_entry->next = NULL;
@@ -788,13 +787,10 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
             ;
         ee_pos->next = new_entry;
     }
-
     add_functions(dvm, new_entry);
     add_enums(dvm, new_entry);
     add_constants(dvm, new_entry);
     add_classes(dvm, new_entry);
-
-
     /*convert_code(dvm, executable,
                  executable->top_level.code, executable->top_level.code_size,
                  NULL);*/ //check-me : check the stack operations
@@ -810,7 +806,6 @@ add_executable_to_dvm(DVM_VirtualMachine *dvm, DVM_Executable *executable,
     add_reference_table(dvm, new_entry, executable);
 
     add_static_variables(dvm,new_entry, executable);
-
     if (is_top_level) {
         dvm->top_level = new_entry;
     }
@@ -844,11 +839,11 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
     ExecutableEntry *ee;
 
     dvm->executable_list = list;
-
     old_class_count = dvm->class_count;
     for (pos = list->list; pos; pos = pos->next) {
 		if(pos->executable->is_required)
 		{
+			printf("required, pos->executable->package_name=%s\n",pos->executable->package_name);
 			if( !LdGetLoadedRequiredModule(pos->executable->package_name)) // makes sure every require executes for one time
 			{
 				ee = add_executable_to_dvm(dvm, pos->executable,
@@ -863,7 +858,6 @@ DVM_set_executable(DVM_VirtualMachine *dvm, DVM_ExecutableList *list)
                                    (pos->executable == list->top_level));
 			initialize_constant(dvm, ee);
 			LdPushModule(pos->executable->package_name,ee);
-
 		}
 
 

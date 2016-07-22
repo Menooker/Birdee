@@ -1546,8 +1546,8 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	TheExecutionEngine->finalizeObject();
 }
 //*/
-void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
-
+//void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
+void ExReplaceInlineFunctions(Module* m);
 int* ExGetReg(BdThread* th,BINT i)
 {
     switch(i)
@@ -1585,9 +1585,7 @@ extern "C" void ExInitThread(BdThread* t,void* mod,void* eng)
 	ExecutionEngine* e=(ExecutionEngine*)eng;
 	void(*RegInit)(BdThread*);
 	RegInit=(void(*)(BdThread*))e->getPointerToFunction(m->getFunction("system!RegInit"));
-
 	RegInit(t);
-
 }
 
 //Init thread's reg in all modules. Used in threads other than the main thread
@@ -1625,9 +1623,8 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	//	return 0;
 	Module* m=(Module*)mod->mod;
 
-
-	ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
-
+	ExReplaceInlineFunctions(m);
+	//ExReplaceInlineFunctions(m,(Module*)ee->executable->inline_module.mod);
 	std::string ErrStr;
 	//ExecutionEngine* TheExecutionEngine;
 	MCJITHelper* MCJIT;
@@ -1645,7 +1642,6 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 		dvm->exe_engine=MCJIT;
 	}
 	ExecutionEngine* TheExecutionEngine=MCJIT->compileModule(m);
-
 	if(parameters.debug)
 	{
 		SetNoThreadLocal(m,"bpc",TheExecutionEngine,0);
@@ -1741,7 +1737,6 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	TheExecutionEngine->addGlobalMapping(f,ExFldPutd);
 	f=m->getFunction("system!FldPuto");
 	TheExecutionEngine->addGlobalMapping(f,ExFldPuto);*/
-
 
 	f=m->getFunction("system!ArrayLiteral");
 	TheExecutionEngine->addGlobalMapping(f,(void*)ExArrayLiteral);
@@ -1906,9 +1901,8 @@ void replaceAllUsesWith(Value* ths,Value *New) {
   if (BasicBlock *BB = dyn_cast<BasicBlock>(ths))
     BB->replaceSuccessorsPhiUsesWith(cast<BasicBlock>(New));
 }
-void ExReplaceInlineFunctions(Module* m,Module* inline_mod)
+void ExReplaceInlineFunctions(Module* m)
 {
-
 
 	Type* TyO=m->getGlobalVariable("bsp")->getType()->getPointerElementType()->getPointerElementType()->getPointerElementType();
 	//TyO->dump();
