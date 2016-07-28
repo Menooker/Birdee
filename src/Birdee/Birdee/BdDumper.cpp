@@ -34,17 +34,25 @@ void conv_wcs4_2_wsc2(wchar_t* src,size_t sz_src,char* dest, size_t sz_dest)
     size_t result;
     iconv_t env;
     //env = iconv_open("UCS-4-INTERNAL","UCS-2-INTERNAL");
-    env = iconv_open("UTF-16","UTF-32");
+    env = iconv_open("UTF-16","WCHAR_T");
     if (env==(iconv_t)-1)
     {
-        printf("iconv_open error %d\n",errno);
-        return ;
+	env = iconv_open("UCS-2","WCHAR_T");
+	if(env==(iconv_t)-1)
+	{
+		env = iconv_open("UCS2","WCHAR_T");
+		if(env==(iconv_t)-1)
+		{
+        		printf("iconv_open error %d\n",errno);
+        		return ;
+		}
+	}
     }
 
     result = iconv(env, (char**)&src, &sz_src, (char**)&dest, &sz_dest);
     if (result==(size_t)-1)
     {
-        printf("UTF32 -> UTF16 conv error %d\n",errno) ;
+        printf("UTF32 -> WCHAR_T conv error %d\n",errno) ;
         return ;
     }
     iconv_close(env);
