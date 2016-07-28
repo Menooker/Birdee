@@ -3845,6 +3845,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
     ExceptionList *el = NULL;
 	BcGetCurrentCompilerContext()->curcls=NULL;
 
+	fix_statement_list(NULL, compiler->statement_list, 0, &el);
     fix_class_list(compiler);
     fix_enum_list(compiler);
     fix_delegate_list(compiler);
@@ -3855,7 +3856,7 @@ dkc_fix_tree(DKC_Compiler *compiler)
         reserve_function_index(compiler, func_pos);
     }
 
-    fix_statement_list(NULL, compiler->statement_list, 0, &el);
+    
 
     for (func_pos = compiler->function_list; func_pos;
          func_pos = func_pos->next) {

@@ -193,7 +193,8 @@ dkc_set_require_and_rename_list(RequireList *require_list,
 {
     DKC_Compiler *compiler;
     char *current_package_name;
-
+	//if(!require_list && !rename_list)
+	//	return;
     compiler = dkc_get_current_compiler();
 
     current_package_name

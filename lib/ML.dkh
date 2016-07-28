@@ -1,0 +1,26 @@
+require Remote
+lib ML
+
+
+declare sub SetNodes(nd as RemoteNode[],thr_per_node as int)
+declare sub LoadDataset(path as string,samples as int,target as double[] global)
+
+abstract class MLModel
+	//public parameters as double[] global
+	public abstract  virtual declare sub train(mdataset as double[] global,offset as int,iteration_num as int,samples as int,mstep_size as double) 
+	public abstract  virtual declare function predict(datapoint as double[], offset as int) as double
+	public abstract  virtual declare function evaluate(mdataset as double[] global,offset as int) as double
+end
+
+shared abstract class SGDOptimizer
+	public abstract  virtual declare sub optimize(datapoint as double[],offset as int,mgradient as double[],para as double[],mfeatures as int,mstep_size as double) 
+end
+
+class ModelBySGD:MLModel
+	public override declare sub train(ds as double[] global, feature_num as int, iteration_num as int,samples as int,mstep_size as double) 
+	public override declare function predict(datapoint as double[], offset as int) as double
+	public override declare function evaluate(mdataset as double[] global,offset as int) as double
+	public override declare constructor initialize(slave_model as SGDOptimizer)
+end
+
+end

@@ -271,7 +271,7 @@ static void do_check_abstract(ClassDefinition *super,ClassDefinition *chk,std::h
 	for (member = super->member; member;member = member->next) {
 		if (member->kind == METHOD_MEMBER &&
 			(isInterface || (member->u.method.is_abstract && member->u.method.function_definition->block==NULL) )) {// if is interface or an unimplemented abstract
-			if(map.find(member->u.method.function_definition->name)==map.end())
+				if(!member->u.method.function_definition->isLib && map.find(member->u.method.function_definition->name)==map.end())
 			{
 				if(!isObject)
 				{

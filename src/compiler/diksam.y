@@ -125,7 +125,7 @@ initial_declaration
         }
 		| initial_declaration lib_function
 		{
-            dkc_set_require_and_rename_list(NULL, NULL);
+            //dkc_set_require_and_rename_list(NULL, NULL);
 		}
         ;
 require_list

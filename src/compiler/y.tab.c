@@ -2287,7 +2287,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 127 "diksam.y"
     {
-            dkc_set_require_and_rename_list(NULL, NULL);
+            //dkc_set_require_and_rename_list(NULL, NULL);
 		}
     break;
 

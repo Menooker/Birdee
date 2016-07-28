@@ -163,6 +163,8 @@
     <None Include="..\..\..\example\pi.txt" />
     <None Include="..\..\..\lib\Exceptions.dkh" />
     <None Include="..\..\..\lib\Exceptions.dkm" />
+    <None Include="..\..\..\lib\ML.dkh" />
+    <None Include="..\..\..\lib\ML.dkm" />
     <None Include="..\..\..\lib\Remote.dkh" />
     <None Include="..\..\..\lib\Remote.dkm" />
     <None Include="..\..\..\README.md" />

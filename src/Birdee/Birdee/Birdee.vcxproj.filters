@@ -114,6 +114,12 @@
       <Filter>资源文件\Examples</Filter>
     </None>
     <None Include="..\..\..\README.md" />
+    <None Include="..\..\..\lib\ML.dkm">
+      <Filter>资源文件\Libraries</Filter>
+    </None>
+    <None Include="..\..\..\lib\ML.dkh">
+      <Filter>资源文件\Libraries</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

@@ -776,8 +776,12 @@ extern "C" void SoGeto(_uint key,_uint fldid,int idx_in_exe)
 	int ret= storage.get(key,fldid).key;
 	if(idx_in_exe!=-1)
 	{
-		int class_index = curthread->current_executable->class_table[idx_in_exe];
-		obj.v_table = curdvm->bclass[class_index]->class_table;
+		//int class_index = curthread->current_executable->class_table[idx_in_exe];
+		//obj.v_table = curdvm->bclass[class_index]->class_table;
+		SoType tag;
+		int fld_cnt,flag;
+		storage.getinfo(ret,tag,fld_cnt,flag);
+		obj.v_table = curdvm->bclass[flag]->class_table;
 	}
 	else
 		obj.v_table=curdvm->global_array_v_table;
