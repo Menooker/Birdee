@@ -3,7 +3,7 @@ lib ML
 
 
 declare sub SetNodes(nd as RemoteNode[],thr_per_node as int)
-declare sub LoadDataset(path as string,samples as int,target as double[] global)
+declare sub LoadDataset(path as string,samples as int,mfeatures as int,target as double[] global)
 
 abstract class MLModel
 	//public parameters as double[] global
