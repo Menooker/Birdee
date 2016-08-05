@@ -3827,7 +3827,7 @@ fix_constant_list(DKC_Compiler *compiler)
             cd_pos->initializer = create_assign_cast(cd_pos->initializer,
                                                      cd_pos->type);
         }
-		
+
 		compiler->dvm_constant[constant_count].type=dkc_copy_type_specifier(cd_pos->type);
         cd_pos->index = constant_count;
         constant_count++;
@@ -3845,18 +3845,19 @@ dkc_fix_tree(DKC_Compiler *compiler)
     ExceptionList *el = NULL;
 	BcGetCurrentCompilerContext()->curcls=NULL;
 
+    fix_constant_list(compiler);
 	fix_statement_list(NULL, compiler->statement_list, 0, &el);
     fix_class_list(compiler);
     fix_enum_list(compiler);
     fix_delegate_list(compiler);
-    fix_constant_list(compiler);
+
 
     for (func_pos = compiler->function_list; func_pos;
          func_pos = func_pos->next) {
         reserve_function_index(compiler, func_pos);
     }
 
-    
+
 
     for (func_pos = compiler->function_list; func_pos;
          func_pos = func_pos->next) {
