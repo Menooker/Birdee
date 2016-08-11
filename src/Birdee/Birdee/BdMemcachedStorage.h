@@ -55,11 +55,11 @@ public:
 		sto=memc;
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1);
 
-/*#ifndef BD_ON_WINDOWS
+#ifndef BD_ON_WINDOWS
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 1);
-		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NOREPLY, 1);
+		//memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NOREPLY, 1);
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_TCP_KEEPALIVE, 1);
-#endif*/
+#endif
 //		memc->call_malloc=(memcached_malloc_function)malloc;
 //		memc->call_free=(memcached_free_function)free;
 //		memc->call_realloc=(memcached_realloc_function)realloc;
@@ -91,7 +91,7 @@ public:
 
 	SoStorageChunkMemcached(std::vector<std::string>& arr_mem_hosts,std::vector<int>& arr_mem_ports):SoStorageMemcached(arr_mem_hosts,arr_mem_ports)
 	{
-		
+
 	}
 };
 

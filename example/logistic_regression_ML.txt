@@ -1,0 +1,28 @@
+require ML
+require Remote
+const samples = 10000
+const features = 100
+
+shared class LogisticRegressionOptimzer:SGDOptimizer
+	public override sub optimize(datapoint as double[],base as int,mgradient as double[], para as double[], mfeatures as int,mstep_size as double)
+			dim dot as double
+			dim j as int
+			dim h as double
+			for j=0;j<features;j++
+				dot+=para[j]*datapoint[base+j]
+			end
+			h=1/(1+exp(-dot))
+			dim delta as double=datapoint[base+features]-h
+			for j=0;j<features;j++
+				mgradient[j]+= mstep_size * delta * datapoint[base+j]
+			end
+	end
+end
+
+dim nodes as RemoteNode[]=StartNodes(5060)
+SetNodes(nodes,8)
+dim dataset as double[] global=new double[samples*128]
+LoadDataset("/home/menooker/dataset.csv",samples,features,dataset)
+dim model as ModelBySGD=new ModelBySGD(new LogisticRegressionOptimzer())
+model.train(dataset,features,20,samples,0.1)
+

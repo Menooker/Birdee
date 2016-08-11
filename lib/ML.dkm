@@ -55,11 +55,16 @@ function putproc(id as var) as int
 	barrier_put.Enter(-1)
 end
 
-sub LoadDataset(path as string,samples as int,target as double[] global)
+sub LoadDataset(path as string,samples as int,mfeatures as int,target as double[] global)
 	dim tm as int=GetClock()
 	dim i as int
 	put_target=target
 	s_sample_num=samples
+	if (mfeatures+1) % 32 == 0 then
+		s_feature_len = (mfeatures+1) / 32 * 32
+	else
+		s_feature_len = (mfeatures+1) / 32 * 32 + 32
+	end
 	barrier_put=new RBarrier(node_num+1)
 	loadpath=path
 	for i=0;i<node_num;i++
