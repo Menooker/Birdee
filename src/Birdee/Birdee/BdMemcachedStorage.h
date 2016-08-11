@@ -57,8 +57,9 @@ public:
 
 #ifndef BD_ON_WINDOWS
 		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NO_BLOCK, 1);
+		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_TCP_NODELAY, 1);
 		//memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_NOREPLY, 1);
-		memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_TCP_KEEPALIVE, 1);
+		//memcached_behavior_set((memcached_st*)_memc, MEMCACHED_BEHAVIOR_TCP_KEEPALIVE, 1);
 #endif
 //		memc->call_malloc=(memcached_malloc_function)malloc;
 //		memc->call_free=(memcached_free_function)free;
