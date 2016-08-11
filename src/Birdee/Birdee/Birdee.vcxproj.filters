@@ -120,6 +120,12 @@
     <None Include="..\..\..\lib\ML.dkh">
       <Filter>资源文件\Libraries</Filter>
     </None>
+    <None Include="..\..\..\example\k-means.txt">
+      <Filter>资源文件\Examples</Filter>
+    </None>
+    <None Include="..\..\..\example\lr_gene.dkm">
+      <Filter>资源文件\Examples</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

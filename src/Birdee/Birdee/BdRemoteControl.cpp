@@ -992,7 +992,7 @@ static THREAD_PROC(RcMasterListen,param)
 				if(RcRecv(slavenodes[i],&cmd,sizeof(cmd))!=sizeof(cmd))
 				{
 					printf("Socket recv Error! %d\n",RcSocketLastError());
-					break;
+					return 0;
 				}
 				switch(cmd.cmd)
 				{

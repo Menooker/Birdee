@@ -2064,7 +2064,46 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 	}
 	else  if(left->kind==INDEX_EXPRESSION)
 	{
-		_BreakPoint;//fix-me
+		if (dkc_is_string(left->u.index_expression.barray->type)) {
+			dkc_compile_error(left->line_number,MATH_TYPE_MISMATCH_ERR,MESSAGE_ARGUMENT_END);
+		}
+
+		TypeSpecifier* ty=left->u.index_expression.barray->type;
+		if (ty->basic_type!=DVM_INT_TYPE || !ty->derive || ty->derive->next!=NULL)
+			dkc_compile_error(left->line_number,MATH_TYPE_MISMATCH_ERR,MESSAGE_ARGUMENT_END);
+		Value* arr=BcGenerateExpression(exe, block, left->u.index_expression.barray);
+		if(left->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION) //if the array is a variable, no need to push
+			builder.CreateCall(GetPush(2),arr);
+		Value* idx=BcGenerateExpression(exe, block, left->u.index_expression.index);
+		Value* p;
+		if(left->u.index_expression.barray->type->derive->u.array_d.is_global)
+		{
+			dkc_compile_error(left->line_number,MATH_TYPE_MISMATCH_ERR,MESSAGE_ARGUMENT_END);
+		}
+		else
+		{
+			if(block && block->unsafe)
+			{
+				Declaration* decl=0;///Full_arr_chk
+				if(	left->u.index_expression.barray->kind ==IDENTIFIER_EXPRESSION)
+						decl=left->u.index_expression.barray->u.identifier.u.declaration;
+				if(decl)
+				{
+					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+						TypeSwitch[0]);
+				}
+				else
+					p=builder.CreatePointerCast(builder.CreateCall(GetArrAddr(),arr),TypeSwitch[0]);//*/
+			}
+			else
+				p=builder.CreatePointerCast(builder.CreateCall2(GetArrAddrSafe(),arr,idx),TypeSwitch[0]);
+		}
+		if(left->u.index_expression.barray->kind !=IDENTIFIER_EXPRESSION)
+			builder.CreateCall(GetPop(),ConstInt(32,1));
+		if(isInc)
+			builder.CreateCall2(fAtmInc,builder.CreateInBoundsGEP(p,idx),r);
+		else
+			builder.CreateCall2(fAtmDec,builder.CreateInBoundsGEP(p,idx),r);
 	}
 	else
 	{
