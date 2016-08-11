@@ -155,8 +155,10 @@
   <ItemGroup>
     <None Include="..\..\..\example\8Queens.txt" />
     <None Include="..\..\..\example\Bubbles.txt" />
+    <None Include="..\..\..\example\k-means.txt" />
     <None Include="..\..\..\example\list.txt" />
     <None Include="..\..\..\example\logistic_regression.txt" />
+    <None Include="..\..\..\example\lr_gene.dkm" />
     <None Include="..\..\..\example\matmul.txt" />
     <None Include="..\..\..\example\matmul_simple.txt" />
     <None Include="..\..\..\example\mergesort.txt" />

@@ -69,7 +69,7 @@ dim cluster_num as int[]
 dim clusters as double[][][]
 
 
-sub put_initial(ds as double[])
+sub put_initial(dim ds as double[])
 	dim ran as int
 	ran=rand(batch_size-K)
 	if ran<0 then
@@ -293,14 +293,14 @@ unsafe
 				mydata_set[0 : K* myfeature_len*mythreads/threads_per_node]=global_means[0 : K* myfeature_len*mythreads/threads_per_node]
 				base=0
 				for i=0;i<mythreads/threads_per_node;i++
-					for k=0;k<K;k++
+					for k=0;k<K:k++
 						for j=0;j<features;j++
 							means[k*myfeature_len+j]+=mydata_set[base+j]
 						end
 						base+=myfeature_len
 					end
 				end
-				for k=0;k<K;k++
+				for k=0;k<K:k++
 					dummy=cluster_counters[k].Get()
 					if dummy==0 then
 						dummy=1
