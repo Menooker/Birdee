@@ -1,368 +1,86 @@
 require Remote
-require math
 
-const samples_per_iter=20
-const round = 10
-const verify_round = 2
-const sample_num = 800
-const features = 2000
-const step_size = 0.05
-const threads_per_node =2
-const batch_size = 800
-const staleness = 1
-const K = 2
 
-dim cur_round as int
-dim time_total as int=GetClock()
-dim time_calc as int
-/*dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-dim ports as int[]={10500,10500,10500,10500,10500,10500,10500,10500}
-//dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113"}
-//dim ports as int[]={10500,10500,10500,10500}
-//dim mem_hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-//dim mem_ports as int[]={11211,11211,11211,11211,11211,11211,11211,11211}
-dim mem_hosts as string[]={"192.168.99.13","192.168.99.14","192.168.99.16","192.168.99.17"}
-dim mem_ports as int[]={11211,11211,11211,11211}*/
-
-dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13080,13090}
+dim hosts as string[]=new string[0]
+//{"127.0.0.1","127.0.0.1"}
+dim ports as int[]=new int[0]
+//{13080,13090}
 dim mem_hosts as string[]={"127.0.0.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
+dim toput as double[]
+dim buf as shared double[] global=new double[5000*4] global
+dim local as double[]
+dim bar as shared RBarrier=new RBarrier(5)
+dim sema as shared RSemaphore=new RSemaphore(1)
 
-println("working")
-dim node_num as shared int=hosts.size()
-dim thread_num as shared int=threads_per_node*node_num
-
-dim feature_len as shared int
-if (features) % 32 == 0 then
-	feature_len = (features) / 32 * 32
-else
-	feature_len = (features) / 32 * 32 + 32
+dim arra as double[]=new double[40000]
+dim arrb as double[]=new double[40000]
+dim bbbb as double[] global =new double[40000]global
+for #i=0;#i<40000;#i++
+	arra[#i]=#i
 end
-
-dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
-dim barrier_internal as shared RBarrier=new RBarrier(node_num+1)
-dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
-dim global_verify_miss_count as shared AtomicCounter=new AtomicCounter(0)
-dim verify_miss_count as AtomicCounter=global_verify_miss_count
-
-dim global_cluster_counters as shared AtomicCounter[] global=new AtomicCounter[K] global
-
-dim global_means as shared double[] global = new double[10] global
-dim data_set1 as double[]
-dim data_set2 as double[]
-
-dim myparam as double[]
-dim means as double[]
-dim volatile sync2 as int
-dim volatile sync1 as int
-dim myfeature_len as int
-dim mythreads as int
-dim gmeans as double[] global
-dim bar_main as RBarrier
-dim bar_int as RBarrier
-dim max_double as double
-dim batch_num as int
-dim volatile bar_file as int
-dim cluster_num as int[]
-dim clusters as double[][][]
-
-
-sub put_initial(ds as double[])
-unsafe
-	dim ran as int
-	ran=rand(batch_size-K)
-	if ran<0 then
-		ran=-ran
+bbbb[31:40000]=arra[0:40000-31]
+arrb[0:40000-31]=bbbb[31:40000]
+for #i=0;#i<40000;#i++
+	if arrb[#i]!=#i then
+		println("ERRRR"+#i)
+		break
 	end
-	gmeans[0:K*myfeature_len]=ds[ran*myfeature_len:(ran+K)*myfeature_len]
 end
+println("OK")
 
-function putproc(id as var) as int
+/*
+function proc2(param as var) as int
 unsafe
-	verify_miss_count=global_verify_miss_count
-	mythreads=thread_num
-	bar_main=barrier_main
-	bar_int=barrier_internal
-	cluster_counters=new AtomicCounter[K]
+	bar.Enter(-1)
 	dim i as int
-	gmeans=global_means
-	for i=0;i<K;i++
-		cluster_counters[i]=global_cluster_counters[i]
+	for i=0;i<5;i++
+		buf[i*5000:(i+1)*5000]=toput[0:5000]
+		bar.Enter(-1)
+		local[0:5000*4]=buf[0:5000*4]
 	end
 
-	dim put_step as int = 5
-	dim node_n as int=node_num
-	dim mlocal as double[]=new double[feature_len*put_step]
-	//println("/home/ubuntu/shared/g"+id+".csv")
-	dim file as CSVReader=new CSVReader("/home/ubuntu/shared/g"+id+".csv")
-	dim fl as int=feature_len
-	dim ds as double[]
+end
+
+function proc(param as var) as int
+unsafe
+	bar.Enter(-1)
+	dim i as int
 	dim j as int
-	dim chunk_size as int=put_step*node_n
-	//file.Skip(put_step*id)
-	for batch_num=0;batch_num<sample_num/batch_size;batch_num++
-		if batch_num %2==0 then
-			ds=data_set1
-		else
-			ds=data_set2
-		end
-		for i=0;i<batch_size;i+=put_step
-			for j=0;j<put_step;j++
-				if(file.ReadLine(mlocal,j*fl)<0) then
-					file.Reset()
-					file.ReadLine(mlocal,j*fl)
-				end
-			end
-			ds[i*fl: (i+put_step)*fl]=mlocal[0:fl*put_step]
-		end
-
-		print("Put batch " + batch_num  + " done\n")
-		bar_file@+=1
-		if batch_num!=sample_num/batch_size-1 then
-			for ;;
-				if bar_file % (threads_per_node+1)==0 then
-					break
-				end
-				Sleep(500)
-			end
-		end
+	println("HHHHHH")
+	for i=0;i<5;i++
+        sema.Acquire(-1)
+		toput[0:5000]=buf[i*5000:(i+1)*5000]
+		buf[i*5000:(i+1)*5000]=toput[0:5000]
+		sema.Release()
+		bar.Enter(-1)
+		dim kk as int
+		kk=17000
+        for j=0;j<1;j++
+            local[j*kk:(j+1)*kk]=buf[j*kk:(j+1)*kk]
+        end
 	end
-	file.Close()
-
-	//barrier_put.Enter(-1)
-
 end
 
-sub put_matrix()
-	dim tm as int=GetClock()
-	dim i as int
-	for i=0;i<node_num;i++
-		nodes[i].CreateThread(putproc,i)
-	end
-	//barrier_put.Enter(-1)
-	println("Put time"+(GetClock()-tm))
-end
-
+nodes[0].CreateThread(proc,0)
+nodes[0].CreateThread(proc,1)
+nodes[1].CreateThread(proc,2)
+nodes[1].CreateThread(proc,3)
+bar.Enter(-1)
+dim t as int=GetClock()
 dim ii as int
-dim jj as int
-for ii=0;ii<K;ii++
-	global_cluster_counters[ii]=new AtomicCounter(0)
-end
-dim time as int=GetClock()
-put_matrix()
-dim time2 as int=GetClock()
-dim ttid as int=0
-
-for ii=0;ii<node_num;ii++
-	for jj=0;jj<threads_per_node;jj++
-		nodes[ii].CreateThread(threadproc,ttid)
-		ttid++
-	end
+for ii=0;ii<5;ii++
+	bar.Enter(-1)
+	println("T="+(GetClock()-t))
+	t=GetClock()
 end
 
-barrier_internal.Enter(-1)
-println("Put initial centers ok")
-for batch_num =0; batch_num<sample_num/batch_size;batch_num++
-	for cur_round=0;cur_round<round;cur_round++
-		//put_matrix()
-		for ii=0;ii<K;ii++
-			global_cluster_counters[ii].Set(0)
-		end
-		barrier_internal.Enter(-1)
-		dim t as int
-		t=GetClock()-time
-		println("time "+ cur_round + " " +t)
-		time=GetClock()
-	end
-	print("Batch "+batch_num+" Done\n")
-end
-
-println("================\nLearning ok")
-barrier_internal.Enter(-1)
-println(verify_miss_count.Get())
-
-println("calc time: "+ (GetClock()-time2))
-println("total time: "+ (GetClock()-time_total))
-//file.Close()
 gets()
 
-
-dim local_cluster_sum as double[]
-dim cluster_counters as AtomicCounter[]
-dim volatile sync4 as int
-function threadproc(id as var) as int
-unsafe
-	dim tid as int=id
-	dim i as int
-	dim j as int
-	dim k as int
-	dim st as int=tid % threads_per_node
-	dim mround as int
-	dim node_id as int=tid/threads_per_node
-	dim mydata_set as double[]
-	dim sum as double
-	dim tmp as double
-	dim dummy as int=thread_num
-	dim means_base as int
-	dim base as int
-	dim tmp2 as double
-
-	dim t1 as int
-	dim t2 as int
-	dim batch as int
-	dim ran as int
-    local_cluster_sum[0]=0
-
-	for batch=0; batch<sample_num/batch_size ; batch++
-		if batch%2==0 then
-			mydata_set=data_set1
-		else
-			mydata_set=data_set2
-		end
-		bar_file@+=1
-		for ;;
-			if bar_file % (threads_per_node+1)==0 then
-				break
-			end
-		end
-		if batch==0 then
-			if tid==0 then
-				put_initial(mydata_set)
-			end
-			bar_int.Enter(-1)
-			means[0:K*myfeature_len]=gmeans[0:K*myfeature_len]
-		end
-
-		for mround=0;mround<round;mround++
-			base=batch_size*st/threads_per_node*myfeature_len
-			for i=0;i<batch_size/threads_per_node;i++
-				sum=max_double
-				means_base=0
-				dim selected_k as int
-				//calculate the distance from the data point to the centers
-				for k=0;k<K;k++
-					for j=0;j<features;j++
-						tmp2 = mydata_set[base+j]-means[means_base+j]
-						tmp += tmp2*tmp2
-					end
-					if tmp<sum then
-						sum=tmp
-						selected_k=k
-					end
-					means_base+=myfeature_len
-				end
-				cluster_num[selected_k]@+=1
-				dim center as double[]
-				center=clusters[st][selected_k]
-				for j=0;j<features;j++
-					center[j]+=mydata_set[base+j]
-				end
-				base+=myfeature_len
-			end
-
-			sync2@+=1
-			for ;;
-				if sync2 % threads_per_node==0 then
-					break
-				end
-			end
-			//phase 4: sum up the local means
-			//println("K4 "+mround+" "+st)
-			if st==0 then
-				for k=0;k<K;k++
-					for j=0;j<features;j++
-						local_cluster_sum[k*myfeature_len+j]+=clusters[0][k][j]
-					end
-				end
-				for i=1;i<threads_per_node;i++
-					for k=0;k<K;k++
-						for j=0;j<features;j++
-							local_cluster_sum[k*myfeature_len+j]+=clusters[i][k][j]
-						end
-					end
-				end
-				gmeans[node_id * myfeature_len * K : (node_id+1) * myfeature_len * K]=local_cluster_sum[0:myfeature_len * K]
-				for i=0;i<K;i++
-					cluster_counters[i].Inc(cluster_num[i])
-				end
-				bar_int.Enter(-1)
-
-				mydata_set[0 : K* myfeature_len*mythreads/threads_per_node]=gmeans[0 : K* myfeature_len*mythreads/threads_per_node]
-				base=0
-				for i=0;i<mythreads/threads_per_node;i++
-					for k=0;k<K;k++
-						for j=0;j<features;j++
-							means[k*myfeature_len+j]+=mydata_set[base+j]
-						end
-						base+=myfeature_len
-					end
-				end
-				for k=0;k<K;k++
-					dummy=cluster_counters[k].Get()
-					if dummy==0 then
-						dummy=1
-					end
-					for j=0;j<features;j++
-						means[k*myfeature_len+j]/=dummy
-					end
-				end
-			end
-
-			sync1@+=1
-			for ;;
-				if sync1 % threads_per_node==0 then
-					break
-				end
-			end
-
-		end
-	end
-
-	base=batch_size*st/threads_per_node*myfeature_len
-	for i=0;i<batch_size/threads_per_node;i++
-		means_base=0
-		//calculate the distance from the data point to the centers
-		local_cluster_sum[st]=0
-		for k=0;k<K;k++
-			for j=0;j<features;j++
-				tmp2 = mydata_set[base+j]-means[means_base+j]
-				local_cluster_sum[st] += tmp2*tmp2
-			end
-			means_base+=myfeature_len
-		end
-		base+=myfeature_len
-	end
-	sync4@+=1
-	for ;;
-		if sync4 % threads_per_node==0 then
-			break
-		end
-	end
-	if st==0 then
-        for i=1;i<threads_per_node;i++
-            local_cluster_sum[0]+=local_cluster_sum[i]
-        end
-        verify_miss_count.Inc(local_cluster_sum[0])
-		bar_int.Enter(-1)
-	end
-end
-
 sub RemoteInitialize()
-
-	if (features+1) % 32 == 0 then
-		myfeature_len = (features) / 32 * 32
-	else
-		myfeature_len = (features) / 32 * 32 + 32
-	end
-	means=new double[K * myfeature_len]
-	data_set1=new double[myfeature_len*batch_size]
-	data_set2=new double[myfeature_len*batch_size]
-	max_double=exp(10000000000000)
-    cluster_num=new int[K]
-	clusters=new double[threads_per_node][K][features]
-	local_cluster_sum =new double[K * myfeature_len]
+	toput=new double[5000]
+	local=new double[5000*10]
 end
-
+*/
 
