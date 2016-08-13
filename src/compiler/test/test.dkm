@@ -1,10 +1,8 @@
 require Remote
 
 
-dim hosts as string[]=new string[0]
-//{"127.0.0.1","127.0.0.1"}
-dim ports as int[]=new int[0]
-//{13080,13090}
+dim hosts as string[]={"127.0.0.1","127.0.0.1","127.0.0.1","127.0.0.1"}
+dim ports as int[]={13080,13090,13060,13070}
 dim mem_hosts as string[]={"127.0.0.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
@@ -14,23 +12,7 @@ dim local as double[]
 dim bar as shared RBarrier=new RBarrier(5)
 dim sema as shared RSemaphore=new RSemaphore(1)
 
-dim arra as double[]=new double[40000]
-dim arrb as double[]=new double[40000]
-dim bbbb as double[] global =new double[40000]global
-for #i=0;#i<40000;#i++
-	arra[#i]=#i
-end
-bbbb[31:40000]=arra[0:40000-31]
-arrb[0:40000-31]=bbbb[31:40000]
-for #i=0;#i<40000;#i++
-	if arrb[#i]!=#i then
-		println("ERRRR"+#i)
-		break
-	end
-end
-println("OK")
 
-/*
 function proc2(param as var) as int
 unsafe
 	bar.Enter(-1)
@@ -63,10 +45,10 @@ unsafe
 	end
 end
 
-nodes[0].CreateThread(proc,0)
-nodes[0].CreateThread(proc,1)
-nodes[1].CreateThread(proc,2)
-nodes[1].CreateThread(proc,3)
+nodes[0].CreateThread(proc2,0)
+nodes[0].CreateThread(proc2,1)
+nodes[1].CreateThread(proc2,2)
+nodes[1].CreateThread(proc2,3)
 bar.Enter(-1)
 dim t as int=GetClock()
 dim ii as int
@@ -82,5 +64,5 @@ sub RemoteInitialize()
 	toput=new double[5000]
 	local=new double[5000*10]
 end
-*/
+
 

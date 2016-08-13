@@ -622,10 +622,10 @@ template <typename T>
 SoStatus splited_getchunk(_uint key,_uint fldid,_uint len,T* buf)
 {
 	_uint l;
-	_uint limit=fldid+len-15000;
-	for(l=fldid;l<limit;l+=15000)
+	_uint limit=fldid+len-15040;
+	for(l=fldid;l<limit;l+=15040)
 	{
-		if (do_getchunk(key,l,15000,buf+(l-fldid))!=SoOK)
+		if (do_getchunk(key,l,15040,buf+(l-fldid))!=SoOK)
 			return SoFail;
 	}
 	_uint remain=fldid+len-l;
