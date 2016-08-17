@@ -1233,7 +1233,7 @@ void RcAccumulate(DVM_Value *args)
 				send_idx_size = arr->size-sent_idx;
 			else
 				send_idx_size = BD_DATA_PROCESS_SIZE/sizeof(double);
-			memcpy(cmd->buf,arr->u.double_array,send_idx_size*sizeof(double));
+			memcpy(cmd->buf,arr->u.double_array+sent_idx,send_idx_size*sizeof(double));
 			cmd->param0=sent_idx;
 			cmd->size=send_idx_size*sizeof(double);
 			sent_idx+=send_idx_size;
@@ -1248,7 +1248,7 @@ void RcAccumulate(DVM_Value *args)
 
 }
 
-char buf[BD_DATA_PROCESS_SIZE*2];
+char buf[BD_DATA_PROCESS_SIZE*2]; //fix-me : may be buffer overflow here ....
 static THREAD_PROC(RcMasterData,param)
 {
 	MasterDataParam* par=(MasterDataParam*)param;
