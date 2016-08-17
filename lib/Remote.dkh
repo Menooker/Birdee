@@ -62,5 +62,8 @@ lib Remote
 		public declare function Acquire(max_wait as int) as int
 		public declare sub Release()
 	end
-
+	shared public class RAccumulator
+		public declare constructor initialize(count as int,size as int,buffer as double[] global)
+		public declare function Accumulate(inc as double[],max_wait as int) as int
+	end
 end

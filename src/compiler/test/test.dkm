@@ -1,68 +1,29 @@
 require Remote
 
-
-dim hosts as string[]={"127.0.0.1","127.0.0.1","127.0.0.1","127.0.0.1"}
-dim ports as int[]={13080,13090,13060,13070}
+dim hosts as string[]={"127.0.0.1","127.0.0.1"}
+dim ports as int[]={13080,13090}
+//dim hosts as string[]=new string[0]
+//dim ports as int[]=new int[0]
 dim mem_hosts as string[]={"127.0.0.1"}
 dim mem_ports as int[]={11211}
 dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 dim toput as double[]
-dim buf as shared double[] global=new double[5000*4] global
-dim local as double[]
-dim bar as shared RBarrier=new RBarrier(5)
-dim sema as shared RSemaphore=new RSemaphore(1)
+dim buf as shared double[] global=new double[50000] global
+dim accu as shared RAccumulator=new RAccumulator(2,50000,buf)
 
-
-function proc2(param as var) as int
-unsafe
-	bar.Enter(-1)
-	dim i as int
-	for i=0;i<5;i++
-		buf[i*5000:(i+1)*5000]=toput[0:5000]
-		bar.Enter(-1)
-		local[0:5000*4]=buf[0:5000*4]
-	end
-
+function proc(par as var) as int
+    dim localbuf as double[]=new double[50000]
+    dim i as int
+    for i=0;i<50000;i++
+        localbuf[i]=par
+    end
+    for #i=0;#i<5;#i++
+        accu.Accumulate(localbuf,-1)
+        println(buf[0])
+    end
 end
 
-function proc(param as var) as int
-unsafe
-	bar.Enter(-1)
-	dim i as int
-	dim j as int
-	println("HHHHHH")
-	for i=0;i<5;i++
-        sema.Acquire(-1)
-		toput[0:5000]=buf[i*5000:(i+1)*5000]
-		buf[i*5000:(i+1)*5000]=toput[0:5000]
-		sema.Release()
-		bar.Enter(-1)
-		dim kk as int
-		kk=17000
-        for j=0;j<1;j++
-            local[j*kk:(j+1)*kk]=buf[j*kk:(j+1)*kk]
-        end
-	end
-end
-
-nodes[0].CreateThread(proc2,0)
-nodes[0].CreateThread(proc2,1)
-nodes[1].CreateThread(proc2,2)
-nodes[1].CreateThread(proc2,3)
-bar.Enter(-1)
-dim t as int=GetClock()
-dim ii as int
-for ii=0;ii<5;ii++
-	bar.Enter(-1)
-	println("T="+(GetClock()-t))
-	t=GetClock()
-end
+nodes[0].CreateThread(proc,1)
+nodes[1].CreateThread(proc,2)
 
 gets()
-
-sub RemoteInitialize()
-	toput=new double[5000]
-	local=new double[5000*10]
-end
-
-

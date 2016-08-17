@@ -20,6 +20,7 @@ void RcTriggerGC(int round_id);
 void RcEnterBarrier(DVM_Value *args);
 void RcEnterSemaphore(DVM_Value *args);
 void RcLeaveSemaphore(DVM_Value *args);
+void RcAccumulate(DVM_Value *args);
 #ifdef __cplusplus
 }
 #endif

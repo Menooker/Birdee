@@ -1,6 +1,10 @@
 #include "Conf.h"
 #ifndef _H_BIRDEE_DEF
 #define _H_BIRDEE_DEF
+#define BD_MAJOR_VER 0
+#define BD_MINOR_VER 0
+#define BD_BUILD_VER 0
+
 typedef void (*BdVMFunction)(void *args, ...);
 typedef int int32;
 typedef unsigned int uint32;

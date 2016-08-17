@@ -148,7 +148,10 @@ main(int argc, char* argv[])
 
 	setlocale(LC_CTYPE, "");
 	if(argc<2)
+	{
+		printf("Birdee verison %d.%d.%d\n",BD_MAJOR_VER,BD_MINOR_VER,BD_BUILD_VER);
 		goto BAD_PARAM;
+	}
 	if(argv[1][0]=='-')
 	{
 		switch (argv[1][1])

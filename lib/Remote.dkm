@@ -101,6 +101,18 @@ shared public class RBarrier
 	public declare function Enter(max_wait as int) as int
 end
 
+shared public class RAccumulator
+	dim cnt as int
+	dim sz as int
+	public buf as double[] global
+	constructor initialize(count as int,size as int,buffer as double[] global)
+		cnt=count
+		sz=size
+		buf=buffer
+	end
+	public declare function Accumulate(inc as double[],max_wait as int) as int
+end
+
 shared public class RSemaphore
 	dim cnt as int
 	constructor initialize(count as int)

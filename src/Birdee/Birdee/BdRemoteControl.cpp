@@ -62,6 +62,12 @@ enum RcCommand
 	RcCmdLeaveSemaphore,
 };
 
+enum RcDataCommand
+{
+	RcDataHello=1,
+	RcDataAccumulate,
+};
+
 #pragma pack(push)
 #pragma pack(4)
 struct RcCommandPack
@@ -79,6 +85,24 @@ struct RcCommandPack
 		_uint64 param34;
 	};
 };
+struct RcDataPack
+{
+	uint32 cmd;
+	uint32 size;
+	_uint64 id;
+	int32 param0;
+	union
+	{
+		struct
+		{
+			int32 param1;
+			int32 param2;
+		};
+		_uint64 param12;
+	};
+	char buf[0];
+};
+
 #pragma pack(pop)
 
 #ifndef BD_ON_VC
@@ -89,13 +113,17 @@ struct RcCommandPack
 //Variables for Master node
 int global_gc=0;
 std::vector<SOCKET> slavenodes;
+std::vector<SOCKET> slavenodes_data;
 THREAD_ID MasterListenThread=0;
+THREAD_ID MasterDataThread=0;
 BD_EVENT master_mark_done;
 BD_LOCK master_bar_lock;
+BD_LOCK master_data_lock;
 //-------------------------
 
 //Variables for Slave node
 SOCKET masternode;
+SOCKET masterdatanode;
 //-------------------------
 
 BD_EVENT gc_event;
@@ -125,10 +153,9 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 {
 	SOCKET s=(SOCKET)RcConnect((char*)hosts[node_id].c_str(),port);
 	if(s==0 || RcMasterHello((SOCKET)s,hosts,ports, memhosts, memports,node_id))
-	{
 		return 1;
-	}
 	slavenodes.push_back(s);
+
 	DVM_ObjectRef obj=dvm_create_class_object_i(curdvm,node_class_index);
 	obj.data->u.class_object.field[0].object = host;
 	obj.data->u.class_object.field[1].int_value=port;
@@ -141,13 +168,20 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 }
 
 int RcSendCmd(SOCKET s,RcCommandPack* cmd);
+struct MasterDataParam
+{
+	int port;
+	int cnt;
+};
 static THREAD_PROC(RcMasterListen,param);
+static THREAD_PROC(RcMasterData,param);
 void RcConnectNode(DVM_Value *args)
 {
     DVM_Object  *ip,*port,*memhost,*memport;
 	DVM_ObjectRef arr,obj;
 	int localport;
 	slavenodes.clear();
+	slavenodes_data.clear();
 	localport = args[4].int_value ;
 
     ip = args[3].object.data ;
@@ -205,6 +239,13 @@ void RcConnectNode(DVM_Value *args)
             hosts.push_back(std::string(buf));
 		ports.push_back(port->u.barray.u.int_array[i]);
 	}
+	if(!MasterDataThread)
+	{
+		MasterDataParam* para=new MasterDataParam;
+		para->cnt=ip->u.barray.size;
+		para->port=localport;
+		MasterDataThread=UaCreateThreadEx(RcMasterData,para); //fix-me : Remember to close the thread
+	}
 	for(int i=0;i<ip->u.barray.size;i++)
 	{
 		if(RcDoConnectNode(ip->u.barray.u.object[i],port->u.barray.u.int_array[i],&obj,i+1,hosts,ports,memhosts,memports))
@@ -217,6 +258,9 @@ void RcConnectNode(DVM_Value *args)
 				node->u.class_object.field[3].int_value=DVM_TRUE; //closed
 				node->u.class_object.field[4].int_value=DVM_FALSE; //connected
 			}
+			UaStopThread(MasterDataThread);
+			UaCloseThread(MasterDataThread);
+			MasterDataThread=NULL;
 			RcThrowSocketError();
 			return;
 		}
@@ -229,6 +273,7 @@ void RcConnectNode(DVM_Value *args)
 		UaInitEvent(&gc_event,0);
 		UaInitEvent(&master_mark_done,0);
 		UaInitLock(&master_bar_lock);
+		UaInitLock(&master_data_lock);
 		MasterListenThread=UaCreateThreadEx(RcMasterListen,NULL); //fix-me : Remember to close the thread
 	}
 
@@ -622,6 +667,11 @@ void RcSlave(int port)
 
 		}
 		printf("All modules received, waiting for command");
+		masterdatanode=RcConnect((char*)master.c_str(),mi.localport);
+		RcCommandPack cmd;
+		cmd.cmd=RcDataHello;
+		cmd.param=mi.node_id;
+		RcSend(masterdatanode,&cmd,sizeof(cmd));
 		RcSlaveMainLoop(mainmod,s,hosts,ports,memhosts,memports,mi.node_id);
 	}
 	else
@@ -736,8 +786,11 @@ struct SyncNode
 		std::vector<SyncThreadNode>* waitlist;
 		std::queue<SyncThreadNode>* waitqueue;
 	};
+	void* buf;
+	uint32 size;
 };
 std::hash_map<_uint,SyncNode*> sync_data;
+std::hash_map<_uint,SyncNode*> data_data;
 typedef std::hash_map<_uint,SyncNode*>::iterator sync_itr;
 
 
@@ -798,6 +851,8 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 	if(itr==sync_data.end())
 	{
 		node=new SyncNode;
+		node->data=0;
+		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=0;
 		node->waitlist=new std::vector<SyncThreadNode>;
@@ -842,6 +897,8 @@ void RcSemaphoreMsg(int src,_uint b_id,_uint64 thread_id)
 	if(itr==sync_data.end())
 	{
 		node=new SyncNode;
+		node->data=0;
+		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=node->data;
 		node->waitqueue=new std::queue<SyncThreadNode>;
@@ -879,6 +936,8 @@ void RcSemaphoreLeaveMsg(int src,_uint b_id,_uint64 thread_id)
 	if(itr==sync_data.end())
 	{
 		node=new SyncNode;
+		node->data=0;
+		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=node->data;
 		node->waitqueue=new std::queue<SyncThreadNode>;
@@ -1078,6 +1137,224 @@ NEXT:
 	return 0;
 }
 
+
+template<typename T>
+SoStatus SoPutChunk(_uint key,_uint fldid,_uint len,T* v);
+void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,double* data)
+{
+	UaEnterLock(&master_data_lock);
+	sync_itr itr=data_data.find(aid);
+	SyncNode* node;
+	if(itr==data_data.end())
+	{
+		node=new SyncNode;
+		node->data=0;
+		node->size=0;
+		node->data=SoGeti(aid,0);
+		node->val=0;
+		node->waitlist=new std::vector<SyncThreadNode>;
+		data_data[aid]=node;
+		node->size=SoGeti(aid,1);
+		if(node->size <= 1024*1024*128)
+		{
+			node->buf=malloc(node->size * sizeof(double));
+			memset(node->buf,0,node->size * sizeof(double));
+		}
+		else
+		{
+			printf("Bad data buffer size\n");
+		}
+	}
+	else
+	{
+		node=itr->second;
+	}
+	double* sum=(double*)node->buf;
+	if( size+offset > node->size )
+	{
+		printf("Accumulation buffer overflow\n");
+	}
+	else
+	{
+		for(_uint i=0;i<size;i++)
+		{
+			sum[i+offset]+=data[i];
+		}
+	}
+	if(thread_id)
+	{
+		node->val++;
+		if(node->val>=node->data)
+		{
+			double* ppp=(double*)node->buf;
+			SoPutChunk(SoGeti(aid,2),0,node->size,(double*)node->buf);
+			node->val=0;
+			RcWakeRemoteThread(src,thread_id);
+			for(_uint i=0;i<node->waitlist->size();i++)
+			{
+				SyncThreadNode& th=(*node->waitlist)[i];
+				RcWakeRemoteThread(th.machine,th.thread_id);
+			}
+			memset(node->buf,0,node->size * sizeof(double));
+			node->waitlist->clear();
+		}
+		else
+		{
+			SyncThreadNode th={src,thread_id};
+			node->waitlist->push_back(th);
+		}
+	}
+	UaLeaveLock(&master_data_lock);
+}
+
+
+void RcAccumulate(DVM_Value *args)
+{
+	_uint bid=(_uint)args[2].object.data;
+	DVM_Array* arr=&args[1].object.data->u.barray;
+	UaResetEvent(&curthread->remote_event);
+	if(curdvm->is_master)
+	{
+		RcAccumulateMsg(-1,bid,(_uint64)curthread,0,arr->size,arr->u.double_array);
+	}
+	else
+	{
+		RcDataPack* cmd;
+		char buf[sizeof(RcDataPack)+BD_DATA_PROCESS_SIZE];
+		cmd=(RcDataPack*)buf;
+		cmd->cmd=RcDataAccumulate;
+		cmd->id=bid;
+		cmd->param12=0;
+		_uint sent_idx=0;
+		_uint send_idx_size;
+		while(sent_idx < arr->size)
+		{
+			if(sent_idx+BD_DATA_PROCESS_SIZE/sizeof(double) > arr->size)
+				send_idx_size = arr->size-sent_idx;
+			else
+				send_idx_size = BD_DATA_PROCESS_SIZE/sizeof(double);
+			memcpy(cmd->buf,arr->u.double_array,send_idx_size*sizeof(double));
+			cmd->param0=sent_idx;
+			cmd->size=send_idx_size*sizeof(double);
+			sent_idx+=send_idx_size;
+			if(sent_idx == arr->size)
+				cmd->param12=(_uint64)curthread;
+			RcSend(masterdatanode,cmd,sizeof(RcDataPack)+cmd->size);
+			
+		}
+		
+	}
+	curthread->retvar.int_value=UaWaitForEventEx(&curthread->remote_event,args[0].int_value);
+
+}
+
+char buf[BD_DATA_PROCESS_SIZE*2];
+static THREAD_PROC(RcMasterData,param)
+{
+	MasterDataParam* par=(MasterDataParam*)param;
+	int n=par->cnt;
+	int port=par->port;
+	delete par;
+	int maxfd;
+	fd_set readfds;
+	RcDataPack cmd;
+	SOCKET slaves[BD_MAX_NODE_NUM]={0};
+	SOCKET slisten=RcCreateListen(port);
+	for(int i=0;i<n;i++)
+	{
+		sockaddr_in remoteAddr;
+	#ifdef BD_ON_WINDOWS
+		int nAddrlen = sizeof(remoteAddr);
+	#else
+		unsigned int nAddrlen = sizeof(remoteAddr);
+	#endif
+		SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
+		if(sClient == INVALID_SOCKET)
+		{
+			printf("Data socket accept error !");
+			return 0;
+		};
+		RcCommandPack pack;
+		if(RcRecv(sClient,&pack,sizeof(RcCommandPack))!=sizeof(RcCommandPack) || pack.cmd!=RcDataHello)
+		{
+			printf("Data socket handshake error !");
+			return 0;
+		}
+		slaves[pack.param-1]=sClient;
+	}
+	printf("Data connection ok\n");
+	if(n>0)
+        maxfd=slaves[0];
+#ifdef BD_ON_LINUX
+	for(int i=1;i<n;i++)
+	{
+        if(slaves[i]>maxfd)
+            maxfd=slaves[i];
+	}
+	maxfd++;
+#endif
+
+	void* memc=NULL;
+	for(;;)
+	{
+		FD_ZERO(&readfds);
+		for(int i=0;i<n;i++)
+		{
+			FD_SET(slaves[i],&readfds);
+		}
+		if(SOCKET_ERROR == select(maxfd,&readfds,NULL,NULL,NULL))
+		{
+			printf("Data Select Error!%d\n",RcSocketLastError());
+			break;
+		}
+		for(int i=0;i<n;i++)
+		{
+			if (FD_ISSET(slaves[i],&readfds))
+			{
+				if(RcRecv(slaves[i],&cmd,sizeof(cmd))!=sizeof(cmd))
+				{
+					printf("Data Socket recv Error! %d\n",RcSocketLastError());
+					return 0;
+				}
+				if(cmd.size>BD_DATA_PROCESS_SIZE)
+				{
+					goto ERR;
+				}
+				int rec=0;
+				int torec=cmd.size;
+				while(rec<torec)
+				{
+					int inc=RcRecv(slaves[i],buf+rec,torec);
+					if(inc<=0)
+					{
+						printf("Data socket closed %d\n",RcSocketLastError());
+						return 0;
+					}
+					rec+=inc;
+				}
+				switch(cmd.cmd)
+				{
+				case RcDataAccumulate:
+					if(!memc)
+						memc=init_memcached_this_thread();
+					RcAccumulateMsg(i,cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
+					break;
+				default:
+					printf("Bad command %d!\n");
+				}
+			}
+NEXT:
+			int dummy;
+		}
+
+	}
+	return 0;
+ERR:
+	printf("Data connection internal error\n");
+	return 0;
+}
+
+
 void RcBeforeClose()
 {
 	UaKillEvent(&gc_event);
@@ -1085,6 +1362,10 @@ void RcBeforeClose()
 	{
 		UaStopThread(MasterListenThread);
 		UaCloseThread(MasterListenThread);
+		UaStopThread(MasterDataThread);
+		UaCloseThread(MasterDataThread);
+		MasterListenThread=NULL;
+		MasterDataThread=NULL;
 	}
 }
 int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)
