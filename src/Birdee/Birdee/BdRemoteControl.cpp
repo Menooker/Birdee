@@ -1248,7 +1248,7 @@ void RcAccumulate(DVM_Value *args)
 
 }
 
-char buf[BD_DATA_PROCESS_SIZE*2]; //fix-me : may be buffer overflow here ....
+
 static THREAD_PROC(RcMasterData,param)
 {
 	MasterDataParam* par=(MasterDataParam*)param;
@@ -1260,6 +1260,7 @@ static THREAD_PROC(RcMasterData,param)
 	RcDataPack cmd;
 	SOCKET slaves[BD_MAX_NODE_NUM]={0};
 	SOCKET slisten=RcCreateListen(port);
+	char buf[BD_DATA_PROCESS_SIZE]; 
 	for(int i=0;i<n;i++)
 	{
 		sockaddr_in remoteAddr;
@@ -1322,14 +1323,15 @@ static THREAD_PROC(RcMasterData,param)
 				}
 				int rec=0;
 				int torec=cmd.size;
-				while(rec<torec)
+				while(torec>0)
 				{
-					int inc=RcRecv(slaves[i],buf+rec,torec);
+					int inc=RcRecv(slaves[i],(char*)buf+rec,torec);
 					if(inc<=0)
 					{
 						printf("Data socket closed %d\n",RcSocketLastError());
 						return 0;
 					}
+					torec-=inc;
 					rec+=inc;
 				}
 				switch(cmd.cmd)
