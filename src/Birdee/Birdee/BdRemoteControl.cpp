@@ -110,6 +110,9 @@ struct RcDataPack
 #endif
 
 
+int self_node_id;
+SOCKET direct_sockets[BD_MAX_NODE_NUM]={0};
+int num_nodes;
 //Variables for Master node
 int global_gc=0;
 std::vector<SOCKET> slavenodes;
@@ -170,8 +173,7 @@ int RcDoConnectNode(DVM_ObjectRef host,int port,DVM_ObjectRef* out,int node_id,
 int RcSendCmd(SOCKET s,RcCommandPack* cmd);
 struct MasterDataParam
 {
-	int port;
-	int cnt;
+	SOCKET port;
 };
 static THREAD_PROC(RcMasterListen,param);
 static THREAD_PROC(RcMasterData,param);
@@ -242,8 +244,9 @@ void RcConnectNode(DVM_Value *args)
 	if(!MasterDataThread)
 	{
 		MasterDataParam* para=new MasterDataParam;
-		para->cnt=ip->u.barray.size;
-		para->port=localport;
+		para->port=RcCreateListen(localport);
+		self_node_id=0;
+		num_nodes=ip->u.barray.size+1;
 		MasterDataThread=UaCreateThreadEx(RcMasterData,para); //fix-me : Remember to close the thread
 	}
 	for(int i=0;i<ip->u.barray.size;i++)
@@ -547,10 +550,29 @@ void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
     return;
 }
 
+SOCKET RcTryConnect(char* ip,int port,int node_id)
+{	
+	SOCKET ret;
+	for(int i=0;i<3;i++)
+	{
+		ret=RcConnect(ip,port);
+		if(ret)
+			break;
+		UaSleep(500);
+	}
+	if(!ret)
+		return 0;
+	RcCommandPack cmd;
+	cmd.cmd=RcDataHello;
+	cmd.param=node_id;
+	RcSend(ret,&cmd,sizeof(cmd));
+	return ret;
+}
 
 void RcSlave(int port)
 {
-	SOCKET s=RcListen(port);
+	SOCKET slisten=RcCreateListen(port);
+	SOCKET s=RcAccept(slisten);
 	printf("Waiting for hand shaking...\n");
 	MasterInfo mi;
 	SlaveInfo si;
@@ -563,6 +585,11 @@ void RcSlave(int port)
 		char path[255];
 		char mainmod[255];
 
+		self_node_id=mi.node_id;
+		num_nodes=mi.num_nodes;
+		MasterDataParam* para=new MasterDataParam;
+		para->port=slisten;
+		MasterDataThread=UaCreateThreadEx(RcMasterData,para); //fix-me : Remember to close the thread
 		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
@@ -667,11 +694,22 @@ void RcSlave(int port)
 
 		}
 		printf("All modules received, waiting for command");
-		masterdatanode=RcConnect((char*)master.c_str(),mi.localport);
-		RcCommandPack cmd;
-		cmd.cmd=RcDataHello;
-		cmd.param=mi.node_id;
-		RcSend(masterdatanode,&cmd,sizeof(cmd));
+		direct_sockets[mi.node_id-1]=RcTryConnect((char*)hosts[0].c_str(),ports[0],mi.node_id);
+		if(!direct_sockets[mi.node_id-1])
+		{
+			printf("Failed to directly connect to master node\n");
+			goto ERR;
+		}
+		for(int i=1;i<mi.node_id;i++)
+		{
+			direct_sockets[i-1]=RcTryConnect((char*)hosts[i].c_str(),ports[i],mi.node_id);
+			if(!direct_sockets[i-1])
+			{
+				printf("Failed to directly connect to node %d\n",i);
+				goto ERR;
+			}
+		}
+		masterdatanode=direct_sockets[mi.node_id-1];
 		RcSlaveMainLoop(mainmod,s,hosts,ports,memhosts,memports,mi.node_id);
 	}
 	else
@@ -680,6 +718,10 @@ ERR:
 		printf("Hand shaking error! %d %d\n",err,err2);
 		RcCloseSocket(s);
 	}
+	
+	UaStopThread(MasterDataThread);
+	UaCloseThread(MasterDataThread);
+	MasterDataThread=NULL;
 }
 
 /*
@@ -1252,16 +1294,14 @@ void RcAccumulate(DVM_Value *args)
 static THREAD_PROC(RcMasterData,param)
 {
 	MasterDataParam* par=(MasterDataParam*)param;
-	int n=par->cnt;
-	int port=par->port;
+	int n=num_nodes-1;
+	SOCKET slisten=par->port;
 	delete par;
 	int maxfd;
 	fd_set readfds;
 	RcDataPack cmd;
-	SOCKET slaves[BD_MAX_NODE_NUM]={0};
-	SOCKET slisten=RcCreateListen(port);
-	char buf[BD_DATA_PROCESS_SIZE]; 
-	for(int i=0;i<n;i++)
+	char buf[BD_DATA_PROCESS_SIZE];
+	for(int i=self_node_id;i<n;i++)
 	{
 		sockaddr_in remoteAddr;
 	#ifdef BD_ON_WINDOWS
@@ -1272,7 +1312,7 @@ static THREAD_PROC(RcMasterData,param)
 		SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
 		if(sClient == INVALID_SOCKET)
 		{
-			printf("Data socket accept error !");
+			printf("Data socket accept error ! %d",RcSocketLastError());
 			return 0;
 		};
 		RcCommandPack pack;
@@ -1281,16 +1321,31 @@ static THREAD_PROC(RcMasterData,param)
 			printf("Data socket handshake error !");
 			return 0;
 		}
-		slaves[pack.param-1]=sClient;
+		direct_sockets[pack.param-1]=sClient;
+		printf("CONNNN %d\n",pack.param);
+	}
+	int connect_done=0;
+	while(connect_done==0)
+	{
+		connect_done=1;
+		for(int i=0;i<self_node_id;i++)
+		{
+			if(!direct_sockets[i])
+			{
+				connect_done=0;
+				UaSleep(50);
+				break;
+			}
+		}
 	}
 	printf("Data connection ok\n");
 	if(n>0)
-        maxfd=slaves[0];
+        maxfd=direct_sockets[0];
 #ifdef BD_ON_LINUX
 	for(int i=1;i<n;i++)
 	{
-        if(slaves[i]>maxfd)
-            maxfd=slaves[i];
+        if(direct_sockets[i]>maxfd)
+            maxfd=direct_sockets[i];
 	}
 	maxfd++;
 #endif
@@ -1301,7 +1356,7 @@ static THREAD_PROC(RcMasterData,param)
 		FD_ZERO(&readfds);
 		for(int i=0;i<n;i++)
 		{
-			FD_SET(slaves[i],&readfds);
+			FD_SET(direct_sockets[i],&readfds);
 		}
 		if(SOCKET_ERROR == select(maxfd,&readfds,NULL,NULL,NULL))
 		{
@@ -1310,9 +1365,9 @@ static THREAD_PROC(RcMasterData,param)
 		}
 		for(int i=0;i<n;i++)
 		{
-			if (FD_ISSET(slaves[i],&readfds))
+			if (FD_ISSET(direct_sockets[i],&readfds))
 			{
-				if(RcRecv(slaves[i],&cmd,sizeof(cmd))!=sizeof(cmd))
+				if(RcRecv(direct_sockets[i],&cmd,sizeof(cmd))!=sizeof(cmd))
 				{
 					printf("Data Socket recv Error! %d\n",RcSocketLastError());
 					return 0;
@@ -1325,7 +1380,7 @@ static THREAD_PROC(RcMasterData,param)
 				int torec=cmd.size;
 				while(torec>0)
 				{
-					int inc=RcRecv(slaves[i],(char*)buf+rec,torec);
+					int inc=RcRecv(direct_sockets[i],(char*)buf+rec,torec);
 					if(inc<=0)
 					{
 						printf("Data socket closed %d\n",RcSocketLastError());

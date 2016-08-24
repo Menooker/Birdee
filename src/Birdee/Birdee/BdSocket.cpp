@@ -135,3 +135,19 @@ SOCKET RcListen(int port)
 	return (SOCKET)sClient;
 }
 
+SOCKET RcAccept(SOCKET slisten)
+{
+    sockaddr_in remoteAddr;
+#ifdef BD_ON_WINDOWS
+    int nAddrlen = sizeof(remoteAddr);
+#else
+	unsigned int nAddrlen = sizeof(remoteAddr);
+#endif
+    SOCKET sClient = accept(slisten, (LPSOCKADDR)&remoteAddr, &nAddrlen);
+    if(sClient == INVALID_SOCKET)
+    {
+        printf("accept error !");
+        return 0;
+    }
+	return (SOCKET)sClient;
+}

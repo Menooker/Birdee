@@ -30,6 +30,7 @@ void RcSetTCPNoDelay(SOCKET fd);
 SOCKET RcConnect(char* ip,int port);
 SOCKET RcListen(int port);
 SOCKET RcCreateListen(int port);
+SOCKET RcAccept(SOCKET slisten);
 #ifdef __cplusplus
 }
 #endif
