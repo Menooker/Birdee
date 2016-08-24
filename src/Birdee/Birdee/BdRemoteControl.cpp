@@ -572,6 +572,7 @@ SOCKET RcTryConnect(char* ip,int port,int node_id)
 
 void RcSlave(int port)
 {
+	printf("port %d waiting for connections...\n",port);
 	SOCKET slisten=RcCreateListen(port);
 	SOCKET s=RcAccept(slisten);
 	printf("Waiting for hand shaking...\n");
@@ -590,6 +591,7 @@ void RcSlave(int port)
 		num_nodes=mi.num_nodes;
 		MasterDataParam* para=new MasterDataParam;
 		para->port=slisten;
+		UaInitLock(&master_data_lock);
 		MasterDataThread=UaCreateThreadEx(RcMasterData,para); //fix-me : Remember to close the thread
 		err=1;
 		if(mi.mod_cnt<=0)
@@ -722,6 +724,7 @@ ERR:
 	
 	UaStopThread(MasterDataThread);
 	UaCloseThread(MasterDataThread);
+	UaKillLock(&master_data_lock);
 	MasterDataThread=NULL;
 }
 
@@ -838,7 +841,7 @@ public:
 	int data;
 	std::vector<SyncThreadNode>* waitlist;
 	int total_size;
-	int base;
+	_uint base;
 	void* buf;
 	uint32 size;
 	_uint outarray;
@@ -861,12 +864,12 @@ public:
 			buf=malloc(size * sizeof(double));
 			if(blocks*DSM_CACHE_BLOCK_SIZE*(self_node_id+1)>sz)
 			{
-				size= sz-blocks*self_node_id;
+				size= sz-blocks*self_node_id*DSM_CACHE_BLOCK_SIZE;
 				if(size<0)
 					size=0;
 			}
 			base=blocks*self_node_id*DSM_CACHE_BLOCK_SIZE;
-			printf("===========\nnode->size =%d\nnode->base=%d\n==============\n",size,base);
+			//printf("===========\nnode->size =%d\nnode->base=%d\n==============\n",size,base);
 			memset(buf,0,size * sizeof(double));
 		}
 		else
@@ -944,7 +947,6 @@ void RcBarrierMsg(int src,_uint b_id,_uint64 thread_id)
 	{
 		node=new SyncNode;
 		node->data=0;
-		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=0;
 		node->waitlist=new std::vector<SyncThreadNode>;
@@ -990,7 +992,6 @@ void RcSemaphoreMsg(int src,_uint b_id,_uint64 thread_id)
 	{
 		node=new SyncNode;
 		node->data=0;
-		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=node->data;
 		node->waitqueue=new std::queue<SyncThreadNode>;
@@ -1029,7 +1030,6 @@ void RcSemaphoreLeaveMsg(int src,_uint b_id,_uint64 thread_id)
 	{
 		node=new SyncNode;
 		node->data=0;
-		node->size=0;
 		node->data=SoGeti(b_id,0);
 		node->val=node->data;
 		node->waitqueue=new std::queue<SyncThreadNode>;
@@ -1232,7 +1232,7 @@ NEXT:
 
 
 #define idx2nodeid(aaa) ((aaa==self_node_id)?0:aaa)
-#define nodeid2idx(aaa) ((aaa==0)?self_node_id:aaa)
+#define nodeid2idx(aaa) ((aaa==0)?self_node_id-1:aaa-1)
 
 template<typename T>
 SoStatus SoPutChunk(_uint key,_uint fldid,_uint len,T* v);
@@ -1286,7 +1286,7 @@ void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint siz
 	double* sum=(double*)node->buf;
 	if( offset<node->base || offset+size > node->base + node->size )
 	{
-		printf("Accumulation buffer overflow\n");
+		printf("Accumulation buffer overflow src=%d offset=%d size=%d\n",src,offset,size);
 	}
 	else
 	{
@@ -1373,7 +1373,7 @@ void RcAccumulate(DVM_Value *args)
 				cmd->param0=send_idx[i];
 				cmd->size=send_idx_size*sizeof(double);
 				send_idx[i]+=send_idx_size;
-				if(send_idx[i] == send_idx[i])
+				if(send_idx[i] == send_size[i])
 				{
 					cmd->param12=(_uint64)curthread;
 				}
@@ -1382,6 +1382,7 @@ void RcAccumulate(DVM_Value *args)
 					cmd->param12=0;
 					done=false;
 				}
+				//printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
 				RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
 			}
 		}
