@@ -66,6 +66,7 @@ enum RcDataCommand
 {
 	RcDataHello=1,
 	RcDataAccumulate,
+	RcDataAccumulatePartialDone,
 };
 
 #pragma pack(push)
@@ -828,13 +829,62 @@ struct SyncNode
 		std::vector<SyncThreadNode>* waitlist;
 		std::queue<SyncThreadNode>* waitqueue;
 	};
+};
+class DataSyncNode
+{
+public:
+	int master_node_cnt;
+	int val;
+	int data;
+	std::vector<SyncThreadNode>* waitlist;
+	int total_size;
+	int base;
 	void* buf;
 	uint32 size;
+	_uint outarray;
+	DataSyncNode(uint32 aid)
+	{
+		data=0;
+		size=0;
+		data=SoGeti(aid,0);
+		val=0;
+		master_node_cnt=0;
+		waitlist=new std::vector<SyncThreadNode>;
+		int sz=SoGeti(aid,1);
+		total_size=sz;
+		outarray=SoGeti(aid,2);
+		if(sz <= 1024*1024*128)
+		{
+			int blocks= (sz % DSM_CACHE_BLOCK_SIZE==0) ? sz/DSM_CACHE_BLOCK_SIZE: sz/DSM_CACHE_BLOCK_SIZE+1;
+			blocks= (blocks % num_nodes==0) ? blocks/num_nodes: blocks/num_nodes+1;
+			size=blocks*DSM_CACHE_BLOCK_SIZE;
+			buf=malloc(size * sizeof(double));
+			if(blocks*DSM_CACHE_BLOCK_SIZE*(self_node_id+1)>sz)
+			{
+				size= sz-blocks*self_node_id;
+				if(size<0)
+					size=0;
+			}
+			base=blocks*self_node_id*DSM_CACHE_BLOCK_SIZE;
+			printf("===========\nnode->size =%d\nnode->base=%d\n==============\n",size,base);
+			memset(buf,0,size * sizeof(double));
+		}
+		else
+		{
+			printf("Bad data buffer size\n");
+		}
+	}
+	~DataSyncNode()
+	{
+		if(waitlist)
+			delete waitlist;
+		free(buf);
+	}
 };
 std::hash_map<_uint,SyncNode*> sync_data;
-std::hash_map<_uint,SyncNode*> data_data;
+std::hash_map<_uint,DataSyncNode*> data_data;
 typedef std::hash_map<_uint,SyncNode*>::iterator sync_itr;
-
+typedef std::hash_map<_uint,DataSyncNode*>::iterator data_itr;
 
 
 /*
@@ -1180,39 +1230,61 @@ NEXT:
 }
 
 
+
+#define idx2nodeid(aaa) ((aaa==self_node_id)?0:aaa)
+#define nodeid2idx(aaa) ((aaa==0)?self_node_id:aaa)
+
 template<typename T>
 SoStatus SoPutChunk(_uint key,_uint fldid,_uint len,T* v);
+
+
+void RcAccumulatePartialDoneMsg(int src,uint32 aid,bool locked)
+{
+	if(!locked)
+		UaEnterLock(&master_data_lock);
+	data_itr itr=data_data.find(aid);
+	DataSyncNode* node;
+	if(itr==data_data.end())
+	{
+		node=new DataSyncNode(aid);
+		data_data[aid]=node;
+	}
+	else
+	{
+		node=itr->second;
+	}
+
+	node->master_node_cnt++;
+	if(node->master_node_cnt>=num_nodes)
+	{
+		for(_uint i=0;i<node->waitlist->size();i++)
+		{
+			SyncThreadNode& th=(*node->waitlist)[i];
+			RcWakeRemoteThread(th.machine,th.thread_id);
+		}
+		node->master_node_cnt=0;
+		node->waitlist->clear();
+	}
+	if(!locked)
+		UaLeaveLock(&master_data_lock);
+}
+
 void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,double* data)
 {
 	UaEnterLock(&master_data_lock);
-	sync_itr itr=data_data.find(aid);
-	SyncNode* node;
+	data_itr itr=data_data.find(aid);
+	DataSyncNode* node;
 	if(itr==data_data.end())
 	{
-		node=new SyncNode;
-		node->data=0;
-		node->size=0;
-		node->data=SoGeti(aid,0);
-		node->val=0;
-		node->waitlist=new std::vector<SyncThreadNode>;
+		node=new DataSyncNode(aid);
 		data_data[aid]=node;
-		node->size=SoGeti(aid,1);
-		if(node->size <= 1024*1024*128)
-		{
-			node->buf=malloc(node->size * sizeof(double));
-			memset(node->buf,0,node->size * sizeof(double));
-		}
-		else
-		{
-			printf("Bad data buffer size\n");
-		}
 	}
 	else
 	{
 		node=itr->second;
 	}
 	double* sum=(double*)node->buf;
-	if( size+offset > node->size )
+	if( offset<node->base || offset+size > node->base + node->size )
 	{
 		printf("Accumulation buffer overflow\n");
 	}
@@ -1220,30 +1292,36 @@ void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint siz
 	{
 		for(_uint i=0;i<size;i++)
 		{
-			sum[i+offset]+=data[i];
+			sum[i+ offset - node->base]+=data[i];
 		}
 	}
 	if(thread_id)
 	{
 		node->val++;
-		if(node->val>=node->data)
-		{
-			double* ppp=(double*)node->buf;
-			SoPutChunk(SoGeti(aid,2),0,node->size,(double*)node->buf);
-			node->val=0;
-			RcWakeRemoteThread(src,thread_id);
-			for(_uint i=0;i<node->waitlist->size();i++)
-			{
-				SyncThreadNode& th=(*node->waitlist)[i];
-				RcWakeRemoteThread(th.machine,th.thread_id);
-			}
-			memset(node->buf,0,node->size * sizeof(double));
-			node->waitlist->clear();
-		}
-		else
+		if(self_node_id==0)
 		{
 			SyncThreadNode th={src,thread_id};
 			node->waitlist->push_back(th);
+		}
+		if(node->val>=node->data)
+		{
+			double* ppp=(double*)node->buf;
+			if(node->size)
+				SoPutChunk(node->outarray,node->base,node->size,(double*)node->buf);
+			node->val=0;
+			memset(node->buf,0,node->size * sizeof(double));
+			if(self_node_id==0)
+			{
+				RcAccumulatePartialDoneMsg(-1,aid,true);
+			}
+			else
+			{
+				RcDataPack cmd;
+				cmd.cmd=RcDataAccumulatePartialDone;
+				cmd.id=aid;
+				cmd.size=0;
+				RcSend(masterdatanode,&cmd,sizeof(cmd));
+			}
 		}
 	}
 	UaLeaveLock(&master_data_lock);
@@ -1255,36 +1333,58 @@ void RcAccumulate(DVM_Value *args)
 	_uint bid=(_uint)args[2].object.data;
 	DVM_Array* arr=&args[1].object.data->u.barray;
 	UaResetEvent(&curthread->remote_event);
-	if(curdvm->is_master)
+	int blocks= (arr->size % DSM_CACHE_BLOCK_SIZE==0) ? arr->size/DSM_CACHE_BLOCK_SIZE: arr->size/DSM_CACHE_BLOCK_SIZE+1;
+	blocks= (blocks % num_nodes==0) ? blocks/num_nodes: blocks/num_nodes+1;
+	int send_idx[BD_MAX_NODE_NUM];
+	int send_size[BD_MAX_NODE_NUM];
+	RcDataPack* cmd;
+	char buf[sizeof(RcDataPack)+BD_DATA_PROCESS_SIZE];
+	cmd=(RcDataPack*)buf;
+	cmd->cmd=RcDataAccumulate;
+	cmd->id=bid;	
+	for(int i=0;i<num_nodes;i++)
 	{
-		RcAccumulateMsg(-1,bid,(_uint64)curthread,0,arr->size,arr->u.double_array);
+		send_idx[i]=i*blocks*DSM_CACHE_BLOCK_SIZE;
+		if(blocks*DSM_CACHE_BLOCK_SIZE+send_idx[i]>arr->size)
+			send_size[i]=arr->size;
+		else
+			send_size[i]=send_idx[i]+blocks*DSM_CACHE_BLOCK_SIZE;
 	}
-	else
+	bool done=false;
+	while(!done)
 	{
-		RcDataPack* cmd;
-		char buf[sizeof(RcDataPack)+BD_DATA_PROCESS_SIZE];
-		cmd=(RcDataPack*)buf;
-		cmd->cmd=RcDataAccumulate;
-		cmd->id=bid;
-		cmd->param12=0;
-		_uint sent_idx=0;
-		_uint send_idx_size;
-		while(sent_idx < arr->size)
+		done=true;
+		for(int i=0;i<num_nodes;i++)
 		{
-			if(sent_idx+BD_DATA_PROCESS_SIZE/sizeof(double) > arr->size)
-				send_idx_size = arr->size-sent_idx;
-			else
-				send_idx_size = BD_DATA_PROCESS_SIZE/sizeof(double);
-			memcpy(cmd->buf,arr->u.double_array+sent_idx,send_idx_size*sizeof(double));
-			cmd->param0=sent_idx;
-			cmd->size=send_idx_size*sizeof(double);
-			sent_idx+=send_idx_size;
-			if(sent_idx == arr->size)
-				cmd->param12=(_uint64)curthread;
-			RcSend(masterdatanode,cmd,sizeof(RcDataPack)+cmd->size);
-			
+			if(send_idx[i]<send_size[i])
+			{
+				if(i==self_node_id)
+				{
+					RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.double_array+send_idx[i]);
+					send_idx[i]=send_size[i];
+					continue;
+				}
+				int send_idx_size;
+				if(send_idx[i]+BD_DATA_PROCESS_SIZE/sizeof(double) > send_size[i])
+					send_idx_size = send_size[i]-send_idx[i];
+				else
+					send_idx_size = BD_DATA_PROCESS_SIZE/sizeof(double);
+				memcpy(cmd->buf,arr->u.double_array+send_idx[i],send_idx_size*sizeof(double));
+				cmd->param0=send_idx[i];
+				cmd->size=send_idx_size*sizeof(double);
+				send_idx[i]+=send_idx_size;
+				if(send_idx[i] == send_idx[i])
+				{
+					cmd->param12=(_uint64)curthread;
+				}
+				else
+				{
+					cmd->param12=0;
+					done=false;
+				}
+				RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
+			}
 		}
-		
 	}
 	curthread->retvar.int_value=UaWaitForEventEx(&curthread->remote_event,args[0].int_value);
 
@@ -1322,7 +1422,6 @@ static THREAD_PROC(RcMasterData,param)
 			return 0;
 		}
 		direct_sockets[pack.param-1]=sClient;
-		printf("CONNNN %d\n",pack.param);
 	}
 	int connect_done=0;
 	while(connect_done==0)
@@ -1394,7 +1493,13 @@ static THREAD_PROC(RcMasterData,param)
 				case RcDataAccumulate:
 					if(!memc)
 						memc=init_memcached_this_thread();
-					RcAccumulateMsg(i,cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
+					RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
+					break;
+				case RcDataAccumulatePartialDone:
+					if(self_node_id==0)
+						RcAccumulatePartialDoneMsg(i,cmd.id,false);
+					else
+						printf("Error! Slave node received a control message!\n");
 					break;
 				default:
 					printf("Bad command %d!\n");
