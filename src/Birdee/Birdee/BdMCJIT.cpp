@@ -4,6 +4,8 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/PassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 using namespace llvm;
 
 //===----------------------------------------------------------------------===//
@@ -249,7 +251,6 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   tm->setMCUseLoc(true);
   tm->Options.NoFramePointerElim=1;
   tm->setOptLevel((CodeGenOpt::Level)(CodeGenOpt::None+parameters.optmization));
-
   eb.setUseMCJIT(this->mUseMC)
     .setErrorStr(&ErrStr)
 	.setOptLevel((CodeGenOpt::Level)(CodeGenOpt::None+parameters.optmization));
@@ -274,7 +275,6 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   // Store this engine
   EngineMap[M] = NewEngine;
   Modules.push_back(M);
-
   return NewEngine;
 }
 

@@ -209,6 +209,7 @@ std::vector<BcParameter> bparameters;
 Value* psta=0;
 //std::vector<BcParameter> bstatic;
 std::hash_map<int ,Value*> barrays;
+std::hash_map<int ,Value*> ballocas;
 
 extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
@@ -226,7 +227,7 @@ Function* BcBuildPush(char* name,int isptr,Type* ty);
 Function* GetArrAddr();
 Function* GetFldAddr();
 Value* cached_mid;
-
+FunctionDefinition * curfun_definition;
  int
 get_opcode_type_offset3(int type)
 {
@@ -345,7 +346,7 @@ Value* GetModuleId()
 	return cached_mid;
 }
 
-Value* GetArrayAddress(int index,int isLocal,int isParam=0)
+Value* GetArrayAddress(Type* ty,int index,int isLocal,int isParam=0)
 {
 	int cacheindex=index;
 	if(index>=2000)
@@ -359,7 +360,7 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 		builder.SetInsertPoint(mainblock->begin());
 		//builder.SetInsertPoint(IP);
 		//builder.SetCurrentDebugLocation (*dbgloc);
-		v=builder.CreateAlloca(TyObjectRef->getPointerTo());
+		v=builder.CreateAlloca(Type::getInt8PtrTy(context),0,"ARRAYCACHE");
 		builder.restoreIP(ip);
 		if(isLocal)
 		{
@@ -371,8 +372,8 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 				Value* addr=curfun->arg_begin();
 				addr=builder.CreateGEP(addr,ConstInt(32,index));
 				addr=builder.CreateLoad(addr);
-
-				builder.CreateStore(builder.CreateCall(GetFldAddr(),addr),v);
+				Value* v1=builder.CreateCall(GetFldAddr(),addr);
+				builder.CreateStore(v1,v);
 			//}
 		}
 		else
@@ -382,6 +383,7 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 			Value* ptr=builder.CreateGEP(vstatic,ConstInt(32,index));
 			vstatic=builder.CreateLoad(ptr);
 			vstatic=builder.CreateCall(GetFldAddr(),vstatic);
+			//Value* v1=builder.CreatePointerCast(vstatic,ty);
 			builder.CreateStore(vstatic,v);
 		}
 		barrays[cacheindex]=v;
@@ -390,6 +392,34 @@ Value* GetArrayAddress(int index,int isLocal,int isParam=0)
 	}
 	else
 		return barrays[cacheindex];
+}
+
+Value* GetParameterAddress(int index,int ty)
+{
+	if(ty==2)
+	{
+		return builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,index)));
+	}
+	if(index>=curfun_param_cnt)
+	{
+		if(ballocas.find(index)==ballocas.end())
+		{
+			IRBuilderBase::InsertPoint ip=builder.saveIP();
+			builder.SetInsertPoint(mainblock->begin());
+			Value* alloca=builder.CreateAlloca(TypeSwitch[ty]->getPointerElementType(),NULL,curfun_definition->local_variable[index]->name);
+			builder.restoreIP(ip);
+			ballocas[index]=alloca;
+			return alloca;
+		}
+		else
+		{
+			return ballocas[index];
+		}
+	}
+	else
+	{
+		return builder.CreatePointerCast(builder.CreateGEP(curfun->arg_begin(),ConstInt(32,index)),TypeSwitch[ty]);
+	}
 }
 
 Value* GetStrValue(char* str)
@@ -742,7 +772,7 @@ Function* GetArrAddrSafe()
 	if(!fArrAddrSafe)
 	{
 
-		BcBuildArrPtrSafe(TyObjectRef->getPointerTo());
+		BcBuildArrPtrSafe(Type::getInt8PtrTy(context));
 	}
 	return fArrAddrSafe;
 
@@ -752,7 +782,7 @@ Function* GetFldAddr()
 {
 	if(!fFldAddr)
 	{
-		BcBuildFldPtr(TyObjectRef->getPointerTo());
+		BcBuildFldPtr(Type::getInt8PtrTy(context));//TyObjectRef->getPointerTo());
 	}
 	return fFldAddr;
 
@@ -763,7 +793,7 @@ Function* GetArrAddr()
 	if(!fArrAddr)
 	{
 		BcBuildArrBdChk();
-		BcBuildArrPtr(TyObjectRef->getPointerTo());
+		BcBuildArrPtr(Type::getInt8PtrTy(context));
 	}
 	return fArrAddr;
 
@@ -890,7 +920,7 @@ extern "C" void BcBuildInlines(void* mod)
 			switch(i)
 			{
 			case FunArrAddr:
-				BcBuildArrPtrImp(TyObjectRef->getPointerTo());
+				BcBuildArrPtrImp(Type::getInt8PtrTy(context));
 				break;
 			case FunPushi:
 				BcBuildPushImp("systemi!PushiImp",0,Type::getInt32Ty(context));
@@ -905,10 +935,10 @@ extern "C" void BcBuildInlines(void* mod)
 				BcBuildPopImp();
 				break;
 			case FunArrAddrSafe:
-				BcBuildArrPtrSafeImp(TyObjectRef->getPointerTo());
+				BcBuildArrPtrSafeImp(Type::getInt8PtrTy(context));
 				break;
 			case FunFldAddr:
-				BcBuildFldPtrImp(TyObjectRef->getPointerTo());
+				BcBuildFldPtrImp(Type::getInt8PtrTy(context));
 				break;
 			}
 		}
@@ -1452,10 +1482,15 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 		BcParameter& p=bparameters[decl->variable_index];
 		if(!p.v || decl->is_volatile)
 		{
+			t1=GetParameterAddress(decl->variable_index,get_opcode_type_offset(decl->type));
+			p.v=builder.CreateLoad(t1,decl->is_volatile);
+			return p.v;
+			/*
 			switch(get_opcode_type_offset(decl->type))
 			{
 			case 2://var is string or obj
-				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
+				//t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
+				t1=GetParameterAddress(decl->variable_index,get_opcode_type_offset(decl->type))
 				p.v=builder.CreateLoad(t1,decl->is_volatile); //pointer variable should not use 'registers'?
 				return p.v;
 			case 0:
@@ -1466,7 +1501,7 @@ Value* BcGetVarValue(Declaration *decl, int line_number)
 				t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
 				p.v=builder.CreateLoad(builder.CreateBitCast(t1,Type::getDoublePtrTy(context)),decl->is_volatile);
 				return p.v;
-			}
+			}*/
 		}
 		else
 		{
@@ -1665,8 +1700,8 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 {
 	int ty=get_opcode_type_offset(decl->type);
     if (decl->is_local) {
-
-		Value* t1=builder.CreateGEP(curfun->arg_begin(),ConstInt(32,decl->variable_index));
+		Value* t1=GetParameterAddress(decl->variable_index,ty);
+		//Value* t1=builder.CreateGEP(curfun->arg_begin(),ConstInt(32,decl->variable_index));
 		if(vartype==-1)
 		{
 
@@ -1687,13 +1722,14 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 				builder.CreateStore(BcBitToInt(v),builder.CreateBitCast(t1,TypeSwitch[ty]),decl->is_volatile);
 				if(dkc_is_array(decl->type) && !decl->type->derive->u.array_d.is_global)//Full_arr_chk
 				{
+
 					if(isArrayAddressSet(decl->variable_index,1))
 					{
 						Value* addr=builder.CreateCall(GetFldAddr(),v);
-						builder.CreateStore(addr,GetArrayAddress(decl->variable_index,1,decl->is_param));
+						builder.CreateStore(addr,GetArrayAddress(TypeSwitch[0],decl->variable_index,1,decl->is_param));
 					}
 					else
-						GetArrayAddress(decl->variable_index,1,decl->is_param);
+						GetArrayAddress(TypeSwitch[0],decl->variable_index,1,decl->is_param);
 				}
 			}
 		}
@@ -1744,10 +1780,10 @@ void BcGenerateSaveToIdentifier(Declaration *decl, Value* v, int line_number,int
 						if(isArrayAddressSet(decl->variable_index,0))
 						{
 							Value* addr=builder.CreateCall(GetFldAddr(),v);
-							builder.CreateStore(addr,GetArrayAddress(decl->variable_index,0));
+							builder.CreateStore(addr,GetArrayAddress(TypeSwitch[ty],decl->variable_index,0));
 						}
 						else
-							GetArrayAddress(decl->variable_index,0);
+							GetArrayAddress(TypeSwitch[ty],decl->variable_index,0);
 					}//*/
 				}
 			}
@@ -1920,7 +1956,7 @@ void BcGenerateSaveToLvalue(DVM_Executable *exe, Block *block,Expression *expr,V
 				{
 					if(decl) ////Full_arr_chk
 					{
-						p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+						p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(TypeSwitch[myty],decl->variable_index,decl->is_local,decl->is_param)),
 							TypeSwitch[myty]);
 					}
 					else
@@ -2020,7 +2056,8 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 		Declaration* decl=left->u.identifier.u.declaration;
 		if(decl->is_local)
 		{
-			t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
+			t1=GetParameterAddress(decl->variable_index,0);
+			//t1=builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,decl->variable_index)));
 			ptr=builder.CreateBitCast(t1,Type::getInt32PtrTy(context));
 			if(isInc)
 				builder.CreateCall2(fAtmInc,ptr,r);
@@ -2089,7 +2126,7 @@ void BcGenerateAtomicExpression(DVM_Executable* exe,Block *block,Expression *lef
 						decl=left->u.index_expression.barray->u.identifier.u.declaration;
 				if(decl)
 				{
-					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(TypeSwitch[0],decl->variable_index,decl->is_local,decl->is_param)),
 						TypeSwitch[0]);
 				}
 				else
@@ -2410,7 +2447,7 @@ Value* BcGenerateIndexExpression(DVM_Executable *exe, Block *block,Expression *e
 						decl=expr->u.index_expression.barray->u.identifier.u.declaration;
 				if(decl)
 				{
-					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(decl->variable_index,decl->is_local,decl->is_param)),
+					p=builder.CreatePointerCast( builder.CreateLoad(GetArrayAddress(TypeSwitch[myty],decl->variable_index,decl->is_local,decl->is_param)),
 						TypeSwitch[myty]);
 
 				}
@@ -3221,6 +3258,12 @@ void BcGenerateContinue(DVM_Executable *exe, Block *block,Statement *statement)
 
 llvm::BasicBlock* BcGenerateBlock(DVM_Executable *cf,Block* current_block,StatementList* statement_list,llvm::BasicBlock* blk)
 {
+	if(current_block && current_block->unsafe)
+	{
+		llvm::FastMathFlags flg;
+		flg.setUnsafeAlgebra();
+		builder.SetFastMathFlags(flg);
+	}
 	StatementList *pos;
     for (pos = statement_list; pos; pos = pos->next) {
         switch (pos->statement->type) {
@@ -3274,6 +3317,10 @@ llvm::BasicBlock* BcGenerateBlock(DVM_Executable *cf,Block* current_block,Statem
             DBG_assert(0, ("pos->statement->type..", pos->statement->type));
         }
     }
+	if(current_block && current_block->unsafe)
+	{
+		builder.clearFastMathFlags();
+	}
 	return blk;
 }
 
@@ -3285,6 +3332,7 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 	//bstatic.resize(100); //fix-me : get the number of static
 	barrays.clear();
 	cached_mid=NULL;
+	ballocas.clear();
 	//block->parent
 	//bparameters.shrink_to_fit();
 	Function *retf = Function::Create(FT, Function::ExternalLinkage,name, module);
@@ -3319,6 +3367,7 @@ llvm::Function* BcGenerateFunctionEx(DVM_Executable *exe, char* name,Block* bloc
 llvm::Function* BcGenerateFunction(DVM_Executable *exe, FunctionDefinition * src,char* clsname)
 {
 	char buf[512];
+	curfun_definition=src;
 	curfun_param_cnt=src->param_cnt;
 	if(clsname)
 	{

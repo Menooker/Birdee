@@ -16,9 +16,11 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Transforms/Instrumentation.h"
+#include "llvm/Transforms/Vectorize.h"
 #include "stdarg.h"
 #include <setjmp.h>
 using namespace llvm;
@@ -31,7 +33,7 @@ using namespace llvm;
 #include "BdMCJIT.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "BdParameters.h"
-
+#include "llvm/Support/Debug.h"
 #ifdef BD_ON_LINUX
 #include <sys/time.h>
 #endif
@@ -1070,7 +1072,8 @@ extern "C" void ExInitExeEngine()
 	InitializeNativeTarget();
 	InitializeNativeTargetAsmPrinter();
 	InitializeNativeTargetAsmParser();
-
+	//DebugFlag=true;
+	//setCurrentDebugType("loop-vectorize");
 }
 
 
@@ -1517,15 +1520,18 @@ void ExInvokeDelegate()
 }
 
 
-void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngine,Module* M)
+void InitOptimizer(PassManager& OurFPM,ExecutionEngine* TheExecutionEngine,Module* M)
 {
-
-
+	EngineBuilder eb(M);
+	TargetMachine* tm=eb.selectTarget();
+	OurFPM.add(new DataLayout(*TheExecutionEngine->getDataLayout()));
+	tm->addAnalysisPasses(OurFPM);
 	// Set up the optimizer pipeline.  Start with registering info about how the
 	// target lays out data structures.
-	OurFPM.add(new DataLayout(*TheExecutionEngine->getDataLayout()));
-	// Provide basic AliasAnalysis support for GVN.
+	//OurFPM.add(new DataLayout(*TheExecutionEngine->getDataLayout()));
+	/*// Provide basic AliasAnalysis support for GVN.
 	OurFPM.add(createBasicAliasAnalysisPass());
+	
 	// Do simple "peephole" optimizations and bit-twiddling optzns.
 	//OurFPM.add(createInstructionCombiningPass());
 	// Reassociate expressions.
@@ -1535,15 +1541,34 @@ void InitOptimizer(FunctionPassManager& OurFPM,ExecutionEngine* TheExecutionEngi
 	// Simplify the control flow graph (deleting unreachable blocks, etc).
 	OurFPM.add(createCFGSimplificationPass());
 	//OurFPM.add(createBoundsCheckingPass());
+	
 	OurFPM.add(createPromoteMemoryToRegisterPass());
-	OurFPM.doInitialization();
+	OurFPM.add(createDependenceAnalysisPass());
+	OurFPM.add(createScalarEvolutionAliasAnalysisPass());
+	OurFPM.add(createLoopVectorizePass());
+	//OurFPM.add(createSLPVectorizerPass());
+	*/
+  PassManagerBuilder Builder;
+  Builder.OptLevel = 2;
+  Builder.LoopVectorize=true;
+  Builder.DisableUnrollLoops=false;
+  OurFPM.add(createPromoteMemoryToRegisterPass());
+  Builder.populateModulePassManager(OurFPM);
+  
+  //OurFPM.add(createLoopVectorizePass());
+	//OurFPM.doInitialization();
+  OurFPM.run(*M);
+  /*
 	Module::iterator it;
 	Module::iterator end = M->end();
 	for (it = M->begin(); it != end; ++it) {
 		// Run the FPM on this function
+		printf("%s",(*it).getName());
 		OurFPM.run(*it);
-	}
+	}*/
 	TheExecutionEngine->finalizeObject();
+	//M->dump();
+
 }
 //*/
 //void ExReplaceInlineFunctions(Module* m,Module* inline_mod);
@@ -1857,10 +1882,10 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoDec);
 	MCJIT->addGlobalMapping("shared!dec",(void*)SoDec);}*/
 
-	FunctionPassManager* pm=new FunctionPassManager(m);
+	PassManager* pm=new PassManager();
 	//mod->pass=pm;
 	InitOptimizer(*pm,TheExecutionEngine,m);
-	delete pm;
+	//delete pm;
 	return TheExecutionEngine;
 }
 
@@ -1911,7 +1936,8 @@ void ExReplaceInlineFunctions(Module* m)
 	f=m->getFunction("systemi!ArrAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,BcBuildArrPtrImp(TyO->getPointerTo()));
+		Type* voidp=f->getFunctionType()->getReturnType();
+		replaceAllUsesWith(f,BcBuildArrPtrImp(voidp));
 	}
 	f=m->getFunction("systemi!Pushi");
 	if(f)
@@ -1931,12 +1957,14 @@ void ExReplaceInlineFunctions(Module* m)
 	f=m->getFunction("systemi!ArrAddrSafe");
 	if(f)
 	{
-		replaceAllUsesWith(f,BcBuildArrPtrSafeImp(TyO->getPointerTo()));
+		Type* voidp=f->getFunctionType()->getReturnType();
+		replaceAllUsesWith(f,BcBuildArrPtrSafeImp(voidp));
 	}
 	f=m->getFunction("systemi!FldAddr");
 	if(f)
 	{
-		replaceAllUsesWith(f,BcBuildFldPtrImp(TyO->getPointerTo()));
+		Type* voidp=f->getFunctionType()->getReturnType();
+		replaceAllUsesWith(f,BcBuildFldPtrImp(voidp));
 	}
 	f=m->getFunction("systemi!Pop");
 	if(f)
