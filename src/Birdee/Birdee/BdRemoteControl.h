@@ -6,7 +6,7 @@
 extern "C"
 {
 #endif
-
+void RcBeforeClose();
 SOCKET RcConnect(char* ip,int port);
 SOCKET RcListen(int port);
 void RcConnectNode(DVM_Value *args);

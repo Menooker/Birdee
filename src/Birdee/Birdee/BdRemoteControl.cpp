@@ -117,7 +117,6 @@ int num_nodes;
 //Variables for Master node
 int global_gc=0;
 std::vector<SOCKET> slavenodes;
-std::vector<SOCKET> slavenodes_data;
 THREAD_ID MasterListenThread=0;
 THREAD_ID MasterDataThread=0;
 BD_EVENT master_mark_done;
@@ -146,7 +145,17 @@ void RcThrowSocketError(int err)
 	_BreakPoint
 }
 
-
+void RcCloseDirectLinks()
+{
+	for(int i=0;i<BD_MAX_NODE_NUM;i++)
+	{
+		if(direct_sockets[i])
+		{
+			RcCloseSocket(direct_sockets[i]);
+			direct_sockets[i]=NULL;
+		}
+	}
+}
 
 int node_class_index=-1;
 
@@ -184,7 +193,6 @@ void RcConnectNode(DVM_Value *args)
 	DVM_ObjectRef arr,obj;
 	int localport;
 	slavenodes.clear();
-	slavenodes_data.clear();
 	localport = args[4].int_value ;
 
     ip = args[3].object.data ;
@@ -719,9 +727,10 @@ void RcSlave(int port)
 	{
 ERR:
 		printf("Hand shaking error! %d %d\n",err,err2);
-		RcCloseSocket(s);
+		
 	}
-	
+	RcCloseSocket(s);
+	RcCloseDirectLinks();
 	UaStopThread(MasterDataThread);
 	UaCloseThread(MasterDataThread);
 	UaKillLock(&master_data_lock);
@@ -1520,15 +1529,22 @@ ERR:
 
 void RcBeforeClose()
 {
-	UaKillEvent(&gc_event);
+	
 	if(MasterListenThread)
 	{
+		UaKillEvent(&gc_event);
 		UaStopThread(MasterListenThread);
 		UaCloseThread(MasterListenThread);
 		UaStopThread(MasterDataThread);
 		UaCloseThread(MasterDataThread);
 		MasterListenThread=NULL;
 		MasterDataThread=NULL;
+		RcCloseDirectLinks();
+		for(int i=0;i<slavenodes.size();i++)
+		{
+			RcCloseSocket(slavenodes[i]);
+		}
+		slavenodes.clear();
 	}
 }
 int RcMasterHello(SOCKET s,std::vector<std::string>& hosts,std::vector<int>& ports,std::vector<std::string>& memhosts,std::vector<int>& memports,int node_id)

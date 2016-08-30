@@ -1960,6 +1960,7 @@ dvm_pop_object(DVM_VirtualMachine *dvm)
 #ifdef BD_DSM_STAT
 	extern void SoPrintStat();
 #endif
+extern void RcBeforeClose();
 DVM_Value
 DVM_execute(DVM_VirtualMachine *dvm)
 {
@@ -1974,6 +1975,7 @@ DVM_execute(DVM_VirtualMachine *dvm)
 #ifdef BD_DSM_STAT
 	SoPrintStat();
 #endif
+	RcBeforeClose();
     return ret;
 }
 

@@ -97,6 +97,14 @@ To build LLVM with MinGW, the following steps are to be taken.
 
    ar x libLLVMBitWriter.a
 
+   ar x libLLVMVectorize.a
+
+   ar x libLLVMipa.a
+   
+   ar x libLLVMipo.a
+   
+   ar x libLLVMInstCombine.a
+
    ar rcs libLLVMLite.a *.obj ./CodeGen/CMakeFiles/LLVMCodeGen.dir/Analysis.cpp.obj
    
    del *.obj
@@ -110,7 +118,8 @@ After the static library is obtained, a few more steps should be done to compile
  * Link/Copy the directory "c:\llvm_cb\include" in the project directory to the same diectory above, re-naming as 'include3'.
  * Link/Copy the static library "libLLVMLite.a" to the to the same diectory above.
 
-Then open "\Birdee\Birdee\Birdee.cbp" if you are using Windows (or "\Birdee\Birdee\Birdee.linux.cbp" if you are using Linux), and everything should be okay to build Birdee!
+Then open "src\Birdee\Birdee\Birdee.cbp" if you are using Windows (or "\Birdee\Birdee\Birdee.linux.cbp" if you are using Linux), and everything should be okay to build Birdee!
+Or, if you are using "makefile" to build Birdee, change the current directory to src\Birdee\Birdee, and enter "make debug" to compile.
 
 ##Install Birdee into your system
 If you are using Birdee on Linux,
