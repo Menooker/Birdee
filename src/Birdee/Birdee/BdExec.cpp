@@ -1883,10 +1883,17 @@ extern "C" void* ExPrepareModule(struct LLVM_Data* mod,DVM_VirtualMachine *dvm,E
 	if(f){TheExecutionEngine->addGlobalMapping(f,(void*)SoDec);
 	MCJIT->addGlobalMapping("shared!dec",(void*)SoDec);}*/
 
-	PassManager* pm=new PassManager();
-	//mod->pass=pm;
-	InitOptimizer(*pm,TheExecutionEngine,m);
-	//delete pm;
+			//OurFPM.doInitialization();
+	MCJIT->getPassManager(m)->run(*m);
+		/*
+		Module::iterator it;
+		Module::iterator end = M->end();
+		for (it = M->begin(); it != end; ++it) {
+			// Run the FPM on this function
+			printf("%s",(*it).getName());
+			OurFPM.run(*it);
+		}*/
+	TheExecutionEngine->finalizeObject();
 	return TheExecutionEngine;
 }
 

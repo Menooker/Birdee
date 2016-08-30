@@ -6,6 +6,7 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/PassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 using namespace llvm;
 
 //===----------------------------------------------------------------------===//
@@ -124,6 +125,8 @@ void *HelpingMemoryManager::getPointerToNamedFunction(const std::string &Name,
 
 MCJITHelper::~MCJITHelper()
 {
+	if(OurFPM)
+		delete OurFPM;
   // Walk the vector of modules.
   ModuleVector::iterator it, end;
   for (it = Modules.begin(), end = Modules.end();
@@ -278,7 +281,51 @@ ExecutionEngine *MCJITHelper::compileModule(Module *M) {
   return NewEngine;
 }
 
+PassManager* MCJITHelper::getPassManager(Module* M)
+{
+	if(!OurFPM)
+	{
+		EngineBuilder eb(M);
+		TargetMachine* tm=eb.selectTarget();
+		OurFPM=new PassManager();
+		OurFPM->add(new DataLayout(*tm->getDataLayout()));
+		tm->addAnalysisPasses(*OurFPM);
+		// Set up the optimizer pipeline.  Start with registering info about how the
+		// target lays out data structures.
+		//OurFPM.add(new DataLayout(*TheExecutionEngine->getDataLayout()));
+		/*// Provide basic AliasAnalysis support for GVN.
+		OurFPM.add(createBasicAliasAnalysisPass());
+	
+		// Do simple "peephole" optimizations and bit-twiddling optzns.
+		//OurFPM.add(createInstructionCombiningPass());
+		// Reassociate expressions.
+		OurFPM.add(createReassociatePass());
+		// Eliminate Common SubExpressions.
+		OurFPM.add(createGVNPass());
+		// Simplify the control flow graph (deleting unreachable blocks, etc).
+		OurFPM.add(createCFGSimplificationPass());
+		//OurFPM.add(createBoundsCheckingPass());
+	
+		OurFPM.add(createPromoteMemoryToRegisterPass());
+		OurFPM.add(createDependenceAnalysisPass());
+		OurFPM.add(createScalarEvolutionAliasAnalysisPass());
+		OurFPM.add(createLoopVectorizePass());
+		//OurFPM.add(createSLPVectorizerPass());
+		*/
+		PassManagerBuilder Builder;
+		Builder.OptLevel = parameters.optmization;
+		Builder.LoopVectorize=true;
+		Builder.SLPVectorize=true;
+		Builder.DisableUnrollLoops=false;
+		OurFPM->add(createPromoteMemoryToRegisterPass());
+		Builder.populateModulePassManager(*OurFPM);
+  
+		//OurFPM.add(createLoopVectorizePass());
 
+		//M->dump();
+	}
+	return OurFPM;
+}
 
 void *MCJITHelper::getPointerToFunction(Function* F)
 {

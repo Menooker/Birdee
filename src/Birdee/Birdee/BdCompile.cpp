@@ -404,10 +404,20 @@ Value* GetParameterAddress(int index,int ty)
 	{
 		if(ballocas.find(index)==ballocas.end())
 		{
-			IRBuilderBase::InsertPoint ip=builder.saveIP();
-			builder.SetInsertPoint(mainblock->begin());
+			bool isHead= (mainblock->begin()==mainblock->end());
+			IRBuilderBase::InsertPoint ip;
+			if(!isHead)
+			{
+				ip=builder.saveIP();
+				builder.SetInsertPoint(mainblock->begin());
+			}
 			Value* alloca=builder.CreateAlloca(TypeSwitch[ty]->getPointerElementType(),NULL,curfun_definition->local_variable[index]->name);
-			builder.restoreIP(ip);
+			if(ty==0)
+				builder.CreateStore(ConstInt(32,0),alloca);
+			else
+				builder.CreateStore(llvm::ConstantFP::get(Type::getDoubleTy(context),0.0),alloca);
+			if(!isHead)
+				builder.restoreIP(ip);
 			ballocas[index]=alloca;
 			return alloca;
 		}

@@ -2,7 +2,7 @@
 #define _H_BIRDEE_BCMCJIT
 #include "BirdeeDef.h"
 
-#include "llvm/Analysis/Passes.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/ExecutionEngine/ObjectCache.h"
@@ -78,7 +78,7 @@ class MCJITHelper //: public BaseHelper
 {
 public:
 
-  MCJITHelper(Module* M,bool useMCJIT) : mUseMC(useMCJIT), CurrentModule(NULL) {
+  MCJITHelper(Module* M,bool useMCJIT) : mUseMC(useMCJIT), CurrentModule(NULL),OurFPM(NULL) {
 
   }
   ~MCJITHelper();
@@ -96,13 +96,14 @@ public:
   virtual void runFPM(Function &F) {} // Not needed, see compileModule
   void dump();
   void addGlobalMapping(const std::string& Name,void*);
+  llvm::legacy::PassManager* getPassManager(Module* M);
 
   ExecutionEngine *compileModule(Module *M);
   typedef std::vector<Module*> ModuleVector;
   ModuleVector  Modules;
   std::map<Module *, ExecutionEngine *> EngineMap;
 private:
-
+  llvm::legacy::PassManager* OurFPM;
   bool mUseMC;
  // MCJITObjectCache OurObjectCache;
   ExecutionEngine* EE;

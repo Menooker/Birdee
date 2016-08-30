@@ -10,10 +10,8 @@ Birdee/Birdee/libmemcached.dll
 *.layout
 *~
 compiler/y.output
-Birdee/Birdee/out.txt
 *.vsp
 Lib/Exceptions.bdl
-*/out.txt
+*out.txt
 src/Birdee/Birdee/libmemcached.dll
-src/Birdee/Birdee/out.txt
 src/Birdee/Birdee/out.txt
