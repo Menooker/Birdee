@@ -1549,8 +1549,9 @@ void InitOptimizer(PassManager& OurFPM,ExecutionEngine* TheExecutionEngine,Modul
 	//OurFPM.add(createSLPVectorizerPass());
 	*/
   PassManagerBuilder Builder;
-  Builder.OptLevel = 2;
+  Builder.OptLevel = parameters.optmization;
   Builder.LoopVectorize=true;
+  Builder.SLPVectorize=true;
   Builder.DisableUnrollLoops=false;
   OurFPM.add(createPromoteMemoryToRegisterPass());
   Builder.populateModulePassManager(OurFPM);
