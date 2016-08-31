@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-e ../../compiler/test/test.dkm 123.bde" />
+				<Option parameters="-e ../../compiler/test/test.dkm 123.bde -nocache" />
 				<Compiler>
 					<Add option="-w" />
 					<Add option="-Wfatal-errors" />
@@ -36,11 +36,7 @@
 					<Add directory="../../shared" />
 				</Compiler>
 				<Linker>
-					<Add library="../../../../libLLVMLite.a" />
-					<Add library="pthread" />
-					<Add library="memcached" />
-					<Add library="dl" />
-					<Add library="ncurses" />
+					<Add option="-L/usr/lib/llvm-3.4/lib -Wl,--start-group -lLLVMCodeGen -lLLVMExecutionEngine -lLLVMTarget -lLLVMJIT -lLLVMScalarOpts -lLLVMAnalysis -lLLVMX86AsmParser -lLLVMX86AsmPrinter -lLLVMX86Desc -lLLVMX86Info -lLLVMX86Utils -lLLVMX86CodeGen -lLLVMSelectionDAG -lLLVMObject -lLLVMTransformUtils -lLLVMBitWriter -lLLVMBitReader -lLLVMMCJIT -lLLVMRuntimeDyld -lLLVMAsmPrinter -lLLVMAsmParser -lLLVMMCParser -lLLVMBitReader -lLLVMBitWriter -lLLVMVectorize -lLLVMipa -lLLVMipo -lLLVMInstCombine -lLLVMMC -lLLVMCore -lLLVMSupport -Wl,--end-group -lpthread -lmemcached -ldl -lncurses" />
 				</Linker>
 			</Target>
 			<Target title="Release">
