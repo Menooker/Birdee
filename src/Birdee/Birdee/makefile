@@ -18,23 +18,23 @@ LIBDIR =
 LIB = 
 LDFLAGS = 
 
-INC_DEBUG =  $(INC) -I../../../../include -I../../../../include3 -I../../../../ -I. -I../../compiler -I../../debug -I../../dvm -I../../include -I../../memory -I../../require -I../../shared
+INC_DEBUG =  $(INC) -L/usr/include/llvm-3.4/llvm -L/usr/include/llvm-c-3.4/llvm-c -I../../../../include -I../../../../include3 -I../../../../ -I. -I../../compiler -I../../debug -I../../dvm -I../../include -I../../memory -I../../require -I../../shared
 CFLAGS_DEBUG =  $(CFLAGS) -w -Wfatal-errors -g -fno-rtti -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DBD_ON_GCC -DBD_ON_LINUX -DBD_MULTITHREAD -DBD_ON_X86
 RESINC_DEBUG =  $(RESINC)
 RCFLAGS_DEBUG =  $(RCFLAGS)
 LIBDIR_DEBUG =  $(LIBDIR)
-LIB_DEBUG = $(LIB) ../../../../libLLVMLite.a -lpthread -lmemcached -ldl -lncurses
+LIB_DEBUG = $(LIB) -L/usr/lib/llvm-3.4/lib -Wl,--start-group -lLLVMCodeGen -lLLVMExecutionEngine -lLLVMTarget -lLLVMJIT -lLLVMScalarOpts -lLLVMAnalysis -lLLVMX86AsmParser -lLLVMX86AsmPrinter -lLLVMX86Desc -lLLVMX86Info -lLLVMX86Utils -lLLVMX86CodeGen -lLLVMSelectionDAG -lLLVMObject -lLLVMTransformUtils -lLLVMBitWriter -lLLVMBitReader -lLLVMMCJIT -lLLVMRuntimeDyld -lLLVMAsmPrinter -lLLVMAsmParser -lLLVMMCParser -lLLVMBitReader -lLLVMBitWriter -lLLVMVectorize -lLLVMipa -lLLVMipo -lLLVMInstCombine -lLLVMMC -lLLVMCore -lLLVMSupport -Wl,--end-group -lpthread -lmemcached -ldl -lncurses
 LDFLAGS_DEBUG =  $(LDFLAGS)
 OBJDIR_DEBUG = obj/Debug
 DEP_DEBUG = 
 OUT_DEBUG = bin/Debug/Birdee
 
-INC_RELEASE =  $(INC) -I../../../../include -I../../../../include3 -I../../../../ -I. -I../../compiler -I../../debug -I../../dvm -I../../include -I../../memory -I../../require -I../../shared
+INC_RELEASE =  $(INC) -L/usr/include/llvm-3.4/llvm -L/usr/include/llvm-c-3.4/llvm-c -I../../../../include -I../../../../include3 -I../../../../ -I. -I../../compiler -I../../debug -I../../dvm -I../../include -I../../memory -I../../require -I../../shared
 CFLAGS_RELEASE =  $(CFLAGS) -O2 -w -fno-rtti -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DBD_ON_GCC -DBD_ON_LINUX -DBD_MULTITHREAD
 RESINC_RELEASE =  $(RESINC)
 RCFLAGS_RELEASE =  $(RCFLAGS)
 LIBDIR_RELEASE =  $(LIBDIR)
-LIB_RELEASE = $(LIB) ../../../../libLLVMLite.a -lpthread -lmemcached -ldl -lncurses
+LIB_RELEASE = $(LIB) -L/usr/lib/llvm-3.4/lib -Wl,--start-group -lLLVMCodeGen -lLLVMExecutionEngine -lLLVMTarget -lLLVMJIT -lLLVMScalarOpts -lLLVMAnalysis -lLLVMX86AsmParser -lLLVMX86AsmPrinter -lLLVMX86Desc -lLLVMX86Info -lLLVMX86Utils -lLLVMX86CodeGen -lLLVMSelectionDAG -lLLVMObject -lLLVMTransformUtils -lLLVMBitWriter -lLLVMBitReader -lLLVMMCJIT -lLLVMRuntimeDyld -lLLVMAsmPrinter -lLLVMAsmParser -lLLVMMCParser -lLLVMBitReader -lLLVMBitWriter -lLLVMVectorize -lLLVMipa -lLLVMipo -lLLVMInstCombine -lLLVMMC -lLLVMCore -lLLVMSupport -Wl,--end-group -lpthread -lmemcached -ldl -lncurses
 LDFLAGS_RELEASE =  $(LDFLAGS) -s
 OBJDIR_RELEASE = obj/Release
 DEP_RELEASE = 

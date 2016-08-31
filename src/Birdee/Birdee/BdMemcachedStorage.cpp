@@ -238,7 +238,7 @@ SoVar SoStorageMemcached::get(_uint key,_uint fldid)
     }
     else
     {
-        printf("Memc Error:%d",memc->cached_errno);
+        //printf("Memc Error:%d",memc->cached_errno);
         throw SO_KEY_NOT_FOUND;
     }
 
@@ -293,7 +293,7 @@ SoStatus SoStorageMemcached::getinfo(_uint key,SoType& tag,int& fld_cnt,int& fla
     }
     else
     {
-        printf("Error:%d",memc->cached_errno);
+        //printf("Error:%d",memc->cached_errno);
 		return SoFail;
     }
 }
