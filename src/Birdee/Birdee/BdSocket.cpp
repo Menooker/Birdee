@@ -53,6 +53,15 @@ SOCKET RcConnect(char* ip,int port)
 SOCKET RcCreateListen(int port)
 {
     SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int reuse = 1;
+    if (setsockopt(slisten, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0)
+        perror("setsockopt(SO_REUSEADDR) failed");
+
+#ifdef SO_REUSEPORT
+	reuse = 1;
+    if (setsockopt(slisten, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0) 
+        perror("setsockopt(SO_REUSEPORT) failed");
+#endif
     if(slisten == INVALID_SOCKET)
     {
         printf("socket error ! \n");
@@ -87,6 +96,15 @@ SOCKET RcCreateListen(int port)
 SOCKET RcListen(int port)
 {
     SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int reuse = 1;
+    if (setsockopt(slisten, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0)
+        perror("setsockopt(SO_REUSEADDR) failed");
+
+#ifdef SO_REUSEPORT
+	reuse = 1;
+    if (setsockopt(slisten, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0) 
+        perror("setsockopt(SO_REUSEPORT) failed");
+#endif
     if(slisten == INVALID_SOCKET)
     {
         printf("socket error ! \n");

@@ -5,7 +5,7 @@
 #include "DKC.h"
 #include "DVM.h"
 #include "MEM.h"
-
+#include "Version.h"
 
 
 #include "Dumper.h"

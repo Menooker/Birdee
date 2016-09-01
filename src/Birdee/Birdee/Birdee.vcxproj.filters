@@ -129,6 +129,9 @@
     <None Include="..\..\..\example\NMF.txt">
       <Filter>资源文件\Examples</Filter>
     </None>
+    <None Include="VectorizeTest_NMF.dkm">
+      <Filter>资源文件\Tests</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -237,6 +240,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BdDSMCache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
