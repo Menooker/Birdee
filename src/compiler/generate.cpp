@@ -495,6 +495,7 @@ get_opcode_type_offset2(TypeSpecifier *type)
         return 0;
         break;
     case DVM_DOUBLE_TYPE:
+	case DVM_FLOAT_TYPE:
         return 1;
         break;
     case DVM_STRING_TYPE:
@@ -551,6 +552,7 @@ get_opcode_type_offset_shared(TypeSpecifier *type)
 	case DVM_VARIENT_TYPE:
     case DVM_DELEGATE_TYPE: /* FALLTHRU */
 	case DVM_TEMPLATE_TYPE:
+	case DVM_FLOAT_TYPE:
 		DBG_assert(0, ("Shared type %d not implemented", type->basic_type));
         return -1;
         break;
@@ -585,6 +587,9 @@ get_opcode_type_offset(TypeSpecifier *type)
         break;
     case DVM_DOUBLE_TYPE:
         return 1;
+        break;
+    case DVM_FLOAT_TYPE:
+        return 3;
         break;
     case DVM_NULL_TYPE: /* FALLTHRU */
     case DVM_STRING_TYPE: /* FALLTHRU */
@@ -2081,16 +2086,17 @@ copy_local_variables(FunctionDefinition *fd, int param_count)
     int i;
     int local_variable_count;
     DVM_LocalVariable *dest;
-
+	int offset;
     local_variable_count = fd->local_variable_count - param_count;
 
     dest = (DVM_LocalVariable*)MEM_malloc(sizeof(DVM_LocalVariable) * local_variable_count);
 
+	offset= (fd->class_definition)?1:0;
     for (i = 0; i < local_variable_count; i++) {
         dest[i].name
-            = MEM_strdup(fd->local_variable[i+param_count]->name);
+            = MEM_strdup(fd->local_variable[i+param_count+offset]->name);
         dest[i].type
-            = dkc_copy_type_specifier(fd->local_variable[i+param_count]->type);
+            = dkc_copy_type_specifier(fd->local_variable[i+param_count+offset]->type);
     }
 
     return dest;
@@ -2134,7 +2140,8 @@ add_function(DVM_Executable *exe,
         dest->code_block.need_stack_size //fix-me : should i implement stack size?
             = calc_need_stack_size(dest->code_block.code,
                                    dest->code_block.code_size);*/
-
+		//if(src->class_definition)
+		//	memset(&dest->local_variable[dest->parameter_count],0,sizeof(DVM_LocalVariable));
         dest->local_variable
             = copy_local_variables(src, dest->parameter_count);
         dest->local_variable_count
@@ -2269,7 +2276,7 @@ dkc_generate(DKC_Compiler *compiler)
     add_classes(compiler, exe);
     add_functions(compiler, exe);
     add_top_level(compiler, exe);
-    generate_constant_initializer(compiler, exe);
+    //generate_constant_initializer(compiler, exe);
 	BcFreeDIBuilder(BcGetCurrentCompilerContext()->dibuilder);
 	if(parameters.need_disasm)
 		BcDumpModule();

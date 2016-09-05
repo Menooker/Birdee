@@ -153,6 +153,7 @@ DVM_Boolean st_character_literal_state;
 <INITIAL>"double"       return DOUBLE_T;
 <INITIAL>"string"       return STRING_T;
 <INITIAL>"var"			return VARIENT_T;
+<INITIAL>"float"		return FLOAT_T;
 <INITIAL>"native_pointer"       return NATIVE_POINTER_T;
 <INITIAL>"new"          return NEW;
 <INITIAL>"require"      return REQUIRE;
@@ -300,6 +301,18 @@ DVM_Boolean st_character_literal_state;
     expression->u.int_value = 0;
     yylval.expression = expression;
     return INT_LITERAL;
+}
+<INITIAL>[0-9]+\.[0-9]+(f) {
+    Expression  *expression = dkc_alloc_expression(FLOAT_EXPRESSION);
+    sscanf(yytext, "%lf", &expression->u.double_value);
+    yylval.expression = expression;
+    return FLOAT_LITERAL;
+}
+<INITIAL>[0-9]+\.[0-9]+(d) {
+    Expression  *expression = dkc_alloc_expression(DOUBLE_EXPRESSION);
+    sscanf(yytext, "%lf", &expression->u.double_value);
+    yylval.expression = expression;
+    return DOUBLE_LITERAL;
 }
 <INITIAL>[0-9]+\.[0-9]+ {
     Expression  *expression = dkc_alloc_expression(DOUBLE_EXPRESSION);

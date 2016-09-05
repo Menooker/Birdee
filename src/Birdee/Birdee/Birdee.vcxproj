@@ -164,6 +164,7 @@
     <None Include="..\..\..\example\mergesort.txt" />
     <None Include="..\..\..\example\NMF.txt" />
     <None Include="..\..\..\example\pi.txt" />
+    <None Include="..\..\..\example\VectorizeTest_NMF.dkm" />
     <None Include="..\..\..\lib\Exceptions.dkh" />
     <None Include="..\..\..\lib\Exceptions.dkm" />
     <None Include="..\..\..\lib\ML.dkh" />
@@ -190,7 +191,6 @@
     <None Include="ReadMe.txt" />
     <None Include="Semaphore.txt" />
     <None Include="ToDoList.txt" />
-    <None Include="VectorizeTest_NMF.dkm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\compiler\diksam.h" />

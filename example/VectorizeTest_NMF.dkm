@@ -1,6 +1,6 @@
 //require Remote
 
-const batch_size=2048
+const batch_size=8192
 const features=4096
 const myfeature_len=4096
 /*const batch_size=512
@@ -8,18 +8,18 @@ const features=16384
 const myfeature_len=16384*/
 const myK_len=32
 const matK=32
-const alpha=0.1
-const beta=0.1
+const alpha=0.1f
+const beta=0.1f
 
 //1. use tmp variables 2. cache address of datasets
-dim P as double[]=new double[batch_size*matK]
-dim Q as double[]=new double[features*matK]
-dim mydata_set as double[]=new double[batch_size*features]
-dim gradient as double[]=new double[features*matK]
+dim P as float[]=new float[batch_size*matK]
+dim Q as float[]=new float[features*matK]
+dim mydata_set as float[]=new float[batch_size*features]
+dim gradient as float[]=new float[features*matK]
 
 
 
-	dim sum as double[]=new double[100]
+	dim sum as float[]=new float[100]
 sub main()
 unsafe
 	dim i as int
@@ -27,7 +27,7 @@ unsafe
 	dim k as int
 	P[0]=P[0]
 	Q[0]=Q[0]
-	dim dot as double=0
+	dim dot as float=0
 	for i=0;i<16384;i++
 		dot+=P[i]*Q[i]
 	end
@@ -47,9 +47,9 @@ unsafe
 	dim j as int
 	dim k as int
 	dim base as int
-	dim dot as double
-	dim tmp as double
-	dim tmp2 as double
+	dim dot as float
+	dim tmp as float
+	dim tmp2 as float
 	dim qindex as int
 	dim pindex as int
 	P[0]=P[0]
@@ -57,7 +57,7 @@ unsafe
 	gradient[0]=0
 	mydata_set[0]=mydata_set[0]
 	base=0
-	dim gsum as double
+	dim gsum as float
 	for i=0;i<batch_size;i++
 		dot=0
 		gsum=0
@@ -73,7 +73,7 @@ unsafe
 			for k=0;k<matK;k++
 				//println((pindex+k))
 				tmp=P[pindex+k]
-				tmp2=P[pindex+k]
+				tmp2=Q[qindex+k]
 				P[pindex+k]= alpha * (2 * dot * tmp2 - beta * tmp)
 				gradient[qindex+k]+= alpha * (2 * dot * tmp - beta * tmp2)
 			end
@@ -90,4 +90,5 @@ dim t as int=GetClock()
 main2()
 println(GetClock()-t)
 gets()
+
 

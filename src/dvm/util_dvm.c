@@ -58,6 +58,7 @@ dvm_initialize_value(DVM_VirtualMachine* dvm,DVM_TypeSpecifier *type, DVM_Value 
         case DVM_BOOLEAN_TYPE: /* FALLTHRU */
         case DVM_INT_TYPE: /* FALLTHRU */
         case DVM_ENUM_TYPE: /* FALLTHRU */
+		case DVM_FLOAT_TYPE: /* FALLTHRU */
             value->int_value = 0;
             break;
         case DVM_DOUBLE_TYPE:

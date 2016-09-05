@@ -168,7 +168,21 @@ dvm_create_array_int_i(DVM_VirtualMachine *dvm, int size)
 
     return ret;
 }
+DVM_ObjectRef
+dvm_create_array_float_i(DVM_VirtualMachine *dvm, int size)
+{
+    DVM_ObjectRef ret;
+    int i;
 
+    ret = alloc_array(dvm, FLOAT_ARRAY, size);
+    ret.data->u.barray.u.int_array = MEM_malloc(sizeof(int) * size);
+    dvm->heap.current_heap_size += sizeof(int) * size;
+    for (i = 0; i < size; i++) {
+        ret.data->u.barray.u.int_array[i] = 0;
+    }
+
+    return ret;
+}
 DVM_ObjectRef
 DVM_create_array_int(DVM_VirtualMachine *dvm,  DVM_Context *context,
                      int size)

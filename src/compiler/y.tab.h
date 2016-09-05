@@ -41,221 +41,225 @@
    enum yytokentype {
      INT_LITERAL = 258,
      DOUBLE_LITERAL = 259,
-     STRING_LITERAL = 260,
-     REGEXP_LITERAL = 261,
-     IDENTIFIER = 262,
-     AUTOVAR = 263,
-     IF = 264,
-     ELSE = 265,
-     ELSIF = 266,
-     SWITCH = 267,
-     CASE = 268,
-     DEFAULT_T = 269,
-     WHILE = 270,
-     DO_T = 271,
-     FOR = 272,
-     FOREACH = 273,
-     RETURN_T = 274,
-     BREAK = 275,
-     CONTINUE = 276,
-     NULL_T = 277,
-     LP = 278,
-     RP = 279,
-     LC = 280,
-     RC = 281,
-     LB = 282,
-     RB = 283,
-     SEMICOLON = 284,
-     COLON = 285,
-     COMMA = 286,
-     ASSIGN_T = 287,
-     LOGICAL_AND = 288,
-     LOGICAL_OR = 289,
-     EQ = 290,
-     NE = 291,
-     GT = 292,
-     GE = 293,
-     LT = 294,
-     LE = 295,
-     ADD = 296,
-     SUB = 297,
-     MUL = 298,
-     DIV = 299,
-     MOD = 300,
-     BIT_AND = 301,
-     BIT_OR = 302,
-     BIT_XOR = 303,
-     BIT_NOT = 304,
-     TRUE_T = 305,
-     FALSE_T = 306,
-     EXCLAMATION = 307,
-     DOT = 308,
-     ADD_ASSIGN_T = 309,
-     SUB_ASSIGN_T = 310,
-     MUL_ASSIGN_T = 311,
-     DIV_ASSIGN_T = 312,
-     MOD_ASSIGN_T = 313,
-     INCREMENT = 314,
-     DECREMENT = 315,
-     TRY = 316,
-     CATCH = 317,
-     FINALLY = 318,
-     THROW = 319,
-     THROWS = 320,
-     VOID_T = 321,
-     BOOLEAN_T = 322,
-     INT_T = 323,
-     DOUBLE_T = 324,
-     STRING_T = 325,
-     VARIENT_T = 326,
-     NATIVE_POINTER_T = 327,
-     NEW = 328,
-     REQUIRE = 329,
-     RENAME = 330,
-     CLASS_T = 331,
-     INTERFACE_T = 332,
-     PUBLIC_T = 333,
-     PRIVATE_T = 334,
-     VIRTUAL_T = 335,
-     OVERRIDE_T = 336,
-     ABSTRACT_T = 337,
-     THIS_T = 338,
-     SUPER_T = 339,
-     CONSTRUCTOR = 340,
-     INSTANCEOF = 341,
-     DOWN_CAST_BEGIN = 342,
-     DOWN_CAST_END = 343,
-     DELEGATE = 344,
-     FINAL = 345,
-     ENUM = 346,
-     CONST = 347,
-     FUNCTION = 348,
-     AS = 349,
-     THEN = 350,
-     DIM = 351,
-     END = 352,
-     CR = 353,
-     DECLARE = 354,
-     BSUB = 355,
-     APOSTROPHE = 356,
-     LIB = 357,
-     UNSAFE = 358,
-     SAFE = 359,
-     SHARED = 360,
-     GLOBAL = 361,
-     VOLATILE = 362,
-     ATM_ADD_ASSIGN_T = 363,
-     ATM_SUB_ASSIGN_T = 364
+     FLOAT_LITERAL = 260,
+     STRING_LITERAL = 261,
+     REGEXP_LITERAL = 262,
+     IDENTIFIER = 263,
+     AUTOVAR = 264,
+     IF = 265,
+     ELSE = 266,
+     ELSIF = 267,
+     SWITCH = 268,
+     CASE = 269,
+     DEFAULT_T = 270,
+     WHILE = 271,
+     DO_T = 272,
+     FOR = 273,
+     FOREACH = 274,
+     RETURN_T = 275,
+     BREAK = 276,
+     CONTINUE = 277,
+     NULL_T = 278,
+     LP = 279,
+     RP = 280,
+     LC = 281,
+     RC = 282,
+     LB = 283,
+     RB = 284,
+     SEMICOLON = 285,
+     COLON = 286,
+     COMMA = 287,
+     ASSIGN_T = 288,
+     LOGICAL_AND = 289,
+     LOGICAL_OR = 290,
+     EQ = 291,
+     NE = 292,
+     GT = 293,
+     GE = 294,
+     LT = 295,
+     LE = 296,
+     ADD = 297,
+     SUB = 298,
+     MUL = 299,
+     DIV = 300,
+     MOD = 301,
+     BIT_AND = 302,
+     BIT_OR = 303,
+     BIT_XOR = 304,
+     BIT_NOT = 305,
+     TRUE_T = 306,
+     FALSE_T = 307,
+     EXCLAMATION = 308,
+     DOT = 309,
+     ADD_ASSIGN_T = 310,
+     SUB_ASSIGN_T = 311,
+     MUL_ASSIGN_T = 312,
+     DIV_ASSIGN_T = 313,
+     MOD_ASSIGN_T = 314,
+     INCREMENT = 315,
+     DECREMENT = 316,
+     TRY = 317,
+     CATCH = 318,
+     FINALLY = 319,
+     THROW = 320,
+     THROWS = 321,
+     VOID_T = 322,
+     BOOLEAN_T = 323,
+     INT_T = 324,
+     DOUBLE_T = 325,
+     STRING_T = 326,
+     VARIENT_T = 327,
+     FLOAT_T = 328,
+     NATIVE_POINTER_T = 329,
+     NEW = 330,
+     REQUIRE = 331,
+     RENAME = 332,
+     CLASS_T = 333,
+     INTERFACE_T = 334,
+     PUBLIC_T = 335,
+     PRIVATE_T = 336,
+     VIRTUAL_T = 337,
+     OVERRIDE_T = 338,
+     ABSTRACT_T = 339,
+     THIS_T = 340,
+     SUPER_T = 341,
+     CONSTRUCTOR = 342,
+     INSTANCEOF = 343,
+     DOWN_CAST_BEGIN = 344,
+     DOWN_CAST_END = 345,
+     DELEGATE = 346,
+     FINAL = 347,
+     ENUM = 348,
+     CONST = 349,
+     FUNCTION = 350,
+     AS = 351,
+     THEN = 352,
+     DIM = 353,
+     END = 354,
+     CR = 355,
+     DECLARE = 356,
+     BSUB = 357,
+     APOSTROPHE = 358,
+     LIB = 359,
+     UNSAFE = 360,
+     SAFE = 361,
+     SHARED = 362,
+     GLOBAL = 363,
+     VOLATILE = 364,
+     ATM_ADD_ASSIGN_T = 365,
+     ATM_SUB_ASSIGN_T = 366
    };
 #endif
 /* Tokens.  */
 #define INT_LITERAL 258
 #define DOUBLE_LITERAL 259
-#define STRING_LITERAL 260
-#define REGEXP_LITERAL 261
-#define IDENTIFIER 262
-#define AUTOVAR 263
-#define IF 264
-#define ELSE 265
-#define ELSIF 266
-#define SWITCH 267
-#define CASE 268
-#define DEFAULT_T 269
-#define WHILE 270
-#define DO_T 271
-#define FOR 272
-#define FOREACH 273
-#define RETURN_T 274
-#define BREAK 275
-#define CONTINUE 276
-#define NULL_T 277
-#define LP 278
-#define RP 279
-#define LC 280
-#define RC 281
-#define LB 282
-#define RB 283
-#define SEMICOLON 284
-#define COLON 285
-#define COMMA 286
-#define ASSIGN_T 287
-#define LOGICAL_AND 288
-#define LOGICAL_OR 289
-#define EQ 290
-#define NE 291
-#define GT 292
-#define GE 293
-#define LT 294
-#define LE 295
-#define ADD 296
-#define SUB 297
-#define MUL 298
-#define DIV 299
-#define MOD 300
-#define BIT_AND 301
-#define BIT_OR 302
-#define BIT_XOR 303
-#define BIT_NOT 304
-#define TRUE_T 305
-#define FALSE_T 306
-#define EXCLAMATION 307
-#define DOT 308
-#define ADD_ASSIGN_T 309
-#define SUB_ASSIGN_T 310
-#define MUL_ASSIGN_T 311
-#define DIV_ASSIGN_T 312
-#define MOD_ASSIGN_T 313
-#define INCREMENT 314
-#define DECREMENT 315
-#define TRY 316
-#define CATCH 317
-#define FINALLY 318
-#define THROW 319
-#define THROWS 320
-#define VOID_T 321
-#define BOOLEAN_T 322
-#define INT_T 323
-#define DOUBLE_T 324
-#define STRING_T 325
-#define VARIENT_T 326
-#define NATIVE_POINTER_T 327
-#define NEW 328
-#define REQUIRE 329
-#define RENAME 330
-#define CLASS_T 331
-#define INTERFACE_T 332
-#define PUBLIC_T 333
-#define PRIVATE_T 334
-#define VIRTUAL_T 335
-#define OVERRIDE_T 336
-#define ABSTRACT_T 337
-#define THIS_T 338
-#define SUPER_T 339
-#define CONSTRUCTOR 340
-#define INSTANCEOF 341
-#define DOWN_CAST_BEGIN 342
-#define DOWN_CAST_END 343
-#define DELEGATE 344
-#define FINAL 345
-#define ENUM 346
-#define CONST 347
-#define FUNCTION 348
-#define AS 349
-#define THEN 350
-#define DIM 351
-#define END 352
-#define CR 353
-#define DECLARE 354
-#define BSUB 355
-#define APOSTROPHE 356
-#define LIB 357
-#define UNSAFE 358
-#define SAFE 359
-#define SHARED 360
-#define GLOBAL 361
-#define VOLATILE 362
-#define ATM_ADD_ASSIGN_T 363
-#define ATM_SUB_ASSIGN_T 364
+#define FLOAT_LITERAL 260
+#define STRING_LITERAL 261
+#define REGEXP_LITERAL 262
+#define IDENTIFIER 263
+#define AUTOVAR 264
+#define IF 265
+#define ELSE 266
+#define ELSIF 267
+#define SWITCH 268
+#define CASE 269
+#define DEFAULT_T 270
+#define WHILE 271
+#define DO_T 272
+#define FOR 273
+#define FOREACH 274
+#define RETURN_T 275
+#define BREAK 276
+#define CONTINUE 277
+#define NULL_T 278
+#define LP 279
+#define RP 280
+#define LC 281
+#define RC 282
+#define LB 283
+#define RB 284
+#define SEMICOLON 285
+#define COLON 286
+#define COMMA 287
+#define ASSIGN_T 288
+#define LOGICAL_AND 289
+#define LOGICAL_OR 290
+#define EQ 291
+#define NE 292
+#define GT 293
+#define GE 294
+#define LT 295
+#define LE 296
+#define ADD 297
+#define SUB 298
+#define MUL 299
+#define DIV 300
+#define MOD 301
+#define BIT_AND 302
+#define BIT_OR 303
+#define BIT_XOR 304
+#define BIT_NOT 305
+#define TRUE_T 306
+#define FALSE_T 307
+#define EXCLAMATION 308
+#define DOT 309
+#define ADD_ASSIGN_T 310
+#define SUB_ASSIGN_T 311
+#define MUL_ASSIGN_T 312
+#define DIV_ASSIGN_T 313
+#define MOD_ASSIGN_T 314
+#define INCREMENT 315
+#define DECREMENT 316
+#define TRY 317
+#define CATCH 318
+#define FINALLY 319
+#define THROW 320
+#define THROWS 321
+#define VOID_T 322
+#define BOOLEAN_T 323
+#define INT_T 324
+#define DOUBLE_T 325
+#define STRING_T 326
+#define VARIENT_T 327
+#define FLOAT_T 328
+#define NATIVE_POINTER_T 329
+#define NEW 330
+#define REQUIRE 331
+#define RENAME 332
+#define CLASS_T 333
+#define INTERFACE_T 334
+#define PUBLIC_T 335
+#define PRIVATE_T 336
+#define VIRTUAL_T 337
+#define OVERRIDE_T 338
+#define ABSTRACT_T 339
+#define THIS_T 340
+#define SUPER_T 341
+#define CONSTRUCTOR 342
+#define INSTANCEOF 343
+#define DOWN_CAST_BEGIN 344
+#define DOWN_CAST_END 345
+#define DELEGATE 346
+#define FINAL 347
+#define ENUM 348
+#define CONST 349
+#define FUNCTION 350
+#define AS 351
+#define THEN 352
+#define DIM 353
+#define END 354
+#define CR 355
+#define DECLARE 356
+#define BSUB 357
+#define APOSTROPHE 358
+#define LIB 359
+#define UNSAFE 360
+#define SAFE 361
+#define SHARED 362
+#define GLOBAL 363
+#define VOLATILE 364
+#define ATM_ADD_ASSIGN_T 365
+#define ATM_SUB_ASSIGN_T 366
 
 
 
@@ -299,7 +303,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 303 "y.tab.h"
+#line 307 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

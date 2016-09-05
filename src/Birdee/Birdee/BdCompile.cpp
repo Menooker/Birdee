@@ -215,7 +215,7 @@ extern "C" int add_constant_pool(DVM_Executable *exe, DVM_ConstantPool *cp);
 extern "C" int get_opcode_type_offset2(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset_shared(TypeSpecifier *type);
 extern "C" int get_opcode_type_offset(TypeSpecifier *type);
-Type* TypeSwitch[3];
+Type* TypeSwitch[4];
 Function* SharedPutSwitch[2][4];
 Function* SharedGetSwitch[2][4];
 //Function* ArrGet[3];Function* ArrPut[3];//Function* FldGet[3];Function* FldPut[3];
@@ -242,6 +242,9 @@ get_opcode_type_offset3(int type)
         break;
     case DVM_DOUBLE_TYPE:
         return 1;
+        break;
+    case DVM_FLOAT_TYPE:
+        return 3;
         break;
     case DVM_STRING_TYPE: /* FALLTHRU */
     case DVM_NATIVE_POINTER_TYPE: /* FALLTHRU */
@@ -400,7 +403,7 @@ Value* GetParameterAddress(int index,int ty)
 	{
 		return builder.CreateGEP(curfun->arg_begin(),ConstantInt::get(Type::getInt32Ty(context),APInt(32,index)));
 	}
-	if(index>=curfun_param_cnt)
+	if(index>=curfun_param_cnt )
 	{
 		if(ballocas.find(index)==ballocas.end())
 		{
@@ -414,8 +417,10 @@ Value* GetParameterAddress(int index,int ty)
 			Value* alloca=builder.CreateAlloca(TypeSwitch[ty]->getPointerElementType(),NULL,curfun_definition->local_variable[index]->name);
 			if(ty==0)
 				builder.CreateStore(ConstInt(32,0),alloca);
-			else
+			else if(ty==1)
 				builder.CreateStore(llvm::ConstantFP::get(Type::getDoubleTy(context),0.0),alloca);
+			else
+				builder.CreateStore(llvm::ConstantFP::get(Type::getFloatTy(context),0.0),alloca);
 			if(!isHead)
 				builder.restoreIP(ip);
 			ballocas[index]=alloca;
@@ -1254,7 +1259,7 @@ extern "C" void BcInitLLVMCompiler()
 	//ArgTys.push_back(Type::getInt32Ty(context));
 	FT = FunctionType::get(Type::getVoidTy(context),ArgTys, false);
 
-	TypeSwitch[0]=Type::getInt32PtrTy(context);TypeSwitch[1]=Type::getDoublePtrTy(context);TypeSwitch[2]=TypStack;
+	TypeSwitch[0]=Type::getInt32PtrTy(context);TypeSwitch[1]=Type::getDoublePtrTy(context);TypeSwitch[2]=TypStack;TypeSwitch[3]=Type::getFloatPtrTy(context);
 	///////////////////
 }
 
@@ -1585,6 +1590,10 @@ Value* BcGenerateIdentifierExpression(DVM_Executable *exe, Block *block,Expressi
 		else if(def->initializer->kind==DOUBLE_EXPRESSION)
 		{
 			return ConstantFP::get(context,APFloat(def->initializer->u.double_value));
+		}
+		else if(def->initializer->kind==FLOAT_EXPRESSION)
+		{
+			return ConstantFP::get(context,APFloat((float)def->initializer->u.double_value));
 		}
 /*        generate_code(ob, expr->line_number,
                       DVM_PUSH_CONSTANT_INT
@@ -2297,6 +2306,18 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
     case DOUBLE_TO_INT_CAST:
         return builder.CreateFPToSI(v,Type::getInt32Ty(context));
         break;
+    case INT_TO_FLOAT_CAST:
+		return builder.CreateSIToFP(v,Type::getFloatTy(context));
+        break;
+    case FLOAT_TO_INT_CAST:
+        return builder.CreateFPToSI(v,Type::getInt32Ty(context));
+        break;
+	case FLOAT_TO_DOUBLE_CAST:
+		return builder.CreateFPCast(v,Type::getDoubleTy(context));
+        break;
+	case DOUBLE_TO_FLOAT_CAST:
+		return builder.CreateFPCast(v,Type::getFloatTy(context));
+        break;
     case BOOLEAN_TO_STRING_CAST:
         builder.CreateCall(fBoolToStr,builder.CreateIntCast(v,Type::getInt32Ty(context),true));
         return builder.CreateLoad(builder.CreateLoad(bretvar));
@@ -2305,6 +2326,8 @@ Value* BcGenerateCastExpression(DVM_Executable *exe, Block *block,Expression *ex
 		builder.CreateCall(fIntToStr,v);
 		return builder.CreateLoad(builder.CreateLoad(bretvar));
         break;
+	case FLOAT_TO_STRING_CAST://fall through
+		v=builder.CreateFPCast(v,Type::getDoubleTy(context));
     case DOUBLE_TO_STRING_CAST:
 		builder.CreateCall(fDoubleToStr,v);
 		return builder.CreateLoad(builder.CreateLoad(bretvar));
@@ -2387,7 +2410,9 @@ Value* BcGenerateArrayCreationExpression(DVM_Executable *exe, Block *block,Expre
 	arg.push_back(ConstInt(32,index));
 	arg.push_back(ConstInt(32,dim_count));
 	if(expr->type->derive->u.array_d.is_global)
-	{
+	{    
+		DBG_assert(expr->type->basic_type != DVM_FLOAT_TYPE,
+               ("shared array expr->type->basic_type == DVM_FLOAT_TYPE"));
 	    builder.CreateCall(fNewGlobalArray,arg);
 	    return builder.CreateLoad(builder.CreateLoad(bretvar));
 	}
@@ -2616,6 +2641,9 @@ Value* BcGenerateExpression(DVM_Executable *exe,Block *current_block,Expression 
         break;
     case DOUBLE_EXPRESSION:
 		return ConstantFP::get(context,APFloat(expr->u.double_value));
+        break;
+    case FLOAT_EXPRESSION:
+		return ConstantFP::get(Type::getFloatTy(context),expr->u.double_value);
         break;
     case STRING_EXPRESSION:
         return BcGenerateStringExpression(exe,expr);

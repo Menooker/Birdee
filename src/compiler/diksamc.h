@@ -175,6 +175,7 @@ typedef enum {
     BOOLEAN_EXPRESSION = 1,
     INT_EXPRESSION,
     DOUBLE_EXPRESSION,
+	FLOAT_EXPRESSION,
     STRING_EXPRESSION,
     IDENTIFIER_EXPRESSION,
     COMMA_EXPRESSION,
@@ -237,6 +238,9 @@ typedef enum {
 
 #define dkc_is_double(type) \
   ((type)->basic_type == DVM_DOUBLE_TYPE && (type)->derive == NULL)
+
+#define dkc_is_float(type) \
+  ((type)->basic_type == DVM_FLOAT_TYPE && (type)->derive == NULL)
 
 #define dkc_is_boolean(type) \
   ((type)->basic_type == DVM_BOOLEAN_TYPE && (type)->derive == NULL)
@@ -510,9 +514,14 @@ typedef struct {
 typedef enum {
     INT_TO_DOUBLE_CAST,
     DOUBLE_TO_INT_CAST,
+    INT_TO_FLOAT_CAST,
+	DOUBLE_TO_FLOAT_CAST,
+	FLOAT_TO_DOUBLE_CAST,
+    FLOAT_TO_INT_CAST,
     BOOLEAN_TO_STRING_CAST,
     INT_TO_STRING_CAST,
     DOUBLE_TO_STRING_CAST,
+	FLOAT_TO_STRING_CAST,
     ENUM_TO_STRING_CAST,
 	VAR_TO_INT_CAST,
 	VAR_TO_DOUBLE_CAST,

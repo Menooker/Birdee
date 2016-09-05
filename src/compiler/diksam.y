@@ -35,6 +35,7 @@
 }
 %token <expression>     INT_LITERAL
 %token <expression>     DOUBLE_LITERAL
+%token <expression>     FLOAT_LITERAL
 %token <expression>     STRING_LITERAL
 %token <expression>     REGEXP_LITERAL
 %token <identifier>     IDENTIFIER
@@ -46,7 +47,7 @@
         TRUE_T FALSE_T EXCLAMATION DOT
         ADD_ASSIGN_T SUB_ASSIGN_T MUL_ASSIGN_T DIV_ASSIGN_T MOD_ASSIGN_T
         INCREMENT DECREMENT TRY CATCH FINALLY THROW THROWS
-        VOID_T BOOLEAN_T INT_T DOUBLE_T STRING_T VARIENT_T NATIVE_POINTER_T
+        VOID_T BOOLEAN_T INT_T DOUBLE_T STRING_T VARIENT_T FLOAT_T NATIVE_POINTER_T
         NEW REQUIRE RENAME
         CLASS_T INTERFACE_T PUBLIC_T PRIVATE_T VIRTUAL_T OVERRIDE_T
         ABSTRACT_T THIS_T SUPER_T CONSTRUCTOR INSTANCEOF
@@ -202,6 +203,10 @@ basic_type_specifier
         | VARIENT_T
         {
             $$ = DVM_VARIENT_TYPE;
+        }
+        | FLOAT_T
+        {
+            $$ = DVM_FLOAT_TYPE;
         }
         | NATIVE_POINTER_T
         {
@@ -584,6 +589,7 @@ primary_no_new_array
         }
         | INT_LITERAL
         | DOUBLE_LITERAL
+		| FLOAT_LITERAL
         | STRING_LITERAL
         | REGEXP_LITERAL
         | TRUE_T

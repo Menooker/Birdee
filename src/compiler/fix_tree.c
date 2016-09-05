@@ -319,6 +319,7 @@ static void check_global_array_type(TypeSpecifier *type)
 		case DVM_INT_TYPE:
 		case DVM_DOUBLE_TYPE:
 		case DVM_STRING_TYPE:
+		case DVM_FLOAT_TYPE:
 			break;
 		case DVM_CLASS_TYPE:
 			if(!type->u.class_ref.class_definition->is_shared)
@@ -586,11 +587,14 @@ alloc_cast_expression(CastType cast_type, Expression *operand)
     cast_expr->u.cast.type = cast_type;
     cast_expr->u.cast.operand = operand;
 
-    if (cast_type == INT_TO_DOUBLE_CAST || cast_type==VAR_TO_DOUBLE_CAST) {
+    if (cast_type == FLOAT_TO_DOUBLE_CAST || cast_type == INT_TO_DOUBLE_CAST || cast_type==VAR_TO_DOUBLE_CAST) {
         cast_expr->type = dkc_alloc_type_specifier(DVM_DOUBLE_TYPE);
-    } else if (cast_type == DOUBLE_TO_INT_CAST|| cast_type==VAR_TO_INT_CAST) {
+    } else if (cast_type == FLOAT_TO_INT_CAST || cast_type == DOUBLE_TO_INT_CAST|| cast_type==VAR_TO_INT_CAST) {
         cast_expr->type = dkc_alloc_type_specifier(DVM_INT_TYPE);
-    } else if (cast_type == BOOLEAN_TO_STRING_CAST
+    } else if (cast_type == INT_TO_FLOAT_CAST || cast_type == DOUBLE_TO_FLOAT_CAST) {
+        cast_expr->type = dkc_alloc_type_specifier(DVM_FLOAT_TYPE);
+    }
+	else if (cast_type == FLOAT_TO_STRING_CAST|| cast_type == BOOLEAN_TO_STRING_CAST
                || cast_type == INT_TO_STRING_CAST
                || cast_type == DOUBLE_TO_STRING_CAST
                || cast_type == ENUM_TO_STRING_CAST
@@ -759,7 +763,11 @@ create_var_to_cast(Expression *src,TypeSpecifier* ty)
     } else if (dkc_is_int(ty)) {
         cast = alloc_cast_expression(VAR_TO_INT_CAST, src);
 
-    } else if (dkc_is_double(ty)) {
+    }
+	else if (dkc_is_float(ty)) {
+        _BreakPoint // fix-me
+
+    }else if (dkc_is_double(ty)) {
         cast = alloc_cast_expression(VAR_TO_DOUBLE_CAST, src);
 
     } else if (dkc_is_string(ty)) {
@@ -783,7 +791,11 @@ create_to_var_cast(Expression *src)
     } else if (dkc_is_double(src->type)) {
         cast = alloc_cast_expression(DOUBLE_TO_VAR_CAST, src);
 
-    } else if (dkc_is_string(src->type)) {
+    }
+	else if (dkc_is_float(src->type)) {
+        _BreakPoint // fix-me
+    }
+	else if (dkc_is_string(src->type)) {
         cast = alloc_cast_expression(STRING_TO_VAR_CAST, src);
     }
 
@@ -804,7 +816,11 @@ create_to_string_cast(Expression *src)
     } else if (dkc_is_double(src->type)) {
         cast = alloc_cast_expression(DOUBLE_TO_STRING_CAST, src);
 
-    } else if (dkc_is_enum(src->type)) {
+    }
+	else if (dkc_is_float(src->type)) {
+        cast = alloc_cast_expression(FLOAT_TO_STRING_CAST, src);
+
+    }else if (dkc_is_enum(src->type)) {
         cast = alloc_cast_expression(ENUM_TO_STRING_CAST, src);
     }
 
@@ -885,7 +901,18 @@ create_assign_cast2(Expression *src, TypeSpecifier *dest,Expression *deste)
         cast_expr = alloc_cast_expression(INT_TO_DOUBLE_CAST, src);
         return cast_expr;
     }
-
+    if (dkc_is_int(src->type) && dkc_is_float(dest)) {
+        cast_expr = alloc_cast_expression(INT_TO_FLOAT_CAST, src);
+        return cast_expr;
+    }
+    if (dkc_is_double(src->type) && dkc_is_float(dest)) {
+        cast_expr = alloc_cast_expression(DOUBLE_TO_FLOAT_CAST, src);
+        return cast_expr;
+    }
+    if (dkc_is_float(src->type) && dkc_is_double(dest)) {
+        cast_expr = alloc_cast_expression(FLOAT_TO_DOUBLE_CAST, src);
+        return cast_expr;
+    }
 	else if (dkc_is_var(src->type))
 	{
 
@@ -895,6 +922,7 @@ create_assign_cast2(Expression *src, TypeSpecifier *dest,Expression *deste)
 			return alloc_cast_expression(VAR_TO_DOUBLE_CAST, src);
 		if(dkc_is_int(dest))
 			return alloc_cast_expression(VAR_TO_INT_CAST, src);
+		_BreakPoint
 	}
 	else if (dkc_is_var(dest))
 	{
@@ -906,7 +934,11 @@ create_assign_cast2(Expression *src, TypeSpecifier *dest,Expression *deste)
 	else if (dkc_is_double(src->type) && dkc_is_int(dest)) {
         cast_expr = alloc_cast_expression(DOUBLE_TO_INT_CAST, src);
         return cast_expr;
-    } else if (dkc_is_string(dest)) {
+    }
+	else if (dkc_is_float(src->type) && dkc_is_int(dest)) {
+        cast_expr = alloc_cast_expression(FLOAT_TO_INT_CAST, src);
+        return cast_expr;
+    }else if (dkc_is_string(dest)) {
         cast_expr = create_to_string_cast(src);
         if (cast_expr) {
             return cast_expr;
@@ -1150,13 +1182,41 @@ cast_binary_expression(Expression *expr)
                                     expr->u.binary_expression.right);
         expr->u.binary_expression.right = cast_expression;
     }
+	else if (dkc_is_int(expr->u.binary_expression.left->type)
+               && dkc_is_float(expr->u.binary_expression.right->type)) {
+        cast_expression
+            = alloc_cast_expression(INT_TO_FLOAT_CAST,
+                                    expr->u.binary_expression.left);
+        expr->u.binary_expression.left = cast_expression;
+    }
+	else if (dkc_is_float(expr->u.binary_expression.left->type)
+               && dkc_is_int(expr->u.binary_expression.right->type)) {
+        cast_expression
+            = alloc_cast_expression(INT_TO_FLOAT_CAST,
+                                    expr->u.binary_expression.right);
+        expr->u.binary_expression.right = cast_expression;
+    }
+	else if (dkc_is_float(expr->u.binary_expression.left->type)
+               && dkc_is_double(expr->u.binary_expression.right->type)) {
+        cast_expression
+            = alloc_cast_expression(FLOAT_TO_DOUBLE_CAST,
+                                    expr->u.binary_expression.left);
+        expr->u.binary_expression.left = cast_expression;
+    }
+	else if (dkc_is_double(expr->u.binary_expression.left->type)
+               && dkc_is_float(expr->u.binary_expression.right->type)) {
+        cast_expression
+            = alloc_cast_expression(FLOAT_TO_DOUBLE_CAST,
+                                    expr->u.binary_expression.right);
+        expr->u.binary_expression.right = cast_expression;
+    }
     if (cast_expression) {
         return expr;
     }
 
 	///////////left is var
     if (dkc_is_var(expr->u.binary_expression.left->type)
-        &&  ( dkc_is_int(expr->u.binary_expression.right->type) || dkc_is_double(expr->u.binary_expression.right->type)
+        &&  ( dkc_is_int(expr->u.binary_expression.right->type) || dkc_is_double(expr->u.binary_expression.right->type) || dkc_is_float(expr->u.binary_expression.right->type)
 		|| dkc_is_string(expr->u.binary_expression.right->type) )  ) {
         cast_expression
             = create_var_to_cast(expr->u.binary_expression.left,expr->u.binary_expression.right->type);
@@ -1166,7 +1226,7 @@ cast_binary_expression(Expression *expr)
     }
 	///////////right is var
     if (dkc_is_var(expr->u.binary_expression.right->type)
-        &&  ( dkc_is_int(expr->u.binary_expression.left->type) || dkc_is_double(expr->u.binary_expression.left->type)
+        &&  ( dkc_is_int(expr->u.binary_expression.left->type) || dkc_is_double(expr->u.binary_expression.left->type)|| dkc_is_float(expr->u.binary_expression.right->type)
 		|| dkc_is_string(expr->u.binary_expression.left->type) )  ) {
         cast_expression
             = create_var_to_cast(expr->u.binary_expression.right,expr->u.binary_expression.left->type);
@@ -1217,7 +1277,10 @@ fix_math_binary_expression(Block *current_block, Expression *expr,
     } else if (dkc_is_double(expr->u.binary_expression.left->type)
                && dkc_is_double(expr->u.binary_expression.right->type)) {
         expr->type = dkc_alloc_type_specifier(DVM_DOUBLE_TYPE);
-    } else if (expr->kind == ADD_EXPRESSION
+	} else if (dkc_is_float(expr->u.binary_expression.left->type)
+               && dkc_is_float(expr->u.binary_expression.right->type)) {
+        expr->type = dkc_alloc_type_specifier(DVM_FLOAT_TYPE);
+    }else if (expr->kind == ADD_EXPRESSION
                && ((dkc_is_string(expr->u.binary_expression.left->type)
                     && dkc_is_string(expr->u.binary_expression.right->type))
                    || (dkc_is_string(expr->u.binary_expression.left->type)
@@ -1519,7 +1582,8 @@ fix_minus_expression(Block *current_block, Expression *expr,
                          el_p);
 
     if (!dkc_is_int(expr->u.minus_expression->type)
-        && !dkc_is_double(expr->u.minus_expression->type)) {
+        && !dkc_is_double(expr->u.minus_expression->type)
+		&& !dkc_is_float(expr->u.minus_expression->type)) {
         dkc_compile_error(expr->line_number,
                           MINUS_TYPE_MISMATCH_ERR,
                           MESSAGE_ARGUMENT_END);
@@ -2609,6 +2673,9 @@ fix_expression(Block *current_block, Expression *expr, Expression *parent,
     case DOUBLE_EXPRESSION:
         expr->type = dkc_alloc_type_specifier(DVM_DOUBLE_TYPE);
         break;
+    case FLOAT_EXPRESSION:
+        expr->type = dkc_alloc_type_specifier(DVM_FLOAT_TYPE);
+        break;
     case STRING_EXPRESSION:
         expr->type = dkc_alloc_type_specifier(DVM_STRING_TYPE);
         break;
@@ -2718,13 +2785,13 @@ static void add_local_variable(FunctionDefinition *fd, Declaration *decl,
 {
     fd->local_variable
         = MEM_realloc(fd->local_variable,
-                      sizeof(Declaration*) * (fd->local_variable_count+1));
-    fd->local_variable[fd->local_variable_count] = decl;
+                      sizeof(Declaration*) * (fd->local_variable_count+1+(fd->class_definition?1:0)));
     if (fd->class_definition && !is_parameter) {
         decl->variable_index = fd->local_variable_count + 1; /* for this */
     } else {
         decl->variable_index = fd->local_variable_count;
     }
+	fd->local_variable[decl->variable_index] = decl;
 	decl->is_param=is_parameter;
     fd->local_variable_count++;
 }
@@ -2890,6 +2957,10 @@ fix_return_statement(Block *current_block, Statement *statement,
                 break;
             case DVM_DOUBLE_TYPE:
                 return_value = dkc_alloc_expression(DOUBLE_EXPRESSION);
+                return_value->u.double_value = 0.0;
+                break;
+            case DVM_FLOAT_TYPE:
+                return_value = dkc_alloc_expression(FLOAT_EXPRESSION);
                 return_value->u.double_value = 0.0;
                 break;
 			case DVM_TEMPLATE_TYPE:

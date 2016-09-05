@@ -41,6 +41,7 @@ dkc_alloc_declaration(DVM_Boolean is_final, TypeSpecifier *type,
     decl->is_final = is_final;
     decl->variable_index = -1;
 	decl->is_shared=DVM_FALSE;
+	decl->is_volatile=DVM_FALSE;
     return decl;
 }
 

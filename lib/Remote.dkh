@@ -65,5 +65,6 @@ lib Remote
 	shared public class RAccumulator
 		public declare constructor initialize(count as int,size as int,buffer as double[] global)
 		public declare function Accumulate(inc as double[],max_wait as int) as int
+		public declare function Accumulatef(inc as float[],max_wait as int) as int
 	end
 end

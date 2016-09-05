@@ -91,6 +91,7 @@ struct RcDataPack
 	uint32 cmd;
 	uint32 size;
 	_uint64 id;
+	uint32 datatype;
 	int32 param0;
 	union
 	{
@@ -1278,7 +1279,8 @@ void RcAccumulatePartialDoneMsg(int src,uint32 aid,bool locked)
 		UaLeaveLock(&master_data_lock);
 }
 
-void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,double* data)
+template <typename T>
+void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,T* data)
 {
 	UaEnterLock(&master_data_lock);
 	data_itr itr=data_data.find(aid);
@@ -1341,6 +1343,14 @@ void RcAccumulate(DVM_Value *args)
 {
 	_uint bid=(_uint)args[2].object.data;
 	DVM_Array* arr=&args[1].object.data->u.barray;
+	int is_double=0;
+	if(arr->type==FLOAT_ARRAY)
+		is_double=0;
+	else if(arr->type==DOUBLE_ARRAY)
+		is_double=1;
+	else
+		printf("Array type Error!\n");
+	size_t sz_type=is_double?sizeof(double):sizeof(float);
 	UaResetEvent(&curthread->remote_event);
 	int blocks= (arr->size % DSM_CACHE_BLOCK_SIZE==0) ? arr->size/DSM_CACHE_BLOCK_SIZE: arr->size/DSM_CACHE_BLOCK_SIZE+1;
 	blocks= (blocks % num_nodes==0) ? blocks/num_nodes: blocks/num_nodes+1;
@@ -1369,18 +1379,22 @@ void RcAccumulate(DVM_Value *args)
 			{
 				if(i==self_node_id)
 				{
-					RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.double_array+send_idx[i]);
+					if(is_double)
+						RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.double_array+send_idx[i]);
+					else
+						RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.float_array+send_idx[i]);
 					send_idx[i]=send_size[i];
 					continue;
 				}
 				int send_idx_size;
-				if(send_idx[i]+BD_DATA_PROCESS_SIZE/sizeof(double) > send_size[i])
+				if(send_idx[i]+BD_DATA_PROCESS_SIZE/sz_type > send_size[i])
 					send_idx_size = send_size[i]-send_idx[i];
 				else
-					send_idx_size = BD_DATA_PROCESS_SIZE/sizeof(double);
-				memcpy(cmd->buf,arr->u.double_array+send_idx[i],send_idx_size*sizeof(double));
+					send_idx_size = BD_DATA_PROCESS_SIZE/sz_type;
+				memcpy(cmd->buf,(char*)arr->u.double_array+send_idx[i]*sz_type,send_idx_size*sz_type);
 				cmd->param0=send_idx[i];
-				cmd->size=send_idx_size*sizeof(double);
+				cmd->size=send_idx_size*sz_type;
+				cmd->datatype=is_double;
 				send_idx[i]+=send_idx_size;
 				if(send_idx[i] == send_size[i])
 				{
@@ -1503,7 +1517,12 @@ static THREAD_PROC(RcMasterData,param)
 				case RcDataAccumulate:
 					if(!memc)
 						memc=init_memcached_this_thread();
-					RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
+					if(cmd.datatype==1)
+						RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
+					else if(cmd.datatype==0)
+						RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(float),(float*)buf);
+					else
+						printf("Bad data type\n");
 					break;
 				case RcDataAccumulatePartialDone:
 					if(self_node_id==0)

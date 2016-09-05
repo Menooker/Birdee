@@ -1,6 +1,6 @@
 ; ModuleID = 'diksam.lang'
 
-%Stack = type { i32, i32 }
+%Stack = type { i32*, i32* }
 
 @bpc = weak thread_local(localdynamic) externally_initialized global i32* null
 @bei = weak thread_local(localdynamic) externally_initialized global i32* null
@@ -119,7 +119,7 @@ define linkonce void @"CSVReader!init"(...) {
 
 define void @println(%Stack*) {
   %2 = getelementptr %Stack* %0, i32 0
-  %3 = load volatile %Stack* %2
+  %3 = load %Stack* %2
   call void @"systemi!Pusho"(%Stack %3)
   call void @"system!Invoke"(i32 0), !dbg !9
   call void @"string!LoadStringFromPool"(i32 0)
@@ -154,9 +154,9 @@ define void @"system!main"(%Stack*) {
 !9 = metadata !{i32 15, i32 0, metadata !4, null}
 !10 = metadata !{i32 16, i32 0, metadata !4, null}
 !11 = metadata !{i32 18, i32 0, metadata !4, null}
-; ModuleID = 'math'
+; ModuleID = 'Remote'
 
-%Stack = type { i32, i32 }
+%Stack = type { i32*, i32* }
 
 @bpc = weak thread_local(localdynamic) externally_initialized global i32* null
 @bei = weak thread_local(localdynamic) externally_initialized global i32* null
@@ -265,302 +265,720 @@ declare void @"shared!gets"(i32, i32)
 
 declare void @"shared!geto"(i32, i32, i32)
 
-define void @"system!main"(%Stack*) {
+define linkonce void @"RemoteNode!init"(...) {
   ret void
 }
 
-!llvm.dbg.cu = !{!0}
-!llvm.module.flags = !{!7}
+define linkonce void @"RemoteThread!init"(...) {
+  ret void
+}
 
-!0 = metadata !{i32 786449, metadata !1, i32 32769, metadata !"Birdee", i1 false, metadata !"", i32 0, metadata !2, metadata !2, metadata !3, metadata !2, metadata !2, metadata !""} ; [ DW_TAG_compile_unit ] [/$unknown] [lang 0x8001]
-!1 = metadata !{metadata !"$unknown", metadata !""}
-!2 = metadata !{i32 0}
-!3 = metadata !{metadata !4}
-!4 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"system!main", metadata !"system!main", metadata !"", i32 0, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"system!main", null, null, metadata !2, i32 0} ; [ DW_TAG_subprogram ] [line 0] [local] [def] [system!main]
-!5 = metadata !{i32 786473, metadata !1}          ; [ DW_TAG_file_type ] [/$unknown]
-!6 = metadata !{i32 786453, i32 0, null, metadata !"", i32 0, i64 0, i64 0, i64 0, i32 0, null, null, i32 0, null, null, null} ; [ DW_TAG_subroutine_type ] [line 0, size 0, align 0, offset 0] [from ]
-!7 = metadata !{i32 2, metadata !"Debug Info Version", i32 1}
-; ModuleID = 'test'
+define linkonce void @"ThisNodeThread!init"(...) {
+  ret void
+}
 
-%Stack = type { i32, i32 }
+define linkonce void @"AtomicCounter!init"(...) {
+  ret void
+}
 
-@bpc = weak thread_local(localdynamic) externally_initialized global i32* null
-@bei = weak thread_local(localdynamic) externally_initialized global i32* null
-@beo = weak thread_local(localdynamic) externally_initialized global %Stack* null
-@bsp = weak thread_local(localdynamic) externally_initialized global %Stack** null
-@arr_sp = weak thread_local(localdynamic) externally_initialized global i32** null
-@retvar = weak thread_local(localdynamic) externally_initialized global %Stack* null
-@pstatic = external constant %Stack*
-@mid = external constant i32
+define linkonce void @"RemoteSpinLock!init"(...) {
+  ret void
+}
 
-declare void @"string!LoadStringFromPool"(i32)
+define linkonce void @"CounterOutOfBoundException!init"(...) {
+  ret void
+}
 
-declare %Stack @"system!DownCast"(i32)
+define linkonce void @"RemoteBarrier!init"(...) {
+  ret void
+}
 
-declare %Stack @"system!UpCast"(i32)
+define linkonce void @"RBarrier!init"(...) {
+  ret void
+}
 
-declare %Stack @"system!NewDelegate"(i32)
+define linkonce void @"RSemaphore!init"(...) {
+  ret void
+}
 
-declare i1 @"system!Instanceof"(i32)
+define linkonce void @"RAccumulator!init"(...) {
+  ret void
+}
 
-declare i1 @"system!Instanceof2"(i32, i32)
-
-declare void @"string!ChainString"()
-
-declare i32 @"string!CompareString"()
-
-declare i32 @"object!CompareObject"()
-
-declare void @"system!ArrayLiteral"(i32, i32)
-
-declare void @"system!NewArray"(i32, i32)
-
-declare void @"shared!NewArray"(i32, i32)
-
-declare void @"object!New"(i32, i32)
-
-declare void @"shared!New"(i32, i32)
-
-declare void @"shared!GlobalArrBoundaryCheck"(i32, i32)
-
-declare i32* @"system!PushException"()
-
-declare i32 @"system!Setjmp"(i32*)
-
-declare void @"system!Raise"(i32)
-
-declare void @"system!SystemRaise"(i32)
-
-declare void @"system!LeaveTry"()
-
-declare i32 @"system!ArrGetCh"(i32)
-
-declare void @"system!CopyArray"(i32, i32, i32, i32, i32, i32)
-
-declare void @"system!InvokeDelegate"()
-
-declare void @"system!GetSuper"()
-
-declare void @"system!ArrPuti"(i32, i32)
-
-declare void @"system!Failure"()
-
-declare void @"system!Reraise"()
-
-declare void @"system!IntToStr"(i32)
-
-declare void @"system!DoubleToStr"(double)
-
-declare void @"system!BoolToStr"(i32)
-
-declare void @"system!AtmInc"(i32*, i32)
-
-declare void @"system!AtmDec"(i32*, i32)
-
-declare void @"system!Invoke"(i32)
-
-declare void @"system!Call"(i32)
-
-declare void @"system!DoInvoke"(i32)
-
-declare void @"autovar!get"(i8*)
-
-declare void @"autovar!getorcreate"(i8*)
-
-declare void @"shared!seti"(i32, i32, i32)
-
-declare void @"shared!vseti"(i32, i32, i32)
-
-declare void @"shared!seto"(i32, i32, i32)
-
-declare void @"shared!setd"(i32, i32, double)
-
-declare void @"shared!vsetd"(i32, i32, double)
-
-declare void @"shared!sets"(i32, i32, %Stack)
-
-declare i32 @"shared!geti"(i32, i32)
-
-declare i32 @"shared!vgeti"(i32, i32)
-
-declare double @"shared!getd"(i32, i32)
-
-declare double @"shared!vgetd"(i32, i32)
-
-declare void @"shared!gets"(i32, i32)
-
-declare void @"shared!geto"(i32, i32, i32)
-
-define void @threadproc(%Stack*) {
-  call void @"string!LoadStringFromPool"(i32 0)
-  %2 = load %Stack** @retvar
-  %3 = load %Stack* %2
-  call void @"systemi!Pusho"(%Stack %3)
-  %4 = getelementptr %Stack* %0, i32 0
-  %5 = load volatile %Stack* %4
-  call void @"systemi!Pusho"(%Stack %5)
-  call void @"system!DoInvoke"(i32 0)
-  %6 = load %Stack** @retvar
-  %7 = bitcast %Stack* %6 to i32*
-  %8 = load i32* %7
-  call void @"systemi!Pushi"(i32 %8)
-  call void @"system!Invoke"(i32 1), !dbg !10
-  %9 = load %Stack** @retvar
-  %10 = bitcast %Stack* %9 to i32*
-  %11 = load i32* %10
-  call void @"system!IntToStr"(i32 %11)
-  %12 = load %Stack** @retvar
-  %13 = load %Stack* %12
-  call void @"systemi!Pusho"(%Stack %13)
-  call void @"string!ChainString"()
-  %14 = load %Stack** @retvar
-  %15 = load %Stack* %14
-  call void @"systemi!Pusho"(%Stack %15)
-  call void @"string!LoadStringFromPool"(i32 1)
-  %16 = load %Stack** @retvar
-  %17 = load %Stack* %16
-  call void @"systemi!Pusho"(%Stack %17)
-  call void @"string!ChainString"()
-  %18 = load %Stack** @retvar
-  %19 = load %Stack* %18
-  call void @"systemi!Pusho"(%Stack %19)
-  call void @"system!Invoke"(i32 3), !dbg !10
-  %20 = load %Stack** @retvar, !dbg !11
-  %21 = bitcast %Stack* %20 to i32*
-  store i32 0, i32* %21, !dbg !11
+define void @"RemoteNode#initialize"(%Stack*) {
+  call void (...)* @"RemoteNode!init"()
+  %2 = load %Stack** @retvar, !dbg !11
+  %3 = bitcast %Stack* %2 to i32*
+  store i32 0, i32* %3, !dbg !11
   ret void, !dbg !11
 }
 
-declare void @"systemi!Pusho"(%Stack)
-
-declare void @"systemi!Pushi"(i32)
-
-define void @funca(%Stack*) {
-  %2 = getelementptr %Stack* %0, i32 0
+define void @"RemoteThread#initialize"(%Stack*) {
+  call void (...)* @"RemoteThread!init"()
+  %2 = load %Stack** @retvar, !dbg !12
   %3 = bitcast %Stack* %2 to i32*
-  %4 = load volatile i32* %3
-  %5 = icmp sgt i32 %4, 0
-  br i1 %5, label %if_t, label %if_f
+  store i32 0, i32* %3, !dbg !12
+  ret void, !dbg !12
+}
 
-if_t:                                             ; preds = %1
-  %6 = getelementptr %Stack* %0, i32 0
-  %7 = bitcast %Stack* %6 to i32*
-  %8 = load volatile i32* %7
-  %9 = sub i32 %8, 1
-  call void @"systemi!Pushi"(i32 %9)
-  call void @"system!Invoke"(i32 1), !dbg !12
-  %10 = load %Stack** @retvar
-  %11 = bitcast %Stack* %10 to i32*
-  %12 = load i32* %11
-  %13 = add i32 %12, 1
-  %14 = load %Stack** @retvar, !dbg !13
-  %15 = bitcast %Stack* %14 to i32*
-  store i32 %13, i32* %15, !dbg !13
+define void @"CounterOutOfBoundException#initialize"(%Stack*) {
+  call void (...)* @"CounterOutOfBoundException!init"()
+  %2 = load %Stack** @retvar, !dbg !13
+  %3 = bitcast %Stack* %2 to i32*
+  store i32 0, i32* %3, !dbg !13
   ret void, !dbg !13
-
-if_f:                                             ; preds = %1
-  br label %cont
-
-cont:                                             ; preds = %if_f
-  %16 = load %Stack** @retvar, !dbg !14
-  %17 = bitcast %Stack* %16 to i32*
-  store i32 0, i32* %17, !dbg !14
-  ret void, !dbg !14
 }
 
 define void @"system!main"(%Stack*) {
-  call void @"systemi!Pushd"(double 1.000000e+00)
-  call void @"system!Invoke"(i32 2), !dbg !15
-  %2 = load %Stack** @retvar
-  %3 = bitcast %Stack* %2 to double*
-  %4 = load double* %3
-  %5 = load %Stack** @pstatic
-  %6 = getelementptr %Stack* %5, i32 0
-  %7 = bitcast %Stack* %6 to double*
-  store double %4, double* %7
-  %8 = load %Stack** @pstatic
-  %9 = getelementptr %Stack* %8, i32 0
-  %10 = bitcast %Stack* %9 to double*
-  %11 = load double* %10
-  call void @"system!DoubleToStr"(double %11)
-  %12 = load %Stack** @retvar
-  %13 = load %Stack* %12
-  call void @"systemi!Pusho"(%Stack %13)
-  call void @"system!Invoke"(i32 3), !dbg !16
-  call void @"systemi!Pushi"(i32 3)
-  call void @"system!Invoke"(i32 1), !dbg !17
-  %14 = load %Stack** @retvar
-  %15 = bitcast %Stack* %14 to i32*
-  %16 = load i32* %15
-  call void @"system!IntToStr"(i32 %16)
-  %17 = load %Stack** @retvar
-  %18 = load %Stack* %17
-  call void @"systemi!Pusho"(%Stack %18)
-  call void @"system!Invoke"(i32 3), !dbg !17
-  call void @"systemi!Pushi"(i32 4)
-  call void @"system!Invoke"(i32 1), !dbg !18
-  %19 = load %Stack** @retvar
-  %20 = bitcast %Stack* %19 to i32*
-  %21 = load i32* %20
-  call void @"system!IntToStr"(i32 %21)
-  %22 = load %Stack** @retvar
-  %23 = load %Stack* %22
-  call void @"systemi!Pusho"(%Stack %23)
-  call void @"system!Invoke"(i32 3), !dbg !18
-  call void @"systemi!Pushi"(i32 4)
-  call void @"system!DoInvoke"(i32 6)
-  %24 = load %Stack** @retvar
-  %25 = load %Stack* %24
-  call void @"systemi!Pusho"(%Stack %25)
-  call void @"systemi!Pushi"(i32 1)
-  %26 = call %Stack @"system!NewDelegate"(i32 0)
-  %27 = load %Stack** @retvar
-  %28 = load %Stack* %27
-  call void @"systemi!Pusho"(%Stack %28)
-  call void @"system!Invoke"(i32 4), !dbg !19
-  %29 = load %Stack** @retvar
-  %30 = bitcast %Stack* %29 to i32*
-  %31 = load i32* %30
-  call void @"systemi!Pushi"(i32 3)
-  call void @"system!DoInvoke"(i32 6)
-  %32 = load %Stack** @retvar
-  %33 = load %Stack* %32
-  call void @"systemi!Pusho"(%Stack %33)
-  call void @"systemi!Pushi"(i32 1)
-  %34 = call %Stack @"system!NewDelegate"(i32 0)
-  %35 = load %Stack** @retvar
-  %36 = load %Stack* %35
-  call void @"systemi!Pusho"(%Stack %36)
-  call void @"system!Invoke"(i32 4), !dbg !20
-  %37 = load %Stack** @retvar
-  %38 = bitcast %Stack* %37 to i32*
-  %39 = load i32* %38
   ret void
 }
 
-declare void @"systemi!Pushd"(double)
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!10}
+
+!0 = metadata !{i32 786449, metadata !1, i32 32769, metadata !"Birdee", i1 false, metadata !"", i32 0, metadata !2, metadata !2, metadata !3, metadata !2, metadata !2, metadata !""} ; [ DW_TAG_compile_unit ] [/Menooker/Birdee/Build0/diksam_book_0_1/lib/Remote.dkh] [lang 0x8001]
+!1 = metadata !{metadata !"Remote.dkh", metadata !"/Menooker/Birdee/Build0/diksam_book_0_1/lib"}
+!2 = metadata !{i32 0}
+!3 = metadata !{metadata !4, metadata !7, metadata !8, metadata !9}
+!4 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"RemoteNode#initialize", metadata !"RemoteNode#initialize", metadata !"", i32 71, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"RemoteNode#initialize", null, null, metadata !2, i32 71} ; [ DW_TAG_subprogram ] [line 71] [local] [def] [RemoteNode#initialize]
+!5 = metadata !{i32 786473, metadata !1}          ; [ DW_TAG_file_type ] [/Menooker/Birdee/Build0/diksam_book_0_1/lib/Remote.dkh]
+!6 = metadata !{i32 786453, i32 0, null, metadata !"", i32 0, i64 0, i64 0, i64 0, i32 0, null, null, i32 0, null, null, null} ; [ DW_TAG_subroutine_type ] [line 0, size 0, align 0, offset 0] [from ]
+!7 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"RemoteThread#initialize", metadata !"RemoteThread#initialize", metadata !"", i32 71, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"RemoteThread#initialize", null, null, metadata !2, i32 71} ; [ DW_TAG_subprogram ] [line 71] [local] [def] [RemoteThread#initialize]
+!8 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"CounterOutOfBoundException#initialize", metadata !"CounterOutOfBoundException#initialize", metadata !"", i32 71, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"CounterOutOfBoundException#initialize", null, null, metadata !2, i32 71} ; [ DW_TAG_subprogram ] [line 71] [local] [def] [CounterOutOfBoundException#initialize]
+!9 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"system!main", metadata !"system!main", metadata !"", i32 0, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"system!main", null, null, metadata !2, i32 0} ; [ DW_TAG_subprogram ] [line 0] [local] [def] [system!main]
+!10 = metadata !{i32 2, metadata !"Debug Info Version", i32 1}
+!11 = metadata !{i32 71, i32 0, metadata !4, null}
+!12 = metadata !{i32 71, i32 0, metadata !7, null}
+!13 = metadata !{i32 71, i32 0, metadata !8, null}
+; ModuleID = 'test'
+
+%Stack = type { i32*, i32* }
+
+@bpc = weak thread_local(localdynamic) externally_initialized global i32* null
+@bei = weak thread_local(localdynamic) externally_initialized global i32* null
+@beo = weak thread_local(localdynamic) externally_initialized global %Stack* null
+@bsp = weak thread_local(localdynamic) externally_initialized global %Stack** null
+@arr_sp = weak thread_local(localdynamic) externally_initialized global i32** null
+@retvar = weak thread_local(localdynamic) externally_initialized global %Stack* null
+@pstatic = external constant %Stack*
+@mid = external constant i32
+@0 = private unnamed_addr constant [3 x i8] c"#i\00"
+
+declare void @"string!LoadStringFromPool"(i32)
+
+declare %Stack @"system!DownCast"(i32)
+
+declare %Stack @"system!UpCast"(i32)
+
+declare %Stack @"system!NewDelegate"(i32)
+
+declare i1 @"system!Instanceof"(i32)
+
+declare i1 @"system!Instanceof2"(i32, i32)
+
+declare void @"string!ChainString"()
+
+declare i32 @"string!CompareString"()
+
+declare i32 @"object!CompareObject"()
+
+declare void @"system!ArrayLiteral"(i32, i32)
+
+declare void @"system!NewArray"(i32, i32)
+
+declare void @"shared!NewArray"(i32, i32)
+
+declare void @"object!New"(i32, i32)
+
+declare void @"shared!New"(i32, i32)
+
+declare void @"shared!GlobalArrBoundaryCheck"(i32, i32)
+
+declare i32* @"system!PushException"()
+
+declare i32 @"system!Setjmp"(i32*)
+
+declare void @"system!Raise"(i32)
+
+declare void @"system!SystemRaise"(i32)
+
+declare void @"system!LeaveTry"()
+
+declare i32 @"system!ArrGetCh"(i32)
+
+declare void @"system!CopyArray"(i32, i32, i32, i32, i32, i32)
+
+declare void @"system!InvokeDelegate"()
+
+declare void @"system!GetSuper"()
+
+declare void @"system!ArrPuti"(i32, i32)
+
+declare void @"system!Failure"()
+
+declare void @"system!Reraise"()
+
+declare void @"system!IntToStr"(i32)
+
+declare void @"system!DoubleToStr"(double)
+
+declare void @"system!BoolToStr"(i32)
+
+declare void @"system!AtmInc"(i32*, i32)
+
+declare void @"system!AtmDec"(i32*, i32)
+
+declare void @"system!Invoke"(i32)
+
+declare void @"system!Call"(i32)
+
+declare void @"system!DoInvoke"(i32)
+
+declare void @"autovar!get"(i8*)
+
+declare void @"autovar!getorcreate"(i8*)
+
+declare void @"shared!seti"(i32, i32, i32)
+
+declare void @"shared!vseti"(i32, i32, i32)
+
+declare void @"shared!seto"(i32, i32, i32)
+
+declare void @"shared!setd"(i32, i32, double)
+
+declare void @"shared!vsetd"(i32, i32, double)
+
+declare void @"shared!sets"(i32, i32, %Stack)
+
+declare i32 @"shared!geti"(i32, i32)
+
+declare i32 @"shared!vgeti"(i32, i32)
+
+declare double @"shared!getd"(i32, i32)
+
+declare double @"shared!vgetd"(i32, i32)
+
+declare void @"shared!gets"(i32, i32)
+
+declare void @"shared!geto"(i32, i32, i32)
+
+define void @proc(%Stack*) {
+  %other = alloca i32
+  store i32 0, i32* %other
+  %2 = load i32* @mid
+  %i = alloca i32
+  store i32 0, i32* %i
+  %ARRAYCACHE1 = alloca i8*
+  %ARRAYCACHE = alloca i8*
+  call void @"systemi!Pushi"(i32 50000)
+  call void @"system!NewArray"(i32 0, i32 1)
+  %3 = load %Stack** @retvar
+  %4 = load %Stack* %3
+  %5 = getelementptr %Stack* %0, i32 1
+  store %Stack %4, %Stack* %5
+  %6 = getelementptr %Stack* %0, i32 1
+  %7 = load %Stack* %6
+  %8 = call i8* @"systemi!FldAddr"(%Stack %7)
+  store i8* %8, i8** %ARRAYCACHE
+  call void @"systemi!Pushi"(i32 50000)
+  call void @"system!NewArray"(i32 1, i32 1)
+  %9 = load %Stack** @retvar
+  %10 = load %Stack* %9
+  %11 = getelementptr %Stack* %0, i32 2
+  store %Stack %10, %Stack* %11
+  %12 = getelementptr %Stack* %0, i32 2
+  %13 = load %Stack* %12
+  %14 = call i8* @"systemi!FldAddr"(%Stack %13)
+  store i8* %14, i8** %ARRAYCACHE1
+  store i32 0, i32* %i
+  br label %cond
+
+cond:                                             ; preds = %post, %1
+  %15 = load i32* %i
+  %16 = icmp slt i32 %15, 50000
+  br i1 %16, label %for, label %conti
+
+for:                                              ; preds = %cond
+  %17 = getelementptr %Stack* %0, i32 0
+  %18 = load %Stack* %17
+  call void @"systemi!Pusho"(%Stack %18)
+  call void @"system!DoInvoke"(i32 0)
+  %19 = load %Stack** @retvar
+  %20 = bitcast %Stack* %19 to i32*
+  %21 = load i32* %20
+  %22 = load i32* %i
+  %23 = add i32 %21, %22
+  %24 = sitofp i32 %23 to float
+  %25 = getelementptr %Stack* %0, i32 1
+  %26 = load %Stack* %25
+  %27 = call i8* @"systemi!ArrAddrSafe"(%Stack %26, i32 %22)
+  %28 = bitcast i8* %27 to float*
+  %29 = getelementptr float* %28, i32 %22
+  store float %24, float* %29
+  br label %post
+
+post:                                             ; preds = %for
+  %30 = load i32* %i
+  %31 = add i32 %30, 1
+  store i32 %31, i32* %i
+  br label %cond
+
+conti:                                            ; preds = %cond
+  %32 = getelementptr %Stack* %0, i32 1
+  %33 = load %Stack* %32
+  %34 = call i8* @"systemi!ArrAddrSafe"(%Stack %33, i32 0)
+  %35 = bitcast i8* %34 to float*
+  %36 = getelementptr inbounds float* %35, i32 0
+  %37 = load float* %36
+  %38 = fpext float %37 to double
+  call void @"system!DoubleToStr"(double %38)
+  %39 = load %Stack** @retvar
+  %40 = load %Stack* %39
+  call void @"systemi!Pusho"(%Stack %40)
+  call void @"system!Invoke"(i32 3), !dbg !9
+  call void @"autovar!getorcreate"(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0))
+  %41 = load %Stack** @retvar
+  %42 = load %Stack* %41
+  call void @"systemi!Pushi"(i32 0)
+  call void @"systemi!Pusho"(%Stack %42)
+  call void @"system!DoInvoke"(i32 3)
+  br label %cond2
+
+cond2:                                            ; preds = %post4, %conti
+  call void @"autovar!get"(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0))
+  %43 = load %Stack** @retvar
+  %44 = load %Stack* %43
+  %45 = load %Stack** @retvar
+  %46 = load %Stack* %45
+  call void @"systemi!Pusho"(%Stack %46)
+  call void @"system!DoInvoke"(i32 0)
+  %47 = load %Stack** @retvar
+  %48 = bitcast %Stack* %47 to i32*
+  %49 = load i32* %48
+  %50 = icmp slt i32 %49, 5
+  br i1 %50, label %for3, label %conti5
+
+for3:                                             ; preds = %cond2
+  call void @"string!LoadStringFromPool"(i32 0)
+  %51 = load %Stack** @retvar
+  %52 = load %Stack* %51
+  call void @"systemi!Pusho"(%Stack %52)
+  call void @"system!Invoke"(i32 4), !dbg !10
+  call void @"systemi!Pushi"(i32 -1)
+  %53 = getelementptr %Stack* %0, i32 1
+  %54 = load %Stack* %53
+  call void @"systemi!Pusho"(%Stack %54)
+  call void @"shared!geto"(i32 %2, i32 1, i32 1)
+  %55 = load %Stack** @retvar
+  %56 = load %Stack* %55
+  call void @"systemi!Pusho"(%Stack %56)
+  call void @"system!Call"(i32 2)
+  %57 = load %Stack** @retvar
+  %58 = bitcast %Stack* %57 to i32*
+  %59 = load i32* %58
+  call void @"shared!geto"(i32 %2, i32 0, i32 -1)
+  %60 = load %Stack** @retvar
+  %61 = load %Stack* %60
+  %62 = call i32 @"systemi!ObjectRefPtr"(%Stack %61)
+  call void @"shared!GlobalArrBoundaryCheck"(i32 %62, i32 0)
+  %63 = call double @"shared!getd"(i32 %62, i32 0)
+  call void @"system!DoubleToStr"(double %63)
+  %64 = load %Stack** @retvar
+  %65 = load %Stack* %64
+  call void @"systemi!Pusho"(%Stack %65)
+  call void @"system!Invoke"(i32 3), !dbg !11
+  br label %post4
+
+post4:                                            ; preds = %for3
+  call void @"autovar!get"(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0))
+  %66 = load %Stack** @retvar
+  %67 = load %Stack* %66
+  %68 = load %Stack** @retvar
+  %69 = load %Stack* %68
+  call void @"systemi!Pusho"(%Stack %69)
+  call void @"system!DoInvoke"(i32 0)
+  %70 = load %Stack** @retvar
+  %71 = bitcast %Stack* %70 to i32*
+  %72 = load i32* %71
+  %73 = add i32 %72, 1
+  call void @"autovar!getorcreate"(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0))
+  %74 = load %Stack** @retvar
+  %75 = load %Stack* %74
+  call void @"systemi!Pushi"(i32 %73)
+  call void @"systemi!Pusho"(%Stack %75)
+  call void @"system!DoInvoke"(i32 3)
+  br label %cond2
+
+conti5:                                           ; preds = %cond2
+  %76 = getelementptr %Stack* %0, i32 2
+  %77 = load %Stack* %76
+  call void @"systemi!Pusho"(%Stack %77)
+  call void @"shared!geto"(i32 %2, i32 0, i32 -1)
+  %78 = load %Stack** @retvar
+  %79 = load %Stack* %78
+  call void @"systemi!Pusho"(%Stack %79)
+  call void @"system!CopyArray"(i32 0, i32 50000, i32 0, i32 50000, i32 1, i32 0)
+  %80 = getelementptr %Stack* %0, i32 0
+  %81 = load %Stack* %80
+  call void @"systemi!Pusho"(%Stack %81)
+  call void @"system!DoInvoke"(i32 0)
+  %82 = load %Stack** @retvar
+  %83 = bitcast %Stack* %82 to i32*
+  %84 = load i32* %83
+  %85 = icmp eq i32 %84, 1
+  br i1 %85, label %if_t, label %if_f
+
+if_t:                                             ; preds = %conti5
+  store i32 2, i32* %other
+  br label %cont
+
+if_f:                                             ; preds = %conti5
+  store i32 1, i32* %other
+  br label %cont
+
+cont:                                             ; preds = %if_f, %if_t
+  %86 = getelementptr %Stack* %0, i32 1
+  %87 = load %Stack* %86
+  %88 = call i8* @"systemi!ArrAddrSafe"(%Stack %87, i32 0)
+  %89 = bitcast i8* %88 to float*
+  %90 = getelementptr inbounds float* %89, i32 0
+  %91 = load float* %90
+  %92 = fpext float %91 to double
+  call void @"system!DoubleToStr"(double %92)
+  %93 = load %Stack** @retvar
+  %94 = load %Stack* %93
+  call void @"systemi!Pusho"(%Stack %94)
+  call void @"system!Invoke"(i32 3), !dbg !12
+  store i32 0, i32* %i
+  br label %cond6
+
+cond6:                                            ; preds = %post8, %cont
+  %95 = load i32* %i
+  %96 = icmp slt i32 %95, 50000
+  br i1 %96, label %for7, label %conti9
+
+for7:                                             ; preds = %cond6
+  %97 = getelementptr %Stack* %0, i32 2
+  %98 = load %Stack* %97
+  %99 = load i32* %i
+  %100 = call i8* @"systemi!ArrAddrSafe"(%Stack %98, i32 %99)
+  %101 = bitcast i8* %100 to double*
+  %102 = getelementptr inbounds double* %101, i32 %99
+  %103 = load double* %102
+  %104 = getelementptr %Stack* %0, i32 1
+  %105 = load %Stack* %104
+  %106 = call i8* @"systemi!ArrAddrSafe"(%Stack %105, i32 %99)
+  %107 = bitcast i8* %106 to float*
+  %108 = getelementptr inbounds float* %107, i32 %99
+  %109 = load float* %108
+  %110 = fpext float %109 to double
+  %111 = fsub double %103, %110
+  %112 = load i32* %other
+  %113 = add i32 %112, %99
+  %114 = sitofp i32 %113 to double
+  %115 = fcmp one double %111, %114
+  br i1 %115, label %if_t10, label %if_f11
+
+post8:                                            ; preds = %cont12
+  %116 = load i32* %i
+  %117 = add i32 %116, 1
+  store i32 %117, i32* %i
+  br label %cond6
+
+conti9:                                           ; preds = %if_t10, %cond6
+  br label %cond13
+
+if_t10:                                           ; preds = %for7
+  call void @"string!LoadStringFromPool"(i32 1)
+  %118 = load %Stack** @retvar
+  %119 = load %Stack* %118
+  call void @"systemi!Pusho"(%Stack %119)
+  %120 = load i32* %i
+  call void @"system!IntToStr"(i32 %120)
+  %121 = load %Stack** @retvar
+  %122 = load %Stack* %121
+  call void @"systemi!Pusho"(%Stack %122)
+  call void @"string!ChainString"()
+  %123 = load %Stack** @retvar
+  %124 = load %Stack* %123
+  call void @"systemi!Pusho"(%Stack %124)
+  call void @"system!Invoke"(i32 3), !dbg !13
+  call void @"string!LoadStringFromPool"(i32 2)
+  %125 = load %Stack** @retvar
+  %126 = load %Stack* %125
+  call void @"systemi!Pusho"(%Stack %126)
+  %127 = getelementptr %Stack* %0, i32 2
+  %128 = load %Stack* %127
+  %129 = call i8* @"systemi!ArrAddrSafe"(%Stack %128, i32 %120)
+  %130 = bitcast i8* %129 to double*
+  %131 = getelementptr inbounds double* %130, i32 %120
+  %132 = load double* %131
+  call void @"system!DoubleToStr"(double %132)
+  %133 = load %Stack** @retvar
+  %134 = load %Stack* %133
+  call void @"systemi!Pusho"(%Stack %134)
+  call void @"string!ChainString"()
+  %135 = load %Stack** @retvar
+  %136 = load %Stack* %135
+  call void @"systemi!Pusho"(%Stack %136)
+  call void @"string!LoadStringFromPool"(i32 3)
+  %137 = load %Stack** @retvar
+  %138 = load %Stack* %137
+  call void @"systemi!Pusho"(%Stack %138)
+  call void @"string!ChainString"()
+  %139 = load %Stack** @retvar
+  %140 = load %Stack* %139
+  call void @"systemi!Pusho"(%Stack %140)
+  %141 = getelementptr %Stack* %0, i32 1
+  %142 = load %Stack* %141
+  %143 = call i8* @"systemi!ArrAddrSafe"(%Stack %142, i32 %120)
+  %144 = bitcast i8* %143 to float*
+  %145 = getelementptr inbounds float* %144, i32 %120
+  %146 = load float* %145
+  %147 = load i32* %other
+  %148 = sitofp i32 %147 to float
+  %149 = fadd float %146, %148
+  %150 = sitofp i32 %120 to float
+  %151 = fadd float %149, %150
+  %152 = fpext float %151 to double
+  call void @"system!DoubleToStr"(double %152)
+  %153 = load %Stack** @retvar
+  %154 = load %Stack* %153
+  call void @"systemi!Pusho"(%Stack %154)
+  call void @"string!ChainString"()
+  %155 = load %Stack** @retvar
+  %156 = load %Stack* %155
+  call void @"systemi!Pusho"(%Stack %156)
+  call void @"system!Invoke"(i32 3), !dbg !14
+  br label %conti9
+
+if_f11:                                           ; preds = %for7
+  br label %cont12
+
+cont12:                                           ; preds = %if_f11
+  br label %post8
+
+cond13:                                           ; preds = %post15, %conti9
+  br label %for14
+
+for14:                                            ; preds = %cond13
+  call void @"system!Invoke"(i32 2), !dbg !15
+  %157 = load %Stack** @retvar
+  %158 = load %Stack* %157
+  %159 = getelementptr %Stack* %0, i32 5
+  call void @"systemi!Pusho"(%Stack %158)
+  %160 = load %Stack* %159
+  call void @"systemi!Pusho"(%Stack %160)
+  call void @"system!DoInvoke"(i32 5)
+  %161 = getelementptr %Stack* %0, i32 2
+  %162 = load %Stack* %161
+  %163 = getelementptr %Stack* %0, i32 5
+  %164 = load %Stack* %163
+  call void @"systemi!Pusho"(%Stack %164)
+  call void @"system!DoInvoke"(i32 0)
+  %165 = load %Stack** @retvar
+  %166 = bitcast %Stack* %165 to i32*
+  %167 = load i32* %166
+  %168 = call i8* @"systemi!ArrAddrSafe"(%Stack %162, i32 %167)
+  %169 = bitcast i8* %168 to double*
+  %170 = getelementptr inbounds double* %169, i32 %167
+  %171 = load double* %170
+  call void @"system!DoubleToStr"(double %171)
+  %172 = load %Stack** @retvar
+  %173 = load %Stack* %172
+  call void @"systemi!Pusho"(%Stack %173)
+  call void @"system!Invoke"(i32 3), !dbg !16
+  br label %post15
+
+post15:                                           ; preds = %for14
+  br label %cond13
+
+conti16:                                          ; No predecessors!
+  %174 = load %Stack** @retvar, !dbg !17
+  %175 = bitcast %Stack* %174 to i32*
+  store i32 0, i32* %175, !dbg !17
+  ret void, !dbg !17
+}
+
+declare void @"systemi!Pushi"(i32)
+
+declare i8* @"systemi!FldAddr"(%Stack)
+
+declare void @"systemi!Pusho"(%Stack)
+
+declare i8* @"systemi!ArrAddrSafe"(%Stack, i32)
+
+declare i32 @"systemi!ObjectRefPtr"(%Stack)
+
+define void @"system!main"(%Stack*) {
+  %ARRAYCACHE4 = alloca i8*
+  %ARRAYCACHE3 = alloca i8*
+  %ARRAYCACHE2 = alloca i8*
+  %ARRAYCACHE1 = alloca i8*
+  %ARRAYCACHE = alloca i8*
+  call void @"string!LoadStringFromPool"(i32 4)
+  %2 = load %Stack** @retvar
+  %3 = load %Stack* %2
+  call void @"systemi!Pusho"(%Stack %3)
+  call void @"string!LoadStringFromPool"(i32 5)
+  %4 = load %Stack** @retvar
+  %5 = load %Stack* %4
+  call void @"systemi!Pusho"(%Stack %5)
+  call void @"system!ArrayLiteral"(i32 2, i32 2)
+  %6 = load %Stack** @retvar
+  %7 = load %Stack* %6
+  %8 = load %Stack** @pstatic
+  %9 = getelementptr %Stack* %8, i32 0
+  store %Stack %7, %Stack* %9
+  %10 = load %Stack** @pstatic
+  %11 = getelementptr %Stack* %10, i32 0
+  %12 = load %Stack* %11
+  %13 = call i8* @"systemi!FldAddr"(%Stack %12)
+  store i8* %13, i8** %ARRAYCACHE
+  call void @"systemi!Pushi"(i32 13080)
+  call void @"systemi!Pushi"(i32 13090)
+  call void @"system!ArrayLiteral"(i32 0, i32 2)
+  %14 = load %Stack** @retvar
+  %15 = load %Stack* %14
+  %16 = load %Stack** @pstatic
+  %17 = getelementptr %Stack* %16, i32 1
+  store %Stack %15, %Stack* %17
+  %18 = load %Stack** @pstatic
+  %19 = getelementptr %Stack* %18, i32 1
+  %20 = load %Stack* %19
+  %21 = call i8* @"systemi!FldAddr"(%Stack %20)
+  store i8* %21, i8** %ARRAYCACHE1
+  call void @"string!LoadStringFromPool"(i32 6)
+  %22 = load %Stack** @retvar
+  %23 = load %Stack* %22
+  call void @"systemi!Pusho"(%Stack %23)
+  call void @"system!ArrayLiteral"(i32 2, i32 1)
+  %24 = load %Stack** @retvar
+  %25 = load %Stack* %24
+  %26 = load %Stack** @pstatic
+  %27 = getelementptr %Stack* %26, i32 2
+  store %Stack %25, %Stack* %27
+  %28 = load %Stack** @pstatic
+  %29 = getelementptr %Stack* %28, i32 2
+  %30 = load %Stack* %29
+  %31 = call i8* @"systemi!FldAddr"(%Stack %30)
+  store i8* %31, i8** %ARRAYCACHE2
+  call void @"systemi!Pushi"(i32 11211)
+  call void @"system!ArrayLiteral"(i32 0, i32 1)
+  %32 = load %Stack** @retvar
+  %33 = load %Stack* %32
+  %34 = load %Stack** @pstatic
+  %35 = getelementptr %Stack* %34, i32 3
+  store %Stack %33, %Stack* %35
+  %36 = load %Stack** @pstatic
+  %37 = getelementptr %Stack* %36, i32 3
+  %38 = load %Stack* %37
+  %39 = call i8* @"systemi!FldAddr"(%Stack %38)
+  store i8* %39, i8** %ARRAYCACHE3
+  %40 = load %Stack** @pstatic
+  %41 = getelementptr %Stack* %40, i32 3
+  %42 = load %Stack* %41
+  call void @"systemi!Pusho"(%Stack %42)
+  %43 = load %Stack** @pstatic
+  %44 = getelementptr %Stack* %43, i32 2
+  %45 = load %Stack* %44
+  call void @"systemi!Pusho"(%Stack %45)
+  %46 = load %Stack** @pstatic
+  %47 = getelementptr %Stack* %46, i32 1
+  %48 = load %Stack* %47
+  call void @"systemi!Pusho"(%Stack %48)
+  %49 = load %Stack** @pstatic
+  %50 = getelementptr %Stack* %49, i32 0
+  %51 = load %Stack* %50
+  call void @"systemi!Pusho"(%Stack %51)
+  call void @"systemi!Pushi"(i32 5080)
+  call void @"system!Invoke"(i32 0), !dbg !18
+  %52 = load %Stack** @retvar
+  %53 = load %Stack* %52
+  %54 = load %Stack** @pstatic
+  %55 = getelementptr %Stack* %54, i32 4
+  store %Stack %53, %Stack* %55
+  %56 = load %Stack** @pstatic
+  %57 = getelementptr %Stack* %56, i32 4
+  %58 = load %Stack* %57
+  %59 = call i8* @"systemi!FldAddr"(%Stack %58)
+  store i8* %59, i8** %ARRAYCACHE4
+  call void @"systemi!Pushi"(i32 50000)
+  call void @"shared!NewArray"(i32 2, i32 1)
+  %60 = load %Stack** @retvar
+  %61 = load %Stack* %60
+  %62 = load i32* @mid
+  %63 = call i32 @"systemi!ObjectRefPtr"(%Stack %61)
+  call void @"shared!seto"(i32 %62, i32 0, i32 %63)
+  call void @"shared!geto"(i32 %62, i32 0, i32 -1)
+  %64 = load %Stack** @retvar
+  %65 = load %Stack* %64
+  call void @"systemi!Pusho"(%Stack %65)
+  call void @"systemi!Pushi"(i32 50000)
+  call void @"systemi!Pushi"(i32 2)
+  call void @"shared!New"(i32 1, i32 0)
+  %66 = load %Stack** @retvar
+  %67 = load %Stack* %66
+  %68 = call i32 @"systemi!ObjectRefPtr"(%Stack %67)
+  call void @"shared!seto"(i32 %62, i32 1, i32 %68)
+  call void @"systemi!Pushi"(i32 1)
+  %69 = call %Stack @"system!NewDelegate"(i32 1)
+  %70 = load %Stack** @retvar
+  %71 = load %Stack* %70
+  call void @"systemi!Pusho"(%Stack %71)
+  %72 = load %Stack** @pstatic
+  %73 = getelementptr %Stack* %72, i32 4
+  %74 = load %Stack* %73
+  %75 = call i8* @"systemi!ArrAddrSafe"(%Stack %74, i32 0)
+  %76 = bitcast i8* %75 to %Stack*
+  %77 = getelementptr inbounds %Stack* %76, i32 0
+  %78 = load %Stack* %77
+  call void @"systemi!Pusho"(%Stack %78)
+  call void @"system!Call"(i32 0)
+  %79 = load %Stack** @retvar
+  %80 = load %Stack* %79
+  call void @"systemi!Pushi"(i32 2)
+  %81 = call %Stack @"system!NewDelegate"(i32 1)
+  %82 = load %Stack** @retvar
+  %83 = load %Stack* %82
+  call void @"systemi!Pusho"(%Stack %83)
+  %84 = load %Stack** @pstatic
+  %85 = getelementptr %Stack* %84, i32 4
+  %86 = load %Stack* %85
+  %87 = call i8* @"systemi!ArrAddrSafe"(%Stack %86, i32 1)
+  %88 = bitcast i8* %87 to %Stack*
+  %89 = getelementptr inbounds %Stack* %88, i32 1
+  %90 = load %Stack* %89
+  call void @"systemi!Pusho"(%Stack %90)
+  call void @"system!Call"(i32 0)
+  %91 = load %Stack** @retvar
+  %92 = load %Stack* %91
+  call void @"system!Invoke"(i32 2), !dbg !19
+  %93 = load %Stack** @retvar
+  %94 = load %Stack* %93
+  ret void
+}
 
 !llvm.dbg.cu = !{!0}
-!llvm.module.flags = !{!9}
+!llvm.module.flags = !{!8}
 
 !0 = metadata !{i32 786449, metadata !1, i32 32769, metadata !"Birdee", i1 false, metadata !"", i32 0, metadata !2, metadata !2, metadata !3, metadata !2, metadata !2, metadata !""} ; [ DW_TAG_compile_unit ] [../../compiler/test/test.dkm] [lang 0x8001]
 !1 = metadata !{metadata !"test.dkm", metadata !"../../compiler/test"}
 !2 = metadata !{i32 0}
-!3 = metadata !{metadata !4, metadata !7, metadata !8}
-!4 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"threadproc", metadata !"threadproc", metadata !"", i32 13, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @threadproc, null, null, metadata !2, i32 13} ; [ DW_TAG_subprogram ] [line 13] [local] [def] [threadproc]
+!3 = metadata !{metadata !4, metadata !7}
+!4 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"proc", metadata !"proc", metadata !"", i32 48, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @proc, null, null, metadata !2, i32 48} ; [ DW_TAG_subprogram ] [line 48] [local] [def] [proc]
 !5 = metadata !{i32 786473, metadata !1}          ; [ DW_TAG_file_type ] [../../compiler/test/test.dkm]
 !6 = metadata !{i32 786453, i32 0, null, metadata !"", i32 0, i64 0, i64 0, i64 0, i32 0, null, null, i32 0, null, null, null} ; [ DW_TAG_subroutine_type ] [line 0, size 0, align 0, offset 0] [from ]
-!7 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"funca", metadata !"funca", metadata !"", i32 20, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @funca, null, null, metadata !2, i32 20} ; [ DW_TAG_subprogram ] [line 20] [local] [def] [funca]
-!8 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"system!main", metadata !"system!main", metadata !"", i32 3, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"system!main", null, null, metadata !2, i32 3} ; [ DW_TAG_subprogram ] [line 3] [local] [def] [system!main]
-!9 = metadata !{i32 2, metadata !"Debug Info Version", i32 1}
-!10 = metadata !{i32 11, i32 0, metadata !4, null}
-!11 = metadata !{i32 13, i32 0, metadata !4, null}
-!12 = metadata !{i32 16, i32 0, metadata !7, null}
-!13 = metadata !{i32 17, i32 0, metadata !7, null}
-!14 = metadata !{i32 19, i32 0, metadata !7, null}
-!15 = metadata !{i32 2, i32 0, metadata !8, null}
-!16 = metadata !{i32 3, i32 0, metadata !8, null}
-!17 = metadata !{i32 4, i32 0, metadata !8, null}
-!18 = metadata !{i32 5, i32 0, metadata !8, null}
-!19 = metadata !{i32 7, i32 0, metadata !8, null}
-!20 = metadata !{i32 8, i32 0, metadata !8, null} ; [ DW_TAG_imported_declaration ]
+!7 = metadata !{i32 786478, metadata !1, metadata !5, metadata !"system!main", metadata !"system!main", metadata !"", i32 4, metadata !6, i1 true, i1 true, i32 0, i32 0, null, i32 256, i1 false, void (%Stack*)* @"system!main", null, null, metadata !2, i32 4} ; [ DW_TAG_subprogram ] [line 4] [local] [def] [system!main]
+!8 = metadata !{i32 2, metadata !"Debug Info Version", i32 1}
+!9 = metadata !{i32 21, i32 0, metadata !4, null}
+!10 = metadata !{i32 23, i32 0, metadata !4, null}
+!11 = metadata !{i32 25, i32 0, metadata !4, null}
+!12 = metadata !{i32 34, i32 0, metadata !4, null}
+!13 = metadata !{i32 37, i32 0, metadata !4, null}
+!14 = metadata !{i32 38, i32 0, metadata !4, null}
+!15 = metadata !{i32 44, i32 0, metadata !4, null}
+!16 = metadata !{i32 45, i32 0, metadata !4, null}
+!17 = metadata !{i32 48, i32 0, metadata !4, null}
+!18 = metadata !{i32 9, i32 0, metadata !7, null}
+!19 = metadata !{i32 52, i32 0, metadata !7, null}

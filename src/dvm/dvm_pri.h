@@ -166,6 +166,7 @@ typedef enum {
     INT_ARRAY = 1,
     DOUBLE_ARRAY,
     OBJECT_ARRAY,
+	FLOAT_ARRAY,
 	VARIENT_ARRAY,
     FUNCTION_INDEX_ARRAY
 } DVM_ArrayType;
@@ -175,6 +176,7 @@ struct DVM_Array_tag {
         int             *int_array;
         double          *double_array;
         DVM_ObjectRef   *object;
+		float			*float_array;
         int             *function_index;
     } u;
 	int         size;
@@ -361,6 +363,7 @@ dvm_literal_to_dvm_string_i(DVM_VirtualMachine *inter, DVM_Char *str);
 DVM_ObjectRef
 dvm_create_dvm_string_i(DVM_VirtualMachine *dvm, DVM_Char *str);
 DVM_ObjectRef dvm_create_array_int_i(DVM_VirtualMachine *dvm, int size);
+DVM_ObjectRef dvm_create_array_float_i(DVM_VirtualMachine *dvm, int size);
 DVM_ObjectRef dvm_create_array_double_i(DVM_VirtualMachine *dvm, int size);
 DVM_ObjectRef ExCreateVarArray(DVM_VirtualMachine *dvm, int size);
 DVM_ObjectRef dvm_create_array_object_i(DVM_VirtualMachine *dvm, int size);

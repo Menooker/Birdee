@@ -676,7 +676,9 @@ dkc_get_basic_type_name(DVM_BasicType type)
     case DVM_NULL_TYPE:
         return "null";
         break;
-
+    case DVM_FLOAT_TYPE:
+        return "float";
+        break;
     case DVM_DELEGATE_TYPE: /* FALLTHRU */
     case DVM_ENUM_TYPE: /* FALLTHRU */
     case DVM_BASE_TYPE: /* FALLTHRU */

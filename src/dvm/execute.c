@@ -386,6 +386,9 @@ create_array_sub(DVM_VirtualMachine *dvm, int dim, int dim_index,
         case DVM_ENUM_TYPE:
             ret = dvm_create_array_int_i(dvm, size);
             break;
+		case DVM_FLOAT_TYPE:
+            ret = dvm_create_array_float_i(dvm, size);
+            break;
         case DVM_DOUBLE_TYPE:
             ret = dvm_create_array_double_i(dvm, size);
             break;

@@ -111,6 +111,7 @@ shared public class RAccumulator
 		buf=buffer
 	end
 	public declare function Accumulate(inc as double[],max_wait as int) as int
+	public declare function Accumulatef(inc as float[],max_wait as int) as int
 end
 
 shared public class RSemaphore
