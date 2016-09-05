@@ -164,7 +164,6 @@
     <None Include="..\..\..\example\mergesort.txt" />
     <None Include="..\..\..\example\NMF.txt" />
     <None Include="..\..\..\example\pi.txt" />
-    <None Include="..\..\..\example\VectorizeTest_NMF.dkm" />
     <None Include="..\..\..\lib\Exceptions.dkh" />
     <None Include="..\..\..\lib\Exceptions.dkm" />
     <None Include="..\..\..\lib\ML.dkh" />
@@ -172,6 +171,7 @@
     <None Include="..\..\..\lib\Remote.dkh" />
     <None Include="..\..\..\lib\Remote.dkm" />
     <None Include="..\..\..\README.md" />
+    <None Include="..\..\..\test\AccumulatorTest.txt" />
     <None Include="..\..\..\test\ArrayCacheTest.txt" />
     <None Include="..\..\..\test\ArrayCacheTest_Reg.txt" />
     <None Include="..\..\..\test\barriertest.txt" />
@@ -182,6 +182,7 @@
     <None Include="..\..\..\test\test_delegate.txt" />
     <None Include="..\..\..\test\thread.txt" />
     <None Include="..\..\..\test\vartest.dkm" />
+    <None Include="..\..\..\test\VectorizeTest_NMF.dkm" />
     <None Include="..\..\compiler\builder.bat" />
     <None Include="..\..\compiler\diksam.l" />
     <None Include="..\..\compiler\diksam.y" />
