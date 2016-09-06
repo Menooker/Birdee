@@ -30,6 +30,7 @@ typedef struct {
 } DVM_ObjectRef;
 
 typedef union {
+	float				float_value;
     int                 int_value;
     double              double_value;
     DVM_ObjectRef       object;

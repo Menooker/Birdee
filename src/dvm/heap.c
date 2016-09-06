@@ -535,6 +535,11 @@ gc_dispose_object(DVM_VirtualMachine *dvm, DVM_Object *obj)
                 -= sizeof(int) * obj->u.barray.alloc_size;
             MEM_free(obj->u.barray.u.int_array);
             break;
+        case FLOAT_ARRAY:
+            dvm->heap.current_heap_size
+                -= sizeof(float) * obj->u.barray.alloc_size;
+            MEM_free(obj->u.barray.u.float_array);
+            break;
         case DOUBLE_ARRAY:
             dvm->heap.current_heap_size
                 -= sizeof(double) * obj->u.barray.alloc_size;

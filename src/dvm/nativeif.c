@@ -189,6 +189,14 @@ resize_array(DVM_VirtualMachine *dvm, DVM_Object *barray, int new_size)
                 += (new_alloc_size - barray->u.barray.alloc_size)
                 * sizeof(int);
             break;
+        case FLOAT_ARRAY:
+            barray->u.barray.u.float_array
+                = MEM_realloc(barray->u.barray.u.float_array,
+                              new_alloc_size * sizeof(float));
+            dvm->heap.current_heap_size
+                += (new_alloc_size - barray->u.barray.alloc_size)
+                * sizeof(float);
+            break;
         case DOUBLE_ARRAY:
             barray->u.barray.u.double_array
                 = MEM_realloc(barray->u.barray.u.double_array,
@@ -226,6 +234,11 @@ DVM_array_resize(DVM_VirtualMachine *dvm, DVM_Object *barray, int new_size)
             barray->u.barray.u.int_array[i] = 0;
         }
         break;
+    case FLOAT_ARRAY:
+        for (i = barray->u.barray.size; i < new_size; i++) {
+            barray->u.barray.u.float_array[i] = 0;
+        }
+        break;
     case DOUBLE_ARRAY:
         for (i = barray->u.barray.size; i < new_size; i++) {
             barray->u.barray.u.double_array[i] = 0;
@@ -257,6 +270,12 @@ DVM_array_insert(DVM_VirtualMachine *dvm, DVM_Object *barray, int pos,
                 sizeof(int) * (barray->u.barray.size - pos));
         barray->u.barray.u.int_array[pos] = value.int_value;
         break;
+    case FLOAT_ARRAY:
+        memmove(&barray->u.barray.u.float_array[pos+1],
+                &barray->u.barray.u.float_array[pos],
+                sizeof(float) * (barray->u.barray.size - pos));
+		barray->u.barray.u.float_array[pos] = value.float_value;
+        break;
     case DOUBLE_ARRAY:
         memmove(&barray->u.barray.u.double_array[pos+1],
                 &barray->u.barray.u.double_array[pos],
@@ -286,6 +305,11 @@ DVM_array_remove(DVM_VirtualMachine *dvm, DVM_Object *barray, int pos)
         memmove(&barray->u.barray.u.int_array[pos],
                 &barray->u.barray.u.int_array[pos+1],
                 sizeof(int) * (barray->u.barray.size - pos - 1));
+        break;
+    case FLOAT_ARRAY:
+        memmove(&barray->u.barray.u.float_array[pos],
+                &barray->u.barray.u.float_array[pos+1],
+                sizeof(float) * (barray->u.barray.size - pos - 1));
         break;
     case DOUBLE_ARRAY:
         memmove(&barray->u.barray.u.double_array[pos],
