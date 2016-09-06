@@ -1421,7 +1421,7 @@ static THREAD_PROC(RcMasterData,param)
 	int n=num_nodes-1;
 	SOCKET slisten=par->port;
 	delete par;
-	int maxfd;
+	int maxfd=0;
 	fd_set readfds;
 	RcDataPack cmd;
 	char buf[BD_DATA_PROCESS_SIZE];

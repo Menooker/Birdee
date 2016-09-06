@@ -1,94 +1,18 @@
-//require Remote
-
-const batch_size=8192
-const features=4096
-const myfeature_len=4096
-/*const batch_size=512
-const features=16384
-const myfeature_len=16384*/
-const myK_len=32
-const matK=32
-const alpha=0.1f
-const beta=0.1f
-
-//1. use tmp variables 2. cache address of datasets
-dim P as float[]=new float[batch_size*matK]
-dim Q as float[]=new float[features*matK]
-dim mydata_set as float[]=new float[batch_size*features]
-dim gradient as float[]=new float[features*matK]
+require Remote
+const size=500000
 
 
+dim hosts as string[]=new string[0]
+dim ports as int[]=new int[0]
+dim mem_hosts as string[]={"127.0.0.1"}
+dim mem_ports as int[]={11211}
+dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
-	dim sum as float[]=new float[100]
-sub main()
-unsafe
-	dim i as int
-	dim j as int
-	dim k as int
-	P[0]=P[0]
-	Q[0]=Q[0]
-	dim dot as float=0
-	for i=0;i<16384;i++
-		dot+=P[i]*Q[i]
-	end
-	println(dot)
-	BreakPoint()
-end
+dim buf as shared double[] global=new double[size] global
 
-		/*for j=0;j<features;j++
-			dot=0
-			for k=0;k<matK;k++
-				mydata_set[i*batch_size+features]+=P[i*matK+k]*Q[j*matK+k]
-			end
-		end*/
-sub main2()
-unsafe
-	dim i as int
-	dim j as int
-	dim k as int
-	dim base as int
-	dim dot as float
-	dim tmp as float
-	dim tmp2 as float
-	dim qindex as int
-	dim pindex as int
-	P[0]=P[0]
-	Q[0]=Q[0]
-	gradient[0]=0
-	mydata_set[0]=mydata_set[0]
-	base=0
-	dim gsum as float
-	for i=0;i<batch_size;i++
-		dot=0
-		gsum=0
-		pindex=i*matK
-		for j=0;j<features;j++
-			//Q[k][j]
-			qindex=j*myK_len
-			for k=0;k<matK;k++
-				dot+=P[pindex+k]*Q[qindex+k]
-			end
-			dot=mydata_set[base+j] - dot
-			//println(dot)
-			for k=0;k<matK;k++
-				//println((pindex+k))
-				tmp=P[pindex+k]
-				tmp2=Q[qindex+k]
-				P[pindex+k]= alpha * (2.0f * dot * tmp2 - beta * tmp)
-				gradient[qindex+k]+= alpha * (2.0f * dot * tmp - beta * tmp2)
-			end
-		end
-		base+=myfeature_len
-	end
-end
-
-/*for #i=0;#i<1000;#i++
-	P[#i]=1
-	Q[#i]=1
-end*/
-dim t as int=GetClock()
-main2()
-println(GetClock()-t)
+	dim localbuf2 as double[]=new double[size]
+	dim t as int=GetClock()
+	buf[0:size]=localbuf2[0:size]
+	println(GetClock()-t)
+	
 gets()
-
-
