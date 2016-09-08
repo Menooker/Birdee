@@ -4,34 +4,21 @@ require math
 //distributed parallel version of http://blog.csdn.net/lilyth_lilyth/article/details/8958147
 
 const samples_per_iter=20
-const round = 2
+const round = 10
 const verify_round = 2
-const sample_num = 800
-const threads_per_node = 2
-const batch_size = 800
+const sample_num = 8192
+const threads_per_node = 4
+const batch_size = 8192
 const staleness = 1
-const alpha=0.001
-const beta=0.001
-const features=1000
-const matK=128
+const alpha=0.01f
+const beta=0.01f
+const features=4096
+const matK=32
+const split_features=1
 
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
-dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-dim ports as int[]={10500,10500,10500,10500,10500,10500,10500,10500}
-//dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113"}
-//dim ports as int[]={10500,10500,10500,10500}
-//dim mem_hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-//dim mem_ports as int[]={11211,11211,11211,11211,11211,11211,11211,11211}
-dim mem_hosts as string[]={"192.168.99.13","192.168.99.14","192.168.99.16","192.168.99.17"}
-dim mem_ports as int[]={11211,11211,11211,11211}
-
-/*dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13070,13080}
-dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}*/
-//dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 dim nodes as RemoteNode[]=StartNodesEx(5080,"slaves.txt","memory.txt")
 
 print("working with "+nodes.size()+" nodes\n")
@@ -57,16 +44,16 @@ dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
 
 dim n2 as int=feature_len * thread_num * sample_num
 dim global_gradient as shared double[] global = new double[10] global
-dim data_set1 as double[]
-dim data_set2 as double[]
+dim data_set1 as float[]
+dim data_set2 as float[]
 
-dim accu as shared RAccumulator=new RAccumulator(node_num,feature_len*matK,global_gradient)
+dim accu as shared RAccumulator=new RAccumulator(node_num,features*myK_len,global_gradient)
 
-dim P as double[][]
-dim Q as double[]
+dim P as float[]
+dim Q as float[]
 //Q[k][features]
 
-dim gradient as double[][]
+dim gradient as float[][]
 dim volatile sync2 as int
 dim volatile sync1 as int
 dim myfeature_len as int
@@ -74,9 +61,19 @@ dim mythreads as int
 dim gparam as double[] global
 dim bar_main as RBarrier
 dim bar_int as RBarrier
-dim local_dataset as double[][]
 dim batch_num as int
 dim volatile bar_file as int
+
+sub CopyAndTrunc(src as double[], start_s as int, dest as float[], start_d as int , len as int)
+unsafe
+	dim d as float[]=dest
+	dim s as double[]=src
+	dim i as int
+	dim l as int=len
+	for i=0;i<len;i++
+		d[start_d+i]=s[start_s+i]
+	end
+end
 
 function putproc(id as var) as int
 unsafe
@@ -88,9 +85,9 @@ unsafe
 	dim node_n as int=node_num
 	dim mlocal as double[]=new double[feature_len*put_step]
 	//println("/home/ubuntu/shared/g"+id+".csv")
-	dim file as CSVReader=new CSVReader("/home/ubuntu/shared/g"+id+".csv")
+	dim file as CSVReader=new CSVReader("/home/ubuntu/shared_bin/petuum/bosen/app/NMF/sample/data/NMF.csv."+id)
 	dim fl as int=feature_len
-	dim ds as double[]
+	dim ds as float[]
 	dim i as int
 	dim j as int
 	dim chunk_size as int=put_step*node_n
@@ -108,7 +105,13 @@ unsafe
 					file.ReadLine(mlocal,j*fl)
 				end
 			end
-			ds[i*fl: (i+put_step)*fl]=mlocal[0:fl*put_step]
+			if i+put_step>batch_size then
+				CopyAndTrunc(mlocal,0,ds,i*fl,	fl*(batch_size-i))			
+				//ds[i*fl: batch_size*fl]=mlocal[0:fl*(batch_size-i)]
+			else
+				CopyAndTrunc(mlocal,0,ds,i*fl,	fl*put_step)
+				//ds[i*fl: (i+put_step)*fl]=mlocal[0:fl*put_step]
+			end
 		end
 		print("Put batch " + batch_num  + " done\n")
 		bar_file@+=1
@@ -139,7 +142,7 @@ end
 
 dim time as int=GetClock()
 put_matrix()
-dim time2 as int=GetClock()
+
 dim ttid as int=0
 dim ii as int
 dim jj as int
@@ -150,6 +153,8 @@ for ii=0;ii<node_num;ii++
 	end
 end
 
+barrier_main.Enter(-1)
+dim time2 as int=GetClock()
 for batch_num =0; batch_num<sample_num/batch_size;batch_num++
 	for cur_round=0;cur_round<round;cur_round++
 		//put_matrix()
@@ -167,7 +172,9 @@ end
 println("calc time: "+ (GetClock()-time2))
 println("total time: "+ (GetClock()-time_total))
 //file.Close()
-gets()
+for ii=0;ii<node_num;ii++
+	nodes[ii].Close()
+end
 
 
 function myrand() as int
@@ -180,6 +187,7 @@ end
 
 
 sub zero_gradient(idx as int)
+unsafe
 	dim i as int
 	for i=0;i<features*myK_len;i++
 		gradient[idx][i]=0
@@ -187,7 +195,7 @@ sub zero_gradient(idx as int)
 end
 
 
-
+dim buf as double[]
 function threadproc(id as var) as int
 unsafe
 	dim tid as int=id
@@ -197,19 +205,31 @@ unsafe
 	dim st as int=tid % threads_per_node
 	dim mround as int
 	dim node_id as int=tid/threads_per_node
-	dim mydata_set as double[]
-	gradient[0][0]=0
-	dim dot as double
-	dim h as double
+	dim mydata_set as float[]
+	dim mygradient as float[]=gradient[st]
+	
+	dim local_gradient_sum as float[]=gradient[0]
+	dim myp as float[]=P
+	dim myq as float[]=Q
+	mygradient[0]=0
+	dim dot as float
+	dim h as float
 	dim ran as int
 	dim dummy as int=thread_num
 
 	dim base as int
 	dim ibase as int
-	dim tmp as double
+	dim tmp as float
 	dim t1 as int
 	dim t2 as int
 	dim batch as int
+	dim pindex as int
+	dim qindex as int
+	dim tmp2 as float
+	mydata_set=data_set1
+	mydata_set[0]=mydata_set[0]
+	dim start_t as int =GetClock()
+	dim size as int=batch_size/threads_per_node
 	for batch=0; batch<sample_num/batch_size ; batch++
 		if batch%2==0 then
 			mydata_set=data_set1
@@ -222,35 +242,52 @@ unsafe
 				break
 			end
 		end
+		if batch==0 then
+			bar_main.Enter(-1)		
+		end
 		for mround=0;mround<round;mround++
 			zero_gradient(st)
-			base=batch_size*st/threads_per_node*myfeature_len
+			
 			ibase=batch_size*st/threads_per_node
+			
 			//phase 3: calculate the gradient on the set of data
 			//println("K3 "+mround+" "+st)
 			dim tm as int
 			tm=GetClock()
-			for i=0;i<batch_size/threads_per_node;i++
+			dim tile as int
+			dim feature_start as int
+			dim feature_end as int
+			pindex=ibase*matK
+			base=batch_size*st/threads_per_node*myfeature_len
+			for i=0;i<size;i++
 				dot=0
-				dim qindex as int		
+				qindex=myK_len*feature_start
 				for j=0;j<features;j++
 					//Q[k][j]
 					for k=0;k<matK;k++
-						qindex=j*myK_len+k
-						dot+=P[i+ibase][k]*Q[qindex]
+						dot+=myp[pindex + k]*myq[qindex+k]
 					end
 					dot=mydata_set[base+j] - dot
 					for k=0;k<matK;k++
-						tmp=P[i+ibase][k]
-						qindex=j*myK_len+k
-						P[i+ibase][k]= alpha * (2 * dot * Q[qindex] - beta * tmp)
-						gradient[st][qindex] += alpha * (2 * dot * tmp - beta * Q[qindex])
+						myp[pindex+k]+= alpha * dot * myq[qindex+k]
+						mygradient[qindex+k]+=beta * dot * myp[pindex+k]
 					end
+					//*/
+					
+					/*for k=0;k<matK;k++
+						tmp=myp[pindex + k]
+						tmp2=myq[qindex+k]
+						myp[pindex + k]+= alpha * (2.0f * dot * tmp2 - beta * tmp)
+						mygradient[qindex+k] += alpha * (2.0f * dot * tmp - beta * tmp2)
+					end
+					//*/
+					qindex+=myK_len
 				end
+				pindex+=matK
 				base+=myfeature_len
 			end
-			println(GetClock()-tm)
-			tm=GetClock()
+			println( ""+ (GetClock()-tm) +" "+id)
+			//tm=GetClock()
 			sync2@+=1
 			for ;;
 				if sync2 % threads_per_node==0 then
@@ -263,21 +300,25 @@ unsafe
 				if mround % staleness ==0 then
 					for i=1;i<threads_per_node;i++
 						for j=0;j<features*myK_len;j++
-							gradient[0][j]+=gradient[i][j]
+							local_gradient_sum[j]+=gradient[i][j]
 						end
 					end
 				end
-				println("K2")
-				dim buf as double[]=gradient[0]
-				accu.Accumulate(buf,-1)
+
+				accu.Accumulatef(local_gradient_sum,-1)
 				buf[0:features*myK_len]=global_gradient[0:features*myK_len]
 				for j=0;j<features*myK_len;j++
-						Q[j]+=gradient[0][j]
+						myq[j]+=buf[j]
+						if myq[i]<0 then
+							myq[i]=0
+						end
 				end
+
 			end
 			bar_main.Enter(-1)
 		end
 	end
+	println("Time used ="+ (GetClock()-start_t))
 end
 
 sub RemoteInitialize()
@@ -292,11 +333,13 @@ sub RemoteInitialize()
 	else
 		myK_len = (matK) / 32 * 32 + 32
 	end
-	gradient=new double[threads_per_node][features*myK_len]
-	data_set1=new double[myfeature_len*batch_size]
-	data_set2=new double[myfeature_len*batch_size]
-	Q=new double[features*myK_len]
-	P=new double[batch_size][matK]
+	
+	buf=new double[features*myK_len]
+	gradient=new float[threads_per_node][features*myK_len]
+	data_set1=new float[myfeature_len*batch_size]
+	data_set2=new float[myfeature_len*batch_size]
+	Q=new float[features*myK_len]
+	P=new float[batch_size*matK]
 	//bar_file=new RBarrier(threads_per_node+1)
 end
 

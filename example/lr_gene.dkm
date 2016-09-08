@@ -2,25 +2,25 @@ require Remote
 require math
 
 const samples_per_iter=20
-const round = 100
+const round = 20
 const verify_round = 2
-const sample_num = 800
+const sample_num = 737
 const features = 22283
-const step_size = 0.05
+const step_size = 0.1
 const threads_per_node = 4
-const batch_size = 800
+const batch_size = 737
 const staleness = 1
 
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
-dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
+dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.100","192.168.99.103","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
 dim ports as int[]={10500,10500,10500,10500,10500,10500,10500,10500}
 //dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113"}
 //dim ports as int[]={10500,10500,10500,10500}
 //dim mem_hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
 //dim mem_ports as int[]={11211,11211,11211,11211,11211,11211,11211,11211}
-dim mem_hosts as string[]={"192.168.99.13","192.168.99.14","192.168.99.16","192.168.99.17"}
+dim mem_hosts as string[]={"192.168.99.13","192.168.99.12","192.168.99.16","192.168.99.17"}
 dim mem_ports as int[]={11211,11211,11211,11211}
 
 /*dim hosts as string[]={"127.0.0.1","127.0.0.1"}
@@ -45,10 +45,11 @@ dim barrier_internal as shared RBarrier=new RBarrier(node_num+1)
 dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
 dim global_verify_miss_count as shared AtomicCounter=new AtomicCounter(0)
 dim verify_miss_count as AtomicCounter=global_verify_miss_count
-
 dim param as shared double[] global = new double[10] global
+
 dim n2 as int=feature_len * thread_num * sample_num
 dim global_gradient as shared double[] global = new double[10] global
+dim accu as shared RAccumulator=new RAccumulator(node_num,feature_len,global_gradient)
 dim data_set1 as double[]
 dim data_set2 as double[]
 
@@ -97,7 +98,11 @@ unsafe
 					file.ReadLine(mlocal,j*fl)
 				end
 			end
-			ds[i*fl: (i+put_step)*fl]=mlocal[0:fl*put_step]
+			if i+put_step>batch_size then		
+				ds[i*fl: batch_size*fl]=mlocal[0:fl*(batch_size-i)]
+			else
+				ds[i*fl: (i+put_step)*fl]=mlocal[0:fl*put_step]
+			end
 		end
 		print("Put batch " + batch_num  + " done\n")
 		bar_file@+=1
@@ -143,7 +148,7 @@ for batch_num =0; batch_num<sample_num/batch_size;batch_num++
 	for cur_round=0;cur_round<round;cur_round++
 		//put_matrix()
 
-		barrier_internal.Enter(-1)
+		barrier_main.Enter(-1)
 		dim t as int
 		t=GetClock()-time
 		println("time "+ cur_round + " " +t)
@@ -255,30 +260,18 @@ unsafe
 							gradient[0][j]+=gradient[i][j]
 						end
 					end
-					global_gradient[node_id * myfeature_len : (node_id+1) * myfeature_len]=gradient[0][0:myfeature_len]	
+					//global_gradient[node_id * myfeature_len : (node_id+1) * myfeature_len]=gradient[0][0:myfeature_len]	
 				end
-				bar_int.Enter(-1)
-			
-				if mround % staleness==0 then
-					mydata_set[0 : myfeature_len*mythreads/threads_per_node]=global_gradient[0 : myfeature_len*mythreads/threads_per_node]
-		//dim tm2 as int=GetClock()
-					base=0
-					for i=0;i<mythreads/threads_per_node;i++
-						for j=0;j<features;j++
-							myparam[j]+=mydata_set[base+j]
-						end
-						base+=myfeature_len
-					end
-		//t2+= GetClock()-tm2
+				accu.Accumulate(gradient[0],-1)
+				dim buf as double[]
+				buf=gradient[1]
+				buf[0 : myfeature_len]=global_gradient[0 : myfeature_len]
+				for j=0;j<features;j++
+					myparam[j]+=buf[j]
 				end
 			end
 
-			sync1@+=1
-			for ;;
-				if sync1 % threads_per_node==0 then
-					break
-				end
-			end
+			bar_main.Enter(-1)
 
 		end
 	end
@@ -305,9 +298,9 @@ unsafe
 				dot+=myparam[j]*mydata_set[base+j]
 			end
 			h=1/(1+exp(-dot))
-			if h>=0.5 && mydata_set[base+features]==0.0 then
+			if h>=0.8 && mydata_set[base+features]==0.0 then
 				verify_miss_count.Inc(1)
-			elseif h<0.5 && mydata_set[base+features]==1.0 then
+			elseif h<0.8 && mydata_set[base+features]==1.0 then
 				verify_miss_count.Inc(1)
 			end
 			base+=myfeature_len
