@@ -329,6 +329,15 @@ void ExExp(DVM_Value *args)
 	curthread->retvar.double_value=exp(args->double_value);
 }
 
+void ExCSVReaderReadDouble(DVM_Value *args)
+{
+	DVM_ObjectRef ths=args[0].object;
+	FILE* f=(FILE*)ths.data->u.class_object.field[1].int_value;
+	double ret;
+	fscanf(f,"%lf",&ret);
+	curthread->retvar.double_value=ret;
+}
+
 void ExCSVReaderInit(DVM_Value *args)
 {
 	DVM_ObjectRef ths=args[1].object;

@@ -1,18 +1,8 @@
-require Remote
-const size=500000
+dim file as CSVReader=new CSVReader("d:\\aaaa.txt")
+dim buf as float[]=new float[10]
+for #i=0;#i<10;#i++
+	println(file.ReadDouble())
+end
 
 
-dim hosts as string[]=new string[0]
-dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}
-dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
 
-dim buf as shared double[] global=new double[size] global
-
-	dim localbuf2 as double[]=new double[size]
-	dim t as int=GetClock()
-	buf[0:size]=localbuf2[0:size]
-	println(GetClock()-t)
-	
-gets()

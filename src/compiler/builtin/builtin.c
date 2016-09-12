@@ -27,6 +27,7 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"	public declare sub Reset()\n",
 	"	public declare sub Close()\n",
 	"	public declare sub Skip(lines as int)\n",
+	"	public declare function ReadDouble() as double\n",
 	"end\n",
 	"declare function LoadNativeLibrary(path as string) as boolean\n",
 /*	"shared public class RemoteThread\n",
