@@ -2,7 +2,9 @@
 #include "diksamc.h"
 
 
-char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as void \n\n",
+char *st_diksam_lang_dkh_text[] = {
+	"dim args as string[]\n",
+	"declare function print(str as string) as void \n\n",
 	"declare sub Invoke(pac as string,name as string,...)\n",
 	"declare sub GetFunction(del as delegate,pac as string,name as string)\n",
 	"declare sub BreakPoint()\n",
@@ -30,6 +32,10 @@ char *st_diksam_lang_dkh_text[] = {"declare function print(str as string) as voi
 	"	public declare function ReadDouble() as double\n",
 	"end\n",
 	"declare function LoadNativeLibrary(path as string) as boolean\n",
+	"function GetArgs() as string[]\n",
+	"	return args\n",
+	"end\n",
+
 /*	"shared public class RemoteThread\n",
 	"	public final tid as int\n",
 	"	dim state as int\n",

@@ -54,7 +54,11 @@ int ParseCompilationParameters(int cur_arg,int argc,char* argv[])
 {
 	for(;cur_arg<argc;cur_arg++)
 	{
-		if(!strcmp(argv[cur_arg],"-disasm"))
+		if(!strcmp(argv[cur_arg],"-arg"))
+		{
+			break;
+		}
+		else if(!strcmp(argv[cur_arg],"-disasm"))
 		{
 			parameters.need_disasm=1;
 		}
@@ -79,7 +83,15 @@ int ParseExecutionParameters(int cur_arg,int argc,char* argv[])
 {
 	for(;cur_arg<argc;cur_arg++)
 	{
-		if(!strcmp(argv[cur_arg],"-debug"))
+		if(!strcmp(argv[cur_arg],"-arg"))
+		{
+			parameters.argv=argv+cur_arg+1;
+			parameters.argc=argc-cur_arg-1;
+			if(parameters.argc<0)
+				parameters.argc=0;
+			break;
+		}
+		else if(!strcmp(argv[cur_arg],"-debug"))
 		{
 			parameters.debug=1;
 		}
@@ -145,6 +157,7 @@ main(int argc, char* argv[])
 	parameters.isLib=0;
 	parameters.isSyslib=0;
 	parameters.optmization=2;
+	parameters.argc=0;
 
 	setlocale(LC_CTYPE, "");
 	if(argc<2)

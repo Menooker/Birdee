@@ -593,7 +593,7 @@ public:
 			backend->dec(0xFFFFFFFF,0,fld_cnt);
 		}
 		UaLeaveReadRWLock(&gc_lock);
-		printf("new key: %d\n",key);
+		//printf("new key: %d\n",key);
 		return key;
 	}
 	_uint newmodule(_uint key,int cnt)

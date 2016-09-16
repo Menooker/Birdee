@@ -1162,6 +1162,24 @@ extern "C" void ExCallInit()
 }
 
 
+void ExSetArgs()
+{
+	DVM_ObjectRef arr=dvm_create_array_object_i(curdvm,parameters.argc);
+	for(int i=0;i<parameters.argc;i++)
+	{
+		DVM_Char* wc_str = dvm_mbstowcs_alloc(curthread, parameters.argv[i]);
+		arr.data->u.barray.u.object[i]= dvm_create_dvm_string_i(curdvm,wc_str);
+	}
+	for(ExecutableEntry* lst=curdvm->executable_entry;lst!=NULL;lst=lst->next)
+	{
+		if(!strcmp(lst->executable->package_name,"diksam.lang"))
+		{
+			lst->static_v.variable[0].object=arr; //the args is hard coded as the first global variable of the built-in module
+			break;
+		}
+	}
+}
+
 extern "C" void ExGoMain()
 {
     UaPrepareThread();
@@ -1169,6 +1187,7 @@ extern "C" void ExGoMain()
 	DVM_Executable* exe=curdvm->top_level->executable;
 	curthread->current_executable =curdvm->top_level;
 	AvPushNullContext();
+	ExSetArgs();
 	MCJITHelper* eng =(MCJITHelper*)curdvm->exe_engine;
 	Module* m=(Module*)exe->module.mod;
 	BdVMFunction FPtr =(BdVMFunction) eng->getPointerToFunction(m->getFunction("system!main"));

@@ -336,7 +336,7 @@ void RcCreateThread(DVM_Value *args)
 	RcCommandPack cmd={RcCmdCreateThread,idx,args[0].int_value};
 	cmd.param3=(int)ret.data;
 	SoSeti((_uint)ret.data,1,RC_THREAD_CREATING);//set the state
-	printf("thread obj id=%d %d\n",cmd.param3,sizeof(RcCommandPack));
+	//printf("thread obj id=%d %d\n",cmd.param3,sizeof(RcCommandPack));
 	DVM_ObjectRef obj=args[2].object;
 	int sret=RcSendCmd((SOCKET)obj.data->u.class_object.field[2].int_value,&cmd);
 	if(sret)

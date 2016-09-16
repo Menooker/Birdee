@@ -13,6 +13,8 @@ struct BdParameters
 	int nocache;
 	int mem_backend;
 	int optmization;
+	int argc;
+	char** argv;
 	//int memport;
 	//char memip[255];
 };

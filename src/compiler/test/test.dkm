@@ -1,8 +1,6 @@
-dim file as CSVReader=new CSVReader("d:\\aaaa.txt")
-dim buf as float[]=new float[10]
-for #i=0;#i<10;#i++
-	println(file.ReadDouble())
+dim arr as string[]=GetArgs()
+for #i=0;#i<arr.size();#i++
+	println(arr[#i])
 end
-
 
 
