@@ -72,6 +72,8 @@ public:
 
 		rc = memcached_server_push((memcached_st*)_memc, servers);
 		memcached_server_free(servers);
+		if(curdvm->is_master)
+			memcached_flush((memcached_st*)_memc,0);
 		main_memc=memc;
 	}
 

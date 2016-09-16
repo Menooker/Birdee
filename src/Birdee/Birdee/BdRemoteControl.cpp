@@ -1279,10 +1279,26 @@ void RcAccumulatePartialDoneMsg(int src,uint32 aid,bool locked)
 		UaLeaveLock(&master_data_lock);
 }
 
+///////////profile
+uint32 mytime=0;
+uint32 myclock()
+{
+	#ifdef BD_ON_WINDOWS
+	return clock()/(CLOCKS_PER_SEC/1000);
+#else
+    struct timeval t;
+    gettimeofday(&t,NULL);
+    return t.tv_sec*1000+t.tv_usec/1000;
+#endif
+}
+////////////
 template <typename T>
 void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,T* data)
 {
 	UaEnterLock(&master_data_lock);
+	//////////profile
+	if(mytime==0)
+		mytime=myclock();
 	data_itr itr=data_data.find(aid);
 	DataSyncNode* node;
 	if(itr==data_data.end())
@@ -1316,9 +1332,17 @@ void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint siz
 		}
 		if(node->val>=node->data)
 		{
+			////////////profile
+			printf("[Profile]Accu=%d\n",myclock()-mytime);
+			mytime=myclock();
+			///////////////
 			double* ppp=(double*)node->buf;
 			if(node->size)
 				SoPutChunk(node->outarray,node->base,node->size,(double*)node->buf);
+			////////////profile
+			printf("[Profile]Write=%d\n",myclock()-mytime);
+			mytime=0;
+			///////////////
 			node->val=0;
 			memset(node->buf,0,node->size * sizeof(double));
 			if(self_node_id==0)
