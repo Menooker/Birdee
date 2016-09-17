@@ -1280,6 +1280,9 @@ void RcAccumulatePartialDoneMsg(int src,uint32 aid,bool locked)
 }
 
 ///////////profile
+#ifdef BD_ON_LINUX
+#include <sys/time.h>
+#endif
 uint32 mytime=0;
 uint32 myclock()
 {
