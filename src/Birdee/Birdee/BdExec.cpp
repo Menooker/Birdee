@@ -352,6 +352,8 @@ void ExCSVReaderInit(DVM_Value *args)
     else
 		str=buf;
 	FILE* f=fopen(str,"r");
+	if(!f)
+		printf("Warning : Failed to open %s\n",str);
 	ths.data->u.class_object.field[1].int_value=(int)f;
 }
 

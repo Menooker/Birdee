@@ -605,13 +605,13 @@ void RcSlave(int port)
 		err=1;
 		if(mi.mod_cnt<=0)
 			goto ERR;
-		printf("Module file count %d\n",mi.mod_cnt);
-		printf("Node count %d\n",mi.num_nodes);
-		printf("Memory server count %d\n",mi.num_mem_server);
+		//printf("Module file count %d\n",mi.mod_cnt);
+		//printf("Node count %d\n",mi.num_nodes);
+		//printf("Memory server count %d\n",mi.num_mem_server);
 
 		char buf[255];
 
-		printf("Host list :\n");
+		//printf("Host list :\n");
 		std::vector<std::string> hosts;
 		std::vector<int> ports;
 
@@ -621,7 +621,7 @@ void RcSlave(int port)
 
 		hosts.push_back(master);
 		ports.push_back(mi.localport);
-		printf("Master = %s:%d\n",master.c_str(),mi.localport);
+		//printf("Master = %s:%d\n",master.c_str(),mi.localport);
 
 		for(int i=1;i<mi.num_nodes;i++)
 		{
@@ -646,10 +646,10 @@ void RcSlave(int port)
 			}
 			hosts.push_back(std::string(buf));
 			ports.push_back(port);
-			printf("%s:%d\n",buf,port);
+			//printf("%s:%d\n",buf,port);
 		}
 
-		printf("Memory server list :\n");
+		//printf("Memory server list :\n");
 		std::vector<std::string> memhosts;
 		std::vector<int> memports;
 		for(int i=0;i<mi.num_mem_server;i++)
@@ -675,7 +675,7 @@ void RcSlave(int port)
 			}
 			memhosts.push_back(std::string(buf));
 			memports.push_back(port);
-			printf("%s:%d\n",buf,port);
+			//printf("%s:%d\n",buf,port);
 		}
 
 		for(_uint i=0;i<mi.mod_cnt;i++)
