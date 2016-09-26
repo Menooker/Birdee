@@ -87,6 +87,7 @@ int ExGetMethodIndex(ExecClass *ec, char *method_name);
 BdVMFunction ExDoLoadFunction(int p1);
 
 void ExExp(DVM_Value *args);
+void ExSqrt(DVM_Value *args);
 void ExCSVReaderInit(DVM_Value *args);
 void ExCSVReaderReadLine(DVM_Value *args);
 void ExCSVReaderClose(DVM_Value *args);

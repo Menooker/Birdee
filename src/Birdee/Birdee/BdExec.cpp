@@ -329,6 +329,11 @@ void ExExp(DVM_Value *args)
 	curthread->retvar.double_value=exp(args->double_value);
 }
 
+void ExSqrt(DVM_Value *args)
+{
+	curthread->retvar.double_value=sqrt(args->double_value);
+}
+
 void ExCSVReaderReadDouble(DVM_Value *args)
 {
 	DVM_ObjectRef ths=args[0].object;

@@ -245,6 +245,7 @@ char *st_diksam_lang_dkm_text[] ={"require diksam.lang;\n",
 char *st_diksam_math_dkh_text[] ={
 	"declare function exp(v as double) as double\n",
 	"declare function rand(max as int) as int\n\n",
+	"declare function sqrt(v as double) as double\n\n",
 	0
 	};/* {
     "double fabs(double z);\n",

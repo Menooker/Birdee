@@ -788,6 +788,7 @@ dvm_add_native_functions(DVM_VirtualMachine *dvm)
 
     DVM_add_native_function(dvm, "math", "rand", ExRand, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "math", "exp", ExExp, 1,DVM_FALSE);
+	DVM_add_native_function(dvm, "math", "sqrt", ExSqrt, 1,DVM_FALSE);
 	DVM_add_native_function(dvm, "diksam.lang", "GetClock", ExGetClock, 0,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "Invoke", ExInvokeByName, 2,DVM_FALSE);
     DVM_add_native_function(dvm, "diksam.lang", "GetFunction", ExGetFunction, 3,DVM_FALSE);
