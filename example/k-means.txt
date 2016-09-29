@@ -2,15 +2,15 @@ require Remote
 require math
 //5 1024 100000
 const samples_per_iter=20
-const round = 40
+const round = 10
 const verify_round = 2
-const sample_num = 30000
+const sample_num = 15000
 const features = 4096
 const step_size = 0.05
 const threads_per_node =4
-const batch_size = 30000
+const batch_size = 15000
 const staleness = 1
-const K = 10
+const K = 256
 /*const round = 20
 const verify_round = 2
 const sample_num = 5000
@@ -24,23 +24,10 @@ const K = 10*/
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
-dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.100","192.168.99.103","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-dim ports as int[]={10500,10500,10500,10500,10500,10500,10500,10500}
-//dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113"}
-//dim ports as int[]={10500,10500,10500,10500}
-//dim mem_hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-//dim mem_ports as int[]={11211,11211,11211,11211,11211,11211,11211,11211}
-dim mem_hosts as string[]={"192.168.99.13","192.168.99.12","192.168.99.16","192.168.99.17"}
-dim mem_ports as int[]={11211,11211,11211,11211}
-
-/*dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13080,13090}
-dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}*/
-dim nodes as RemoteNode[]=ConnectNode(5090,hosts,ports,mem_hosts,mem_ports)
+dim nodes as RemoteNode[]=StartNodesEx(5080,"slaves16.txt","memory16.txt")
 
 println("working")
-dim node_num as shared int=hosts.size()
+dim node_num as shared int=nodes.size()
 dim thread_num as shared int=threads_per_node*node_num
 
 dim feature_len as shared int
@@ -116,7 +103,7 @@ unsafe
 	dim node_n as int=node_num
 	dim mlocal as double[]=new double[feature_len*put_step]
 	//println("/home/ubuntu/shared/g"+id+".csv")
-	dim file as CSVReader=new CSVReader("/home/ubuntu/shared/synthetic_"+id+".csv")
+	dim file as CSVReader=new CSVReader("/home/ubuntu/shared/k-means-240000-16/synthetic_"+id+".csv")
 	dim fl as int=feature_len
 	dim ds as double[]
 	dim j as int
@@ -189,12 +176,8 @@ end
 barrier_main.Enter(-1)
 println("Put initial centers ok")
 dim time2 as int=GetClock()
-/*for batch_num =0; batch_num<sample_num/batch_size;batch_num++
+for batch_num =0; batch_num<sample_num/batch_size;batch_num++
 	for cur_round=0;cur_round<round;cur_round++
-		//put_matrix()
-		for ii=0;ii<K;ii++
-			global_cluster_counters[ii].Set(0)
-		end
 		barrier_main.Enter(-1)
 		dim t as int
 		t=GetClock()-time
@@ -202,19 +185,18 @@ dim time2 as int=GetClock()
 		time=GetClock()
 	end
 	print("Batch "+batch_num+" Done\n")
-end*/
-barrier_main.Enter(-1)
-
+end
+dim time_middle as int=GetClock()
 println("================\nLearning ok")
 barrier_internal.Enter(-1)
-println(verify_miss_count.Get())
+println(verify_miss_count.Get()*10000)
 
-println("calc time: "+ (GetClock()-time2))
+println("calc time: "+ (time_middle-time2))
 println("total time: "+ (GetClock()-time_total))
 //file.Close()
 
 
-dim local_cluster_sum as double[]
+dim local_cluster_sum as float[]
 dim cluster_counters as AtomicCounter[]
 dim volatile sync4 as int
 function threadproc(id as var) as int
@@ -258,20 +240,24 @@ unsafe
 			end
 		end
 		if batch==0 then
-			if st==0 then
+			/*if st==0 then
 				put_initial(mydata_set,node_id)
 			end
+			means[0:K*myfeature_len]=gmeans[0:K*myfeature_len]*/
 			bar_main.Enter(-1)
-			means[0:K*myfeature_len]=gmeans[0:K*myfeature_len]
 		end
 
 		for mround=0;mround<round;mround++
 			for i=0;i<myfeature_len*K;i++
 				center[i]=0
 			end
+			dim ttt as int
+			if st ==0 then
+				ttt=GetClock()
+			end
 			base=batch_size*st/threads_per_node*myfeature_len
 			for i=0;i<batch_size/threads_per_node;i++
-				sum=max_double
+				sum=1.0f/0.0f
 				means_base=0
 				dim selected_k as int
 				//calculate the distance from the data point to the centers
@@ -281,7 +267,7 @@ unsafe
 						tmp2 = mydata_set[base+j]-means[means_base+j]
 						tmp += tmp2*tmp2
 					end
-					if tmp<sum then
+					if tmp<=sum then
 						sum=tmp
 						selected_k=k
 					end
@@ -293,10 +279,15 @@ unsafe
 				end
 				base+=myfeature_len
 			end
+
+			
 			sync2@+=1
-			for ;;
-				if sync2 % threads_per_node==0 then
-					break
+			if tid ==0 then
+				println("CalcTime "+(GetClock()-ttt) + " " +node_id)
+				for ;;
+					if sync2 % threads_per_node==0 then
+						break
+					end
 				end
 			end
 			//phase 4: sum up the local means
@@ -320,11 +311,13 @@ unsafe
 				end
 				dummy=myfeature_len*K+K
 
-				accu.Accumulate(local_cluster_sum,-1)
-				local_cluster_sum[0:dummy]=gmeans[0:dummy]
+				accu.Accumulatef(local_cluster_sum,-1)
+//ttt=GetClock()
+				means[0:dummy]=gmeans[0:dummy]
+//println("SyncTime "+(GetClock()-ttt) + " " +node_id)
 				for i=0;i<K;i+=1
-					tmp=local_cluster_sum[myfeature_len*K+i]
-					/*if tid==0 then
+					tmp=means[myfeature_len*K+i]
+					/*if tid==0 && i<5 then
 						println("C "+ i + " " +tmp)				
 					end*/
 					if tmp<0.1 then
@@ -332,14 +325,14 @@ unsafe
 						means[i*myfeature_len:(i+1)*myfeature_len]=mydata_set[dummy*myfeature_len:(dummy+1)*myfeature_len]
 					else
 						for j=0;j<features;j++
-							means[i*myfeature_len+j]= local_cluster_sum[i*myfeature_len+j] / tmp
+							means[i*myfeature_len+j]= means[i*myfeature_len+j] / tmp
 						end
 					end
 
 				end
 			end
-
-			sync1@+=1
+			bar_main.Enter(-1)
+/*			sync1@+=1
 			for ;;
 				if sync1 % threads_per_node==0 then
 					break
@@ -347,7 +340,7 @@ unsafe
 			end
 			
 
-/*			sync3@+=1
+			sync3@+=1
 			for ;;
 				if sync3 % threads_per_node==0 then
 					break
@@ -358,12 +351,12 @@ unsafe
 			end
 		end
 	end
-	bar_main.Enter(-1)
+	
 	local_cluster_sum[st]=0
 	base=batch_size*st/threads_per_node*myfeature_len
 	for i=0;i<batch_size/threads_per_node;i++
 		means_base=0
-		sum=max_double
+		sum=1.0f/0.0f
 		//calculate the distance from the data point to the centers
 		for k=0;k<K;k++
 			tmp=0
@@ -371,7 +364,7 @@ unsafe
 				tmp2 = mydata_set[base+j]-means[means_base+j]
 				tmp += tmp2*tmp2
 			end
-			if tmp<sum then
+			if tmp<=sum then
 				sum=tmp
 			end
 			means_base+=myfeature_len
@@ -391,7 +384,7 @@ unsafe
 		    local_cluster_sum[0]+=local_cluster_sum[i]
 		end
 		println(local_cluster_sum[0])
-		verify_miss_count.Inc(local_cluster_sum[0])
+		verify_miss_count.Inc(local_cluster_sum[0]/10000)
 		bar_int.Enter(-1)
 	end
 end
@@ -403,14 +396,14 @@ sub RemoteInitialize()
 	else
 		myfeature_len = (features) / 32 * 32 + 32
 	end
-	means=new double[K * myfeature_len]
+	means=new double[K * myfeature_len+K]
 	data_set1=new double[myfeature_len*batch_size]
 	//data_set2=new double[myfeature_len*batch_size]
-	max_double=exp(100000000000)
+	max_double=1.0/0.0
     cluster_num=new int[K]
 	clusters=new double[16][K*myfeature_len] 
 //fix-me : 16 -> node_num
-	local_cluster_sum =new double[K * myfeature_len+K]
+	local_cluster_sum =new float[K * myfeature_len+K]
 	cluster_counters=new AtomicCounter[K]
 end
 

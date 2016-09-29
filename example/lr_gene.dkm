@@ -3,34 +3,22 @@ require math
 
 const samples_per_iter=20
 const round = 20
-const verify_round = 2
+const verify_round = 7
 const sample_num = 737
 const features = 22283
 const step_size = 0.1
 const threads_per_node = 4
 const batch_size = 737
 const staleness = 1
+const reg = 0.01
 
 dim cur_round as int
 dim time_total as int=GetClock()
 dim time_calc as int
-dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.100","192.168.99.103","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-dim ports as int[]={10500,10500,10500,10500,10500,10500,10500,10500}
-//dim hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113"}
-//dim ports as int[]={10500,10500,10500,10500}
-//dim mem_hosts as string[]={"192.168.99.102","192.168.99.108","192.168.99.110","192.168.99.113","192.168.99.109","192.168.99.112","192.168.99.111","192.168.99.114"}
-//dim mem_ports as int[]={11211,11211,11211,11211,11211,11211,11211,11211}
-dim mem_hosts as string[]={"192.168.99.13","192.168.99.12","192.168.99.16","192.168.99.17"}
-dim mem_ports as int[]={11211,11211,11211,11211}
-
-/*dim hosts as string[]={"127.0.0.1","127.0.0.1"}
-dim ports as int[]={13070,13080}
-dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}*/
-dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
+dim nodes as RemoteNode[]=StartNodesEx(5090,"slaves.txt","memory.txt")
 
 println("working")
-dim node_num as shared int=hosts.size()
+dim node_num as shared int=nodes.size()
 dim thread_num as shared int=threads_per_node*node_num
 
 dim feature_len as shared int
@@ -44,7 +32,11 @@ dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
 dim barrier_internal as shared RBarrier=new RBarrier(node_num+1)
 dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
 dim global_verify_miss_count as shared AtomicCounter=new AtomicCounter(0)
+dim global_verify_positive_count as shared AtomicCounter=new AtomicCounter(0)
+dim global_verify_false_count as shared AtomicCounter=new AtomicCounter(0)
 dim verify_miss_count as AtomicCounter=global_verify_miss_count
+dim verify_positive_count as AtomicCounter=global_verify_positive_count
+dim verify_false_count as AtomicCounter=global_verify_false_count
 dim param as shared double[] global = new double[10] global
 
 dim n2 as int=feature_len * thread_num * sample_num
@@ -69,6 +61,8 @@ dim volatile bar_file as int
 function putproc(id as var) as int
 unsafe
 	verify_miss_count=global_verify_miss_count
+	verify_positive_count =global_verify_positive_count
+	verify_false_count =global_verify_false_count
 	mythreads=thread_num
 	gparam=param
 	bar_main=barrier_main
@@ -167,12 +161,14 @@ for ;cur_round<round+verify_round;cur_round++
 	time=GetClock()
 end
 
-
-println(verify_miss_count.Get()*1.0/samples_per_iter/thread_num/verify_round)
+dim precision as double= 1- verify_miss_count.Get()/(verify_positive_count.Get()+0.001)
+dim recall as double= 1 - verify_false_count.Get()/ (verify_round*batch_size*nodes.size()- verify_positive_count.Get()+0.001)
+println("precision=1-"+verify_miss_count.Get()+"/"+verify_positive_count.Get()+"="+ precision)
+println("recall="+ recall)
 println("calc time: "+ (GetClock()-time2))
 println("total time: "+ (GetClock()-time_total))
 //file.Close()
-gets()
+//gets()
 
 
 function myrand() as int
@@ -212,6 +208,9 @@ unsafe
 	dim t1 as int
 	dim t2 as int
 	dim batch as int
+	for i=0;i<features;i++
+		myparam[i]=0.01	
+	end
 	for batch=0; batch<sample_num/batch_size ; batch++
 		if batch%2==0 then
 			mydata_set=data_set1
@@ -243,7 +242,6 @@ unsafe
 				end
 				base+=myfeature_len
 			end
-
 			sync2@+=1
 			for ;;
 				if sync2 % threads_per_node==0 then
@@ -267,7 +265,7 @@ unsafe
 				buf=gradient[1]
 				buf[0 : myfeature_len]=global_gradient[0 : myfeature_len]
 				for j=0;j<features;j++
-					myparam[j]+=buf[j]
+					myparam[j]+= (buf[j]- step_size*reg*myparam[j])/batch_size
 				end
 			end
 
@@ -298,17 +296,18 @@ unsafe
 				dot+=myparam[j]*mydata_set[base+j]
 			end
 			h=1/(1+exp(-dot))
-			if h>=0.8 && mydata_set[base+features]==0.0 then
-				verify_miss_count.Inc(1)
-			elseif h<0.8 && mydata_set[base+features]==1.0 then
-				verify_miss_count.Inc(1)
+			if mydata_set[base+features]==1.0 then
+				verify_positive_count.Inc(1)
+				if h<0.5 then
+					verify_miss_count.Inc(1)
+				end
+			elseif h>=0.5 then
+				verify_false_count.Inc(1)			
 			end
 			base+=myfeature_len
 		end
 		bar_main.Enter(-1)
 	end
-	print("T1="+id+" "+(1.0*t1/round)+"\n")
-	print("T2="+id+" "+(1.0*t2/round)+"\n")
 end
 
 sub RemoteInitialize()
