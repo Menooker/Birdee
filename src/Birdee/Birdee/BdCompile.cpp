@@ -26,6 +26,7 @@ extern "C"{
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/DebugInfo.h"
+#include "llvm/IR/Intrinsics.h"
 
 //#pragma comment(lib,"D:\\Menooker\\libLLVMlite\\libLLVMlite\\Debug\\libLLVMLite.lib")
 #include <string>
@@ -1656,6 +1657,89 @@ Value* BcGenerateMethodCall(DVM_Executable *exe, Block *block,Expression *expr)
     //generate_code(ob, expr->line_number, DVM_INVOKE);
 }
 
+enum IntrinsicTypes
+{
+	IFLOAT=1,
+	IDOUBLE,
+	IINT,
+};
+struct IntrinsicFunction
+{
+	const char* package;
+	const char* name;
+	llvm::Intrinsic::ID id;
+	int args;
+	IntrinsicTypes types[2];
+};
+IntrinsicFunction intrinsic_functions[]={
+//	{"diksam.lang","BreakPoint",llvm::Intrinsic::trap,0},
+	{"math","exp",llvm::Intrinsic::exp,1,{IDOUBLE}},
+	{"math","sqrt",llvm::Intrinsic::sqrt,1,{IDOUBLE}},
+};
+DVM_Boolean
+dkc_compare_package_name2(PackageName *p1, const char *p2)
+{
+    PackageName *pos1;
+	size_t len2=strlen(p2);
+	const char* pp2=p2;
+    for (pos1 = p1; pos1;pos1 = pos1->next) {
+		if(pp2-p2>=len2)
+			return DVM_FALSE;
+		if(pp2!=p2 && pp2[-1]!='.')
+			return DVM_FALSE;
+		size_t len1=strlen(pos1->name);
+        if (strncmp(pos1->name, pp2,len1) != 0) {
+            return DVM_FALSE;
+        }
+		pp2+=len1+1;
+    }
+    return DVM_TRUE;
+}
+Value* BcGenerateIntrinsicCall(DVM_Executable *exe, Block *block,FunctionDefinition* fd,ArgumentList *arg_list,int line_number)
+{
+	if(fd->intrinsic==-1)
+	{
+		fd->intrinsic=-2;
+		for (int i=0;i<sizeof(intrinsic_functions)/sizeof(IntrinsicFunction);i++)
+		{
+			if(!strcmp(fd->name,intrinsic_functions[i].name) && dkc_compare_package_name2(fd->package_name,intrinsic_functions[i].package))
+			{
+				fd->intrinsic=i;
+				break;
+			}
+		}
+	}
+	if(fd->intrinsic==-2)
+	{
+		return NULL;
+	}
+	ArgumentList *arg_pos;
+	std::vector<Value*> stk; 
+	for (arg_pos = arg_list; arg_pos; arg_pos = arg_pos->next) {
+		Value* v=BcGenerateExpression(exe,block,arg_pos->expression);
+		stk.push_back(v);
+	}
+	std::vector<Type*> types; 
+	for (int i=0;i<intrinsic_functions[fd->intrinsic].args;i++)
+	{
+		switch(intrinsic_functions[fd->intrinsic].types[i])
+		{
+		case IFLOAT:
+			types.push_back(Type::getFloatTy(context));
+			break;
+		case IDOUBLE:
+			types.push_back(Type::getDoubleTy(context));
+			break;
+		case IINT:
+			types.push_back(Type::getInt32Ty(context));
+			break;
+		}
+	}
+	llvm::CallInst* ret=builder.CreateCall(llvm::Intrinsic::getDeclaration(module,intrinsic_functions[fd->intrinsic].id,types),stk);
+	ret->setDebugLoc(DebugLoc::get(line_number,0,currentdifunc));
+	return ret;
+
+}
 
 Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *expr)
 {
@@ -1680,6 +1764,9 @@ Value* BcGenerateCallExpression(DVM_Executable *exe, Block *block, Expression *e
 	{
 		rtype=fce->function->u.identifier.u.function.function_definition->type;
 		param_cnt=fce->function->u.identifier.u.function.function_definition->param_cnt;
+		Value* incret=BcGenerateIntrinsicCall(exe,block,fce->function->u.identifier.u.function.function_definition,fce->argument,expr->line_number);
+		if(incret)
+			return incret;
 	}
     popcnt=BcGeneratePushArgument(exe, block, fce->argument)-param_cnt;
     Value* fid=BcGenerateExpression(exe, block, fce->function);

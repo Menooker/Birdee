@@ -249,6 +249,7 @@ dkc_create_function_definition(TypeSpecifier *type, char *identifier,
     fd->end_line_number = compiler->current_line_number;
 	fd->isApose=isApose;
     fd->next = NULL;
+	fd->intrinsic=-1;
 	fd->isLib= (DVM_Boolean)BcGetCurrentCompilerContext()->isLib;
     if (block) {
         block->type = FUNCTION_BLOCK;

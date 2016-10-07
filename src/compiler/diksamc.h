@@ -785,6 +785,7 @@ struct FunctionDefinition_tag {
 	int isApose;
 	int param_cnt;
 	DVM_Boolean isLib;
+	int intrinsic;
     struct FunctionDefinition_tag       *next;
 };
 
