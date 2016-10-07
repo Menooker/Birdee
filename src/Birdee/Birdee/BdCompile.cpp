@@ -1672,7 +1672,7 @@ struct IntrinsicFunction
 	IntrinsicTypes types[2];
 };
 IntrinsicFunction intrinsic_functions[]={
-//	{"diksam.lang","BreakPoint",llvm::Intrinsic::trap,0},
+	{"diksam.lang","BreakPoint",llvm::Intrinsic::debugtrap,0},
 	{"math","exp",llvm::Intrinsic::exp,1,{IDOUBLE}},
 	{"math","sqrt",llvm::Intrinsic::sqrt,1,{IDOUBLE}},
 };
