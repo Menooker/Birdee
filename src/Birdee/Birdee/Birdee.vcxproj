@@ -163,6 +163,7 @@
     <None Include="..\..\..\example\matmul_simple.txt" />
     <None Include="..\..\..\example\mergesort.txt" />
     <None Include="..\..\..\example\NMF.txt" />
+    <None Include="..\..\..\example\PageRank.dkm" />
     <None Include="..\..\..\example\pi.txt" />
     <None Include="..\..\..\lib\Exceptions.dkh" />
     <None Include="..\..\..\lib\Exceptions.dkm" />
@@ -189,7 +190,6 @@
     <None Include="..\..\compiler\test\test.dkm" />
     <None Include="ab.dkh" />
     <None Include="ab.dkm" />
-    <None Include="PageRank.dkm" />
     <None Include="ReadMe.txt" />
     <None Include="Semaphore.txt" />
     <None Include="ToDoList.txt" />

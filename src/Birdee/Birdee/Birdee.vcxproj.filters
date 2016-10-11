@@ -135,7 +135,7 @@
     <None Include="..\..\..\test\AccumulatorTest.txt">
       <Filter>资源文件\Tests</Filter>
     </None>
-    <None Include="PageRank.dkm">
+    <None Include="..\..\..\example\PageRank.dkm">
       <Filter>资源文件\Examples</Filter>
     </None>
   </ItemGroup>
