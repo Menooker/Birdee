@@ -70,21 +70,29 @@ unsafe
 			ds=data_set2
 		end
 		d=file.ReadDouble()
+		dim cnt as int=0
 		for i=0;i<batch_size;i++
-			if d!=i+ibase then
-				println("Node "+node_id+" read file error! "+d+ "!="+ (i+ibase))
-				break
+			if d>i+ibase then
+				println("Node "+node_id+" read file found empty point! " + (i+ibase))
+				ds[i]=new int[0]
+				i++
+			end
+			if d<i+ibase then
+				file.ReadDouble()
+				d=file.ReadDouble()
+				continue
 			end
 			for j=0;d==i+ibase;j++
 				page_rank[j]=file.ReadDouble()
 				d=file.ReadDouble()
 			end
 			ds[i]=new int[j]
+			cnt++
 			for k=0;k<j;k++
 				ds[i][k]=page_rank[k]
 			end
 		end
-		print("Put batch " + batch_num  + " done\n")
+		print("Put batch " + batch_num +",points="+ cnt  + " done\n")
 		bar_file@+=1
 		if batch_num!=sample_num/batch_size-1 then
 			for ;;
