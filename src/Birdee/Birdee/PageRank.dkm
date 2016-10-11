@@ -1,0 +1,238 @@
+require Remote
+require math
+
+const round = 20
+
+const const_d=0.85f
+const data_points_num=10000
+const sample_num = 5000
+const threads_per_node = 4
+const batch_size = 5000
+const staleness = 1
+
+dim cur_round as int
+dim time_total as int=GetClock()
+dim time_calc as int
+dim nodes as RemoteNode[]=StartNodesEx(5090,"slaves16.txt","memory16.txt")
+
+print("working with "+nodes.size()+" nodes\n")
+dim node_num as shared int=nodes.size()
+dim thread_num as shared int=threads_per_node*node_num
+
+dim my_data_num as int
+if (data_points_num) % 32 == 0 then
+	my_data_num = data_points_num
+else
+	my_data_num = (data_points_num) / 32 * 32 + 32
+end
+
+dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
+dim barrier_internal as shared RBarrier=new RBarrier(node_num+1)
+dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
+
+dim global_gradient as shared double[] global = new double[10] global
+dim data_set1 as int[][]
+dim data_set2 as int[][]
+
+dim accu as shared RAccumulator=new RAccumulator(node_num,my_data_num,global_gradient)
+
+
+dim gradient as float[][]
+dim volatile sync2 as int
+dim volatile sync1 as int
+dim mythreads as int
+dim gparam as double[] global
+dim bar_main as RBarrier
+dim bar_int as RBarrier
+dim batch_num as int
+dim volatile bar_file as int
+dim page_rank as double[]
+
+function putproc(id as var) as int
+unsafe
+	mythreads=thread_num
+	bar_main=barrier_main
+	bar_int=barrier_internal
+
+	dim node_n as int=node_num
+	dim file as CSVReader=new CSVReader("/home/ubuntu/shared_bin/netflix16/netflix.txt."+id)
+	dim ds as int[][]
+	dim i as int
+	dim j as int
+	dim k as int
+	dim d as double
+	dim node_id as int=id
+	dim ibase as int=node_id*batch_size
+	for batch_num=0;batch_num<sample_num/batch_size;batch_num++
+		if batch_num %2==0 then
+			ds=data_set1
+		else
+			ds=data_set2
+		end
+		d=file.ReadDouble()
+		for i=0;i<batch_size;i++
+			if d!=i+ibase then
+				println("Node "+node_id+" read file error! "+d+ "!="+ (i+ibase))
+				break
+			end
+			for j=0;d==i+ibase;j++
+				page_rank[j]=file.ReadDouble()
+				d=file.ReadDouble()
+			end
+			ds[i]=new int[j]
+			for k=0;k<j;k++
+				ds[i][k]=page_rank[k]
+			end
+		end
+		print("Put batch " + batch_num  + " done\n")
+		bar_file@+=1
+		if batch_num!=sample_num/batch_size-1 then
+			for ;;
+				if bar_file % (threads_per_node+1)==0 then
+					break
+				end
+				Sleep(500)
+			end
+		end
+	end
+	file.Close()
+
+	//barrier_put.Enter(-1)
+
+end
+
+sub put_matrix()
+	dim tm as int=GetClock()
+	dim i as int
+	for i=0;i<node_num;i++
+		nodes[i].CreateThread(putproc,i)
+	end
+	//barrier_put.Enter(-1)
+	println("Put time"+(GetClock()-tm))
+end
+
+dim time as int=GetClock()
+put_matrix()
+
+dim ttid as int=0
+dim ii as int
+dim jj as int
+for ii=0;ii<node_num;ii++
+	for jj=0;jj<threads_per_node;jj++
+		nodes[ii].CreateThread(threadproc,ttid)
+		ttid++
+	end
+end
+
+barrier_main.Enter(-1)
+dim time2 as int=GetClock()
+for batch_num =0; batch_num<sample_num/batch_size;batch_num++
+	for cur_round=0;cur_round<round;cur_round++
+		//put_matrix()
+
+		barrier_main.Enter(-1)
+		dim t as int
+		t=GetClock()-time
+		println("time "+ cur_round + " " +t)
+		time=GetClock()
+	end
+	print("Batch "+batch_num+" Done\n")
+end
+
+
+println("calc time: "+ (GetClock()-time2))
+println("total time: "+ (GetClock()-time_total))
+//file.Close()
+for ii=0;ii<node_num;ii++
+	nodes[ii].Close()
+end
+
+
+
+sub zero_gradient(idx as int)
+unsafe
+	dim i as int
+	for i=0;i<data_points_num;i++
+		gradient[idx][i]=0
+	end
+end
+
+
+function threadproc(id as var) as int
+unsafe
+	dim tid as int=id
+	dim i as int
+	dim j as int
+	dim k as int
+	dim st as int=tid % threads_per_node
+	dim mround as int
+	dim node_id as int=tid/threads_per_node
+	dim mydata_set as int[][]
+	dim mygradient as float[]=gradient[st]
+	dim batch as int
+
+	dim local_gradient_sum as float[]=gradient[0]
+	dim size as int=batch_size/threads_per_node
+	dim ibase as int=node_id*sample_num
+	zero_gradient(st)
+	for batch=0; batch<sample_num/batch_size ; batch++
+		if batch%2==0 then
+			mydata_set=data_set1
+		else
+			mydata_set=data_set2
+		end
+		bar_file@+=1
+		for ;;
+			if bar_file % (threads_per_node+1)==0 then
+				break
+			end
+			for i=0;i<data_points_num;i++
+				page_rank[i]=1.0f
+			end
+		end
+		if batch==0 then
+			bar_main.Enter(-1)
+		end
+		for mround=0;mround<round;mround++
+			for i=size*st;i<(st+1)*size;i++
+				dim outdegree as int
+				dim datapoint as int[]
+				datapoint=mydata_set[i]
+				outdegree=datapoint.size()
+				mygradient[ibase+i]= (1-const_d)/outdegree
+				dim pr as float
+				pr=const_d*page_rank[i]/outdegree
+				for j=0;j<outdegree;j++
+					mygradient[datapoint[j]]+=pr
+				end
+			end
+			sync2@+=1
+			if st==0 then
+				for ;;
+					if sync2 % threads_per_node==0 then
+						break
+					end
+					Sleep(10)
+				end
+				for i=1;i<threads_per_node;i++
+						for j=0;j<data_points_num;j++
+							local_gradient_sum[j]+=gradient[i][j]
+						end
+				end
+				accu.Accumulatef(local_gradient_sum,-1)
+				page_rank[0:sample_num]=global_gradient[ibase:ibase+sample_num]
+			end
+			bar_main.Enter(-1)
+		end
+	end
+end
+
+sub RemoteInitialize()
+
+	page_rank=new double[batch_size]
+	gradient=new float[threads_per_node][data_points_num]
+	data_set1=new int[data_points_num][]
+	//data_set2=new float[myfeature_len*batch_size]
+end
+
+
