@@ -387,15 +387,16 @@ gc_mark(DVM_ObjectRef *ref)
 {
     int i;
 
-	if(ref->v_table && (ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared || ref->v_table==curdvm->global_array_v_table))
+	if(ref->v_table && ref->v_table!=curdvm->string_v_table && ref->v_table!=curdvm->array_v_table &&
+		(ref->v_table->exec_class && ref->v_table->exec_class->dvm_class->is_shared || ref->v_table==curdvm->global_array_v_table))
 		return;
-
 
     if (ref->data == NULL)
         return;
 
     if (ref->data->marked)
         return;
+
 
 
     ref->data->marked = DVM_TRUE;

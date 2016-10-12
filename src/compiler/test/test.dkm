@@ -1,57 +1,287 @@
 require Remote
-const size=500000
+require math
 
-dim hosts as string[]={"127.0.0.1","127.0.0.1","127.0.0.1","127.0.0.1"}
-dim ports as int[]={13080,13090,13070,13060}
-//dim hosts as string[]=new string[0]
-//dim ports as int[]=new int[0]
-dim mem_hosts as string[]={"127.0.0.1"}
-dim mem_ports as int[]={11211}
-dim nodes as RemoteNode[]=ConnectNode(5080,hosts,ports,mem_hosts,mem_ports)
-dim toput as double[]
-dim buf as shared double[] global=new double[size] global
-dim accu as shared RAccumulator=new RAccumulator(4,size,buf)
+const round = 10
 
-function proc(par as var) as int
-    dim localbuf as float[]=new float[size]
-	dim localbuf2 as double[]=new double[size]
-    dim i as int
-    for i=0;i<size;i++
-        localbuf[i]=par+i
-    end
-	dim t as int
-	dim tsum as int
-	t=GetClock()
-    for #i=0;#i<15;#i++
-		print("KKKK\n")
-        accu.Accumulatef(localbuf,-1)
-    end
-	tsum=GetClock()-t
-	println(tsum)
-	localbuf2[0:size]=buf[0:size]
-	dim other as int
-	if par==1 then
-		other=2
-	else
-		other=1
-	end
-	println( localbuf[0])
-    for i=0;i<size;i++
-        if localbuf2[i]-localbuf[i]!= other+i then
-			println("ERRR"+i)
-			println("ERRR "+ localbuf2[i] +" "+(localbuf[i]+ other+i))
-			break
+const data_points_num=3997962
+const sample_num = 3997962/2
+const batch_size = 3997962/2
+//*/
+
+/*const data_points_num=20000
+const sample_num = 20000/2
+const batch_size = 20000/2
+//*/
+
+const const_d=0.85f
+const threads_per_node = 2
+const staleness = 1
+
+dim cur_round as int
+dim time_total as int=GetClock()
+dim time_calc as int
+
+dim nodes as RemoteNode[]=StartNodesEx(5090,"slaves.txt","memory.txt")
+
+print("working with "+nodes.size()+" nodes\n")
+dim node_num as shared int=nodes.size()
+dim thread_num as shared int=threads_per_node*node_num
+
+dim my_data_num as int
+if (data_points_num) % 32 == 0 then
+	my_data_num = data_points_num
+else
+	my_data_num = (data_points_num) / 32 * 32 + 32
+end
+
+dim barrier_main as shared RBarrier=new RBarrier(thread_num+1)
+dim barrier_internal as shared RBarrier=new RBarrier(node_num+1)
+dim barrier_put as shared RBarrier=new RBarrier(node_num+1)
+
+dim global_gradient as shared double[] global = new double[10] global
+dim data_set1 as int[]
+dim data_set2 as int[]
+dim index_set as int[]
+dim size_set as int[]
+
+dim accu as shared RAccumulator=new RAccumulator(node_num,my_data_num,global_gradient)
+
+
+dim gradient as float[][]
+dim volatile sync2 as int
+dim volatile sync1 as int
+dim mythreads as int
+dim gparam as double[] global
+dim bar_main as RBarrier
+dim bar_int as RBarrier
+dim batch_num as int
+dim volatile bar_file as int
+dim page_rank as double[]
+
+
+function putproc(id as var) as int
+unsafe
+	dim ds as int[]=data_set1
+	bar_main=barrier_main
+	bar_int=barrier_internal
+
+	index_set=new int[sample_num]
+	size_set=new int[sample_num]
+	dim file as CSVReader=new CSVReader("D:\\Dataset\\com-lj.ungraph.txt")
+	file.Skip(4)
+	dim i as int
+	dim j as int
+	dim k as int
+	dim d as double
+	dim node_id as int=id
+	dim ibase as int=node_id*batch_size
+	dim counter as int=0
+	dim buffer as float[]=gradient[0]
+	for batch_num=0;batch_num<sample_num/batch_size;batch_num++
+
+		d=file.ReadDouble()
+		dim cnt as int=0
+		for i=0;i<batch_size;i++
+			if d>i+ibase then
+				//println("Node "+node_id+" read file found empty point! " + (i+ibase))
+				size_set[i]=0
+				index_set[i]=0
+				continue
+			end
+			for ;d<i+ibase;
+				file.ReadDouble()
+				d=file.ReadDouble()
+			end
+			for j=0;d==i+ibase;j++
+				buffer[j]=file.ReadDouble()
+				if buffer[j]>=data_points_num then
+					j--
+				end
+				d=file.ReadDouble()
+			end
+			index_set[i]=counter
+			size_set[i]=j
+			cnt++
+			for k=0;k<j;k++
+				ds[counter]=buffer[k]
+				counter++
+			end
 		end
-    end
-	dim p as var
-	for ;;
-		p=gets()
-		println(localbuf2[p])
+		print("Put batch " + batch_num +",points="+ cnt  + " done\n")
+		println(counter)
+		bar_file@+=1
+		if batch_num!=sample_num/batch_size-1 then
+			for ;;
+				if bar_file % (threads_per_node+1)==0 then
+					break
+				end
+				Sleep(500)
+			end
+		end
+		
+	end
+	file.Close()
+
+	//barrier_put.Enter(-1)
+
+end
+
+
+sub put_matrix()
+	dim tm as int=GetClock()
+	dim i as int
+	for i=0;i<node_num;i++
+		nodes[i].CreateThread(putproc,i)
+	end
+	//barrier_put.Enter(-1)
+	println("Put time"+(GetClock()-tm))
+end
+
+dim time as int=GetClock()
+put_matrix()
+
+dim ttid as int=0
+dim ii as int
+dim jj as int
+for ii=0;ii<node_num;ii++
+	for jj=0;jj<threads_per_node;jj++
+		nodes[ii].CreateThread(threadproc,ttid)
+		ttid++
 	end
 end
 
-nodes[0].CreateThread(proc,1)
-nodes[1].CreateThread(proc,2)
-nodes[2].CreateThread(proc,3)
-nodes[3].CreateThread(proc,4)
-gets()
+barrier_main.Enter(-1)
+dim time2 as int=GetClock()
+for batch_num =0; batch_num<sample_num/batch_size;batch_num++
+	for cur_round=0;cur_round<round;cur_round++
+		//put_matrix()
+
+		barrier_main.Enter(-1)
+		dim t as int
+		t=GetClock()-time
+		println("time "+ cur_round + " " +t)
+		time=GetClock()
+	end
+	print("Batch "+batch_num+" Done\n")
+end
+
+
+println("calc time: "+ (GetClock()-time2))
+println("total time: "+ (GetClock()-time_total))
+//file.Close()
+for ii=0;ii<node_num;ii++
+	nodes[ii].Close()
+end
+
+
+
+sub zero_gradient(idx as int)
+unsafe
+	dim i as int
+	for i=0;i<data_points_num;i++
+		gradient[idx][i]=0
+	end
+end
+
+sub check(idx as int,arr as int[],mname as string)
+	if idx>=arr.size() then
+		println(mname+"OUT OF BOUND")
+		println("idx="+idx +" size="+arr.size())
+		BreakPoint()
+	end
+end
+
+sub checkf(idx as int,arr as float[],mname as string)
+	if idx>=arr.size() then
+		println(mname+"OUT OF BOUND")
+		println("idx="+idx +" size="+arr.size())
+		BreakPoint()
+	end
+end
+
+function threadproc(id as var) as int
+unsafe
+	dim tid as int=id
+	dim i as int
+	dim j as int
+	dim k as int
+	dim st as int=tid % threads_per_node
+	dim mround as int
+	dim node_id as int=tid/threads_per_node
+	dim mydata_set as int[]
+	dim mygradient as float[]=gradient[st]
+	dim batch as int
+
+	dim local_gradient_sum as float[]=gradient[0]
+	dim size as int=batch_size/threads_per_node
+	dim ibase as int=node_id*sample_num
+	zero_gradient(st)
+	for batch=0; batch<sample_num/batch_size ; batch++
+		if batch%2==0 then
+			mydata_set=data_set1
+		else
+			mydata_set=data_set2
+		end
+		bar_file@+=1
+		for ;;
+			if bar_file % (threads_per_node+1)==0 then
+				break
+			end
+			Sleep(2000)
+		end
+		if batch==0 then
+			for i=0;i<batch_size;i++
+				page_rank[i]=1.0f
+			end
+			bar_main.Enter(-1)
+		end
+		for mround=0;mround<round;mround++
+			for i=size*st;i<(st+1)*size;i++
+				dim outdegree as int
+				dim datapoint as int
+				datapoint=index_set[i]
+				outdegree=size_set[i]
+				if outdegree==0 then
+					mygradient[ibase+i]=0
+				else
+					mygradient[ibase+i]= (1-const_d)/outdegree
+					dim pr as float
+					pr=const_d*page_rank[i]/outdegree
+					for j=0;j<outdegree;j++
+						//check(datapoint+j,mydata_set,"mydata_set")
+						//checkf(mydata_set[datapoint+j],mygradient,"mygradient")
+						mygradient[mydata_set[datapoint+j]]+=pr
+					end
+				end
+			end
+			sync2@+=1
+			if st==0 then
+				for ;;
+					if sync2 % threads_per_node==0 then
+						break
+					end
+					Sleep(10)
+				end
+				for i=1;i<threads_per_node;i++
+						for j=0;j<data_points_num;j++
+							local_gradient_sum[j]+=gradient[i][j]
+						end
+				end
+				accu.Accumulatef(local_gradient_sum,-1)
+				page_rank[0:sample_num]=global_gradient[ibase:ibase+sample_num]
+			end
+			bar_main.Enter(-1)
+		end
+	end
+end
+
+sub RemoteInitialize()
+
+	page_rank=new double[batch_size]
+	gradient=new float[threads_per_node][data_points_num]
+	data_set1=new int[sample_num*100]
+	println(data_set1.tostr())
+	//data_set2=new float[myfeature_len*batch_size]
+end
+
+
