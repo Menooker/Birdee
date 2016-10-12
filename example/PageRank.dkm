@@ -1,6 +1,12 @@
 require Remote
 require math
 
+/* data is stored in data_set1, which is a large array of int.
+index_set stores the index within data_set1 of each node. e.g. if you want to see node "123" 's out edges,
+first see index_set[123], the first node connected to node "123" is data_set1[index_set[123]], the second is
+data_set1[index_set[123]+1], ...
+The outdegree of each node is saved in size_set.*/
+
 const round = 10
 
 const data_points_num=3997962

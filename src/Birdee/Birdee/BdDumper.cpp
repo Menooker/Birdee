@@ -104,7 +104,7 @@ BdStatus CpSaveCodeToFile(char* path,DVM_ExecutableList* exelist )
 		if(parameters.isLib && pCur->executable->package_name && !strcmp(pCur->executable->package_name,"diksam.lang"))
 			continue;
 		sz=CpDumpExecutable(pCur->executable,f);
-		printf("sz: %d\n",sz);
+		//printf("sz: %d\n",sz);
 	}
 	fclose(f);
 	return BdSuccess;

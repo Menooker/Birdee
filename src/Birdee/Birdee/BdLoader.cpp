@@ -490,7 +490,7 @@ BINT LdExecutable(DVM_Executable* exe,FILE* f)
 		_BreakPoint
 		return BdBadMagicNum;
 	}
-	printf("sz:%d\n",sz);
+	//printf("sz:%d\n",sz);
 	free(buf.p);
 	return BdSuccess;
 	//exe->
