@@ -1368,44 +1368,73 @@ void RcAccumulate(DVM_Value *args)
 		else
 			send_size[i]=send_idx[i]+blocks*DSM_CACHE_BLOCK_SIZE;
 	}
-	bool done=false;
-	while(!done)
+	if(is_double)
+		RcAccumulateMsg(self_node_id-1,bid,(_uint64)curthread,send_idx[self_node_id],
+			send_size[self_node_id]-send_idx[self_node_id],arr->u.double_array+send_idx[self_node_id]);
+	else
+		RcAccumulateMsg(self_node_id-1,bid,(_uint64)curthread,send_idx[self_node_id],
+			send_size[self_node_id]-send_idx[self_node_id],arr->u.float_array+send_idx[self_node_id]);
+	send_idx[self_node_id]=send_size[self_node_id];
+
+	int done=1;
+	int maxfd=0;
+	fd_set writefds;
+	if(num_nodes>0)
+		maxfd=direct_sockets[0];
+#ifdef BD_ON_LINUX
+	for(int i=1;i<num_nodes;i++)
 	{
-		done=true;
+		if(i!=self_node_id && direct_sockets[nodeid2idx(i)]>maxfd)
+			maxfd=direct_sockets[nodeid2idx(i)];
+	}
+	maxfd++;
+#endif
+	while(done<num_nodes)
+	{
+		FD_ZERO(&writefds);
+		for(int i=0;i<num_nodes;i++)
+		{
+			if(i!=self_node_id)
+				FD_SET(direct_sockets[nodeid2idx(i)],&writefds);
+		}
+		if(SOCKET_ERROR == select(maxfd,NULL,&writefds,NULL,NULL))
+		{
+			printf("Data Send Select Error!%d\n",RcSocketLastError());
+			break;
+		}
 		for(int i=0;i<num_nodes;i++)
 		{
 			if(send_idx[i]<send_size[i])
 			{
 				if(i==self_node_id)
 				{
-					if(is_double)
-						RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.double_array+send_idx[i]);
-					else
-						RcAccumulateMsg(i-1,bid,(_uint64)curthread,send_idx[i],send_size[i]-send_idx[i],arr->u.float_array+send_idx[i]);
-					send_idx[i]=send_size[i];
 					continue;
 				}
-				int send_idx_size;
-				if(send_idx[i]+BD_DATA_PROCESS_SIZE/sz_type > send_size[i])
-					send_idx_size = send_size[i]-send_idx[i];
-				else
-					send_idx_size = BD_DATA_PROCESS_SIZE/sz_type;
-				memcpy(cmd->buf,(char*)arr->u.double_array+send_idx[i]*sz_type,send_idx_size*sz_type);
-				cmd->param0=send_idx[i];
-				cmd->size=send_idx_size*sz_type;
-				cmd->datatype=is_double;
-				send_idx[i]+=send_idx_size;
-				if(send_idx[i] == send_size[i])
+
+				if (FD_ISSET(direct_sockets[nodeid2idx(i)],&writefds))
 				{
-					cmd->param12=(_uint64)curthread;
+					int send_idx_size;
+					if(send_idx[i]+BD_DATA_PROCESS_SIZE/sz_type > send_size[i])
+						send_idx_size = send_size[i]-send_idx[i];
+					else
+						send_idx_size = BD_DATA_PROCESS_SIZE/sz_type;
+					memcpy(cmd->buf,(char*)arr->u.double_array+send_idx[i]*sz_type,send_idx_size*sz_type);
+					cmd->param0=send_idx[i];
+					cmd->size=send_idx_size*sz_type;
+					cmd->datatype=is_double;
+					send_idx[i]+=send_idx_size;
+					if(send_idx[i] == send_size[i])
+					{
+						cmd->param12=(_uint64)curthread;
+						done++;
+					}
+					else
+					{
+						cmd->param12=0;
+					}
+					//printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
+					RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
 				}
-				else
-				{
-					cmd->param12=0;
-					done=false;
-				}
-				//printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
-				RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
 			}
 		}
 	}
