@@ -1503,7 +1503,8 @@ static THREAD_PROC(RcMasterData,param)
 
 	void* memc=NULL;
 	for(;;)
-	{
+	{	
+		AGAIN:
 		FD_ZERO(&readfds);
 		for(int i=0;i<n;i++)
 		{
@@ -1511,6 +1512,7 @@ static THREAD_PROC(RcMasterData,param)
 		}
 		if(SOCKET_ERROR == select(maxfd,&readfds,NULL,NULL,NULL))
 		{
+			int err=RcSocketLastError();
 			printf("Data Select Error!%d\n",RcSocketLastError());
 			break;
 		}
@@ -1518,10 +1520,18 @@ static THREAD_PROC(RcMasterData,param)
 		{
 			if (FD_ISSET(direct_sockets[i],&readfds))
 			{
-				if(RcRecv(direct_sockets[i],&cmd,sizeof(cmd))!=sizeof(cmd))
+				int cmdrec=0;
+				int cmdtorec=sizeof(cmd);
+				while(cmdtorec>0)
 				{
-					printf("Data Socket recv Error! %d\n",RcSocketLastError());
-					return 0;
+					int inc=RcRecv(direct_sockets[i],(char*)&cmd+cmdrec,cmdtorec);
+					if(inc<=0)
+					{
+						printf("Data socket closed %d\n",RcSocketLastError());
+						return 0;
+					}
+					cmdtorec-=inc;
+					cmdrec+=inc;
 				}
 				if(cmd.size>BD_DATA_PROCESS_SIZE)
 				{
