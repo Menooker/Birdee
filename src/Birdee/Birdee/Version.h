@@ -2,5 +2,5 @@
 #define _H_BIRDEE_VERSION
 #define BD_MAJOR_VER 0
 #define BD_MINOR_VER 0
-#define BD_BUILD_VER 8
+#define BD_BUILD_VER 12
 #endif

@@ -616,9 +616,7 @@ void AvGetOrCreateVar(char* name)
 
 }
 
-
-
-void AvGetVar(char* name)
+bool AvDoGetVar(char* name)
 {
 	if(*name=='#')
 	{
@@ -629,11 +627,11 @@ void AvGetVar(char* name)
 			if((*mp).find(name)!=(*mp).end())
 			{
 			    curthread->retvar.object= (*mp)[name];
-				return;
+				return true;
 			}
 		}
 		//if no context or var not found
-		ExSystemRaise(ExVarUseBeforeSet);
+		return false;
 	}
 	else if(*name=='$')
 	{
@@ -641,14 +639,24 @@ void AvGetVar(char* name)
 		if(MainMap.find(name)!=MainMap.end())
 		{
 		    curthread->retvar.object=MainMap[name];
-			return ;
+			return true;
 		}
 		else
 		{
-			ExSystemRaise(ExVarUseBeforeSet);
+			return false;
 		}
+
 	}
 	curthread->retvar.object= dvm_null_object_ref;
+	return false;
+}
+
+void AvGetVar(char* name)
+{
+		if(!AvDoGetVar(name))
+		{
+			ExSystemRaise(ExVarUseBeforeSet);
+		}
 }
 
 

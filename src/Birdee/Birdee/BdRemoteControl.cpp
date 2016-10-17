@@ -105,12 +105,33 @@ struct RcDataPack
 	char buf[0];
 };
 
+template<typename T>
+struct SparseElement
+{
+	uint32 index;
+	T data;
+};
+
+
 #pragma pack(pop)
 
 #ifndef BD_ON_VC
 #pragma ms_struct off
 #endif
 
+
+enum AccumulateMode{
+	DenseMode,
+	SparseMode,
+	AutoMode,
+};
+
+enum AccumulateDataType{
+	DenseFloat,
+	DenseDouble,
+	SparseFloat,
+	SparseDouble,
+};
 
 int self_node_id;
 SOCKET direct_sockets[BD_MAX_NODE_NUM]={0};
@@ -561,7 +582,7 @@ void get_peer_ip_port(SOCKET fd, std::string& ip, int& port)
 }
 
 SOCKET RcTryConnect(char* ip,int port,int node_id)
-{	
+{
 	SOCKET ret;
 	for(int i=0;i<3;i++)
 	{
@@ -728,7 +749,7 @@ void RcSlave(int port)
 	{
 ERR:
 		printf("Hand shaking error! %d %d\n",err,err2);
-		
+
 	}
 	RcCloseSocket(s);
 	RcCloseDirectLinks();
@@ -1280,7 +1301,42 @@ void RcAccumulatePartialDoneMsg(int src,uint32 aid,bool locked)
 }
 
 template <typename T>
-void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,T* data)
+void RcAccumulateDense(T* data,_uint size,_uint offset, DataSyncNode* node)
+{
+	size=size/sizeof(T);
+	double* sum=(double*)node->buf;
+	if( offset<node->base || offset+size > node->base + node->size )
+	{
+		printf("Accumulation buffer overflow  offset=%d size=%d\n",offset,size);
+	}
+	else
+	{
+		for(_uint i=0;i<size;i++)
+		{
+			sum[i+ offset - node->base]+=data[i];
+		}
+	}
+}
+
+template <typename T>
+void RcAccumulateSparse(char* data,_uint size,_uint offset, DataSyncNode* node)
+{
+	size=size/sizeof(SparseElement<T>);
+	SparseElement<T>* elements=(SparseElement<T>*) data;
+	double* sum=(double*)node->buf;
+	for(_uint i=0;i<size;i++)
+	{
+		uint32 idx=elements[i].index;
+		if( idx<node->base || idx > node->base + node->size )
+		{
+			printf("Accumulation buffer overflow idx=%d offset=%d size=%d\n",idx,offset,node->base + node->size);
+			continue;
+		}
+		sum[idx - node->base]+=elements[i].data;
+	}
+}
+
+void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint size,char* data,uint32 type)
 {
 	UaEnterLock(&master_data_lock);
 	data_itr itr=data_data.find(aid);
@@ -1294,18 +1350,23 @@ void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint siz
 	{
 		node=itr->second;
 	}
-	double* sum=(double*)node->buf;
-	if( offset<node->base || offset+size > node->base + node->size )
+
+	switch(type)
 	{
-		printf("Accumulation buffer overflow src=%d offset=%d size=%d\n",src,offset,size);
+	case DenseDouble:
+		RcAccumulateDense((double*)data,size,offset,node);
+		break;
+	case DenseFloat:
+		RcAccumulateDense((float*)data,size,offset,node);
+		break;
+	case SparseDouble:
+		RcAccumulateSparse<double>(data,size,offset,node);
+		break;
+	case SparseFloat:
+		RcAccumulateSparse<float>(data,size,offset,node);
+		break;
 	}
-	else
-	{
-		for(_uint i=0;i<size;i++)
-		{
-			sum[i+ offset - node->base]+=data[i];
-		}
-	}
+
 	if(thread_id)
 	{
 		node->val++;
@@ -1338,8 +1399,133 @@ void RcAccumulateMsg(int src,uint32 aid,_uint64 thread_id,_uint offset,_uint siz
 }
 
 
+extern "C" bool AvDoGetVar(char* name);
+
+int ReadAccumulatorConfig(double& threshold)
+{
+	int config_mode=0;
+
+	if(AvDoGetVar("$_Config_Remote_Accumulator_Mode") &&
+		curthread->retvar.object.data->u.var.pobj->type==AV_INT)
+	{
+		config_mode=curthread->retvar.object.data->u.var.pobj->v.int_value;
+		if(config_mode!=0)
+		{
+			if (AvDoGetVar("$_Config_Remote_Accumulator_Threshold"))
+			{
+				ExVarient_tag* var=curthread->retvar.object.data->u.var.pobj;
+				if(var->type==AV_INT)
+				{
+					threshold=var->v.int_value;
+				}
+				else if(var->type==AV_DOUBLE)
+				{
+					threshold=var->v.double_value;
+				}
+			}
+			else
+			{
+				threshold=0;
+			}
+		}
+	}
+	return config_mode;
+}
+
+template<typename T> bool IsProfitableToCompress(T* vec, int vsize,double threshold)
+{
+	unsigned int zeros=0;
+	unsigned int used=0;
+	int i;
+	for(i=0;i<vsize && used<BD_DATA_PROCESS_SIZE;i++)
+	{
+		T val=vec[i];
+		if( (val>=0 && val<threshold) || (val<0 && val> -threshold) )
+		{
+			zeros++;
+			used+=sizeof(SparseElement<T>);
+		}
+	}
+	return ((double)zeros/i >0.52);
+}
+
+/*
+return the number of elements in the buffer.
+outsize returns size of the elements in bytes
+*/
+template<typename T> unsigned int MakeSparseArray(T* vec, int src, int vsize,double threshold, char* dest,unsigned int& used)
+{
+	used=0;
+	int i;
+	for(i=src;i<vsize;i++)
+	{
+		if(used+sizeof(SparseElement<T>)>=BD_DATA_PROCESS_SIZE)
+			break;
+		T val=vec[i];
+		if(val>=0 && val<threshold)
+			val=0;
+		else if(val<0 && val> -threshold)
+			val=0;
+		if(val!=0)
+		{
+			SparseElement<T>* ptr= (SparseElement<T>*)(dest+used);
+			ptr->index=i;
+			ptr->data=val;
+			used+=sizeof(SparseElement<T>);
+		}
+	}
+	return i-src;
+}
+
+/*
+return the number of elements in the buffer.
+outsize returns size of the elements in bytes
+*/
+unsigned int RcAccumulatePrepareBuffer(int config_mode,double threshold, int is_double, size_t sz_type,
+	const char* src, char* dest, int idx,int size,unsigned int& outsize, uint32 & type)
+{
+	unsigned int send_idx_size;
+	if (config_mode==AutoMode)
+	{
+		if(is_double)
+			config_mode=IsProfitableToCompress( ((double*)src)+idx ,size-idx,threshold) ? SparseMode : DenseMode;
+		else
+			config_mode=IsProfitableToCompress( ((float*)src)+idx ,size-idx,threshold) ? SparseMode : DenseMode;
+	}
+	if (config_mode==DenseMode)
+	{
+
+		if(idx+BD_DATA_PROCESS_SIZE/sz_type > size)
+			send_idx_size = size - idx;
+		else
+			send_idx_size = BD_DATA_PROCESS_SIZE/sz_type;
+		outsize=send_idx_size*sz_type;
+		memcpy(dest,src+idx*sz_type,outsize);
+		type=is_double ? DenseDouble : DenseFloat;
+	}
+	else if (config_mode==SparseMode)
+	{
+		if(is_double)
+		{
+			send_idx_size=MakeSparseArray((double*)src, idx ,size,threshold,dest,outsize);
+			type=SparseDouble;
+		}
+		else
+		{
+			send_idx_size=MakeSparseArray((float*)src, idx ,size,threshold,dest,outsize);
+			type=SparseFloat;
+		}
+	}
+
+	return send_idx_size;
+}
+
 void RcAccumulate(DVM_Value *args)
 {
+	int config_mode;
+	double threshold;
+	config_mode=ReadAccumulatorConfig(threshold);
+
 	_uint bid=(_uint)args[2].object.data;
 	DVM_Array* arr=&args[1].object.data->u.barray;
 	int is_double=0;
@@ -1359,7 +1545,7 @@ void RcAccumulate(DVM_Value *args)
 	char buf[sizeof(RcDataPack)+BD_DATA_PROCESS_SIZE];
 	cmd=(RcDataPack*)buf;
 	cmd->cmd=RcDataAccumulate;
-	cmd->id=bid;	
+	cmd->id=bid;
 	for(int i=0;i<num_nodes;i++)
 	{
 		send_idx[i]=i*blocks*DSM_CACHE_BLOCK_SIZE;
@@ -1370,10 +1556,10 @@ void RcAccumulate(DVM_Value *args)
 	}
 	if(is_double)
 		RcAccumulateMsg(self_node_id-1,bid,(_uint64)curthread,send_idx[self_node_id],
-			send_size[self_node_id]-send_idx[self_node_id],arr->u.double_array+send_idx[self_node_id]);
+			(send_size[self_node_id]-send_idx[self_node_id])*sizeof(double),(char*)(arr->u.double_array+send_idx[self_node_id]),DenseDouble);
 	else
 		RcAccumulateMsg(self_node_id-1,bid,(_uint64)curthread,send_idx[self_node_id],
-			send_size[self_node_id]-send_idx[self_node_id],arr->u.float_array+send_idx[self_node_id]);
+			(send_size[self_node_id]-send_idx[self_node_id])*sizeof(float),(char*)(arr->u.float_array+send_idx[self_node_id]),DenseFloat);
 	send_idx[self_node_id]=send_size[self_node_id];
 
 	int done=1;
@@ -1413,15 +1599,9 @@ void RcAccumulate(DVM_Value *args)
 
 				if (FD_ISSET(direct_sockets[nodeid2idx(i)],&writefds))
 				{
-					int send_idx_size;
-					if(send_idx[i]+BD_DATA_PROCESS_SIZE/sz_type > send_size[i])
-						send_idx_size = send_size[i]-send_idx[i];
-					else
-						send_idx_size = BD_DATA_PROCESS_SIZE/sz_type;
-					memcpy(cmd->buf,(char*)arr->u.double_array+send_idx[i]*sz_type,send_idx_size*sz_type);
+					unsigned int send_idx_size=RcAccumulatePrepareBuffer(config_mode,threshold,is_double,sz_type,
+						(char*)arr->u.double_array,(char*)cmd->buf,send_idx[i],send_size[i],cmd->size,cmd->datatype);
 					cmd->param0=send_idx[i];
-					cmd->size=send_idx_size*sz_type;
-					cmd->datatype=is_double;
 					send_idx[i]+=send_idx_size;
 					if(send_idx[i] == send_size[i])
 					{
@@ -1432,7 +1612,7 @@ void RcAccumulate(DVM_Value *args)
 					{
 						cmd->param12=0;
 					}
-					//printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
+					printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
 					RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
 				}
 			}
@@ -1503,8 +1683,7 @@ static THREAD_PROC(RcMasterData,param)
 
 	void* memc=NULL;
 	for(;;)
-	{	
-		AGAIN:
+	{
 		FD_ZERO(&readfds);
 		for(int i=0;i<n;i++)
 		{
@@ -1555,12 +1734,7 @@ static THREAD_PROC(RcMasterData,param)
 				case RcDataAccumulate:
 					if(!memc)
 						memc=init_memcached_this_thread();
-					if(cmd.datatype==1)
-						RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(double),(double*)buf);
-					else if(cmd.datatype==0)
-						RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size/sizeof(float),(float*)buf);
-					else
-						printf("Bad data type\n");
+					RcAccumulateMsg(idx2nodeid(i),cmd.id,cmd.param12,cmd.param0,cmd.size,buf,cmd.datatype);
 					break;
 				case RcDataAccumulatePartialDone:
 					if(self_node_id==0)
@@ -1572,7 +1746,6 @@ static THREAD_PROC(RcMasterData,param)
 					printf("Bad command %d!\n");
 				}
 			}
-NEXT:
 			int dummy;
 		}
 
@@ -1586,7 +1759,7 @@ ERR:
 
 void RcBeforeClose()
 {
-	
+
 	if(MasterListenThread)
 	{
 		UaKillEvent(&gc_event);
