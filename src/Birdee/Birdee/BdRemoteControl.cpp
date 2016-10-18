@@ -1612,7 +1612,7 @@ void RcAccumulate(DVM_Value *args)
 					{
 						cmd->param12=0;
 					}
-					printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
+					//printf("Send partition to %d, offset=%d len=%d\n",nodeid2idx(i),cmd->param0,send_idx_size);
 					RcSend(direct_sockets[nodeid2idx(i)],cmd,sizeof(RcDataPack)+cmd->size);
 				}
 			}
