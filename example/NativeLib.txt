@@ -1,0 +1,5 @@
+println(LoadNativeLibrary("libNativeTest.dll"))
+delegate MsgBoxProc(prompt as string, title as string) as void
+dim MsgBox as MsgBoxProc=new delegate()
+GetFunction(MsgBox,"Native","MsgBox")
+MsgBox("PPP","TTT")

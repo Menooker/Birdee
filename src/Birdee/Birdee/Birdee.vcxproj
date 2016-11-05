@@ -162,6 +162,7 @@
     <None Include="..\..\..\example\matmul.txt" />
     <None Include="..\..\..\example\matmul_simple.txt" />
     <None Include="..\..\..\example\mergesort.txt" />
+    <None Include="..\..\..\example\NativeLib.txt" />
     <None Include="..\..\..\example\NMF.txt" />
     <None Include="..\..\..\example\PageRank.dkm" />
     <None Include="..\..\..\example\pi.txt" />
