@@ -341,52 +341,64 @@ static SoStatus fetchchunk(_uint64 k,_uint len)
 SoStatus SoStorageMemcached::getchunk(_uint key,_uint fldid,_uint len,BINT* buf)
 {
 	_uint64 k=MAKE64(key,fldid);
-	memcached_result_st results_obj;
-	memcached_result_st* results;
-	results= memcached_result_create(memc, &results_obj);
-	memset(buf,0,sizeof(BINT)*len);
-
-	memcached_return rc;
-	SoStatus ret=fetchchunk(k,len);
-	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	_uint offset;
+	SoStatus ret;
+	for(offset=0;offset<len;offset+=15040)
 	{
-		if(rc == MEMCACHED_SUCCESS)
+		memcached_result_st results_obj;
+		memcached_result_st* results;
+		results= memcached_result_create(memc, &results_obj);
+		_uint mylen=offset+15040<len?15040:len-offset;
+		memset(buf+offset,0,sizeof(double)*mylen);
+
+		memcached_return rc;
+		ret=fetchchunk(k+offset,mylen);
+		while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
 		{
-			_uint64* pkey;
-			SoVar* pvalue;
-			pkey=(_uint64*)memcached_result_key_value(results);
-			pvalue=(SoVar*)memcached_result_value(results);
-			//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
-			buf[ (*pkey) - k ]= pvalue->vi;
+			if(rc == MEMCACHED_SUCCESS)
+			{
+				_uint64* pkey;
+				SoVar* pvalue;
+				pkey=(_uint64*)memcached_result_key_value(results);
+				pvalue=(SoVar*)memcached_result_value(results);
+				//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
+				buf[ (*pkey) - k ]= pvalue->vi;
+			}
 		}
+		memcached_result_free(&results_obj);
 	}
-	memcached_result_free(&results_obj);
 	return ret;
 }
 
 SoStatus SoStorageMemcached::getchunk(_uint key,_uint fldid,_uint len,double* buf)
 {
 	_uint64 k=MAKE64(key,fldid);
-	memcached_result_st results_obj;
-	memcached_result_st* results;
-	results= memcached_result_create(memc, &results_obj);
-	memset(buf,0,sizeof(double)*len);
-
-	memcached_return rc;
-	SoStatus ret=fetchchunk(k,len);
-	while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
+	_uint offset;
+	SoStatus ret;
+	for(offset=0;offset<len;offset+=15040)
 	{
-		if(rc == MEMCACHED_SUCCESS)
+		memcached_result_st results_obj;
+		memcached_result_st* results;
+		results= memcached_result_create(memc, &results_obj);
+		_uint mylen=offset+15040<len?15040:len-offset;
+		memset(buf+offset,0,sizeof(double)*mylen);
+
+		memcached_return rc;
+		ret=fetchchunk(k+offset,mylen);
+		while ((results= memcached_fetch_result(memc, &results_obj, &rc)))
 		{
-			_uint64* pkey;
-			SoVar* pvalue;
-			pkey=(_uint64*)memcached_result_key_value(results);
-			pvalue=(SoVar*)memcached_result_value(results);
-			//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
-			buf[ (*pkey) - k ]= pvalue->vd;
+			if(rc == MEMCACHED_SUCCESS)
+			{
+				_uint64* pkey;
+				SoVar* pvalue;
+				pkey=(_uint64*)memcached_result_key_value(results);
+				pvalue=(SoVar*)memcached_result_value(results);
+				//printf("read [%llx]=%d\n",*pkey,pvalue->vi);
+				buf[ (*pkey) - k ]= pvalue->vd;
+			}
 		}
+		memcached_result_free(&results_obj);
 	}
-	memcached_result_free(&results_obj);
 	return ret;
 }
 
